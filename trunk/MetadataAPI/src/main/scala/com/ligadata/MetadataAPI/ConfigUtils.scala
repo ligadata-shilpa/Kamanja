@@ -999,7 +999,7 @@ object ConfigUtils {
   def GetAllAdapters(formatType: String, userid: Option[String] = None): String = {
     try {
       val adapters = MdMgr.GetMdMgr.Adapters.values.toArray
-      MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETCONFIG, AuditConstants.CONFIG, AuditConstants.FAIL, "", "adapters")
+      MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETCONFIG, AuditConstants.CONFIG, AuditConstants.SUCCESS, "", "adapters")
       if (adapters.length == 0) {
         logger.debug("No Adapters found ")
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllAdapters", null, ErrorCodeConstants.Get_All_Adapters_Failed_Not_Available)
@@ -1015,6 +1015,22 @@ object ConfigUtils {
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetAllAdapters", null, "Error :" + e.toString() + ErrorCodeConstants.Get_All_Adapters_Failed)
 
         apiResult.toString()
+      }
+    }
+  }
+
+
+  def GetAllTenants(userid: Option[String] = None): Array[String] = {
+    try{
+      MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETCONFIG, AuditConstants.CONFIG, AuditConstants.SUCCESS, "", "tenants")
+      var tenants = MdMgr.GetMdMgr.GetAllTenantInfos
+      var tenantIds: ArrayBuffer[String] = ArrayBuffer[String]()
+      tenants.foreach(x=> tenantIds.append(x.tenantId))
+      return tenantIds.toArray[String]
+    } catch {
+      case e: Exception => {
+        logger.error("Unable to retreive tenant ids")
+        return new Array[String](0)
       }
     }
   }

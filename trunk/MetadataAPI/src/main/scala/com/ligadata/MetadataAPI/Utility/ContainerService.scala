@@ -37,6 +37,18 @@ object ContainerService {
   def addContainer(input: String, tid: Option[String] = None): String ={
     var response = ""
     var containerFileDir: String = ""
+
+    //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+    var chosen: String = ""
+    var finalTid: Option[String] = None
+    if (tid == None) {
+      chosen = getTenantId
+      finalTid = Some(chosen)
+    } else {
+      finalTid = tid
+    }
+
+
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
     if (input == "") {
       containerFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONTAINER_FILES_DIR")
@@ -55,7 +67,7 @@ object ContainerService {
               case option => {
                 val containerDefs = getUserInputFromMainMenu(containers)
                 for (containerDef <- containerDefs) {
-                  response += MetadataAPIImpl.AddContainer(containerDef.toString, "JSON", userid, tid)
+                  response += MetadataAPIImpl.AddContainer(containerDef.toString, "JSON", userid, finalTid)
                 }
               }
             }
@@ -71,7 +83,7 @@ object ContainerService {
       var container = new File(input.toString)
       if( container.exists()){
         val containerDef = Source.fromFile(container).mkString
-        response = MetadataAPIImpl.AddContainer(containerDef, "JSON", userid, tid)
+        response = MetadataAPIImpl.AddContainer(containerDef, "JSON", userid, finalTid)
       }else{
         response = "Input container file does not exist"
       }
@@ -83,6 +95,18 @@ object ContainerService {
   def updateContainer(input: String, tid: Option[String] = None): String ={
     var response = ""
     var containerFileDir: String = ""
+
+    //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+    var chosen: String = ""
+    var finalTid: Option[String] = None
+    if (tid == None) {
+      chosen = getTenantId
+      finalTid = Some(chosen)
+    } else {
+      finalTid = tid
+    }
+
+
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
     if (input == "") {
       containerFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONTAINER_FILES_DIR")
@@ -243,7 +267,23 @@ object ContainerService {
       true
   }
 
-  def   getUserInputFromMainMenu(containers: Array[File]): Array[String] = {
+  private def getTenantId: String = {
+    var tenatns = MetadataAPIImpl.GetAllTenants(userid)
+    return getUserInputFromMainMenu(tenatns)
+  }
+
+  def getUserInputFromMainMenu(tenants: Array[String]) : String = {
+    var srNo = 0
+    for(tenant <- tenants) {
+      srNo += 1
+      println("[" + srNo + "]" + tenant)
+    }
+    print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
+    val userOption: Int = readLine().trim.toInt
+    return tenants(userOption - 1)
+  }
+
+  def getUserInputFromMainMenu(containers: Array[File]): Array[String] = {
     var listOfContainerDef: Array[String] = Array[String]()
     var srNo = 0
     println("\nPick a Container Definition file(s) from below choices\n")
