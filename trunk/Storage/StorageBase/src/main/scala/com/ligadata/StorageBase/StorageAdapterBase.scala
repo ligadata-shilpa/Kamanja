@@ -23,6 +23,8 @@ case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[By
 trait DataStoreOperations extends AdaptersSerializeDeserializers {
   // update operations, add & update semantics are different for relational databases
 
+  override def getAdapterName: String = ""
+
   def put(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
     if (container == null)
       throw new InvalidArgumentException("container should not be null", null)
