@@ -120,9 +120,9 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   protected override def commitData(txnCtxt: TransactionContext): Unit = {
     try {
-      val adapterChngCntr = KamanjaManager.getAdapterChangedCntr
+      val adapterChngCntr = KamanjaManager.instance.getAdapterChangedCntr
       if (adapterChngCntr != adapterChangedCntr) {
-        val (ins, outs, storages, cntr) = KamanjaManager.getAllAdaptersInfo
+        val (ins, outs, storages, cntr) = KamanjaManager.instance.getAllAdaptersInfo
         adapterChangedCntr = cntr
 
         val mdMgr = GetMdMgr

@@ -475,7 +475,7 @@ object KamanjaMdCfg {
         if (adapter == null) return false
         adapter.setObjectResolver(KamanjaMetadata)
         storageAdapters += adapter
-        KamanjaManager.incrAdapterChangedCntr()
+        KamanjaManager.instance.incrAdapterChangedCntr()
       } catch {
         case e: Exception => {
           LOG.error("Failed to get output adapter for %s".format(ac), e)
@@ -594,7 +594,7 @@ object KamanjaMdCfg {
         if (adapter == null) return false
         adapter.setObjectResolver(KamanjaMetadata)
         outputAdapters += adapter
-        KamanjaManager.incrAdapterChangedCntr()
+        KamanjaManager.instance.incrAdapterChangedCntr()
       } catch {
         case e: Exception => {
           LOG.error("Failed to get output adapter for %s".format(ac), e)
@@ -713,7 +713,7 @@ object KamanjaMdCfg {
         val adapter = CreateInputAdapterFromConfig(conf, execCtxtObj, nodeContext)
         if (adapter == null) return false
         inputAdapters += adapter
-        KamanjaManager.incrAdapterChangedCntr()
+        KamanjaManager.instance.incrAdapterChangedCntr()
       } catch {
         case e: Exception => {
           LOG.error("Failed to get input adapter for %s.".format(ac), e)
