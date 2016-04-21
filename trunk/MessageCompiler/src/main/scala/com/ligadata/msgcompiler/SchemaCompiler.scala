@@ -93,7 +93,7 @@ class SchemaCompiler {
               retFldStr = generateFieldType(fldStr, bslash, quote)
             } else if (fieldTypestr.size == 2) {
               log.info("fieldTypestr(1).substring(7) " + fieldTypestr(1));
-              if (primitiveTypes.contains(fieldTypestr(1)) || primitiveTypes.contains(fieldTypestr(1).substring(7)) || primitiveTypes.contains(fieldTypestr(1).substring(5))) {
+              if (primitiveTypes.contains(fieldTypestr(1)) || primitiveTypes.contains(fieldTypestr(1).substring(7)) || primitiveTypes.contains(fieldTypestr(1).substring(5)) || fieldTypestr(1).equalsIgnoreCase(integer) || fieldTypestr(1).substring(7).equalsIgnoreCase(integer) || fieldTypestr(1).substring(5).equalsIgnoreCase(integer)) {
                 retFldStr = parseFldStr(fieldTypestr) //handling array of primitive types (scalar types)
               } else {
                 retFldStr = parseContainer(field, mdMgr) //handling array of containers if the container if the namespace is one word
@@ -204,19 +204,17 @@ class SchemaCompiler {
   private def parseMapPrimitives(mapType: String): String = {
     var retFldtypeStr: String = "";
     var ftype: String = "";
-    var fldtypeStr: String = "";
+    var flsValType: String = "";
     if (mapType.startsWith("map")) {
-      fldtypeStr = mapType.substring(5);
+      flsValType = mapType.substring(5);
 
-      if (fldtypeStr.startsWith("string")) {
-        val flsValType = fldtypeStr.substring(6)
-        //log.info("flsValType  " + flsValType)
-        if (primitiveTypes.contains(flsValType)) {
-          ftype = primitiveTypes(primitiveTypes.indexOf(flsValType));
-        } else if (fldtypeStr.startsWith("array")) {
-          //handle array of arrayofint
-          ftype = parseArrayPrimitives(flsValType)
-        }
+      // val flsValType = fldtypeStr.substring(6)
+      //log.info("flsValType  " + flsValType)
+      if (primitiveTypes.contains(flsValType)) {
+        ftype = primitiveTypes(primitiveTypes.indexOf(flsValType));
+      } else if (flsValType.startsWith("array")) {
+        //handle array of arrayofint
+        ftype = parseArrayPrimitives(flsValType)
       }
     }
 
