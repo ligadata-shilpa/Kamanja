@@ -289,7 +289,7 @@ trait AdaptersSerializeDeserializers {
   // For now we are mapping to one message to one serializer. Later may be we need to handle multiple serializers
   private val reent_lock = new ReentrantReadWriteLock(true)
 
-  def getAdapterName: String = ""
+  def getAdapterName: String
 
   private def ReadLock(reent_lock: ReentrantReadWriteLock): Unit = {
     if (reent_lock != null)
@@ -566,7 +566,7 @@ trait AdaptersSerializeDeserializers {
     }
 
     if (allMsgBindings.size != 1) {
-      throw new KamanjaException("We can not deserialize more than one message for input adapter", null)
+      throw new KamanjaException("We can not deserialize more than one message for input adapter. Found:" + allMsgBindings.map(b => b._1), null)
     }
 
     val ser = allMsgBindings.values.head

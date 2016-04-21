@@ -65,7 +65,7 @@ class TreeMapAdapterSpec extends FunSpec with BeforeAndAfter with BeforeAndAfter
       serializer = SerializerManager.GetSerializer("kryo")
       logger.info("Initialize TreeMapAdapter")
       var dataStoreInfo="{\"StoreType\": \"" + "treemap" + "\",\"SchemaName\": \"" + "unit_tests" + "\",\"Location\": \"" + dataDirectory + "\"}"
-      adapter = TreeMapAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+      adapter = TreeMapAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo, null, null)
    }
     catch {
       case e: Exception => throw new Exception("Failed to execute set up properly\n", e)

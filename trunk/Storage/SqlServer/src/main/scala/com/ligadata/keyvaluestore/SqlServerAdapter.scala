@@ -18,9 +18,11 @@ package com.ligadata.keyvaluestore
 import java.sql.DriverManager
 import java.sql.{ Statement, PreparedStatement, CallableStatement, DatabaseMetaData, ResultSet }
 import java.sql.Connection
+import com.ligadata.KamanjaBase.NodeContext
 import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
 import java.nio.ByteBuffer
+import com.ligadata.kamanja.metadata.AdapterInfo
 import org.apache.logging.log4j._
 import com.ligadata.Exceptions._
 import org.json4s._
@@ -61,7 +63,7 @@ class DriverShim(d: Driver) extends Driver {
   def getParentLogger(): java.util.logging.Logger = this.driver.getParentLogger()
 }
 
-class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
+class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val nodeCtxt: NodeContext, val adapterInfo: AdapterInfo) extends DataStore {
 
   private[this] val lock = new Object
 
@@ -1671,5 +1673,5 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
 
 // To create SqlServer Datastore instance
 object SqlServerAdapter extends StorageAdapterFactory {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new SqlServerAdapter(kvManagerLoader, datastoreConfig)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, nodeCtxt: NodeContext, adapterInfo: AdapterInfo): DataStore = new SqlServerAdapter(kvManagerLoader, datastoreConfig, nodeCtxt, adapterInfo)
 }

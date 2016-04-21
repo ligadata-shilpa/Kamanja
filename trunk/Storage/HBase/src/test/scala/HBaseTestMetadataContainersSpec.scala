@@ -105,7 +105,7 @@ class HBaseTestMetadataContainersSpec extends FunSpec with BeforeAndAfter with B
     var connectionAttempts = 0
     while (connectionAttempts < maxConnectionAttempts) {
       try {
-        adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+        adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo, null, null)
         return adapter
       } catch {
         case e: Exception => {

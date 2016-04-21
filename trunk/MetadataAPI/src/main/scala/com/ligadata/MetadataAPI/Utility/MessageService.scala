@@ -37,7 +37,19 @@ object MessageService {
   def addMessage(input: String, tid: Option[String]): String = {
     var response = ""
     var msgFileDir: String = ""
+
+
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+    var chosen: String = ""
+    var finalTid: Option[String] = None
+    if (tid == None) {
+      chosen = getTenantId
+      finalTid = Some(chosen)
+    } else {
+      finalTid = tid
+    }
+
+
     if (input == "") {
       msgFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
       if (msgFileDir == null) {
@@ -56,7 +68,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid, tid)
+                  response += MetadataAPIImpl.AddMessage(messageDef.toString, "JSON", userid, finalTid)
                 }
               }
             }
@@ -72,7 +84,7 @@ object MessageService {
       var message = new File(input.toString)
       if(message.exists()){
         val messageDef = Source.fromFile(message).mkString
-        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid, tid)
+        response = MetadataAPIImpl.AddMessage(messageDef, "JSON", userid, finalTid)
       }else{
         response="Message defintion file does not exist"
       }
@@ -105,6 +117,18 @@ object MessageService {
   def updateMessage(input: String, tid: Option[String]): String = {
     var response = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+
+    //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
+    var chosen: String = ""
+    var finalTid: Option[String] = None
+    if (tid == None) {
+      chosen = getTenantId
+      finalTid = Some(chosen)
+    } else {
+      finalTid = tid
+    }
+
+
     if (input == "") {
       val msgFileDir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
       if (msgFileDir == null) {
@@ -123,7 +147,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += MetadataAPIImpl.UpdateMessage(messageDef.toString, "JSON", userid, tid)
+                  response += MetadataAPIImpl.UpdateMessage(messageDef.toString, "JSON", userid, finalTid)
                 }
               }
             }
@@ -138,7 +162,7 @@ object MessageService {
       //input provided
       var message = new File(input.toString)
       val messageDef = Source.fromFile(message).mkString
-      response = MetadataAPIImpl.UpdateMessage(messageDef, "JSON", userid)
+      response = MetadataAPIImpl.UpdateMessage(messageDef, "JSON", userid, finalTid)
     }
     //Got the message. Now add them
     response
@@ -256,6 +280,22 @@ object MessageService {
       false
     } else
       true
+  }
+
+  private def getTenantId: String = {
+    var tenatns = MetadataAPIImpl.GetAllTenants(userid)
+    return getUserInputFromMainMenu(tenatns)
+  }
+
+  def getUserInputFromMainMenu(tenants: Array[String]) : String = {
+    var srNo = 0
+    for(tenant <- tenants) {
+      srNo += 1
+      println("[" + srNo + "]" + tenant)
+     }
+     print("\nEnter your choice(If more than 1 choice, please use commas to seperate them): \n")
+    val userOption: Int = readLine().trim.toInt
+    return tenants(userOption - 1)
   }
 
   def   getUserInputFromMainMenu(messages: Array[File]): Array[String] = {

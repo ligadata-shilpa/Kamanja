@@ -17,6 +17,8 @@
 package com.ligadata.keyvaluestore
 
 // Hbase core
+import com.ligadata.KamanjaBase.NodeContext
+import com.ligadata.kamanja.metadata.AdapterInfo
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.NamespaceDescriptor;
@@ -55,7 +57,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import scala.collection.JavaConversions._
 
-class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
+class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val nodeCtxt: NodeContext, val adapterInfo: AdapterInfo) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
 //  val loggerName = this.getClass.getName
 //  val logger = LogManager.getLogger(loggerName)
@@ -1736,5 +1738,5 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
 
 // To create HBase Datastore instance
 object HBaseAdapter extends StorageAdapterFactory {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new HBaseAdapter(kvManagerLoader, datastoreConfig)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, nodeCtxt: NodeContext, adapterInfo: AdapterInfo): DataStore = new HBaseAdapter(kvManagerLoader, datastoreConfig, nodeCtxt, adapterInfo)
 }

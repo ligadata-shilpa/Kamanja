@@ -34,6 +34,8 @@ import com.datastax.driver.core.Statement
 
 
 import java.nio.ByteBuffer
+import com.ligadata.KamanjaBase.NodeContext
+import com.ligadata.kamanja.metadata.AdapterInfo
 import org.apache.logging.log4j._
 import com.ligadata.Exceptions._
 import org.json4s._
@@ -90,7 +92,7 @@ USE default;
 CREATE TABLE default (key blob, value blob, primary key(key) );
 */
 
-class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
+class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val nodeCtxt: NodeContext, val adapterInfo: AdapterInfo) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
 //  val loggerName = this.getClass.getName
 //  val logger = LogManager.getLogger(loggerName)
@@ -1403,5 +1405,5 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
 
 // To create Cassandra Datastore instance
 object CassandraAdapter extends StorageAdapterFactory {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new CassandraAdapter(kvManagerLoader, datastoreConfig)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, nodeCtxt: NodeContext, adapterInfo: AdapterInfo): DataStore = new CassandraAdapter(kvManagerLoader, datastoreConfig, nodeCtxt, adapterInfo)
 }

@@ -66,7 +66,7 @@ class CassandraPerfTestSpec extends FunSpec with BeforeAndAfter with BeforeAndAf
     var connectionAttempts = 0
     while (connectionAttempts < maxConnectionAttempts) {
       try {
-        adapter = CassandraAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+        adapter = CassandraAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo, null, null)
         return adapter
       } catch {
         case e: StorageConnectionException => {

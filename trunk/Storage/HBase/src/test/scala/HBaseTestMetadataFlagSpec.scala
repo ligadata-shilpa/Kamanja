@@ -105,7 +105,7 @@ class HBaseTestMetadataFlagSpec extends FunSpec with BeforeAndAfter with BeforeA
     var connectionAttempts = 0
     while (connectionAttempts < maxConnectionAttempts) {
       try {
-        adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo)
+        adapter = HBaseAdapter.CreateStorageAdapter(kvManagerLoader, dataStoreInfo, null, null)
         return adapter
       } catch {
         case e: Exception => {
