@@ -34,8 +34,10 @@ No schema setup
 
 package com.ligadata.keyvaluestore
 
+import com.ligadata.KamanjaBase.NodeContext
 import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
+import com.ligadata.kamanja.metadata.AdapterInfo
 
 import org.mapdb._
 import java.io._
@@ -47,7 +49,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
 
-class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
+class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val nodeCtxt: NodeContext, val adapterInfo: AdapterInfo) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
 //  val loggerName = this.getClass.getName
 //  val logger = LogManager.getLogger(loggerName)
@@ -918,5 +920,5 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
 
 // To create TreeMap Datastore instance
 object TreeMapAdapter extends StorageAdapterFactory {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new TreeMapAdapter(kvManagerLoader, datastoreConfig)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, nodeCtxt: NodeContext, adapterInfo: AdapterInfo): DataStore = new TreeMapAdapter(kvManagerLoader, datastoreConfig, nodeCtxt, adapterInfo)
 }

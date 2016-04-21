@@ -26,6 +26,8 @@ public interface MessageContainerObjBase extends ContainerOrConceptFactory {
 	public ContainerInterface createInstance();
 
 	public int getSchemaId();
+	
+	public String getTenantId();
 
 	public Object convertFrom(Object srcObj);
 

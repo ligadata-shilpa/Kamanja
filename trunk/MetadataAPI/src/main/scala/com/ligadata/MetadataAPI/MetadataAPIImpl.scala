@@ -3727,6 +3727,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ConfigUtils.RemoveTenant(tenantId)
   }
 
+  def GetAllTenants(uid: Option[String] = None): Array[String] = {
+    ConfigUtils.GetAllTenants(uid)
+  }
+
 
     /**
      * AddAdapter
@@ -3987,7 +3991,6 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   def GetAllAdapters(formatType: String, userid: Option[String] = None): String = {
     ConfigUtils.GetAllAdapters(formatType,userid)
   }
-
 
 
   private def updateClusterConfigForKey(elemType: String, key: String, clusterId: String, operation: String): Unit = {

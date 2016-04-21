@@ -25,6 +25,9 @@ object TransactionMsg extends RDDObject[TransactionMsg] with MessageFactoryInter
   override def getFullName = getFullTypeName;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
+  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
+  override def convertFrom(newVerObj: Any, oldVerobj: Any): ContainerInterface = null
+
   def build = new T(this)
   def build(from: T) = new T(from)
   override def getPartitionKeyNames: Array[String] = Array("custid");

@@ -20,7 +20,7 @@ package com.ligadata.KamanjaManager
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.KvBase.{ Key }
-import com.ligadata.StorageBase.StorageAdapter
+import com.ligadata.StorageBase.DataStore
 import com.ligadata.kamanja.metadata.AdapterMessageBinding
 import com.ligadata.kamanja.metadata.MdMgr._
 
@@ -44,7 +44,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
   // Mapping Adapter to Msgs
 //  private var inputAdapters = Array[(InputAdapter, Array[AdapterMessageBinding])]()
   private var outputAdapters = Array[(OutputAdapter, Array[AdapterMessageBinding])]()
-  private var storageAdapters = Array[(StorageAdapter, Array[AdapterMessageBinding])]()
+  private var storageAdapters = Array[(DataStore, Array[AdapterMessageBinding])]()
 
 //  NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
 //
@@ -120,9 +120,9 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   protected override def commitData(txnCtxt: TransactionContext): Unit = {
     try {
-      val adapterChngCntr = KamanjaManager.getAdapterChangedCntr
+      val adapterChngCntr = KamanjaManager.instance.getAdapterChangedCntr
       if (adapterChngCntr != adapterChangedCntr) {
-        val (ins, outs, storages, cntr) = KamanjaManager.getAllAdaptersInfo
+        val (ins, outs, storages, cntr) = KamanjaManager.instance.getAllAdaptersInfo
         adapterChangedCntr = cntr
 
         val mdMgr = GetMdMgr
@@ -136,7 +136,8 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         })
 
         val newStorages = storages.map(storage => {
-          (storage, mdMgr.BindingsForAdapter(storage._storageConfig.Name).map(bind => bind._2).toArray)
+          val name = if (storage != null && storage.adapterInfo!= null) storage.adapterInfo.Name else ""
+          (storage, mdMgr.BindingsForAdapter(name).map(bind => bind._2).toArray)
         })
 
 //        inputAdapters = newIns
@@ -171,7 +172,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //          sendSerOptions += bind.options;
           sendContainers += orginAndmsg._2.asInstanceOf[ContainerInterface];
         })))
-        adap._1.save(txnCtxt, sendContainers.toArray)
+        adap._1.put(txnCtxt, sendContainers.toArray)
       })
 
       val allData = txnCtxt.getAllContainersOrConcepts()

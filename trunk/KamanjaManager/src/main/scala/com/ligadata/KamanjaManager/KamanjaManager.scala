@@ -4,7 +4,7 @@ package com.ligadata.KamanjaManager
 import com.ligadata.HeartBeat.MonitoringContext
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextFactory, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
-import com.ligadata.StorageBase.StorageAdapter
+import com.ligadata.StorageBase.{DataStore}
 import com.ligadata.ZooKeeper.CreateClient
 import com.ligadata.kamanja.metadata.AdapterInfo
 import org.json4s.jackson.JsonMethods._
@@ -27,7 +27,7 @@ import com.ligadata.Exceptions.{ FatalAdapterException }
 import scala.actors.threadpool.{ ExecutorService }
 import com.ligadata.KamanjaVersion.KamanjaVersion
 
-class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
+class KamanjaServer(port: Int) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
   private val serverSocket = new ServerSocket(port)
 
@@ -36,7 +36,7 @@ class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
       while (true) {
         // This will block until a connection comes in.
         val socket = serverSocket.accept()
-        (new Thread(new ConnHandler(socket, mgr))).start()
+        (new Thread(new ConnHandler(socket))).start()
       }
     } catch {
       case e: Exception => {
@@ -54,7 +54,7 @@ class KamanjaServer(var mgr: KamanjaManager, port: Int) extends Runnable {
   }
 }
 
-class ConnHandler(var socket: Socket, var mgr: KamanjaManager) extends Runnable {
+private class ConnHandler(var socket: Socket) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
   private val out = new PrintStream(socket.getOutputStream)
   private val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
@@ -67,7 +67,7 @@ class ConnHandler(var socket: Socket, var mgr: KamanjaManager) extends Runnable 
           val strLine = in.readLine()
           if (strLine == null)
             break
-          mgr.execCmd(strLine)
+          KamanjaManager.instance.execCmd(strLine)
         }
       }
     } catch {
@@ -227,7 +227,7 @@ class KamanjaManager extends Observer {
 
   private val inputAdapters = new ArrayBuffer[InputAdapter]
   private val outputAdapters = new ArrayBuffer[OutputAdapter]
-  private val storageAdapters = new ArrayBuffer[StorageAdapter]
+  private val storageAdapters = new ArrayBuffer[DataStore]
   //  private val adapterChangedCntr = new java.util.concurrent.atomic.AtomicLong(0)
   private var adapterChangedCntr: Long = 0
   //  private val statusAdapters = new ArrayBuffer[OutputAdapter]
@@ -248,7 +248,7 @@ class KamanjaManager extends Observer {
 
   def getAdapterChangedCntr: Long = adapterChangedCntr
 
-  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = {
+  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = {
     (inputAdapters.toArray, outputAdapters.toArray, storageAdapters.toArray, adapterChangedCntr)
   }
 
@@ -589,7 +589,7 @@ class KamanjaManager extends Observer {
     }
   }
 
-  def run(args: Array[String]): Int = {
+  private def run(args: Array[String]): Int = {
     KamanjaConfiguration.Reset
     KamanjaLeader.Reset
     if (args.length == 0) {
@@ -918,7 +918,7 @@ class KamanjaManager extends Observer {
     if (objType.equalsIgnoreCase("adapterdef")) {
       var cia: InputAdapter = null
       var coa: OutputAdapter = null
-      var csa: StorageAdapter = null
+      var csa: DataStore = null
 
       // If this is an add
       if (action.equalsIgnoreCase("add")) {
@@ -933,7 +933,7 @@ class KamanjaManager extends Observer {
         // SetUpdatePartitionsFlag
         inputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) cia = ad })
         outputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) coa = ad })
-        storageAdapters.foreach(ad => { if (ad._storageConfig.Name.equalsIgnoreCase(objectName)) csa = ad })
+        storageAdapters.foreach(ad => { if (ad != null && ad.adapterInfo != null && ad.adapterInfo.Name.equalsIgnoreCase(objectName)) csa = ad })
 
 
         if (cia != null) {
@@ -959,7 +959,7 @@ class KamanjaManager extends Observer {
     return false
   }
 
-  class SignalHandler extends Observable with sun.misc.SignalHandler {
+  private class SignalHandler extends Observable with sun.misc.SignalHandler {
     def handleSignal(signalName: String) {
       sun.misc.Signal.handle(new sun.misc.Signal(signalName), this)
     }
@@ -987,6 +987,7 @@ class ComponentInfo {
   var metrics: collection.mutable.Map[String, Any] = null
 }
 
+/*
 object KamanjaManager {
   private val LOG = LogManager.getLogger(getClass);
   var curMgr: KamanjaManager = _
@@ -1005,6 +1006,29 @@ object KamanjaManager {
 
   def incrAdapterChangedCntr(): Unit = curMgr.incrAdapterChangedCntr()
   def getAdapterChangedCntr = curMgr.getAdapterChangedCntr
-  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[StorageAdapter], Long) = curMgr.getAllAdaptersInfo
+  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = curMgr.getAllAdaptersInfo
+}
+*/
+
+object KamanjaManager {
+  private val LOG = LogManager.getLogger(getClass)
+  private var km: KamanjaManager = _
+
+  val instance: KamanjaManager = {
+    if(km == null) {
+      km = new KamanjaManager
+    }
+    km
+  }
+
+  def main(args: Array[String]): Unit = {
+    scala.sys.addShutdownHook({
+      if (KamanjaConfiguration.shutdown == false) {
+        LOG.warn("KAMANJA-MANAGER: Received shutdown request")
+        KamanjaConfiguration.shutdown = true // Setting the global shutdown
+      }
+    })
+    sys.exit(instance.run(args))
+  }
 }
 

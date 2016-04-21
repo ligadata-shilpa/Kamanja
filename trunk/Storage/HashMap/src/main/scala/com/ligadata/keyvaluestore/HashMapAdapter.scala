@@ -34,8 +34,10 @@ No schema setup
 
 package com.ligadata.keyvaluestore
 
+import com.ligadata.KamanjaBase.NodeContext
 import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
+import com.ligadata.kamanja.metadata.AdapterInfo
 
 import org.mapdb._
 import java.io._
@@ -49,7 +51,7 @@ import com.ligadata.Utils.{ KamanjaLoaderInfo }
 
 import com.ligadata.Exceptions._
 
-class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
+class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String, val nodeCtxt: NodeContext, val adapterInfo: AdapterInfo) extends DataStore {
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
 //  val loggerName = this.getClass.getName
 //  val logger = LogManager.getLogger(loggerName)
@@ -1004,5 +1006,5 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
 
 // To create HashMap Datastore instance
 object HashMapAdapter extends StorageAdapterFactory {
-  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String): DataStore = new HashMapAdapter(kvManagerLoader, datastoreConfig)
+  override def CreateStorageAdapter(kvManagerLoader: KamanjaLoaderInfo, datastoreConfig: String, nodeCtxt: NodeContext, adapterInfo: AdapterInfo): DataStore = new HashMapAdapter(kvManagerLoader, datastoreConfig, nodeCtxt, adapterInfo)
 }
