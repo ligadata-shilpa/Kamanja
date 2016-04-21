@@ -62,13 +62,12 @@ class MessageCompiler {
         throw new Exception("MdMgr is not found")
       if (msgDfType.equalsIgnoreCase("json")) {
         message = messageParser.processJson(jsonstr, mdMgr, recompile)
-        if (schemaId != null)
-          message.schemaId = schemaId
+        message.schemaId = schemaId
         if (tenantId != null) {
           val tId: String = tenantId.getOrElse(null)
           if (tId != null && tId.trim() != "")
             message.tenantId = tId
-        }else message.tenantId = ""
+        } else message.tenantId = ""
         handleMsgFieldTypes.handleFieldTypes(message, mdMgr)
         //log.info("\n\nSchema ==============START" + message.Schema);
         message = schemaCompiler.generateAvroSchema(message, mdMgr);
