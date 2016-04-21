@@ -3040,7 +3040,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                   ConfigUtils.LoadAdapterMessageBindingIntoCache(bindingKey)
               }
               case "Remove" => {
-                  //ConfigUtils.RemoveAdapterMessageBindingFromCache(bindingKey)
+                  ConfigUtils.RemoveAdapterMessageBindingFromCache(zkMessage.ObjectType, bindingKey)
               }
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }
@@ -4301,7 +4301,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * UpdateMetadata - This is a callback function for the Zookeeper Listener.  It will get called when we detect Metadata being updated from
      *                  a different metadataImpl service.
      *
-     * @param receivedJsonStr message from another cluster node
+     * @param receivedJsonStr zk message from another cluster node
      */
   def UpdateMetadata(receivedJsonStr: String): Unit = {
     logger.debug("Process ZooKeeper notification " + receivedJsonStr)
@@ -4317,8 +4317,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * InitMdMgr
-      *
-      * @param mgr
+     *
+     * @param mgr the metadata manager instance
      * @param jarPathsInfo
      * @param databaseInfo
      */

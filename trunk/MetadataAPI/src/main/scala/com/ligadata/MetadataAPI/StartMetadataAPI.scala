@@ -62,10 +62,12 @@ object StartMetadataAPI {
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
 
-  /** AdapterMessageBinding add tags */
+  /** AdapterMessageBinding tags */
   val FROMFILE="FROMFILE"
   val FROMSTRING="FROMSTRING"
-  val REMOVESTRING="REMOVE"
+  val KEY="KEY"
+  val ADAPTERMESSAGEBINDING = "ADAPTERMESSAGEBINDING"
+
   /** List AdapterMessageBinding filters */
   val ADAPTERFILTER="ADAPTERFILTER"
   val MESSAGEFILTER="MESSAGEFILTER"
@@ -79,7 +81,6 @@ object StartMetadataAPI {
   var foundMessageName = false
   var expectBindingFromFile = false
   var expectBindingFromString = false
-  var removeCmdFound = false
   var expectRemoveBindingKey = false
   var expectListBindingFilter = false
   var expectAdapterFilter = false
@@ -137,11 +138,7 @@ object StartMetadataAPI {
                       expectMessageName = true
                   } else if (arg.equalsIgnoreCase(OUTPUTMSG)) {
                       expectOutputMsg = true
-                  } else if (arg.equalsIgnoreCase(REMOVESTRING)) {
-                      removeCmdFound = true
-                  } else if (arg.equalsIgnoreCase(Action.REMOVEADAPTERMESSAGEBINDING.toString)) {
-                      expectRemoveBindingKey = true
-                  } else if (arg.equalsIgnoreCase(s"REMOVE${Action.REMOVEADAPTERMESSAGEBINDING.toString}")) {
+                  } else if (arg.equalsIgnoreCase(KEY)) {
                       expectRemoveBindingKey = true
                   } else if (arg.equalsIgnoreCase(FROMFILE)) {
                       expectBindingFromFile = true
@@ -180,8 +177,7 @@ object StartMetadataAPI {
                           expectMessageName = false
                           argVar = "" // Make sure we dont add to the routing command
                       }
-                      if (removeCmdFound && expectRemoveBindingKey) {
-                          removeCmdFound = false
+                      if (expectRemoveBindingKey) {
                           expectRemoveBindingKey = false
                           extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
                           argVar = "" // Make sure we dont add to the routing command
@@ -483,7 +479,7 @@ object StartMetadataAPI {
                 println(s"Remove Adapter Message Binding syntax: \nkamanja <apiconfig> remove adaptermessagebinding '<adapter name>,<namespace.msgname>,namespace.serializername>'")
                 throw new RuntimeException(s"Remove Adapter Message Binding syntax: \nkamanja <apiconfig> remove adaptermessagebinding '<adapter name>,<namespace.msgname>,namespace.serializername>'")
             }
-            response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)
+            response = AdapterMessageBindingService.removeAdapterMessageBinding(bindingKey, userId)
         }
 
         case Action.LISTADAPTERMESSAGEBINDINGS => {

@@ -1762,6 +1762,33 @@ object ConfigUtils {
         }
     }
 
+    /**
+      * Remove the supplied binding the the supplied zookeeper object and binding specific key.
+      *
+      * @param zkObjectType currently "AdapterMsgBinding"
+      * @param bindingKey "<adapter name>,<namespace.msgname>,<namespace.serializername>"
+      */
+    def RemoveAdapterMessageBindingFromCache(zkObjectType : String, bindingKey : String): Unit = {
+      try {
+          val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(bindingKey)
+          if (binding != null) {
+              val key = s"$zkObjectType.$bindingKey"
+              MetadataAPIImpl.DeleteObject(key.toLowerCase, "adapter_message_bindings")
+              val apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveAdapterMessageBindingFromCache", null, ErrorCodeConstants.Remove_AdapterMessageBinding_Successful + ":" + bindingKey)
+              apiResult.toString()
+          } else {
+              logger.warn(s"The binding $bindingKey is already removed from the cache.  This is typical on a one node cluster or on the node that has initiated the removal.")
+              val apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveAdapterMessageBindingFromCache", null, s"The binding $bindingKey is already removed from the cache.  This is typical on a one node cluster or on the node that has initiated the removal.")
+              apiResult.toString() // these aren't used but might be some day rather than grounding out with a "Unit" fcn signature
+          }
+      } catch {
+          case e: Exception => {
+              logger.debug("", e)
+              val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveAdapterMessageBindingFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_AdapterMessageBinding_Failed + ":" + s"$zkObjectType.$bindingKey")
+              apiResult.toString()
+          }
+      }
+    }
 
 
 }

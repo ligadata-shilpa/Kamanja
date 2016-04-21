@@ -102,7 +102,7 @@ File ingestion of the adapter message bindings is also possible.  With a file  m
 	}
 ]
 
-There are a total of five bindings specified here.  This is a practical way to establish a new cluster.
+There are a total of five bindings specified here.  This is a practical way to describe the adapter bindings when establishing a new cluster.
 
 A binding is prepared for the adapter/message/serializers in each map.  As can be seen in the kafkaAdapterOutput2 and hBaseStore1 adapters, the multiple message shorthand is used that will cause a binding for each unique triple.
 
@@ -135,6 +135,8 @@ Removal of a binding is accomplished with this command.
 
 _Remove the supplied binding key_
 	$KAMANJA_HOME/bin/kamanja debug $apiConfigProperties remove adaptermessagebindings hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser
+	
+	$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser
 
 **Failure test cases**
 

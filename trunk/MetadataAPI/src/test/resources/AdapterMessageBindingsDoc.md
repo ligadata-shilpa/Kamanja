@@ -144,8 +144,9 @@ Removal of a binding is accomplished with this command.
 
 _Remove the supplied binding key_
 
-The binding key consists of the names of the three components of the binding, namely the adapter name, the fully qualified message name, and the fully qualified serializer name - comma separated:
+The binding key, the parameter KEY's value, consists of the names of the three components of the binding, namely the adapter name, the fully qualified message name, and the fully qualified serializer name - comma separated:
 
-	$KAMANJA_HOME/bin/kamanja debug $APICONFIGPROPERTIES remove adaptermessagebindings hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser
+	$KAMANJA_HOME/bin/kamanja $APICONFIGPROPERTIES remove adaptermessagebinding KEY 'hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser'
+
 
 
