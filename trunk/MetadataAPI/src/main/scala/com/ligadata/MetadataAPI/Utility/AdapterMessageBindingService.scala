@@ -157,18 +157,7 @@ object AdapterMessageBindingService {
       * @return a JSON message result
       */
     def removeAdapterMessageBinding(input: String, userId : Option[String]) : String  = {
-
-        val binding : AdapterMessageBinding = if (input != null && input.contains('.')) {
-            AdapterMessageBindingUtils.RemoveAdapterMessageBinding(input, userId)
-        } else {
-            null
-        }
-
-        val result : String = if (binding != null) {
-            new ApiResult(0, "removeAdapterMessageBinding", "successful removal", s"${binding.FullBindingName}").toString
-        } else {
-            new ApiResult(-1, "removeAdapterMessageBinding", "failed!", "binding not found").toString
-        }
+        val result : String = AdapterMessageBindingUtils.RemoveAdapterMessageBinding(input, userId)
         result
     }
 
