@@ -37,7 +37,7 @@ object AdapterMessageBindingUtils {
     private def AddAdapterMessageBinding(adapterName : String
                                  , messageName : String
                                  , serializerName : String
-                                 , options : scala.collection.immutable.Map[String,String]
+                                 , options : scala.collection.immutable.Map[String,Any]
                                  , userId : Option[String]) : (String, BaseElemDef) = {
         val (acceptableBinding, errorMsgs) : (Boolean, String) = SemanticChecks(adapterName, messageName, serializerName, options)
         val result : (String, BaseElemDef) = if (acceptableBinding) {
@@ -196,10 +196,10 @@ object AdapterMessageBindingUtils {
             val messageName: String = bindingMap.getOrElse(MessageNameKey, "**invalid message name**").asInstanceOf[String].trim
             val messageNames: List[String] = bindingMap.getOrElse(MessageNamesKey, List[String]()).asInstanceOf[List[String]]
             val serializerName: String = bindingMap.getOrElse(SerializerKey, "**invalid serializer name**").asInstanceOf[String].trim
-            val options: scala.collection.immutable.Map[String, String] = 
+            val options: scala.collection.immutable.Map[String, Any] =
 				if (bindingMap.contains(OptionsKey) &&  bindingMap(OptionsKey) != null) {
 					try {
-						bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, String]]
+						bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, Any]]
 					} catch {
 						case e : Exception => {
 							logger.error("Options should be a map of any values, not an array")
@@ -207,7 +207,7 @@ object AdapterMessageBindingUtils {
 						}
 					}
 				} else {
-					scala.collection.immutable.Map[String, String]()
+					scala.collection.immutable.Map[String, Any]()
 				}
 
             val multipleMessages : Boolean = messageNames.length > 0
@@ -258,7 +258,7 @@ object AdapterMessageBindingUtils {
     private def SemanticChecks(adapterName: String
                                , messageName: String
                                , serializerName: String
-                               , options: scala.collection.immutable.Map[String,String]) : (Boolean, String) = {
+                               , options: scala.collection.immutable.Map[String,Any]) : (Boolean, String) = {
         val buffer : StringBuilder = new StringBuilder
 
         /** 1) if the names start with "**" it means that the name was not supplied ... issue name error */
