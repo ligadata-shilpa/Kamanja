@@ -25,7 +25,7 @@ class ConversionFuncGenerator {
   /*
    * Get Previous version msg
    */
-  private def getPrevVersionMsg(message: Message, mdMgr: MdMgr, MsgFullName: String): String = {
+  private def getPrevVersionMsg(message: Message, mdMgr: MdMgr, currentMsgPhysicalName: String): String = {
     var prevVerMsgObjstr: String = ""
     var prevMsgConvCase: String = ""
     var prevVerMsgBaseTypesIdxArry = new ArrayBuffer[String]
@@ -36,46 +36,46 @@ class ConversionFuncGenerator {
     var prevVerConvFuncs = new StringBuilder(8 * 1024)
     var conversion = new StringBuilder(8 * 1024)
     if (msgdefArray == null) {
-      prevVerCaseStmts.append(generateCurVerCaseStmts(MsgFullName, message.VersionLong.toString()))
+      prevVerCaseStmts.append(generateCurVerCaseStmts(currentMsgPhysicalName, message.VersionLong.toString()))
       val ConversionStr = ConversionFunc(message, prevVerCaseStmts.toString())
-      conversion.append(ConversionStr + generateConvToCurrentVer(message, MsgFullName))
+      conversion.append(ConversionStr + generateConvToCurrentVer(message, currentMsgPhysicalName))
 
     } else {
 
-      prevVerCaseStmts.append(generateCurVerCaseStmts(MsgFullName, message.VersionLong.toString()))
+      prevVerCaseStmts.append(generateCurVerCaseStmts(currentMsgPhysicalName, message.VersionLong.toString()))
 
       msgdefArray.foreach(msgdef => {
         //call the function which generates the complete conversion function and also another string with case stmt and append to string buffer 
         if (msgdef != null) {
 
-          val (caseStmt, convertFunc) = getconversionFunc(msgdef, isMsg, Fixed, message, mdMgr)
+          val (caseStmt, convertFunc) = getconversionFunc(msgdef, isMsg, Fixed, message, mdMgr, currentMsgPhysicalName)
           message.Jarset = message.Jarset ++ getDependencyJarSet(msgdef)
           // get the case stmsts and put it in array of case stmsnts        
           prevVerCaseStmts.append(caseStmt)
           prevVerConvFuncs.append(convertFunc)
-          
+
         }
       })
 
       //put array of case stmts in fucnction  and generate main conversion func
       val ConversionStr = ConversionFunc(message, prevVerCaseStmts.toString())
       if (Fixed)
-        conversion.append(ConversionStr + generateConvToCurrentVer(message, MsgFullName) + prevVerConvFuncs.toString)
-      else conversion.append(ConversionStr + generateConvToCurrentVer(message, MsgFullName) + prevVerConvFuncs.toString);
+        conversion.append(ConversionStr + generateConvToCurrentVer(message, currentMsgPhysicalName) + prevVerConvFuncs.toString)
+      else conversion.append(ConversionStr + generateConvToCurrentVer(message, currentMsgPhysicalName) + prevVerConvFuncs.toString);
 
       //append the prev conversion funcs to this string buffer and return string 
 
     }
-    
+
     return conversion.toString()
 
   }
-  
+
   /*
    * Get the Previous version jars
    */
-  
-   private def getDependencyJarSet(cntrDef: ContainerDef): Set[String] = {
+
+  private def getDependencyJarSet(cntrDef: ContainerDef): Set[String] = {
 
     var jarset: Set[String] = Set[String]();
 
@@ -93,7 +93,7 @@ class ConversionFuncGenerator {
   /*
    * Get Conversion Func for each prev version 
    */
-  private def getconversionFunc(msgdef: ContainerDef, isMsg: Boolean, fixedMsg: Boolean, message: Message, mdMgr: MdMgr): (String, String) = {
+  private def getconversionFunc(msgdef: ContainerDef, isMsg: Boolean, fixedMsg: Boolean, message: Message, mdMgr: MdMgr, currentMsgPhysicalName: String): (String, String) = {
     var attributes: Map[String, Any] = Map[String, Any]()
     var caseStmt: String = "";
     var conversionFunc: String = "";
@@ -105,16 +105,8 @@ class ConversionFuncGenerator {
         //attributes.foreach(a => log.info(a._1 + "========" + a._2.asInstanceOf[AttributeDef].aType.typeString))
         // generate the previous version match keys and prevVer keys do not match 
 
-        conversionFunc = generateConvToPrevObjsFunc(message, mdMgr, attributes, fixedMsg, msgdef)
-        caseStmt = generatePrevVerCaseStmts(msgdef.PhysicalName, msgdef.Version.toString(), message)
-        //generate the whole functtion
-
-        /* if ((msgdef.dependencyJarNames != null) && (msgdef.JarName != null))
-          message.Jarset = message.Jarset + pMsgdef.JarName ++ pMsgdef.dependencyJarNames
-        else if (pMsgdef.JarName != null)
-          message.Jarset = message.Jarset + pMsgdef.JarName
-        else if (pMsgdef.dependencyJarNames != null)
-          message.Jarset = message.Jarset ++ pMsgdef.dependencyJarNames*/
+        conversionFunc = generateConvToPrevObjsFunc(message, mdMgr, attributes, fixedMsg, msgdef, currentMsgPhysicalName)
+        caseStmt = generatePrevVerCaseStmts(msgdef.PhysicalName, msgdef.Version.toString(), message, currentMsgPhysicalName)
       }
     } catch {
       case e: Exception => {
@@ -265,14 +257,14 @@ class ConversionFuncGenerator {
   /*
    * Generate the case Stmts for prevobjects conversion
    */
-  private def generatePrevVerCaseStmts(msgPhyicalName: String, version: String, message: Message): String = {
+  private def generatePrevVerCaseStmts(msgPhyicalName: String, version: String, message: Message, curntMsgPhysicalName: String): String = {
     """
-      case oldVerobj: """ + msgPhyicalName + """ => { return  convertToVer""" + version + """(newVerObj.asInstanceOf[""" + message.PhysicalName + """], oldVerobj.asInstanceOf[""" + msgPhyicalName + """]); } """
+      case oldVerobj: """ + msgPhyicalName + """ => { return  convertToVer""" + version + """(newVerObj.asInstanceOf[""" + curntMsgPhysicalName + """], oldVerobj.asInstanceOf[""" + msgPhyicalName + """]); } """
   }
   /*
    * generate conversion Func
    */
-  private def generateConvToPrevObjsFunc(message: Message, mdMgr: MdMgr, attributes: Map[String, Any], fixedMsg: Boolean, prevMsgdef: ContainerDef): String = {
+  private def generateConvToPrevObjsFunc(message: Message, mdMgr: MdMgr, attributes: Map[String, Any], fixedMsg: Boolean, prevMsgdef: ContainerDef, currentMsgPhysicalName: String): String = {
     var convStmtArray = Array[String]();
     var genPrevVerTypMatchKeys: String = ""
     var genPrevVerTypNotMatchKeys: String = ""
@@ -281,7 +273,7 @@ class ConversionFuncGenerator {
       convStmtArray = CheckFieldsWithPrevObjs(message, mdMgr, attributes, fixedMsg)
       //generate prevtyper match keys variable and generate prevTypeNotmatchKeys Variable
       if (fixedMsg) {
-        conversionFunc = ConvertToPreVersionFixedFunc(convStmtArray(2), message, prevMsgdef)
+        conversionFunc = ConvertToPreVersionFixedFunc(convStmtArray(2), message, prevMsgdef, currentMsgPhysicalName)
       } else {
         genPrevVerTypMatchKeys = getMappedMsgPrevVerKeys(convStmtArray(0), prevVerTypMatchKeys)
         genPrevVerTypNotMatchKeys = getMappedMsgPrevVerKeys(convStmtArray(1), prevVerTypesNotMatch)
@@ -289,7 +281,7 @@ class ConversionFuncGenerator {
         // log.info("genPrevVerTypMatchKeys " + genPrevVerTypMatchKeys)
         // log.info("genPrevVerTypNotMatchKeys " + genPrevVerTypNotMatchKeys)
 
-        conversionFunc = ConvertToPreVersionMappedFunc(genPrevVerTypMatchKeys, genPrevVerTypNotMatchKeys, message, prevMsgdef, conversionFunc)
+        conversionFunc = ConvertToPreVersionMappedFunc(genPrevVerTypMatchKeys, genPrevVerTypNotMatchKeys, message, prevMsgdef, conversionFunc, currentMsgPhysicalName)
       }
     } catch {
       case e: Exception => {
@@ -301,13 +293,12 @@ class ConversionFuncGenerator {
 
   }
 
-  private def ConvertToPreVersionFixedFunc(convFuncStr: String, message: Message, prevMsgdef: ContainerDef): String = {
-    val currentMsgPhysicalName: String = message.PhysicalName
+  private def ConvertToPreVersionFixedFunc(convFuncStr: String, message: Message, prevMsgdef: ContainerDef, currentMsgPhysicalName: String): String = {
     val prevVerMsgPhysicalName: String = prevMsgdef.PhysicalName
     val prevVersion = prevMsgdef.Version.toString()
 
     """
-      private def convertToVer""" + prevVersion + """(newVerObj: """ + message.PhysicalName + """, oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
+      private def convertToVer""" + prevVersion + """(newVerObj: """ + currentMsgPhysicalName + """, oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
         //var newVerObj = new """ + currentMsgPhysicalName + """(this)
     """ + convFuncStr + """  
       return newVerObj
@@ -319,13 +310,13 @@ class ConversionFuncGenerator {
   /*
    * Conversion function in mapped mag
    */
-  private def ConvertToPreVersionMappedFunc(genPrevVerTypMatchKeys: String, genPrevVerTypNotMatchKeys: String, message: Message, prevMsgdef: ContainerDef, genConvForMsgsAndCntrs: String): String = {
-    val currentMsgPhysicalName: String = message.PhysicalName
+  private def ConvertToPreVersionMappedFunc(genPrevVerTypMatchKeys: String, genPrevVerTypNotMatchKeys: String, message: Message, prevMsgdef: ContainerDef, genConvForMsgsAndCntrs: String, currentMsgPhysicalName: String): String = {
+    //val currentMsgPhysicalName: String = message.PhysicalName
     val prevVerMsgPhysicalName: String = prevMsgdef.PhysicalName
     val prevVersion = prevMsgdef.Version.toString()
     //   val genConvForMsgsAndCntrs = ""
     """
-    private def convertToVer""" + prevVersion + """(newVerObj: """ + message.PhysicalName + """, oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
+    private def convertToVer""" + prevVersion + """(newVerObj: """ + currentMsgPhysicalName + """, oldVerobj: """ + prevVerMsgPhysicalName + """): """ + currentMsgPhysicalName + """= {
        """ + genPrevVerTypMatchKeys + genPrevVerTypNotMatchKeys + """         
        oldVerobj.valuesMap.foreach(attribute => {
        val key = attribute._1.toLowerCase()
