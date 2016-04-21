@@ -160,8 +160,7 @@ class HdfsFileHandler extends SmartFileHandler{
      } 
      catch {
        case ex : Exception => {
-        ex.printStackTrace()
-        logger.error(ex.getMessage)
+        logger.error("Hdfs File Handler - Error while trying to delete file " + getFullPath, ex)
         return false 
        }
         
@@ -320,8 +319,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
             }
             catch {
               case ex: Exception => {
-                logger.error(ex.getMessage)
-                ex.printStackTrace()
+                logger.error("Smart File Consumer (Hdfs Monitor) - Error while checking the folder", ex)
               }
             }
 
