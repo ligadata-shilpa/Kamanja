@@ -119,7 +119,7 @@ object AdapterMessageBindingUtils {
         val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(fqBindingName)
 
         val result : String = if (binding != null) {
-            ConfigUtils.RemoveAdapterMessageBindingFromCache("AdapterMsgBinding", fqBindingName)
+            ConfigUtils.RemoveAdapterMessageBindingFromCache(fqBindingName)
             val displayKey : String = binding.FullBindingName
 
             /** Notify the cluster via zookeeper of removal */

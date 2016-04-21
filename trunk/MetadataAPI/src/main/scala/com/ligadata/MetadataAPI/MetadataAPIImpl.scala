@@ -3040,7 +3040,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                   ConfigUtils.LoadAdapterMessageBindingIntoCache(bindingKey)
               }
               case "Remove" => {
-                  ConfigUtils.RemoveAdapterMessageBindingFromCache(zkMessage.ObjectType, bindingKey)
+                  ConfigUtils.RemoveAdapterMessageBindingFromCache(bindingKey)
               }
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }

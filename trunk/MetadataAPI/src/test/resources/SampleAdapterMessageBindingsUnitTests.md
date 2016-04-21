@@ -135,9 +135,6 @@ Removal of a binding is accomplished with this command.
 
 _Remove the supplied binding key_
 
-	$KAMANJA_HOME/bin/kamanja debug $apiConfigProperties remove adaptermessagebinding key 'hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser'
-	
-
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding key 'hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser'
 
 **Failure test cases**
