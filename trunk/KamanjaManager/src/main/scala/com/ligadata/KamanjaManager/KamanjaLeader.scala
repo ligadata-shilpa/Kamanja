@@ -1145,6 +1145,9 @@ object KamanjaLeader {
           }
         }
 
+        SetCanRedistribute(true)
+        envCtxt.registerNodesChangeNotification(EventChangeCallback)
+
         distributionExecutor.execute(new Runnable() {
           override def run() = {
             var updatePartsCntr = 0
@@ -1263,8 +1266,8 @@ object KamanjaLeader {
           }
         })
 
-        SetCanRedistribute(true)
-        envCtxt.registerNodesChangeNotification(EventChangeCallback)
+        //SetCanRedistribute(true)
+        //envCtxt.registerNodesChangeNotification(EventChangeCallback)
 //          zkLeaderLatch = new ZkLeaderLatch(zkConnectString, engineLeaderZkNodePath, nodeId, EventChangeCallback, zkSessionTimeoutMs, zkConnectionTimeoutMs)
 //        zkLeaderLatch.SelectLeader
         /*
