@@ -73,7 +73,12 @@ class Conversion {
   def ToInteger(v: Any): Int = {
     v match {
       case null => 0
-      case y: String => y.toInt
+      case y: String => {
+        if (y.trim.size > 0)
+          y.trim.toInt
+        else
+          0
+      }
       case y: Int => y
     }
   }
@@ -81,7 +86,12 @@ class Conversion {
   def ToLong(v: Any): Long = {
     v match {
       case null => 0
-      case y: String => y.toLong
+      case y: String => {
+        if (y.trim.size > 0)
+          y.trim.toLong
+        else
+          0
+      }
       case y: Long => y
     }
   }
@@ -89,7 +99,12 @@ class Conversion {
   def ToFloat(v: Any): Float = {
     v match {
       case null => 0
-      case y: String => y.toFloat
+      case y: String => {
+        if (y.trim.size > 0)
+          y.trim.toFloat
+        else
+          0
+      }
       case y: Float => y
     }
   }
@@ -97,7 +112,12 @@ class Conversion {
   def ToDouble(v: Any): Double = {
     v match {
       case null => 0
-      case y: String => y.toDouble
+      case y: String => {
+        if (y.trim.size > 0)
+          y.trim.toDouble
+        else
+          0
+      }
       case y: Double => y
     }
   }
@@ -105,7 +125,12 @@ class Conversion {
   def ToBoolean(v: Any): Boolean = {
     v match {
       case null => false
-      case y: String => y.toBoolean
+      case y: String => {
+        if (y.trim.size > 0)
+          y.trim.toBoolean
+        else
+          false
+      }
       case y: Boolean => y
     }
   }
@@ -137,8 +162,12 @@ class Conversion {
   def ToChar(v: Any): Char = {
     v match {
       case null => ' '
-      case x: String if x.length() == 0 => ' '
-      case x: String => x.charAt(0)
+      case x: String => {
+        if (x.trim.size > 0)
+          x.charAt(0)
+        else
+          ' '
+      }
       case x: Char => x
     }
   }
