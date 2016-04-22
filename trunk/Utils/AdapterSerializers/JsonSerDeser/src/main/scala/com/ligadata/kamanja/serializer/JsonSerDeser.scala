@@ -51,14 +51,21 @@ object JSONSerDes {
     val indents = ComputeIndents
     val strLF = "\n"
     val maxIndentLevel = 64
-    def getIndentStr(indentLevel: Int) = if(indentLevel > maxIndentLevel) indents(maxIndentLevel - 1) else if (indentLevel < 0) "" else indents(indentLevel)
+    def getIndentStr(indentLevel: Int): String = {
+        if (indentLevel < 0 || indents.size == 0)
+            return ""
+        if(indentLevel >= indents.size)
+            indents(indents.size - 1)
+        else
+            indents(indentLevel)
+    }
 
     private
     def ComputeIndents : Array[String] = {
         val indentsTemp = ArrayBuffer[String]()
-        indentsTemp.append("")
+        indentsTemp += ""
         val indent = "  "
-        for (idx <- 1 to maxIndentLevel) indentsTemp.append(indent+indentsTemp(idx-1))
+        for (idx <- 1 to maxIndentLevel) indentsTemp += (indent+indentsTemp(idx-1))
         indentsTemp.toArray
     }
 }
@@ -153,7 +160,8 @@ class JSONSerDes extends SerializeDeserialize {
     }
 
     private def valueAsJson(sb: StringBuilder, indentLevel: Int, value : Any, quoteValue: Boolean)  = {
-        val quote = if (quoteValue) s"\\${'"'}" else ""
+        // val quote = if (quoteValue) s"\\${'"'}" else ""
+        val quote ="\""
         // @TODO: need to encode string as proper json string
         sb.append(quote+value+quote)
     }
