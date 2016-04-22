@@ -566,7 +566,7 @@ trait AdaptersSerializeDeserializers {
     }
 
     if (allMsgBindings.size != 1) {
-      throw new KamanjaException("We can not deserialize more than one message for input adapter. Found:" + allMsgBindings.map(b => b._1), null)
+      throw new KamanjaException("We can not deserialize more than one message from input adapter. Found:" + allMsgBindings.map(b => b._1), null)
     }
 
     val ser = allMsgBindings.values.head
@@ -622,4 +622,3 @@ trait AdaptersSerializeDeserializers {
   }
 }
 
-case class ContainerInterfaceWithModFlag(modified: Boolean, value: ContainerInterface)

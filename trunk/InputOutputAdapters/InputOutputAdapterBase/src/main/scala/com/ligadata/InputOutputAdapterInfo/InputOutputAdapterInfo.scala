@@ -235,13 +235,12 @@ trait ExecContext {
       }
       txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       txnCtxt.setInitialMessage("", msg)
-      executeMessage(txnCtxt): Unit
+      executeMessage(txnCtxt)
     } catch {
       case e: Throwable => {
         LOG.error("Failed to execute message : " + msg.getFullTypeName, e)
       }
     } finally {
-      // Commit. Writing into OutputAdapters & Storage Adapters
       commitData(txnCtxt);
     }
   }
