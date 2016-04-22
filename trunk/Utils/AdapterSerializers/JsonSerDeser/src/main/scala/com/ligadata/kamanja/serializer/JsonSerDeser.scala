@@ -51,7 +51,7 @@ object JSONSerDes {
     val indents = ComputeIndents
     val strLF = "\n"
     val maxIndentLevel = 64
-    def getIndentStr(indentLevel: Int) = if(indentLevel > maxIndentLevel) indents(maxIndentLevel) else if (indentLevel < 0) indents(0) else indents(indentLevel)
+    def getIndentStr(indentLevel: Int) = if(indentLevel > maxIndentLevel) indents(maxIndentLevel - 1) else if (indentLevel < 0) "" else indents(indentLevel)
 
     private
     def ComputeIndents : Array[String] = {
