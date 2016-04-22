@@ -204,16 +204,47 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       depJars ++=  GetDepJars(md, outputType1)
     })
 
-    inmessages.foreach( s =>
-      s.foreach( m => {
-        depJars ++=  GetDepJars(md, m._1)
-      })
-    )
-
     val out: Array[String] = outmessages.toArray
 
     // If we have same maps of messages (may or may not have different attributes), may be we need to fold it
+    // val inMsgsAndAttrs = scala.collection.mutable.Map[String, Array[MessageAndAttributes]]()
+    val inMsgsAndAttrsSets = ArrayBuffer[(Set[String], Array[MessageAndAttributes])]()
 
+    inmessages.foreach( s => {
+      val set1 = s.map( m => m._1.toLowerCase()).toSet
+      var foundSetIdx = -1
+      var idx = 0
+      while (foundSetIdx == -1 && idx < inMsgsAndAttrsSets.size) {
+        if (set1.size == inMsgsAndAttrsSets(idx)._1.size) {
+          val rest = set1 -- inMsgsAndAttrsSets(idx)._1
+          if (rest.size == 0)
+            foundSetIdx = idx
+        }
+        idx += 1
+      }
+
+      if (foundSetIdx >= 0) {
+        s.foreach( m => {
+          val msgAndAttribs = inMsgsAndAttrsSets(idx)._2.filter(x => x.message.equalsIgnoreCase(m._1))
+          if (msgAndAttribs.size > 0) {
+            msgAndAttribs(0).attributes = msgAndAttribs(0).attributes ++ m._2
+          }
+        })
+      } else {
+        val msgsAndAttribs = s.map( m => {
+          // Collecting dependency jars
+          depJars ++=  GetDepJars(md, m._1)
+          val ma = new MessageAndAttributes
+          ma.origin = "" //FIXME:- Fill this if looking for specific input
+          ma.message = m._1
+          ma.attributes = m._2.toArray
+          ma
+        }).toArray
+        inMsgsAndAttrsSets += ((set1, msgsAndAttribs))
+      }
+    })
+
+/*
     val in: Array[Array[MessageAndAttributes]] = inmessages.map( s =>
           s.map( m => {
             val ma = new MessageAndAttributes
@@ -223,8 +254,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             ma
           }).toArray
     )
+*/
 
-    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
+    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, inMsgsAndAttrsSets.toArray, out, isReusable, supportsInstanceSerialization)
 
     // Append addtional attributes
     model.nameSpace = ModelNamespace
