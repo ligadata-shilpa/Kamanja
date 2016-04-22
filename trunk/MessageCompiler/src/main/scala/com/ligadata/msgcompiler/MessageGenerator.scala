@@ -62,7 +62,7 @@ class MessageGenerator {
         messageGenerator = messageGenerator.append(msgConstants.getGetSetMethods);
         messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
       }
-
+      messageGenerator = messageGenerator.append(msgConstants.generateWithMethods(message))
       messageGenerator = messageGenerator.append(messageContructor(message))
       messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace);
       messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
@@ -662,7 +662,7 @@ class MessageGenerator {
   private def getByName(message: Message): String = {
     """
     private def getByName(key: String): AnyRef = {
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container """+message.Name +"""");
+      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container """ + message.Name + """");
       return get(keyTypes(key).getIndex)
   }
   """
