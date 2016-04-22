@@ -256,7 +256,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     )
 */
 
-    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, inMsgsAndAttrsSets.toArray, out, isReusable, supportsInstanceSerialization)
+    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, inMsgsAndAttrsSets.map(s => s._2).toArray, out, isReusable, supportsInstanceSerialization)
 
     // Append addtional attributes
     model.nameSpace = ModelNamespace
