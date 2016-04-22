@@ -1365,6 +1365,28 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     isShutdown = true
 
+    if (_listenerCache != null) {
+      try {
+        _listenerCache.shutdown()
+      } catch {
+        case e:Throwable => {
+          logger.error("Failed to shutdown EnvCtxtListenersCache", e)
+        }
+      }
+      _listenerCache = null
+    }
+
+    if (_listenerConfigClusterCache != null) {
+      try {
+        _listenerConfigClusterCache.shutdown()
+      } catch {
+        case e:Throwable => {
+          logger.error("Failed to shutdown EnvCtxtConfigClusterCache", e)
+        }
+      }
+      _listenerConfigClusterCache = null
+    }
+
     //    if (_modelsRsltBuckets != null) {
     //      for (i <- 0 until _parallelBuciets) {
     //        _modelsRsltBktlocks(i).writeLock().lock()

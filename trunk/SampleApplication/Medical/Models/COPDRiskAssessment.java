@@ -35,7 +35,7 @@ public class COPDRiskAssessment extends ModelInstance {
 			super(modelDef, nodeContext);
 		}
 
-        public boolean isValidMessage(ContainerInterface msg) {
+        public boolean isValidMessage(MessageContainerBase msg) {
             return (msg instanceof Beneficiary);
         }
 
