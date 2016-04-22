@@ -555,7 +555,7 @@ object KamanjaLeader {
             val keys = uAK.map(k => ia.DeserializeKey(k))
 
             LOG.debug("Deserializing Values")
-            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v else ""))
+            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v else null))
 
             LOG.debug("Deserializing Keys & Values done")
 
