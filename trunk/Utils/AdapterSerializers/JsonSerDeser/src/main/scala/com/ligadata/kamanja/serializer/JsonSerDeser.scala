@@ -218,6 +218,7 @@ class JSONSerDes extends SerializeDeserialize {
                 case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
                 case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[Any]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, v.asInstanceOf[ContainerInterface])
+                case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
             }
             sb.append(mapJsonTail)
         })
@@ -238,7 +239,7 @@ class JSONSerDes extends SerializeDeserialize {
             idx += 1
             sb.append(mapJsonHead)
             keyAsJson(sb, 0, k.toString)
-            valueAsJson(sb, 0, v, isInstanceOf[String])
+            valueAsJson(sb, 0, v, v.isInstanceOf[String])
             sb.append(mapJsonTail)
         })
         sb.append(mapJsonTail)
@@ -254,7 +255,7 @@ class JSONSerDes extends SerializeDeserialize {
         array.foreach(elem => {
             if(idx > 0) sb.append(", ")
             idx += 1
-            valueAsJson(sb, 0, elem, isInstanceOf[String])
+            valueAsJson(sb, 0, elem, elem.isInstanceOf[String])
         })
         sb.append(mapJsonTail)
     }
@@ -282,6 +283,7 @@ class JSONSerDes extends SerializeDeserialize {
                 case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
                 case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[Any]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, itm.asInstanceOf[ContainerInterface])
+                case _ => throw new UnsupportedObjectException("Not yet handled itemType:" + itemType, null)
             }
         })
         sb.append(mapJsonTail)
@@ -353,6 +355,7 @@ class JSONSerDes extends SerializeDeserialize {
                     case MAP => jsonAsMap(at, v.asInstanceOf[Map[String, Any]])
                     case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(v.asInstanceOf[Map[String,Any]])
                     case ARRAY => jsonAsArray(at, v.asInstanceOf[List[Any]])
+                    case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
                 }
                 ci.set(k, fld)
             }
@@ -413,7 +416,6 @@ class JSONSerDes extends SerializeDeserialize {
                 case ARRAY => value.asInstanceOf[List[Any]].toArray
                 case _ => throw new ObjectNotFoundException(s"jsonAsMap: invalid value type: ${valType.getValue}, fldName: ${valType.name} could not be resolved",null)
             }
-            fld
             (key, fld)
         }).toMap
 
