@@ -433,18 +433,18 @@ class JSONSerDes extends SerializeDeserialize {
         try {
             implicit val jsonFormats: Formats = DefaultFormats
             val json = parse(configJson)
-            logger.debug("Parsed the json : " + configJson)
+            Debug("Parsed the json : " + configJson)
 
             val fullmap = json.values.asInstanceOf[Map[String, Any]]
 
             fullmap
         } catch {
             case e: MappingException => {
-                logger.debug("", e)
+                Debug("", e)
                 throw Json4sParsingException(e.getMessage, e)
             }
             case e: Exception => {
-                logger.debug("", e)
+                Debug("", e)
                 throw EngineConfigParsingException(e.getMessage, e)
             }
         }
