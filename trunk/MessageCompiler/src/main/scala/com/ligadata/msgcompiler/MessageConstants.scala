@@ -461,10 +461,8 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
     var withMethodsBuf = new StringBuilder(8 * 1024)
     if (message.Elements != null) {
       message.Elements.foreach(field => {
-        withMethodsBuf = withMethodsBuf.append("%s%s def with%s(value: %s) : %s = {%s".format(newline, pad1, field.Name, field.FldMetaataType.typeString, message.Name, newline))
-        withMethodsBuf = withMethodsBuf.append("%s if(value!= null) {%s".format(pad2, newline))
-        withMethodsBuf = withMethodsBuf.append("%s valuesMap(\"%s\") = new AttributeValue(value, keyTypes(\"%s\")) %s".format(pad1, field.Name, field.Name, newline))
-        withMethodsBuf = withMethodsBuf.append("%s }%s".format(pad2, newline))
+        withMethodsBuf = withMethodsBuf.append("%s def with%s(value: %s) : %s = {%s".format(pad1, field.Name, field.FldMetaataType.typeString, message.Name, newline))
+        withMethodsBuf = withMethodsBuf.append("%s valuesMap(\"%s\") = new AttributeValue(value, keyTypes(\"%s\")) %s".format(pad2, field.Name, field.Name, newline))
         withMethodsBuf = withMethodsBuf.append("%s return this %s %s } %s".format(pad1, newline, pad1, newline))
       })
       return withMethodsBuf.toString()
@@ -478,10 +476,9 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
     var withMethodsBuf = new StringBuilder(8 * 1024)
     if (message.Elements != null) {
       message.Elements.foreach(field => {
-        withMethodsBuf = withMethodsBuf.append("%s %s def with%s(value: %s) : %s = {%s".format(newline, pad2, field.Name, field.FldMetaataType.typeString, message.Name, newline))
-        withMethodsBuf = withMethodsBuf.append("%s if(value!= null) {%s".format(pad2, newline))
-        withMethodsBuf = withMethodsBuf.append("%s this.%s = value %s%s }%s".format(pad2, field.Name, newline, pad2, newline))
-        withMethodsBuf = withMethodsBuf.append("%s return this %s %s } %s".format(pad2, newline, pad2, newline))
+        withMethodsBuf = withMethodsBuf.append("%s def with%s(value: %s) : %s = {%s".format(pad1, field.Name, field.FldMetaataType.typeString, message.Name, newline))
+        withMethodsBuf = withMethodsBuf.append("%s this.%s = value %s".format(pad2, field.Name, newline))
+        withMethodsBuf = withMethodsBuf.append("%s return this %s %s } %s".format(pad2, newline, pad1, newline))
 
       })
       return withMethodsBuf.toString()
