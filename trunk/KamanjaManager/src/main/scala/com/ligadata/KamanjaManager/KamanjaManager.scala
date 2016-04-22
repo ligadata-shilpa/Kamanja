@@ -987,29 +987,6 @@ class ComponentInfo {
   var metrics: collection.mutable.Map[String, Any] = null
 }
 
-/*
-object KamanjaManager {
-  private val LOG = LogManager.getLogger(getClass);
-  var curMgr: KamanjaManager = _
-  def main(args: Array[String]): Unit = {
-    val mgr = new KamanjaManager
-    scala.sys.addShutdownHook({
-      if (KamanjaConfiguration.shutdown == false) {
-        LOG.warn("Got Shutdown request")
-        KamanjaConfiguration.shutdown = true // Setting the global shutdown
-      }
-    })
-
-    curMgr = mgr
-    sys.exit(mgr.run(args))
-  }
-
-  def incrAdapterChangedCntr(): Unit = curMgr.incrAdapterChangedCntr()
-  def getAdapterChangedCntr = curMgr.getAdapterChangedCntr
-  def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = curMgr.getAllAdaptersInfo
-}
-*/
-
 object KamanjaManager {
   private val LOG = LogManager.getLogger(getClass)
   private var km: KamanjaManager = _
@@ -1028,7 +1005,10 @@ object KamanjaManager {
         KamanjaConfiguration.shutdown = true // Setting the global shutdown
       }
     })
-    sys.exit(instance.run(args))
+    val kmResult = instance.run(args)
+    if(kmResult != 0) {
+      LOG.error(s"KAMANJA-MANAGER: Kamanja shutdown with error code $kmResult")
+    }
   }
 }
 
