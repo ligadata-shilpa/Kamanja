@@ -22,7 +22,7 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.KvBase.{ Key }
 import com.ligadata.StorageBase.DataStore
-import com.ligadata.kamanja.metadata.AdapterMessageBinding
+import com.ligadata.kamanja.metadata.{ContainerDef, MessageDef, AdapterMessageBinding}
 import com.ligadata.kamanja.metadata.MdMgr._
 
 import org.apache.logging.log4j.{ Logger, LogManager }
@@ -46,6 +46,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //  private var inputAdapters = Array[(InputAdapter, Array[AdapterMessageBinding])]()
   private var outputAdapters = Array[(OutputAdapter, Array[AdapterMessageBinding])]()
   private var storageAdapters = Array[(DataStore, Array[AdapterMessageBinding])]()
+  private val msg2TenantId = scala.collection.mutable.Map[String, String]()
 
 //  NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
 //
@@ -144,6 +145,21 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //        inputAdapters = newIns
         outputAdapters = newOuts
         storageAdapters = newStorages
+        msg2TenantId.clear()
+
+        val msgDefs: Option[scala.collection.immutable.Set[MessageDef]] = mdMgr.Messages(true, true)
+        if (msgDefs != None) {
+          msgDefs.get.foreach(m => {
+            msg2TenantId(m.FullName.toLowerCase()) = m.TenantId.toLowerCase()
+          })
+        }
+
+        val containerDefs: Option[scala.collection.immutable.Set[ContainerDef]] = mdMgr.Containers(true, true)
+        if (containerDefs != None) {
+          containerDefs.get.foreach(c => {
+            msg2TenantId(c.FullName.toLowerCase()) = c.TenantId.toLowerCase()
+          })
+        }
       }
 
       //FIXME:- Fix this
@@ -173,20 +189,29 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //          sendSerOptions += bind.options;
           sendContainers += orginAndmsg._2.asInstanceOf[ContainerInterface];
         })))
-        adap._1.put(txnCtxt, sendContainers.toArray)
+        adap._1.putContainers(txnCtxt, sendContainers.toArray)
       })
 
       val allData = txnCtxt.getAllContainersOrConcepts()
 
-      if (allData != null) {
-        // val validDataToCommit = allData.values.filter( => c.isInstanceOf[ContainerInterface] && c.asInstanceOf[ContainerInterface].CanPersist())
+      if (allData != null && nodeContext != null && nodeContext.getEnvCtxt() != null) {
+        // All containers data for Tenant
+        val validDataToCommit = scala.collection.mutable.Map[String, ArrayBuffer[(String, Array[ContainerInterface])]]()
+        allData.filter(containerAndData => (containerAndData != null && containerAndData._2 != null && containerAndData._2.size > 0 &&
+          containerAndData._2(0).container.isInstanceOf[ContainerInterface] && containerAndData._2(0).container.asInstanceOf[ContainerInterface].CanPersist())).foreach(containerAndData => {
+          val tenatId = if (containerAndData._2.size > 0) msg2TenantId.getOrElse(containerAndData._2(0).container.getFullTypeName.toLowerCase(), "") else ""
+          val cData = containerAndData._2.filter(cInfo => (cInfo != null && cInfo.container.isInstanceOf[ContainerInterface])).map(cInfo => cInfo.container.asInstanceOf[ContainerInterface])
+          if (cData.size > 0) {
+            val arrContainersData = validDataToCommit.getOrElse(tenatId.toLowerCase(), ArrayBuffer[(String, Array[ContainerInterface])]())
+            arrContainersData += ((containerAndData._1.toLowerCase(), cData))
+            validDataToCommit(tenatId.toLowerCase()) = arrContainersData
+          }
+        })
 
-        // validDataToCommit.groupBy(_.)
+        validDataToCommit.foreach(kv => {
+          txnCtxt.getNodeCtxt().getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
+        })
       }
-
-      // Commit. Writing into OutputAdapters & Storage Adapters
-
-
     } catch {
       case e: Throwable => throw e
     }
