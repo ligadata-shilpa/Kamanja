@@ -708,6 +708,7 @@ object KamanjaMdCfg {
       try {
         val adapter = CreateInputAdapterFromConfig(conf, execCtxtObj, nodeContext)
         if (adapter == null) return false
+        adapter.setObjectResolver(KamanjaMetadata)
         inputAdapters += adapter
         KamanjaManager.instance.incrAdapterChangedCntr()
       } catch {

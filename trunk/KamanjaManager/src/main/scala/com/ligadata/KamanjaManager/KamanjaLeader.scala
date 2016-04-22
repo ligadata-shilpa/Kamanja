@@ -1266,8 +1266,6 @@ object KamanjaLeader {
           }
         })
 
-        //SetCanRedistribute(true)
-        //envCtxt.registerNodesChangeNotification(EventChangeCallback)
 //          zkLeaderLatch = new ZkLeaderLatch(zkConnectString, engineLeaderZkNodePath, nodeId, EventChangeCallback, zkSessionTimeoutMs, zkConnectionTimeoutMs)
 //        zkLeaderLatch.SelectLeader
         /*

@@ -122,18 +122,18 @@ class SaveContainerDataCompImpl extends LogTrait with ObjectResolver {
     }
   }
 
-  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
+  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
     val value: ContainerInterface = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, _kamanjaLoader.loader, true, "")
     val primarykey = value.getPrimaryKey
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-    dataByBucketKeyPart.put(key, ContainerInterfaceWithModFlag(false, value))
+    dataByBucketKeyPart.put(key, value)
 
     val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
     val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
     loadedKeys.add(loadKey)
   }
 
-  private def LoadDataIfNeeded(typ: String, loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag]): Unit = {
+  private def LoadDataIfNeeded(typ: String, loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface]): Unit = {
     if (loadedKeys.contains(loadKey))
       return
     val buildOne = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {

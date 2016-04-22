@@ -286,37 +286,37 @@ trait EnvContext /* extends Monitorable */  {
   //  def RegisterMessageOrContainers(containersInfo: Array[ContainerNameAndDatastoreInfo]): Unit
 
   // RDD Ops
-  def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface]
+  def getRecent(tenantId: String, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface]
 
-  def getRDD(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface]
+  def getRDD(tenantId: String, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface]
 
-//  def saveOne(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit
+//  def saveOne(containerName: String, partKey: List[String], value: ContainerInterface): Unit
 //
-//  def saveRDD(transId: Long, containerName: String, values: Array[ContainerInterface]): Unit
+//  def saveRDD(containerName: String, values: Array[ContainerInterface]): Unit
 
   // RDD Ops
   def Shutdown: Unit
 
-  def getAllObjects(transId: Long, containerName: String): Array[ContainerInterface]
+  def getAllObjects(tenantId: String, containerName: String): Array[ContainerInterface]
 
-  def getObject(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): ContainerInterface
+  def getObject(tenantId: String, containerName: String, partKey: List[String], primaryKey: List[String]): ContainerInterface
 
   // if appendCurrentChanges is true return output includes the in memory changes (new or mods) at the end otherwise it ignore them.
-  def getHistoryObjects(transId: Long, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[ContainerInterface]
+  def getHistoryObjects(tenantId: String, containerName: String, partKey: List[String], appendCurrentChanges: Boolean): Array[ContainerInterface]
 
-  def setObject(transId: Long, containerName: String, partKey: List[String], value: ContainerInterface): Unit
+  def setObject(tenantId: String, containerName: String, partKey: List[String], value: ContainerInterface): Unit
 
-  def contains(transId: Long, containerName: String, partKey: List[String], primaryKey: List[String]): Boolean
+  def contains(tenantId: String, containerName: String, partKey: List[String], primaryKey: List[String]): Boolean
 
-  def containsAny(transId: Long, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean
+  def containsAny(tenantId: String, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean
 
   //partKeys.size should be same as primaryKeys.size
-  def containsAll(transId: Long, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean //partKeys.size should be same as primaryKeys.size
+  def containsAll(tenantId: String, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean //partKeys.size should be same as primaryKeys.size
 
   // Adapters Keys & values
-//  def setAdapterUniqueKeyValue(transId: Long, key: String, value: String, outputResults: List[(String, String, String)]): Unit
+//  def setAdapterUniqueKeyValue(key: String, value: String, outputResults: List[(String, String, String)]): Unit
 
-//  def getAdapterUniqueKeyValue(transId: Long, key: String): (Long, String, List[(String, String, String)])
+//  def getAdapterUniqueKeyValue(key: String): (Long, String, List[(String, String, String)])
 
 //  def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit
 
@@ -326,13 +326,13 @@ trait EnvContext /* extends Monitorable */  {
 
   //  def getAllIntermediateCommittingInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String)]))] // Getting intermediate committing information.
 
-  //  def removeCommittedKey(transId: Long, key: String): Unit
+  //  def removeCommittedKey(key: String): Unit
   //  def removeCommittedKeys(keys: Array[String]): Unit
 
   // Model Results Saving & retrieving. Don't return null, always return empty, if we don't find
-  //  def saveModelsResult(transId: Long, key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit
+  //  def saveModelsResult(key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit
   //
-  //  def getModelsResult(transId: Long, key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult]
+  //  def getModelsResult(key: List[String]): scala.collection.mutable.Map[String, SavedMdlResult]
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
@@ -356,7 +356,7 @@ trait EnvContext /* extends Monitorable */  {
   //  def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit
 
   // Set Reload Flag
-  //  def setReloadFlag(transId: Long, containerName: String): Unit
+  //  def setReloadFlag(containerName: String): Unit
 
   //  def PersistValidateAdapterInformation(validateUniqVals: Array[(String, String)]): Unit
 
@@ -374,7 +374,7 @@ trait EnvContext /* extends Monitorable */  {
   def getContainerInstance(containerName: String): ContainerInterface
 
   // Just get the cached container key and see what are the containers we need to cache
-  //  def CacheContainers(clusterId: String): Unit
+  def cacheContainers(clusterId: String): Unit
 
   //  def EnableEachTransactionCommit: Boolean
 
@@ -413,7 +413,7 @@ trait EnvContext /* extends Monitorable */  {
   // Saving & getting data (from cache or disk)
   def saveDataInPersistentStore(containerName: String, key: String, serializerType: String, value: Array[Byte]): Unit
 
-  def getDataInPersistentStore(containerName: String, key: String): SerializerTypeValuePair
+  def getDataFromPersistentStore(containerName: String, key: String): SerializerTypeValuePair
 
   // Zookeeper functions
   def setDataToZNode(zNodePath: String, value: Array[Byte]): Unit
@@ -883,14 +883,14 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
       return Some(tmpMsgs(tmpMsgs.size - 1)._2) // Take the last one
 
     if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
-      return getNodeCtxt.getEnvCtxt.getRecent(containerName, partKey, tmRange, f)
+      return getNodeCtxt.getEnvCtxt.getRecent(null, containerName, partKey, tmRange, f)
     None
   }
 
   final def getRDD(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface] = {
     val tmpList =
       if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
-        getNodeCtxt.getEnvCtxt.getRDD(containerName, partKey, tmRange, f)
+        getNodeCtxt.getEnvCtxt.getRDD(null, containerName, partKey, tmRange, f)
       else
         Array[ContainerInterface]()
 

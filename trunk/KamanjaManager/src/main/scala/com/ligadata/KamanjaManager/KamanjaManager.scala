@@ -514,7 +514,7 @@ class KamanjaManager extends Observer {
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
         KamanjaMetadata.InitMdMgr(zkConnectString, metadataUpdatesZkNodePath, zkSessionTimeoutMs, zkConnectionTimeoutMs, inputAdapters, outputAdapters, storageAdapters)
-        //        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+        KamanjaMetadata.envCtxt.cacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
         LOG.debug("Initializing Leader")
 
         var txnCtxt: TransactionContext = null
@@ -650,7 +650,14 @@ class KamanjaManager extends Observer {
 
     val statusPrint_PD = new Runnable {
       def run(): Unit = {
-        val stats: scala.collection.immutable.Map[String, Long] = Map[String, Long]() // SimpleStats.copyMap
+        //var stats: scala.collection.immutable.Map[String, Long] = Map[String, Long]() // SimpleStats.copyMap
+        var stats: ArrayBuffer[String] = new ArrayBuffer[String]()
+        outputAdapters.foreach(x => {
+          stats.append(x.getComponentSimpleStats)
+        })
+        inputAdapters.foreach(x => {
+          stats.append(x.getComponentSimpleStats)
+        })
         val statsStr = stats.mkString("~")
         val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
         val statusMsg: com.ligadata.KamanjaBase.KamanjaStatusEvent = KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatusEvent").asInstanceOf[KamanjaStatusEvent]
@@ -718,7 +725,7 @@ class KamanjaManager extends Observer {
 
     val scheduledThreadPool = Executors.newScheduledThreadPool(3);
 
-    // scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
+    scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
     /**
       * print("=> ")
@@ -852,11 +859,14 @@ class KamanjaManager extends Observer {
       changes.foreach(changes => {
         val cTokens = changes._1.split('.')
         if (cTokens.size == 3) {
-          isChangeApplicable = processConfigChange(cTokens(0), cTokens(1), cTokens(2), changes._2)
+          val tmp = processConfigChange(cTokens(0), cTokens(1), cTokens(2), changes._2)
+          if (tmp)
+            isChangeApplicable = tmp
         }
       })
     }
     if (isChangeApplicable) {
+      println("FORCING REBALANCE")
       // force Kamanja Mananger to take the changes
       KamanjaLeader.forceAdapterRebalance
       isChangeApplicable = false
@@ -920,11 +930,9 @@ class KamanjaManager extends Observer {
       var coa: OutputAdapter = null
       var csa: DataStore = null
 
-      // If this is an add
+      // If this is an add - just call updateAdapter, he will figure out if its input or output
       if (action.equalsIgnoreCase("add")) {
-        if (cia != null) KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
-        if (coa != null) KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
-        if (csa != null) KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
+        KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
         return true
       }
 

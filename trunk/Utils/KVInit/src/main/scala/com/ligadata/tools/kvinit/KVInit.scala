@@ -561,18 +561,18 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
   override def getMdMgr: MdMgr = mdMgr
 
-  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
+  private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
     val value: ContainerInterface = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
     val primarykey = value.getPrimaryKey
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-    dataByBucketKeyPart.put(key, ContainerInterfaceWithModFlag(false, value))
+    dataByBucketKeyPart.put(key, value)
 
     val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
     val loadKey = LoadKeyWithBucketId(bucketId, TimeRange(k.timePartition, k.timePartition), k.bucketKey)
     loadedKeys.add(loadKey)
   }
 
-  private def LoadDataIfNeeded(loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], kvstore: DataStore): Unit = {
+  private def LoadDataIfNeeded(loadKey: LoadKeyWithBucketId, loadedKeys: java.util.TreeSet[LoadKeyWithBucketId], dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface], kvstore: DataStore): Unit = {
     if (loadedKeys.contains(loadKey))
       return
     val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
@@ -629,18 +629,18 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     }
   }
 
-  private def commitData(transId: Long, kvstore: DataStore, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag], commitBatchSize: Int, processedRows: Int): Unit = {
+  private def commitData(transId: Long, kvstore: DataStore, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface], commitBatchSize: Int, processedRows: Int): Unit = {
     val storeObjects = new ArrayBuffer[(Key, String, Any)](dataByBucketKeyPart.size())
     var it1 = dataByBucketKeyPart.entrySet().iterator()
     while (it1.hasNext()) {
       val entry = it1.next();
 
       val value = entry.getValue();
-      if (value.modified) {
+      if (true /* value.modified */) {
         val key = entry.getKey();
         try {
           val k = entry.getKey().key
-          storeObjects += ((k, "", value.value))
+          storeObjects += ((k, "", value))
         } catch {
           case e: Exception => {
             logger.error("Failed to serialize/write data.", e)
@@ -784,7 +784,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     logger.debug("KeyFields:" + keyfieldnames.mkString(","))
 
     // The value for this is Boolean & ContainerInterface. Here Boolean represents it is changed in this transaction or loaded from previous file
-    var dataByBucketKeyPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterfaceWithModFlag](KvBaseDefalts.defualtBucketKeyComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
+    var dataByBucketKeyPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface](KvBaseDefalts.defualtBucketKeyComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
     var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
 
     var hasPrimaryKey = false
@@ -847,7 +847,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
                 LoadDataIfNeeded(loadKey, loadedKeys, dataByBucketKeyPart, kvstore)
               }
 
-              dataByBucketKeyPart.put(k, ContainerInterfaceWithModFlag(true, container))
+              dataByBucketKeyPart.put(k, container)
               processedRows += 1
               if (processedRows % commitBatchSize == 0) {
                 logger.info("%s: Collected batch (%d) of values. About to insert".format(GetCurDtTmStr, commitBatchSize))
