@@ -18,7 +18,7 @@ import org.apache.logging.log4j.LogManager
   * Meta fields found at the beginning of each JSON representation of a ContainerInterface object
   */
 //@@TODO: move this into utils and use for all logging
-object Log {
+object JSonLog {
     private val log = LogManager.getLogger(getClass);
 
     def Trace(str: String) = if(log.isTraceEnabled())  log.trace(str)
@@ -64,7 +64,7 @@ object JSONSerDes {
 }
 
 import JSONSerDes._
-import Log._
+import JSonLog._
 /**
   * JSONSerDeser instance can serialize a ContainerInterface to a byte array and deserialize a byte array to form
   * an instance of the ContainerInterface encoded in its bytes.
@@ -73,7 +73,7 @@ import Log._
   * before it can be used.
   */
 
-class JSONSerDes extends SerializeDeserialize with LogTrait {
+class JSONSerDes extends SerializeDeserialize {
     var _objResolver : ObjectResolver = null
     var _config = Map[String,String]()
     var _isReady : Boolean = false

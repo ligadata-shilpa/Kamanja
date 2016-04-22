@@ -19,7 +19,7 @@ object CsvContainerInterfaceKeys extends Enumeration {
 }
 
 //@@TODO: move this into utils and use for all logging
-object Log {
+object CSVLog {
     private val log = LogManager.getLogger(getClass)
 
     def Trace(str: String) = if(log.isTraceEnabled())  log.trace(str)
@@ -47,7 +47,7 @@ object Log {
     def isDebugEnabled = log.isDebugEnabled()
 }
 
-import Log._
+import CSVLog._
 /**
   * CsvSerDeser instance can serialize a ContainerInterface to a byte array and deserialize a byte array to form
   * an instance of the ContainerInterface encoded in its bytes.
