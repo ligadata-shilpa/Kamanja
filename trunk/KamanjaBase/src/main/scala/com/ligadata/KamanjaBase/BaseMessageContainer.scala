@@ -337,7 +337,7 @@ trait AdaptersSerializeDeserializers {
     return Serialization.write(map)
   }
 
-  private def resolveBinding(serName: String, options: Map[String, Any]): MsgBindingInfo = {
+  protected def resolveBinding(serName: String, options: Map[String, Any]): MsgBindingInfo = {
     if (objectResolver == null)
       throw new KamanjaException("Metadata/ObjectResolver manager is not yet set", null)
 
