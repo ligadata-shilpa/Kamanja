@@ -225,7 +225,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
       if (foundSetIdx >= 0) {
         s.foreach( m => {
-          val msgAndAttribs = inMsgsAndAttrsSets(idx)._2.filter(x => x.message.equalsIgnoreCase(m._1))
+          val msgAndAttribs = inMsgsAndAttrsSets(foundSetIdx)._2.filter(x => x.message.equalsIgnoreCase(m._1))
           if (msgAndAttribs.size > 0) {
             msgAndAttribs(0).attributes = msgAndAttribs(0).attributes ++ m._2
           }
