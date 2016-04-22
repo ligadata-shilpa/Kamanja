@@ -757,23 +757,23 @@ object KamanjaMetadata extends ObjectResolver {
     // Adding container
     if (contObjects != null && contObjects.size > 0) {
       messageContainerObjects ++= contObjects
-      //      if (envCtxt != null) {
+      if (envCtxt != null) {
       //        val containerNames = contObjects.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
       //        val containerInfos = containerNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
       //        envCtxt.RegisterMessageOrContainers(containerInfos) // Containers
-      //        envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
-      //      }
+        envCtxt.cacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+      }
     }
 
     // Adding Messages
     if (msgObjects != null && msgObjects.size > 0) {
       messageContainerObjects ++= msgObjects
-      //      if (envCtxt != null) {
+      if (envCtxt != null) {
       //        val topMessageNames = msgObjects.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
       //        val messagesInfos = topMessageNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
       //        envCtxt.RegisterMessageOrContainers(messagesInfos) // Messages
-      //        envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
-      //      }
+        envCtxt.cacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+      }
     }
 
     // Adding Models

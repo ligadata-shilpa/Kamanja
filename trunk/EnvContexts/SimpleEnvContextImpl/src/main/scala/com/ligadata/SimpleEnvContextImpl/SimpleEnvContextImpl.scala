@@ -65,6 +65,7 @@ case class AdapterUniqueValueDes(T: Long, V: String, Out: Option[List[List[Strin
 object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   case class CacheInfo(HostList: String, CachePort: Int, CacheSizePerNode: Long, ReplicateFactor: Int, TimeToIdleSeconds: Long, EvictionPolicy: String)
+  case class TenantEnvCtxtInfo(tenantInfo: TenantInfo, datastore: DataStore, cachedContainers: scala.collection.mutable.Map[String, MsgContainerInfo], containersNames: scala.collection.mutable.Set[String])
 
   val CLASSNAME = "com.ligadata.SimpleEnvContextImpl.SimpleEnvContextImpl$"
   private var hbExecutor: ExecutorService = Executors.newFixedThreadPool(1)
@@ -99,7 +100,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   private var txnIdsRangeForPartition: Int = 10000
   // Each time get txnIdsRange of transaction ids for each partition
   private var _sysCatalogDsString: String = _
-  private val _tenantIdPrimaryDatastores = scala.collection.mutable.Map[String, (TenantInfo, DataStore)]()
+  private val _tenantIdMap = scala.collection.mutable.Map[String, TenantEnvCtxtInfo]()
   private var _postMsgListenerCallback: (Array[ContainerInterface]) => Unit = null
   private var _listenerCache: DataCache = null
   private var _listenerConfigClusterCache: DataCache = null
@@ -732,8 +733,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // private[this] val _messagesOrContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
   // Do we need to have Cached Container per TenatId??????
-  private[this] val _cachedContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
-  private[this] val _containersNames = scala.collection.mutable.Set[String]()
+//  private[this] val _cachedContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
+//  private[this] val _containersNames = scala.collection.mutable.Set[String]()
   //  private[this] val _txnContexts = new Array[scala.collection.mutable.Map[Long, TransactionContext]](_buckets)
 
   //  private[this] val _modelsRsltBuckets = new Array[scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]](_parallelBuciets)
@@ -1166,7 +1167,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   private def getData(tenantId: String, contName: String, tmRangeValues: Array[TimeRange], partKeys: Array[Array[String]], f: ContainerInterface => Boolean): Array[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)] = {
     val loadedData = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
-    if (tmRangeValues.size == partKeys.size) {
+    val tenantInfo: TenantEnvCtxtInfo = if (tmRangeValues.size == partKeys.size) _tenantIdMap.getOrElse(tenantId.toLowerCase(), null) else null
+    if (tenantInfo != null && tenantInfo.datastore != null && tmRangeValues.size == partKeys.size) {
+      val tmpDatastore = tenantInfo.datastore
       val containerName = contName.toLowerCase
       val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
         if (f != null) {
@@ -1181,7 +1184,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       }
 
       // Check whether this table is in Cache or not
-      var cacheContainer = _cachedContainers.getOrElse(containerName, null)
+      var cacheContainer = tenantInfo.cachedContainers.getOrElse(containerName, null)
 
       for (i <- 0 until tmRangeValues.size) {
         val bk = partKeys(i)
@@ -1208,9 +1211,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
               }
             } else {
               if (tr != null)
-                callGetData(_sysCatalogDatastore, containerName, Array(tr), Array(bk), buildOne)
+                callGetData(tmpDatastore, containerName, Array(tr), Array(bk), buildOne)
               else
-                callGetData(_sysCatalogDatastore, containerName, Array(bk), buildOne)
+                callGetData(tmpDatastore, containerName, Array(bk), buildOne)
             }
           } catch {
             case e: ObjectNotFoundException => {
@@ -1239,7 +1242,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 TxnContextCommonFunctions.ReadUnlockContainer(cacheContainer)
               }
             } else {
-              callGetData(_sysCatalogDatastore, containerName, Array(tr), buildOne)
+              callGetData(tmpDatastore, containerName, Array(tr), buildOne)
             }
           } catch {
             case e: ObjectNotFoundException => {
@@ -1268,7 +1271,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 TxnContextCommonFunctions.ReadUnlockContainer(cacheContainer)
               }
             } else {
-              callGetData(_sysCatalogDatastore, containerName, buildOne)
+              callGetData(tmpDatastore, containerName, buildOne)
             }
           } catch {
             case e: ObjectNotFoundException => {
@@ -1376,6 +1379,18 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     //      }
     //    }
 
+
+    _tenantIdMap.foreach(tInfo => {
+      if (tInfo != null && tInfo._2 != null && tInfo._2.datastore != null) {
+        if (tInfo._2.datastore != null)
+          tInfo._2.datastore.Shutdown()
+        tInfo._2.cachedContainers.clear()
+        tInfo._2.containersNames.clear()
+      }
+    })
+
+    _tenantIdMap.clear()
+
     if (_sysCatalogDatastore != null)
       _sysCatalogDatastore.Shutdown
     _sysCatalogDatastore = null
@@ -1444,7 +1459,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       if (tenantInfo != null && tenantInfo.primaryDataStore != null && tenantInfo.primaryDataStore.trim.size > 0) {
         try {
           val tenantPrimaryDatastore = GetDataStoreHandle(_jarPaths, tenantInfo.primaryDataStore)
-          _tenantIdPrimaryDatastores(tenantInfo.tenantId) = (tenantInfo, tenantPrimaryDatastore)
+          _tenantIdMap(tenantInfo.tenantId.toLowerCase()) = TenantEnvCtxtInfo(tenantInfo, tenantPrimaryDatastore, scala.collection.mutable.Map[String, MsgContainerInfo](), scala.collection.mutable.Set[String]())
         } catch {
           case e: Throwable => {
             logger.error("Failed to connect to datastore for tenantId:%swith configuration:%s".format(tenantInfo.tenantId, tenantInfo.primaryDataStore), e)
@@ -1452,7 +1467,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           }
         }
       } else {
-        _tenantIdPrimaryDatastores(tenantInfo.tenantId) = (tenantInfo, null)
+        _tenantIdMap(tenantInfo.tenantId.toLowerCase()) = TenantEnvCtxtInfo(tenantInfo, null, scala.collection.mutable.Map[String, MsgContainerInfo](), scala.collection.mutable.Set[String]())
       }
     })
   }
@@ -1511,35 +1526,53 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       val tmpContainersStr = _mgr.GetUserProperty(clusterId, "containers2cache")
       val containersNames = if (tmpContainersStr != null) tmpContainersStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
       if (containersNames.size > 0) {
-        containersNames.foreach(c => {
-          var cacheContainer = _cachedContainers.getOrElse(c, null)
-          if (cacheContainer == null) {
-            // Load the container data into cache
-            cacheContainer = new MsgContainerInfo(true)
-            val loadedData = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
+        val tenantAndContainers = containersNames.map(c => {
+          var tenatId: String = ""
+          val msg = _objectResolver.getMdMgr.Message(c, -1, true)
+          if (msg == None) {
+            val container = _objectResolver.getMdMgr.Container(c, -1, true)
+            if (container != None)
+              tenatId = container.get.tenantId
+          } else {
+            tenatId = msg.get.tenantId
+          }
+          (tenatId, c)
+        }).filter(tc => (tc._1 != null && tc._1.trim.size > 0)).groupBy(_._1)
 
-            val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
-              if (v != null && v.isInstanceOf[ContainerInterface]) {
-                collectKeyAndValues(k, v, loadedData)
+        tenantAndContainers.foreach(tcKv => {
+          val tenantInfo = _tenantIdMap.getOrElse(tcKv._1.toLowerCase(), null)
+          if (tenantInfo != null) {
+            tcKv._2.foreach(tc => {
+              val c = tc._2
+              var cacheContainer = tenantInfo.cachedContainers.getOrElse(c, null)
+              if (cacheContainer == null) {
+                // Load the container data into cache
+                cacheContainer = new MsgContainerInfo(true)
+                val loadedData = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
+
+                val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
+                  if (v != null && v.isInstanceOf[ContainerInterface]) {
+                    collectKeyAndValues(k, v, loadedData)
+                  }
+                }
+                if (tenantInfo.datastore != null)
+                  callGetData(tenantInfo.datastore, c, buildOne)
+                TxnContextCommonFunctions.WriteLockContainer(cacheContainer)
+                try {
+                  loadedData.foreach(kv => {
+                    cacheContainer.dataByBucketKey.put(kv._1, kv._2)
+                    cacheContainer.dataByTmPart.put(kv._1, kv._2)
+                  })
+                } catch {
+                  case e: Exception => {
+                    throw e
+                  }
+                } finally {
+                  TxnContextCommonFunctions.WriteUnlockContainer(cacheContainer)
+                }
+                tenantInfo.cachedContainers(c) = cacheContainer
               }
-            }
-
-            callGetData(_sysCatalogDatastore, c, buildOne)
-            TxnContextCommonFunctions.WriteLockContainer(cacheContainer)
-            try {
-              loadedData.foreach(kv => {
-                cacheContainer.dataByBucketKey.put(kv._1, kv._2)
-                cacheContainer.dataByTmPart.put(kv._1, kv._2)
-              })
-            } catch {
-              case e: Exception => {
-                throw e
-              }
-            } finally {
-              TxnContextCommonFunctions.WriteUnlockContainer(cacheContainer)
-            }
-
-            _cachedContainers(c) = cacheContainer
+            })
           }
         })
       }
@@ -2139,13 +2172,18 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //  }
 
   override def getRecent(tenantId: String, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface] = {
-    var cacheContainer = _cachedContainers.getOrElse(containerName, null)
-    if (cacheContainer != null) {
-      val inMemoryRecent = TxnContextCommonFunctions.getRecent(cacheContainer, partKey, tmRange, null, f)
-      if (inMemoryRecent != null && inMemoryRecent._1 != null)
-        Some(inMemoryRecent._1)
-      else
-        None
+    val tenantInfo: TenantEnvCtxtInfo = _tenantIdMap.getOrElse(tenantId.toLowerCase(), null)
+    if (tenantInfo == null) return None
+
+    if (tenantInfo.cachedContainers != null) {
+      var cacheContainer = tenantInfo.cachedContainers.getOrElse(containerName, null)
+      if (cacheContainer != null) {
+        val inMemoryRecent = TxnContextCommonFunctions.getRecent(cacheContainer, partKey, tmRange, null, f)
+        if (inMemoryRecent != null && inMemoryRecent._1 != null)
+          Some(inMemoryRecent._1)
+        else
+          None
+      }
     }
 
     val data = getData(tenantId, containerName, if (tmRange != null) Array(tmRange) else Array[TimeRange](), if (partKey != null) Array(partKey.toArray) else Array[Array[String]](), f)

@@ -514,7 +514,7 @@ class KamanjaManager extends Observer {
       if (retval) {
         LOG.debug("Initialize Metadata Manager")
         KamanjaMetadata.InitMdMgr(zkConnectString, metadataUpdatesZkNodePath, zkSessionTimeoutMs, zkConnectionTimeoutMs, inputAdapters, outputAdapters, storageAdapters)
-        //        KamanjaMetadata.envCtxt.CacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
+        KamanjaMetadata.envCtxt.cacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
         LOG.debug("Initializing Leader")
 
         var txnCtxt: TransactionContext = null
