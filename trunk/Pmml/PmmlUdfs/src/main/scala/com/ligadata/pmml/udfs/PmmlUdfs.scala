@@ -95,24 +95,22 @@ object Udfs extends LogTrait {
     @param xId : the transaction id that initialized the model instance that is calling
     @param gCtx : the EnvContext object that initialized the model instance that is calling
     @param containerName : The top level container name that purportedly contains the companion 'key'
-    @param key : the object identifer of interest that purportedly lives in supplied 'containerName'
     @return true if the object exists
    */
 
   def Contains(xId: Long, gCtx: EnvContext, containerName: String, partKey: List[String], primaryKey: List[String]): Boolean = {
-    val itExists: Boolean = if (gCtx != null) gCtx.contains(xId, containerName, partKey, primaryKey) else false
+    val itExists: Boolean = if (gCtx != null) gCtx.contains(null, containerName, partKey, primaryKey) else false
     itExists
   }
   /** 
     Answer whether the supplied container and key exist in the storage manged by the global context
     @param ctx : the runtime Context for the calling model instance
     @param containerName : The top level container name that purportedly contains the companion 'key'
-    @param key : the object identifer of interest that purportedly lives in supplied 'containerName'
     @return true if the object exists
    */
 
   def Contains(ctx: Context, containerName: String, partKey: List[String], primaryKey: List[String]): Boolean = {
-    val itExists: Boolean = if (ctx != null && ctx.gCtx != null) ctx.gCtx.contains(ctx.xId, containerName, partKey, primaryKey) else false
+    val itExists: Boolean = if (ctx != null && ctx.gCtx != null) ctx.gCtx.contains(null, containerName, partKey, primaryKey) else false
     itExists
   }
   
@@ -122,22 +120,20 @@ object Udfs extends LogTrait {
     @param xId : the transaction id that initialized the model instance that is calling
     @param gCtx : the EnvContext object that initialized the model instance that is calling
     @param containerName : The top level container name that purportedly contains the companion 'key'
-    @param keys : an array of identifiers sought in the 'containerName'
     @return true if the object exists
    */
   def ContainsAny(xId: Long, gCtx: EnvContext, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean = {
-    val itExists: Boolean = if (gCtx != null) gCtx.containsAny(xId, containerName, partKeys, primaryKeys) else false
+    val itExists: Boolean = if (gCtx != null) gCtx.containsAny(null, containerName, partKeys, primaryKeys) else false
     itExists
   }
   /** 
     Answer whether ANY of the supplied keys exist in the supplied container.
     @param ctx : the runtime Context for the calling model instance
     @param containerName : The top level container name that purportedly contains the companion 'key'
-    @param keys : an array of identifiers sought in the 'containerName'
     @return true if any of the supplied keys are found
    */
   def ContainsAny(ctx: Context, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean = {
-    val itExists: Boolean = if (ctx != null && ctx.gCtx != null) ctx.gCtx.containsAny(ctx.xId, containerName, partKeys, primaryKeys) else false
+    val itExists: Boolean = if (ctx != null && ctx.gCtx != null) ctx.gCtx.containsAny(null, containerName, partKeys, primaryKeys) else false
     itExists
   }
 
@@ -147,22 +143,20 @@ object Udfs extends LogTrait {
     @param xId : the transaction id that initialized the model instance that is calling
     @param gCtx : the EnvContext object that initialized the model instance that is calling
     @param containerName : The top level container name that purportedly contains the companion 'key'
-    @param keys : an array of identifiers sought in the 'containerName'
     @return true if the object exists
    */
   def ContainsAll(xId: Long, gCtx: EnvContext, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean = {
-    val allExist: Boolean = if (gCtx != null) gCtx.containsAll(xId, containerName, partKeys, primaryKeys) else false
+    val allExist: Boolean = if (gCtx != null) gCtx.containsAll(null, containerName, partKeys, primaryKeys) else false
     allExist
   }
   /** 
     Answer whether ALL of the supplied keys exist in the supplied container.
     @param ctx : the runtime Context for the calling model instance
     @param containerName : The top level container name that purportedly contains the companion 'key'
-    @param keys : an array of identifiers sought in the 'containerName'
     @return true if the object exists
    */
   def ContainsAll(ctx: Context, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean = {
-    val allExist: Boolean = if (ctx != null && ctx.gCtx != null) ctx.gCtx.containsAll(ctx.xId, containerName, partKeys, primaryKeys) else false
+    val allExist: Boolean = if (ctx != null && ctx.gCtx != null) ctx.gCtx.containsAll(null, containerName, partKeys, primaryKeys) else false
     allExist
   }
 
@@ -483,7 +477,7 @@ object Udfs extends LogTrait {
       @return the ContainerInterface associated with these keys.
    */
   def Get(xId: Long, gCtx: EnvContext, containerId: String, partKey: List[String], primaryKey: List[String]): ContainerInterface = {
-    gCtx.getObject(xId, containerId, partKey, primaryKey)
+    gCtx.getObject(null, containerId, partKey, primaryKey)
   }
 
   /**
@@ -494,7 +488,7 @@ object Udfs extends LogTrait {
       @return the ContainerInterface associated with these keys.
    */
   def Get(ctx: Context, containerId: String, partKey: List[String], primaryKey: List[String]): ContainerInterface = {
-	  if (ctx != null && ctx.gCtx != null) ctx.gCtx.getObject(ctx.xId, containerId, partKey, primaryKey) else null
+	  if (ctx != null && ctx.gCtx != null) ctx.gCtx.getObject(null, containerId, partKey, primaryKey) else null
   }
 
 
@@ -513,7 +507,7 @@ object Udfs extends LogTrait {
    */
   
   def GetMsgContainerElseNew(xId: Long, gCtx: EnvContext, fqClassName : String, containerId: String, partKey: List[String], primaryKey: List[String]): ContainerInterface = {
-    val mc : ContainerInterface = gCtx.getObject(xId, containerId, partKey, primaryKey)
+    val mc : ContainerInterface = gCtx.getObject(null, containerId, partKey, primaryKey)
     if (mc != null) {
     	mc
     } else {
@@ -533,7 +527,7 @@ object Udfs extends LogTrait {
    */
   
   def GetMsgContainerElseNew(ctx: Context, fqClassName : String, containerId: String, partKey: List[String], primaryKey: List[String]): ContainerInterface = {
-    val mc : ContainerInterface = if (ctx != null && ctx.gCtx != null) ctx.gCtx.getObject(ctx.xId, containerId, partKey, primaryKey) else null
+    val mc : ContainerInterface = if (ctx != null && ctx.gCtx != null) ctx.gCtx.getObject(null, containerId, partKey, primaryKey) else null
     if (mc != null) {
     	mc
     } else {
@@ -612,7 +606,7 @@ object Udfs extends LogTrait {
    */
 
   def GetHistory(xId: Long, gCtx: EnvContext, containerId: String, partKey: List[String], appendCurrentChanges: Boolean): Array[ContainerInterface] = {
-    gCtx.getHistoryObjects(xId, containerId, partKey, appendCurrentChanges)
+    gCtx.getHistoryObjects(null, containerId, partKey, appendCurrentChanges)
   }
 
   /**
@@ -627,7 +621,7 @@ object Udfs extends LogTrait {
    */
 
   def GetHistory(ctx: Context, containerId: String, partKey: List[String], appendCurrentChanges: Boolean): Array[ContainerInterface] = {
-      if (ctx != null && ctx.gCtx != null) ctx.gCtx.getHistoryObjects(ctx.xId, containerId, partKey, appendCurrentChanges) else Array[ContainerInterface]()
+      if (ctx != null && ctx.gCtx != null) ctx.gCtx.getHistoryObjects(null, containerId, partKey, appendCurrentChanges) else Array[ContainerInterface]()
   }
 
   /** 
@@ -643,7 +637,7 @@ object Udfs extends LogTrait {
    */
   
   def GetArray(xId: Long, gCtx: EnvContext, containerId: String): Array[ContainerInterface] = {
-    gCtx.getAllObjects(xId, containerId)
+    gCtx.getAllObjects(null, containerId)
   }
 
   /** 
@@ -657,7 +651,7 @@ object Udfs extends LogTrait {
    */
   
   def GetArray(ctx: Context, containerId: String): Array[ContainerInterface] = {
-      if (ctx != null && ctx.gCtx != null) ctx.gCtx.getAllObjects(ctx.xId, containerId) else Array[ContainerInterface]()
+      if (ctx != null && ctx.gCtx != null) ctx.gCtx.getAllObjects(null, containerId) else Array[ContainerInterface]()
   }
 
   /** 
@@ -672,7 +666,7 @@ object Udfs extends LogTrait {
    *  @return true if it worked
    */
   def Put(xId: Long, gCtx: EnvContext, containerId: String, key: List[String], value: MessageInterface): Boolean = {
-    gCtx.setObject(xId, containerId, key, value)
+    gCtx.setObject(null, containerId, key, value)
     true
   }
 
@@ -685,7 +679,7 @@ object Udfs extends LogTrait {
    *  @return true if it worked
    */
   def Put(ctx: Context, containerId: String, key: List[String], value: MessageInterface): Boolean = {
-      if (ctx != null && ctx.gCtx != null) {ctx.gCtx.setObject(ctx.xId, containerId, key, value); true} else false
+      if (ctx != null && ctx.gCtx != null) {ctx.gCtx.setObject(null, containerId, key, value); true} else false
   }
 
   /** 
@@ -700,7 +694,7 @@ object Udfs extends LogTrait {
    *  @return true if it worked
    */
   def Put(xId: Long, gCtx: EnvContext, containerId: String, key: List[String], value: ContainerInterface): Boolean = {
-    gCtx.setObject(xId, containerId, key, value)
+    gCtx.setObject(null, containerId, key, value)
     true
   }
 
@@ -714,7 +708,7 @@ object Udfs extends LogTrait {
    *  @return true if it worked
    */
   def Put(ctx: Context, containerId: String, key: List[String], value: ContainerInterface): Boolean = {
-	  if (ctx != null && ctx.gCtx != null) {ctx.gCtx.setObject(ctx.xId, containerId, key, value); true} else false
+	  if (ctx != null && ctx.gCtx != null) {ctx.gCtx.setObject(null, containerId, key, value); true} else false
   }
 
 

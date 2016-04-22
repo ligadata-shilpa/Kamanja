@@ -525,9 +525,9 @@ object KamanjaLeader {
     LOG.debug("EventChangeCallback => Exit")
   }
 
-//  private def GetUniqueKeyValue(uk: String): (Long, String, List[(String, String, String)]) = {
-//    envCtxt.getAdapterUniqueKeyValue(0, uk)
-//  }
+  private def GetUniqueKeyValue(uk: String): String  = {
+    envCtxt.getAdapterUniqueKeyValue(uk)
+  }
 
   private def StartNodeKeysMap(nodeKeysMap: scala.collection.immutable.Map[String, Array[String]], receivedJsonStr: String, adapMaxPartsMap: Map[String, Int], foundKeysInVald: Map[String, (String, Int, Int, Long)]): Boolean = {
     if (nodeKeysMap == null || nodeKeysMap.size == 0) {
@@ -546,9 +546,8 @@ object KamanjaLeader {
         try {
           val uAK = nodeKeysMap.getOrElse(name, null)
           if (uAK != null) {
-            // val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) }) // FIXME:: get save Values for the keys
-            val empty:(Long, String, List[(String, String, String)]) = null
-            val uKV = uAK.map(uk => empty)
+            val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
+
             val maxParts = adapMaxPartsMap.getOrElse(name, 0)
             LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
 
@@ -556,7 +555,7 @@ object KamanjaLeader {
             val keys = uAK.map(k => ia.DeserializeKey(k))
 
             LOG.debug("Deserializing Values")
-            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v._2 else null))
+            val vals = uKV.map(v => ia.DeserializeValue(if (v != null) v else null))
 
             LOG.debug("Deserializing Keys & Values done")
 
@@ -1266,8 +1265,6 @@ object KamanjaLeader {
           }
         })
 
-        //SetCanRedistribute(true)
-        //envCtxt.registerNodesChangeNotification(EventChangeCallback)
 //          zkLeaderLatch = new ZkLeaderLatch(zkConnectString, engineLeaderZkNodePath, nodeId, EventChangeCallback, zkSessionTimeoutMs, zkConnectionTimeoutMs)
 //        zkLeaderLatch.SelectLeader
         /*

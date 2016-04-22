@@ -25,13 +25,13 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
 
   override def getAdapterName: String = ""
 
-  def put(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
+  def putContainers(tnxCtxt: TransactionContext, container: ContainerInterface): Unit = {
     if (container == null)
       throw new InvalidArgumentException("container should not be null", null)
-    put(tnxCtxt, Array(container))
+    putContainers(tnxCtxt, Array(container))
   }
 
-  def put(tnxCtxt: TransactionContext, containers: Array[ContainerInterface]): Unit = {
+  def putContainers(tnxCtxt: TransactionContext, containers: Array[ContainerInterface]): Unit = {
     if (containers == null)
       throw new InvalidArgumentException("containers should not be null", null)
     if (containers.size == 0) return
@@ -43,6 +43,23 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
         (Key(container.TimePartitionData(), container.PartitionKeyData(), container.TransactionId(), container.RowNumber()), "", container.asInstanceOf[Any])
       }))
     }).toArray
+
+    put(tnxCtxt, data_list)
+  }
+
+  // sending multiple container at the same time
+  def putContainers(tnxCtxt: TransactionContext, containers: Array[(String, Array[ContainerInterface])]): Unit = {
+    if (containers == null)
+      throw new InvalidArgumentException("containers should not be null", null)
+    if (containers.size == 0) return
+
+    val data = ArrayBuffer[(Key, String, Any)]()
+
+    val data_list = containers.map(oneContainerData => {
+      (oneContainerData._1, oneContainerData._2.map(container => {
+        (Key(container.TimePartitionData(), container.PartitionKeyData(), container.TransactionId(), container.RowNumber()), "", container.asInstanceOf[Any])
+      }))
+    })
 
     put(tnxCtxt, data_list)
   }
