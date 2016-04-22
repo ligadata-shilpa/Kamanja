@@ -256,10 +256,10 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
   }
 
 
-  private def checkExistingFiles(d: File): Unit = {
+  private def checkExistingFiles(parentDir: File): Unit = {
     // Process all the existing files in the directory that are not marked complete.
-    if (d.exists && d.isDirectory) {
-      val files = d.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
+    if (parentDir.exists && parentDir.isDirectory) {
+      val files = parentDir.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
       files.foreach(file => {
         val tokenName = file.toString.split("/")
         if (!checkIfFileHandled(file.toString)) {
@@ -271,9 +271,32 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
           modifiedFileCallback(fileHandler)
         }
       })
+
+      //remove files that are no longer in the folder
+      val deletedFiles = new ArrayBuffer[String]()
+      fileCacheLock.synchronized {
+        fileCache.foreach(fileCacheEntry => {
+          //logger.debug("file in map is {}, its parent is {}, the folder beind checked is {}",
+            //fileCacheEntry._1,  new File(fileCacheEntry._1).getParent, parentDir.toString.trim)
+
+          if (new File(fileCacheEntry._1).getParent.trim.equals(parentDir.toString.trim)) {
+            //logger.debug("file in map is direct child of checked folder")
+            if (!files.exists(fileName => fileName.equals(fileCacheEntry._1))) {
+              //key that is no more in the folder => file/folder deleted
+              //logger.debug("file in map is not currenlty in children list of the folder, adding it to deleted files list")
+              deletedFiles += fileCacheEntry._1
+            }
+          }
+        })
+
+        //logger.debug("deleted files list is {}", deletedFiles)
+        deletedFiles.foreach(f => fileCache -= f)//remove from file cache
+      }
+
+
     }
     else{
-      logger.warn(d.toString + " is not a directory or does not exist")
+      logger.warn(parentDir.toString + " is not a directory or does not exist")
     }
   }
 
@@ -293,7 +316,6 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
       }
     }
   }
-
 
 }
 
