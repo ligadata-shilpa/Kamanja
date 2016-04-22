@@ -28,6 +28,8 @@ import java.io.{StringReader, File}
 import com.ligadata.runtime.Conversion
 import com.ligadata.jtm.nodes._
 
+import scala.collection.mutable.ArrayBuffer
+
 // Laundry list
 /*
 3) Support java
@@ -196,7 +198,21 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val supportsInstanceSerialization : Boolean = false
     val isReusable: Boolean = true
 
+    val depJars = scala.collection.mutable.Set[String]()
+
+    outmessages.foreach(outputType1 => {
+      depJars ++=  GetDepJars(md, outputType1)
+    })
+
+    inmessages.foreach( s =>
+      s.foreach( m => {
+        depJars ++=  GetDepJars(md, m._1)
+      })
+    )
+
     val out: Array[String] = outmessages.toArray
+
+    // If we have same maps of messages (may or may not have different attributes), may be we need to fold it
 
     val in: Array[Array[MessageAndAttributes]] = inmessages.map( s =>
           s.map( m => {
@@ -216,6 +232,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     model.description = root.header.description
     model.ver = ModelVersionLong
     model.physicalName = PackageName + "." + FactoryName
+    model.dependencyJarNames = if (depJars != null) depJars.toArray else Array[String]()
+
     model
   }
 
@@ -424,6 +442,19 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
     classMd.get.physicalName
+  }
+
+  def GetDepJars(mgr: MdMgr, classname: String): Array[String] = {
+    var jars = ArrayBuffer[String]()
+    val classMd = md.Message(classname, 0, true)
+    if(!classMd.isEmpty)  {
+      if (classMd.get.JarName != null && classMd.get.JarName.trim.size > 0)
+        jars += classMd.get.JarName.trim
+      if (classMd.get.DependencyJarNames != null && classMd.get.DependencyJarNames.size > 0) {
+        jars ++= classMd.get.DependencyJarNames.filter(j => (j != null && j.trim.size > 0)).map(j => j.trim)
+      }
+    }
+    jars.toArray
   }
 
   /**
