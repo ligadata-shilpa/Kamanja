@@ -189,38 +189,38 @@ class Conversion {
 
   def ToStringArray(InputData: String, valueDelim: String): Array[String] = {
     if (InputData == null || valueDelim == null) return Array[String]()
-    InputData.split(valueDelim)
+    InputData.split(valueDelim, -1)
   }
 
   def ToIntArray(InputData: String, valueDelim: String): Array[Int] = {
     if (InputData == null || valueDelim == null) return Array[Int]()
-    InputData.split(valueDelim).map(v => ToInteger(v))
+    InputData.split(valueDelim, -1).map(v => ToInteger(v))
   }
 
   def ToIntegerArray(InputData: String, valueDelim: String): Array[Int] = ToIntArray(InputData, valueDelim)
 
   def ToLongArray(InputData: String, valueDelim: String): Array[Long] = {
     if (InputData == null || valueDelim == null) return Array[Long]()
-    InputData.split(valueDelim).map(v => ToLong(v))
+    InputData.split(valueDelim, -1).map(v => ToLong(v))
   }
 
   def ToFloatArray(InputData: String, valueDelim: String): Array[Float] = {
     if (InputData == null || valueDelim == null) return Array[Float]()
-    InputData.split(valueDelim).map(v => ToFloat(v))
+    InputData.split(valueDelim, -1).map(v => ToFloat(v))
   }
 
   def ToDoubleArray(InputData: String, valueDelim: String): Array[Double] = {
     if (InputData == null || valueDelim == null) return Array[Double]()
-    InputData.split(valueDelim).map(v => ToDouble(v))
+    InputData.split(valueDelim, -1).map(v => ToDouble(v))
   }
 
   def ToBooleanArray(InputData: String, valueDelim: String): Array[Boolean] = {
     if (InputData == null || valueDelim == null) return Array[Boolean]()
-    InputData.split(valueDelim).map(v => ToBoolean(v))
+    InputData.split(valueDelim, -1).map(v => ToBoolean(v))
   }
 
   def ToCharArray(InputData: String, valueDelim: String): Array[Char] = {
     if (InputData == null || valueDelim == null) return Array[Char]()
-    InputData.split(valueDelim).map(v => ToChar(v))
+    InputData.split(valueDelim, -1).map(v => ToChar(v))
   }
 }

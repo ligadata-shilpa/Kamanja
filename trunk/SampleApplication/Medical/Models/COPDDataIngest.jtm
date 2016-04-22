@@ -31,7 +31,7 @@
       "computes": {
         "inpData": {
           "type": "Array[String]",
-          "val": "$msg.split(\",\")",
+          "val": "$msg.split(\",\", -1)",
           "comment": "Split the incoming data"
         }
       },
