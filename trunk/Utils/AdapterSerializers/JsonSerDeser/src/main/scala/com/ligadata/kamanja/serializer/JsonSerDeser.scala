@@ -161,7 +161,7 @@ class JSONSerDes extends SerializeDeserialize {
 
     private def valueAsJson(sb: StringBuilder, indentLevel: Int, value : Any, quoteValue: Boolean)  = {
         // val quote = if (quoteValue) s"\\${'"'}" else ""
-        val quote ="\""
+        val quote = if (quoteValue) "\"" else ""
         // @TODO: need to encode string as proper json string
         sb.append(quote+value+quote)
     }
