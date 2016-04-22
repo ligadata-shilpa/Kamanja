@@ -1741,10 +1741,11 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     // throw new KamanjaException("Function call is not implemented", null)
   }
 
-  override def commitData(txnCtxt: TransactionContext): Unit = {
-
+  override def commitData(tenantId: String, txnCtxt: TransactionContext, data: Array[(String, Array[ContainerInterface])]): Unit = {
+    val tenantInfo: TenantEnvCtxtInfo = _tenantIdMap.getOrElse(tenantId.toLowerCase(), null)
+    if (tenantInfo == null) return
+    tenantInfo.datastore.putContainers(txnCtxt, data)
   }
-
 
   //  // Final Commit for the given transaction
   //  // BUGBUG:: For now we are committing all the data into default datastore. Not yet handled message level datastore.
