@@ -54,17 +54,13 @@ trait LogTrait {
   val logger = LogManager.getLogger(loggerName)
 }
 
-// case class AdapterUniqueValueDes(T: Long, V: String, Qs: Option[List[String]], Ks: Option[List[String]], Res: Option[List[String]]) // TransactionId, Value, Queues & Result Strings. Queues and Result Strings should be same size.  
-
-// TransactionId, Value, Queues & Result Strings. Adapter Name, Key and Result Strings
-case class AdapterUniqueValueDes(T: Long, V: String, Out: Option[List[List[String]]])
-
 /**
   * The SimpleEnvContextImpl supports kv stores that are based upon MapDb hash tables.
   */
 object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   case class CacheInfo(HostList: String, CachePort: Int, CacheSizePerNode: Long, ReplicateFactor: Int, TimeToIdleSeconds: Long, EvictionPolicy: String)
+
   case class TenantEnvCtxtInfo(tenantInfo: TenantInfo, datastore: DataStore, cachedContainers: scala.collection.mutable.Map[String, MsgContainerInfo], containersNames: scala.collection.mutable.Set[String])
 
   val CLASSNAME = "com.ligadata.SimpleEnvContextImpl.SimpleEnvContextImpl$"
@@ -295,10 +291,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     msgOrContainer
   }
 
-//  class TxnCtxtKey {
-//    var containerName: String = _
-//    var key: String = _
-//  }
+  //  class TxnCtxtKey {
+  //    var containerName: String = _
+  //    var key: String = _
+  //  }
 
   class MsgContainerInfo(createLock: Boolean) {
     // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
@@ -537,7 +533,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //
   //  class TransactionContext(var txnId: Long) {
   //    private[this] val _messagesOrContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
-  //    private[this] val _adapterUniqKeyValData = scala.collection.mutable.Map[String, (Long, String, List[(String, String, String)])]()
+  //      private[this] val _adapterUniqKeyValData = scala.collection.mutable.Map[String, String]()
   //    //    private[this] val _modelsResult = scala.collection.mutable.Map[Key, scala.collection.mutable.Map[String, SavedMdlResult]]()
   //
   //    def getMsgContainer(containerName: String, addIfMissing: Boolean): MsgContainerInfo = {
@@ -690,15 +686,101 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //      return
   //    }
   //
-  //    // Adapters Keys & values
-  //    def setAdapterUniqueKeyValue(key: String, value: String, outputResults: List[(String, String, String)]): Unit = {
-  //      _adapterUniqKeyValData(key) = (transId, value, outputResults)
-  //    }
-  //
-  //    def getAdapterUniqueKeyValue(key: String): (Long, String, List[(String, String, String)]) = {
-  //      _adapterUniqKeyValData.getOrElse(key, null)
-  //    }
-  //
+  // Adapters Keys & values
+  override def setAdapterUniqueKeyValue(key: String, value: String): Unit = {
+    val bktIdx = getParallelBucketIdx(key)
+    _adapterUniqKeyValBktlocks(bktIdx).writeLock().lock()
+    try {
+      _adapterUniqKeyValBuckets(bktIdx)(key) = value
+    } catch {
+      case e: Exception => {
+        throw e
+      }
+    } finally {
+      _adapterUniqKeyValBktlocks(bktIdx).writeLock().unlock()
+    }
+  }
+
+  // Get Status information from Final table
+  override def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, String)] = {
+    localGetAdapterUniqueKeyValue(keys).toArray
+  }
+
+  override def getAdapterUniqueKeyValue(key: String): String = {
+    val res = localGetAdapterUniqueKeyValue(Array(key))
+    if (res != null && res.size > 0)
+      return res(0)._2
+    null
+  }
+
+  private def getParallelBucketIdx(key: String): Int = {
+    if (key == null) return 0
+    return (math.abs(key.hashCode()) % _parallelBuciets)
+  }
+
+  private def localGetAdapterUniqueKeyValue(keys: Array[String]): Array[(String, String)] = {
+    var retVal = ArrayBuffer[(String, String)]()
+    var notFoundKeys = ArrayBuffer[Array[String]]()
+
+    val bktIdxsAndKeys = keys.map(k => (getParallelBucketIdx(k), k))
+
+    val bktIdxs = bktIdxsAndKeys.map(IdxAndKey => IdxAndKey._1).toSet
+
+    bktIdxs.foreach(bktIdx => {
+      _adapterUniqKeyValBktlocks(bktIdx).readLock().lock()
+      try {
+        bktIdxsAndKeys.foreach(IdxAndKey => {
+          if (IdxAndKey._1 == bktIdx) {
+            val v = _adapterUniqKeyValBuckets(bktIdx).getOrElse(IdxAndKey._2, null)
+            if (v != null) {
+              retVal += ((IdxAndKey._2, v))
+            } else {
+              notFoundKeys += Array(IdxAndKey._2)
+            }
+          }
+        })
+      } catch {
+        case e: Exception => {
+          throw e
+        }
+      } finally {
+        _adapterUniqKeyValBktlocks(bktIdx).readLock().unlock()
+      }
+    })
+
+    if (notFoundKeys.size == 0) return retVal.toArray
+    val results = new ArrayBuffer[(String, String)]()
+    val buildAdapOne = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
+      buildAdapterUniqueValue(k, v, results)
+    }
+    try {
+      callGetData(_sysCatalogDatastore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), notFoundKeys.toArray, buildAdapOne)
+    } catch {
+      case e: Exception => {
+        logger.debug("Data not found for keys:" + notFoundKeys.map(key => key.mkString(",")).mkString(","), e)
+      }
+    }
+    if (results.size > 0) {
+      retVal ++= results
+      val groupedVals = results.groupBy(kv => getParallelBucketIdx(kv._1))
+      groupedVals.foreach(idxAndValues => {
+        _adapterUniqKeyValBktlocks(idxAndValues._1).writeLock().lock()
+        try {
+          idxAndValues._2.foreach(kv => {
+            _adapterUniqKeyValBuckets(idxAndValues._1)(kv._1) = kv._2
+          })
+        } catch {
+          case e: Exception => {
+            throw e
+          }
+        } finally {
+          _adapterUniqKeyValBktlocks(idxAndValues._1).writeLock().unlock()
+        }
+      })
+    }
+    return retVal.toArray
+  }
+
   //    // Model Results Saving & retrieving. Don't return null, always return empty, if we don't find
   //    //    def saveModelsResult(key: List[String], value: scala.collection.mutable.Map[String, SavedMdlResult]): Unit = {
   //    //      _modelsResult(Key(KvBaseDefalts.defaultTime, key.toArray, 0L, 0)) = value
@@ -709,9 +791,11 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //    //    }
   //
   //    def getAllMessagesAndContainers = _messagesOrContainers.toMap
-  //
-  //    def getAllAdapterUniqKeyValData = _adapterUniqKeyValData.toMap
-  //
+
+//  private def getAllAdapterUniqKeyValData = {
+//    _adapterUniqKeyValData.toMap
+//  }
+
   //    //    def getAllModelsResult = _modelsResult.toMap
   //
   //    def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, primaryKey: List[String], f: ContainerInterface => Boolean): (ContainerInterface, Boolean) = {
@@ -726,29 +810,29 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   // Prime number
   //  private[this] val _buckets = 257
-  //  // Prime number
-  //  private[this] val _parallelBuciets = 11
-  //
+  // Prime number
+  private[this] val _parallelBuciets = 11
+
   //  private[this] val _locks = new Array[Object](_buckets)
 
   // private[this] val _messagesOrContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
   // Do we need to have Cached Container per TenatId??????
-//  private[this] val _cachedContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
-//  private[this] val _containersNames = scala.collection.mutable.Set[String]()
+  //  private[this] val _cachedContainers = scala.collection.mutable.Map[String, MsgContainerInfo]()
+  //  private[this] val _containersNames = scala.collection.mutable.Set[String]()
   //  private[this] val _txnContexts = new Array[scala.collection.mutable.Map[Long, TransactionContext]](_buckets)
 
   //  private[this] val _modelsRsltBuckets = new Array[scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]](_parallelBuciets)
   //  private[this] val _modelsRsltBktlocks = new Array[ReentrantReadWriteLock](_parallelBuciets)
 
-  //  private[this] val _adapterUniqKeyValBuckets = new Array[scala.collection.mutable.Map[String, (Long, String, List[(String, String, String)])]](_parallelBuciets)
-  //  private[this] val _adapterUniqKeyValBktlocks = new Array[ReentrantReadWriteLock](_parallelBuciets)
+  private[this] val _adapterUniqKeyValBuckets = new Array[scala.collection.mutable.Map[String, String]](_parallelBuciets)
+  private[this] val _adapterUniqKeyValBktlocks = new Array[ReentrantReadWriteLock](_parallelBuciets)
 
-  //  for (i <- 0 until _parallelBuciets) {
-  //    //    _modelsRsltBuckets(i) = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]()
-  //    //    _modelsRsltBktlocks(i) = new ReentrantReadWriteLock(true);
-  //    _adapterUniqKeyValBuckets(i) = scala.collection.mutable.Map[String, (Long, String, List[(String, String, String)])]()
-  //    _adapterUniqKeyValBktlocks(i) = new ReentrantReadWriteLock(true);
-  //  }
+  for (i <- 0 until _parallelBuciets) {
+    //    _modelsRsltBuckets(i) = scala.collection.mutable.Map[String, scala.collection.mutable.Map[String, SavedMdlResult]]()
+    //    _modelsRsltBktlocks(i) = new ReentrantReadWriteLock(true);
+    _adapterUniqKeyValBuckets(i) = scala.collection.mutable.Map[String, String]()
+    _adapterUniqKeyValBktlocks(i) = new ReentrantReadWriteLock(true);
+  }
 
   //  private[this] var _kryoSer: com.ligadata.Serialize.Serializer = null
   //  private[this] var _classLoader: java.lang.ClassLoader = null
@@ -823,20 +907,9 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   val results = new ArrayBuffer[(String, (Long, String, List[(String, String)]))]()
 
-  private def buildAdapterUniqueValue(k: Key, v: Any, results: ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]) {
-    var res = List[(String, String, String)]()
+  private def buildAdapterUniqueValue(k: Key, v: Any, results: ArrayBuffer[(String, String)]) {
     if (v != null && v.isInstanceOf[Array[Byte]]) {
-      implicit val jsonFormats: Formats = DefaultFormats
-      val uniqVal = parse(new String(v.asInstanceOf[Array[Byte]])).extract[AdapterUniqueValueDes]
-
-
-      if (uniqVal.Out != None) {
-        res = uniqVal.Out.get.map(o => {
-          (o(0), o(1), o(2))
-        })
-      }
-
-      results += ((k.bucketKey(0), (uniqVal.T, uniqVal.V, res.toList))) // taking 1st key, that is what we are expecting
+      results += ((k.bucketKey(0), new String(v.asInstanceOf[Array[Byte]]))) // taking 1st key, that is what we are expecting
     }
   }
 
@@ -952,61 +1025,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //      }
   //    }
   //    return retResult.toArray
-  //  }
-  //
-  //  private def getParallelBucketIdx(key: String): Int = {
-  //    if (key == null) return 0
-  //    return (math.abs(key.hashCode()) % _parallelBuciets)
-  //  }
-  //
-  //  private def localGetAdapterUniqueKeyValue(key: String): (Long, String, List[(String, String, String)]) = {
-  //    val txnCtxt = getTransactionContext(transId, false)
-  //    if (txnCtxt != null) {
-  //      val v = txnCtxt.getAdapterUniqueKeyValue(key)
-  //      if (v != null) return v
-  //    }
-  //
-  //    var v: (Long, String, List[(String, String, String)]) = null
-  //
-  //    val bktIdx = getParallelBucketIdx(key)
-  //
-  //    _adapterUniqKeyValBktlocks(bktIdx).readLock().lock()
-  //    try {
-  //      v = _adapterUniqKeyValBuckets(bktIdx).getOrElse(key, null)
-  //    } catch {
-  //      case e: Exception => {
-  //        throw e
-  //      }
-  //    } finally {
-  //      _adapterUniqKeyValBktlocks(bktIdx).readLock().unlock()
-  //    }
-  //
-  //    if (v != null) return v
-  //    val results = new ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]()
-  //    val buildAdapOne = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
-  //      buildAdapterUniqueValue(k, v, results)
-  //    }
-  //    try {
-  //      callGetData(_sysCatalogDatastore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), Array(Array(key)), buildAdapOne)
-  //    } catch {
-  //      case e: Exception => {
-  //        logger.debug("Data not found for key:" + key, e)
-  //      }
-  //    }
-  //    if (results.size > 0) {
-  //      _adapterUniqKeyValBktlocks(bktIdx).writeLock().lock()
-  //      try {
-  //        _adapterUniqKeyValBuckets(bktIdx)(key) = results(0)._2
-  //      } catch {
-  //        case e: Exception => {
-  //          throw e
-  //        }
-  //      } finally {
-  //        _adapterUniqKeyValBktlocks(bktIdx).writeLock().unlock()
-  //      }
-  //      return results(0)._2
-  //    }
-  //    return null
   //  }
 
   /*
@@ -1363,22 +1381,21 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     //      }
     //    }
     //
-    //    if (_adapterUniqKeyValBuckets != null) {
-    //      for (i <- 0 until _parallelBuciets) {
-    //        _adapterUniqKeyValBktlocks(i).writeLock().lock()
-    //        try {
-    //          _adapterUniqKeyValBuckets(i).clear()
-    //        } catch {
-    //          case e: Exception => {
-    //            logger.warn("", e)
-    //            // throw e
-    //          }
-    //        } finally {
-    //          _adapterUniqKeyValBktlocks(i).writeLock().unlock()
-    //        }
-    //      }
-    //    }
-
+    if (_adapterUniqKeyValBuckets != null) {
+      for (i <- 0 until _parallelBuciets) {
+        _adapterUniqKeyValBktlocks(i).writeLock().lock()
+        try {
+          _adapterUniqKeyValBuckets(i).clear()
+        } catch {
+          case e: Exception => {
+            logger.warn("", e)
+            // throw e
+          }
+        } finally {
+          _adapterUniqKeyValBktlocks(i).writeLock().unlock()
+        }
+      }
+    }
 
     _tenantIdMap.foreach(tInfo => {
       if (tInfo != null && tInfo._2 != null && tInfo._2.datastore != null) {
@@ -1522,61 +1539,61 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //    ResolveEnableEachTransactionCommit
   //  }
 
-    override def cacheContainers(clusterId: String): Unit = {
-      val tmpContainersStr = _mgr.GetUserProperty(clusterId, "containers2cache")
-      val containersNames = if (tmpContainersStr != null) tmpContainersStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
-      if (containersNames.size > 0) {
-        val tenantAndContainers = containersNames.map(c => {
-          var tenatId: String = ""
-          val msg = _objectResolver.getMdMgr.Message(c, -1, true)
-          if (msg == None) {
-            val container = _objectResolver.getMdMgr.Container(c, -1, true)
-            if (container != None)
-              tenatId = container.get.tenantId
-          } else {
-            tenatId = msg.get.tenantId
-          }
-          (tenatId, c)
-        }).filter(tc => (tc._1 != null && tc._1.trim.size > 0)).groupBy(_._1)
+  override def cacheContainers(clusterId: String): Unit = {
+    val tmpContainersStr = _mgr.GetUserProperty(clusterId, "containers2cache")
+    val containersNames = if (tmpContainersStr != null) tmpContainersStr.trim.toLowerCase.split(",").map(s => s.trim).filter(s => s.size > 0) else Array[String]()
+    if (containersNames.size > 0) {
+      val tenantAndContainers = containersNames.map(c => {
+        var tenatId: String = ""
+        val msg = _objectResolver.getMdMgr.Message(c, -1, true)
+        if (msg == None) {
+          val container = _objectResolver.getMdMgr.Container(c, -1, true)
+          if (container != None)
+            tenatId = container.get.tenantId
+        } else {
+          tenatId = msg.get.tenantId
+        }
+        (tenatId, c)
+      }).filter(tc => (tc._1 != null && tc._1.trim.size > 0)).groupBy(_._1)
 
-        tenantAndContainers.foreach(tcKv => {
-          val tenantInfo = _tenantIdMap.getOrElse(tcKv._1.toLowerCase(), null)
-          if (tenantInfo != null) {
-            tcKv._2.foreach(tc => {
-              val c = tc._2
-              var cacheContainer = tenantInfo.cachedContainers.getOrElse(c, null)
-              if (cacheContainer == null) {
-                // Load the container data into cache
-                cacheContainer = new MsgContainerInfo(true)
-                val loadedData = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
+      tenantAndContainers.foreach(tcKv => {
+        val tenantInfo = _tenantIdMap.getOrElse(tcKv._1.toLowerCase(), null)
+        if (tenantInfo != null) {
+          tcKv._2.foreach(tc => {
+            val c = tc._2
+            var cacheContainer = tenantInfo.cachedContainers.getOrElse(c, null)
+            if (cacheContainer == null) {
+              // Load the container data into cache
+              cacheContainer = new MsgContainerInfo(true)
+              val loadedData = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
 
-                val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
-                  if (v != null && v.isInstanceOf[ContainerInterface]) {
-                    collectKeyAndValues(k, v, loadedData)
-                  }
+              val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
+                if (v != null && v.isInstanceOf[ContainerInterface]) {
+                  collectKeyAndValues(k, v, loadedData)
                 }
-                if (tenantInfo.datastore != null)
-                  callGetData(tenantInfo.datastore, c, buildOne)
-                TxnContextCommonFunctions.WriteLockContainer(cacheContainer)
-                try {
-                  loadedData.foreach(kv => {
-                    cacheContainer.dataByBucketKey.put(kv._1, kv._2)
-                    cacheContainer.dataByTmPart.put(kv._1, kv._2)
-                  })
-                } catch {
-                  case e: Exception => {
-                    throw e
-                  }
-                } finally {
-                  TxnContextCommonFunctions.WriteUnlockContainer(cacheContainer)
-                }
-                tenantInfo.cachedContainers(c) = cacheContainer
               }
-            })
-          }
-        })
-      }
+              if (tenantInfo.datastore != null)
+                callGetData(tenantInfo.datastore, c, buildOne)
+              TxnContextCommonFunctions.WriteLockContainer(cacheContainer)
+              try {
+                loadedData.foreach(kv => {
+                  cacheContainer.dataByBucketKey.put(kv._1, kv._2)
+                  cacheContainer.dataByTmPart.put(kv._1, kv._2)
+                })
+              } catch {
+                case e: Exception => {
+                  throw e
+                }
+              } finally {
+                TxnContextCommonFunctions.WriteUnlockContainer(cacheContainer)
+              }
+              tenantInfo.cachedContainers(c) = cacheContainer
+            }
+          })
+        }
+      })
     }
+  }
 
   private def Clone(vals: Array[ContainerInterface]): Array[ContainerInterface] = {
     if (vals == null) return null
@@ -1676,11 +1693,11 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     false
   }
 
-    override def setObject(tenantId: String, containerName: String, partKey: List[String], value: ContainerInterface): Unit = {
-//      if (value != null && TxnContextCommonFunctions.IsEmptyKey(partKey) == false)
-//        localSetObject(transId, containerName, Array(value.getTimePartitionData), Array(partKey.toArray), Array(value))
-      throw new KamanjaException("Function call is not implemented", null)
-    }
+  override def setObject(tenantId: String, containerName: String, partKey: List[String], value: ContainerInterface): Unit = {
+    //      if (value != null && TxnContextCommonFunctions.IsEmptyKey(partKey) == false)
+    //        localSetObject(transId, containerName, Array(value.getTimePartitionData), Array(partKey.toArray), Array(value))
+    throw new KamanjaException("Function call is not implemented", null)
+  }
 
   //  override def setAdapterUniqueKeyValue(key: String, value: String, outputResults: List[(String, String, String)]): Unit = {
   ////    localSetAdapterUniqueKeyValue(transId, key, value, outputResults)
@@ -2044,20 +2061,6 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   //    })
   //*/
   //  }
-
-  // Get Status information from Final table
-  override def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] = {
-    val results = new ArrayBuffer[(String, (Long, String, List[(String, String, String)]))]()
-
-    val buildAdapOne = (k: Key, v: Any, serType: String, t: String, ver: Int) => {
-      buildAdapterUniqueValue(k, v, results)
-    }
-
-    callGetData(_sysCatalogDatastore, "AdapterUniqKvData", Array(TimeRange(KvBaseDefalts.defaultTime, KvBaseDefalts.defaultTime)), keys.map(k => Array(k)), buildAdapOne)
-
-    logger.debug("Loaded %d committing informations".format(results.size))
-    results.toArray
-  }
 
   /*
   // Save Current State of the machine
