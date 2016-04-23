@@ -1303,7 +1303,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           }
         }
       } else {
-        // println("3. containerName:" + containerName)
+        // println("containerName:" + containerName)
         try {
           logger.debug("Table %s".format(containerName))
           if (cacheContainer != null) {
