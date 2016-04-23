@@ -330,7 +330,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
   }
 
   val zooKeeperInfo = if (isOk) cluster.cfgMap.getOrElse("ZooKeeperInfo", null) else null
-  if (isOk && dataStore == null) {
+  if (isOk && zooKeeperInfo == null) {
     logger.error("ZooKeeperInfo not found for Node %d  & ClusterId : %s".format(KvInitConfiguration.nodeId, nodeInfo.ClusterId))
     isOk = false
   }
