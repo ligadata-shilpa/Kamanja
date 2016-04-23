@@ -1168,7 +1168,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
   private def collectKeyAndValues(k: Key, v: Any, loadedData: ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]): Unit = {
     if (v != null && v.isInstanceOf[ContainerInterface]) {
-      logger.debug("Key:(%d, %s, %d, %d)".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId))
+      if (logger.isDebugEnabled)
+        logger.debug("Key:(%d, %s, %d, %d)".format(k.timePartition, k.bucketKey.mkString(","), k.transactionId, k.rowId))
       val value = v.asInstanceOf[ContainerInterface]
       val primarykey = value.getPrimaryKey
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
@@ -1183,8 +1184,17 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
   }
 
-  private def getData(tenantId: String, contName: String, tmRangeValues: Array[TimeRange], partKeys: Array[Array[String]], f: ContainerInterface => Boolean): Array[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)] = {
+  private def getData(tenantId: String, contName: String, tmRangeValues1: Array[TimeRange], partKeys: Array[Array[String]], f: ContainerInterface => Boolean): Array[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)] = {
     val loadedData = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
+    val tmRangeValues = {
+      if (partKeys.size > 0 && tmRangeValues1.size == 0) {
+        partKeys.map(k => TimeRange(Long.MinValue, Long.MaxValue))
+      } else {
+        tmRangeValues1
+      }
+    }
+
+
     val tenantInfo: TenantEnvCtxtInfo = if (tmRangeValues.size == partKeys.size) _tenantIdMap.getOrElse(tenantId.toLowerCase(), null) else null
     if (tenantInfo != null && tenantInfo.datastore != null && tmRangeValues.size == partKeys.size) {
       val tmpDatastore = tenantInfo.datastore
