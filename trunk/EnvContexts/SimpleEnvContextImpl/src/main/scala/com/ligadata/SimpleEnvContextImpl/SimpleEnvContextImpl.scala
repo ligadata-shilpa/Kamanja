@@ -1498,8 +1498,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       if (tenantInfo != null && tenantInfo.primaryDataStore != null && tenantInfo.primaryDataStore.trim.size > 0) {
         try {
           val tenantPrimaryDatastore = GetDataStoreHandle(_jarPaths, tenantInfo.primaryDataStore)
-          if (tenantPrimaryDatastore != null)
+          if (tenantPrimaryDatastore != null) {
+            tenantPrimaryDatastore.setObjectResolver(_objectResolver)
             tenantPrimaryDatastore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", Map[String, Any]())
+          }
           _tenantIdMap(tenantInfo.tenantId.toLowerCase()) = TenantEnvCtxtInfo(tenantInfo, tenantPrimaryDatastore, scala.collection.mutable.Map[String, MsgContainerInfo](), scala.collection.mutable.Set[String]())
         } catch {
           case e: Throwable => {
@@ -3240,9 +3242,10 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       _sysCatalogDatastore.Shutdown()
     _sysCatalogDatastore = null
     _sysCatalogDatastore = GetDataStoreHandle(_jarPaths, _sysCatalogDsString)
-    if (_sysCatalogDatastore != null)
+    if (_sysCatalogDatastore != null) {
+      _sysCatalogDatastore.setObjectResolver(_objectResolver)
       _sysCatalogDatastore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", Map[String, Any]())
-
+    }
   }
 
   override def getSystemCatalogDatastore(): String = _sysCatalogDsString
