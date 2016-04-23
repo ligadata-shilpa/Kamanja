@@ -354,7 +354,8 @@ object AdapterMessageBindingUtils {
       */
     private def CatalogResults(processingResults : List[(String,BaseElemDef)] ) : String = {
 
-        /** Check if all bindings found in the json input were acceptable and AdapterMessageBinding instances created */
+        /** Check if all bindings found in the json input were acceptable and AdapterMessageBinding instances created.
+          * This is indicated by the BaseElemDef value (pair._2 being null */
         val acceptable : Boolean = ! processingResults.exists(pair => pair._2 == null)
         val resultString : String = if (acceptable) {
 
@@ -362,6 +363,9 @@ object AdapterMessageBindingUtils {
             var allResultsCached : Boolean = true /** optimisim */
             val cachedResults : List[(String,BaseElemDef)] = processingResults.map(bindingPair => {
                     val (messages, elem) : (String, BaseElemDef) = bindingPair
+
+                    elem.tranId = PersistenceUtils.GetNewTranId
+
                     val binding : AdapterMessageBinding = elem.asInstanceOf[AdapterMessageBinding]
                     if (! mdMgr.AddAdapterMessageBinding(binding)) {
                         allResultsCached = false

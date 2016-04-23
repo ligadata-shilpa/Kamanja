@@ -822,7 +822,7 @@ object JsonSerializer {
               * FIXME: the usage pattern in MetadataAPIImpl.updateThisKey method.
               * FIXME: This mechanism should be reconsidered.
               */
-            val json = (("ObjectType" ->  "AdapterMsgBinding") ~
+            val json = (("ObjectType" ->  "AdapterMessageBinding") ~
                 ("Operation" -> operation) ~
                 ("NameSpace" -> o.adapterName) ~
                 ("Name" -> o.FullBindingName) ~

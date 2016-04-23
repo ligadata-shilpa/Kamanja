@@ -2880,7 +2880,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           val unHandledFunctions = ArrayBuffer[(Key, Array[Byte])]()
           functionsYetToProcess.foreach(fun => {
             try {
-              DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
+                DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
             } catch {
               case e: Throwable => {
                 unHandledFunctions += fun
@@ -2897,7 +2897,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             {
               val data = v.asInstanceOf[Array[Byte]]
               try {
-                DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId, ignoreExistingObjectsOnStartup)
+                  val maxTranId = PersistenceUtils.GetTranId
+                  MetadataAPIImpl.setCurrentTranLevel(maxTranId)
+
+                  DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId, ignoreExistingObjectsOnStartup)
               } catch {
                 case e: Throwable => {
                   if (typ.equalsIgnoreCase("types")) {

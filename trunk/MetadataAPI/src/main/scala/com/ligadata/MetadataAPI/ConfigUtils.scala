@@ -1756,7 +1756,7 @@ object ConfigUtils {
       * LoadAdapterMessageBindingIntoCache
       *
       * @param key string of the form "s"${zkMessage.ObjectType}.${zkMessage.Name}" where the object type is the
-      *            "AdapterMsgBinding" and the Name is the FullBindingName of the object to fetch
+      *            "AdapterMessageBinding" and the Name is the FullBindingName of the object to fetch
       */
     def LoadAdapterMessageBindingIntoCache(key: String) {
         try {
@@ -1788,7 +1788,7 @@ object ConfigUtils {
           val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(bindingKey)
 
           /** Note that even if it the binding is not in the mdMgr cache, we will proceed to remove it if possible
-            * from the Storage. The MetadataAPI can delete it (it doesn't necessarily notify the engine and get it
+            * from the Storage. The MetadataAPI can delete it (it doesn't necessarily notify the engine... NOTIFY_ENGINE = NO... and get it
             * deleted on the back side during call back.  */
           val key = s"AdapterMessageBinding.$bindingKey"
           MetadataAPIImpl.DeleteObject(key.toLowerCase, "adapter_message_bindings")
