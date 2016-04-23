@@ -119,6 +119,11 @@ object AdapterMessageBindingUtils {
         val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(fqBindingName)
 
         val result : String = if (binding != null) {
+
+            /** Assign a current transaction id to the object so that we don't rezero the counter in NotifyEngine */
+            val xid : Long = PersistenceUtils.GetNewTranId
+            binding.tranId = xid
+
             ConfigUtils.RemoveAdapterMessageBindingFromCache(fqBindingName)
             val displayKey : String = binding.FullBindingName
 
@@ -361,10 +366,11 @@ object AdapterMessageBindingUtils {
 
             /** add the AdapterMessageBinding instances to the cache */
             var allResultsCached : Boolean = true /** optimisim */
+            val tranId : Long = PersistenceUtils.GetNewTranId
             val cachedResults : List[(String,BaseElemDef)] = processingResults.map(bindingPair => {
                     val (messages, elem) : (String, BaseElemDef) = bindingPair
 
-                    elem.tranId = PersistenceUtils.GetNewTranId
+                    elem.tranId = tranId
 
                     val binding : AdapterMessageBinding = elem.asInstanceOf[AdapterMessageBinding]
                     if (! mdMgr.AddAdapterMessageBinding(binding)) {
