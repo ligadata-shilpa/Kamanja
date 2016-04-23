@@ -419,40 +419,33 @@ class JSONSerDes extends SerializeDeserialize {
       throw new UnsupportedObjectException("Convert to long. Parameter is neither BigInt, Long or Int", null)
   }
 
-  /**
+
+    /**
       * Coerce the list of mapped elements to an array of the mapped elements' values
       *
       * @param arrayTypeInfo the metadata that describes the array
       * @param collElements the list of json elements for the array buffer
       * @return an array instance
       */
-    def jsonAsArray(arrayTypeInfo : AttributeTypeInfo, collElements : List[Any]) : Array[Any] = {
-        /**
-          * FIXME: if we intend to support arrays of hetergeneous items (i.e, Array[Any]), this has to change.  At the
-          * moment only arrays of homogeneous types are supported.
-          */
+    private def jsonAsArray(arrayTypeInfo : AttributeTypeInfo, collElements : List[Any]) : Any = {
+        var retVal: Any = Array[Any]()
 
         val itmType = arrayTypeInfo.getValTypeCategory
-        val array : Array[Any] = if (collElements.nonEmpty) {
-            val list : List[Any] = collElements.map(itm => {
-                val fld = itmType match {
-                    case LONG => toLong(itm)
-                    case INT => toInt(itm)
-                    case BYTE => toByte(itm)
-                    case (BOOLEAN | DOUBLE | FLOAT | STRING) => itm
-                    case CHAR => { if (itm != null && itm.isInstanceOf[String] && itm.asInstanceOf[String].size > 0) itm.asInstanceOf[String].charAt(0) else ' ' }
-                    case MAP => itm.asInstanceOf[Map[String, Any]]
-                    case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(itm.asInstanceOf[Map[String,Any]])
-                    case ARRAY => itm.asInstanceOf[List[Any]].toArray
-                    case _ => throw new ObjectNotFoundException(s"jsonAsArray: invalid value type: ${itmType.getValue}, fldName: ${itmType.name} could not be resolved",null)
-                }
-                fld
-            })
-            list.toArray
-        } else {
-            Array[Any]()
+        val fld = itmType match {
+            case LONG => { retVal = collElements.map(itm => toLong(itm)).toArray }
+            case INT => { retVal = collElements.map(itm => toInt(itm)).toArray }
+            case BYTE => { retVal = collElements.map(itm => toByte(itm)).toArray }
+            case BOOLEAN => { retVal = collElements.map(itm => itm.asInstanceOf[Boolean]).toArray }
+            case DOUBLE => { retVal = collElements.map(itm => itm.asInstanceOf[Double]).toArray }
+            case FLOAT => { retVal = collElements.map(itm => itm.asInstanceOf[Float]).toArray }
+            case STRING => { retVal = collElements.map(itm => itm.asInstanceOf[String]).toArray }
+            case CHAR => { retVal = collElements.map(itm => if (itm != null && itm.isInstanceOf[String] && itm.asInstanceOf[String].size > 0) itm.asInstanceOf[String].charAt(0) else ' ' ).toArray }
+            case MAP => { retVal = collElements.map(itm => itm.asInstanceOf[Map[String, Any]]).toArray }
+            case (CONTAINER | MESSAGE) => { retVal = collElements.map(itm => deserializeContainerFromJsonMap(itm.asInstanceOf[Map[String,Any]])).toArray }
+            case ARRAY => { retVal = collElements.map(itm => itm.asInstanceOf[List[Any]].toArray ).toArray }
+            case _ => throw new ObjectNotFoundException(s"jsonAsArray: invalid value type: ${itmType.getValue}, fldName: ${itmType.name} could not be resolved",null)
         }
-        array
+        retVal
     }
 
     /**
