@@ -152,6 +152,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                     }
                   }
                 } else {
+                  logger.debug("SMART FILE CONSUMER (MonitorController):  File {} size changed from {} to {}",
+                    fileHandler.getFullPath, thisFileOrigLength.toString, fileTuple._2._1.toString)
                   bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
                 }
               } else {
