@@ -62,7 +62,7 @@ public class LowBalanceAlertModel extends ModelBase {
 
     public static class LowBalanceAlertModelObj implements ModelBaseObj {
 
-    	public boolean IsValidMessage(ContainerInterface msg) {
+    	public boolean IsValidMessage(MessageContainerBase msg) {
     		return (msg instanceof CustTransaction);
     	}
 

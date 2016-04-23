@@ -314,13 +314,13 @@ trait EnvContext /* extends Monitorable */  {
   def containsAll(tenantId: String, containerName: String, partKeys: Array[List[String]], primaryKeys: Array[List[String]]): Boolean //partKeys.size should be same as primaryKeys.size
 
   // Adapters Keys & values
-//  def setAdapterUniqueKeyValue(key: String, value: String, outputResults: List[(String, String, String)]): Unit
+  def setAdapterUniqueKeyValue(key: String, value: String): Unit
 
-//  def getAdapterUniqueKeyValue(key: String): (Long, String, List[(String, String, String)])
+  def getAdapterUniqueKeyValue(key: String): String
 
 //  def setAdapterUniqKeyAndValues(keyAndValues: List[(String, String)]): Unit
 
-  def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, (Long, String, List[(String, String, String)]))] // Get Status information from Final table. No Transaction required here.
+  def getAllAdapterUniqKvDataInfo(keys: Array[String]): Array[(String, String)] // Get Status information from Final table. No Transaction required here.
 
   //  def getAllIntermediateCommittingInfo: Array[(String, (Long, String, List[(String, String)]))] // Getting intermediate committing information. Once we commit we don't have this, because we remove after commit
 
@@ -336,7 +336,7 @@ trait EnvContext /* extends Monitorable */  {
 
   // Final Commit for the given transaction
   // outputResults has AdapterName, PartitionKey & Message
-  def commitData(txnCtxt: TransactionContext): Unit
+  def commitData(tenantId: String, txnCtxt: TransactionContext, data: Array[(String, Array[ContainerInterface])]): Unit
 
   def rollbackData(): Unit
 

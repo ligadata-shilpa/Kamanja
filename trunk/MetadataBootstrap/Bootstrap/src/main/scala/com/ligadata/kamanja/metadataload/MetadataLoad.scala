@@ -157,7 +157,7 @@ class MetadataLoad(val mgr: MdMgr, val typesPath: String, val fcnPath: String, v
       , "jsonserdeser" //name: String
       , 1 //version: Long = 1
       , SerializeDeserializeType.JSON //serializerType: SerializeDeserializeType.SerDeserType
-      , "com.ligadata.kamanja.serializer.JsonSerDeser" //physicalName: String
+      , "com.ligadata.kamanja.serializer.JSONSerDes" //physicalName: String
       , MetadataLoad.baseTypesOwnerId //ownerId: String
       , MetadataLoad.baseTypesTenantId //tenantId: String
       , 2 //uniqueId: Long

@@ -35,7 +35,7 @@ public class COPDRiskAssessment extends ModelInstance {
 			super(modelDef, nodeContext);
 		}
 
-        public boolean isValidMessage(ContainerInterface msg) {
+        public boolean isValidMessage(MessageContainerBase msg) {
             return (msg instanceof Beneficiary);
         }
 
@@ -92,8 +92,8 @@ public class COPDRiskAssessment extends ModelInstance {
 
     private SimpleDateFormat yearMonthDayHourFormat = new SimpleDateFormat("yyyyMMdd");
 
-    private void init(TransactionContext txnCtxt) {
-        msg = (Beneficiary) txnCtxt.getMessage();
+    private void init(TransactionContext txnCtxt, ContainerOrConcept[] execMsgsSet) {
+        msg = (Beneficiary) execMsgsSet[0];
         System.out.println("Executing COPD Risk Assessment against Beneficiary message:");
         System.out.println("\tMessage Name: " + msg.getTypeName());
         System.out.println("\tMessage Version: " + msg.getTypeVersion());
@@ -395,7 +395,7 @@ public class COPDRiskAssessment extends ModelInstance {
 
     @Override
 	public ContainerOrConcept[] execute(TransactionContext txnCtxt, ContainerOrConcept[] execMsgsSet, int matchedInputSetIndex, boolean outputDefault) {
-        init(txnCtxt);
+        init(txnCtxt, execMsgsSet);
         ContainerOrConcept[] result = copdRiskLevel();
         if(!outputDefault) {
             if (result.length > 0 && result[0] != null && (((COPDOutputMessage)result[0]).risklevel() == null || ((COPDOutputMessage)result[0]).risklevel() == "")) {

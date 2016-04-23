@@ -569,7 +569,7 @@ object SimpleKafkaProducer {
     props.put("socket.send.buffer", bufferMemory.toString)
     props.put("socket.receive.buffer", bufferMemory.toString)
     props.put("client.id", clientId)
-    props.put("partitioner.class", "CustPartitioner");
+    props.put("partitioner.class", "com.ligadata.tools.CustPartitioner");
 
     val s = System.nanoTime
 

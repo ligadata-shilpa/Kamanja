@@ -18,7 +18,7 @@ import org.apache.logging.log4j.LogManager
   * Meta fields found at the beginning of each JSON representation of a ContainerInterface object
   */
 //@@TODO: move this into utils and use for all logging
-object Log {
+object JSonLog {
     private val log = LogManager.getLogger(getClass);
 
     def Trace(str: String) = if(log.isTraceEnabled())  log.trace(str)
@@ -51,20 +51,27 @@ object JSONSerDes {
     val indents = ComputeIndents
     val strLF = "\n"
     val maxIndentLevel = 64
-    def getIndentStr(indentLevel: Int) = if(indentLevel > maxIndentLevel) indents(maxIndentLevel) else if (indentLevel < 0) indents(0) else indents(indentLevel)
+    def getIndentStr(indentLevel: Int): String = {
+        if (indentLevel < 0 || indents.size == 0)
+            return ""
+        if(indentLevel >= indents.size)
+            indents(indents.size - 1)
+        else
+            indents(indentLevel)
+    }
 
     private
     def ComputeIndents : Array[String] = {
         val indentsTemp = ArrayBuffer[String]()
-        indentsTemp.append("")
+        indentsTemp += ""
         val indent = "  "
-        for (idx <- 1 to maxIndentLevel) indentsTemp.append(indent+indentsTemp(idx-1))
+        for (idx <- 1 to maxIndentLevel) indentsTemp += (indent+indentsTemp(idx-1))
         indentsTemp.toArray
     }
 }
 
 import JSONSerDes._
-import Log._
+import JSonLog._
 /**
   * JSONSerDeser instance can serialize a ContainerInterface to a byte array and deserialize a byte array to form
   * an instance of the ContainerInterface encoded in its bytes.
@@ -73,7 +80,7 @@ import Log._
   * before it can be used.
   */
 
-class JSONSerDes extends SerializeDeserialize with LogTrait {
+class JSONSerDes extends SerializeDeserialize {
     var _objResolver : ObjectResolver = null
     var _config = Map[String,String]()
     var _isReady : Boolean = false
@@ -127,10 +134,10 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
             val commaSuffix = if (processCnt < fieldCnt) "," else ""
             val quoteValue = useQuotesOnValue(valueType)
             valueType.getTypeCategory match {
-                case MAP => { keyAsJson(sb, indentLevel+1, valueType.getName); mapAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Map[Any, Any]]) }
-                case ARRAY => { keyAsJson(sb, indentLevel+1, valueType.getName); arrayAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Array[Any]]) }
+                case MAP => { keyAsJson(sb, indentLevel+1, valueType.getName); mapAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Map[_, _]]) }
+                case ARRAY => { keyAsJson(sb, indentLevel+1, valueType.getName); arrayAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Array[_]]) }
                 case (MESSAGE | CONTAINER) => { keyAsJson(sb, indentLevel+1, valueType.getName); containerAsJson(sb, indentLevel+1, rawValue.asInstanceOf[ContainerInterface]) }
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => nameValueAsJson(sb, indentLevel+1, valueType.getName, rawValue, quoteValue)
+                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => nameValueAsJson(sb, indentLevel+1, valueType.getName, rawValue, quoteValue)
                 case _ => throw new UnsupportedObjectException(s"container type ${valueType.getName} not currently serializable", null)
             }
             sb.append(commaSuffix)
@@ -153,7 +160,8 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
     }
 
     private def valueAsJson(sb: StringBuilder, indentLevel: Int, value : Any, quoteValue: Boolean)  = {
-        val quote = if (quoteValue) s"\\${'"'}" else ""
+        // val quote = if (quoteValue) s"\\${'"'}" else ""
+        val quote = if (quoteValue) "\"" else ""
         // @TODO: need to encode string as proper json string
         sb.append(quote+value+quote)
     }
@@ -190,13 +198,13 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
       * @param map the map instance
       * @return a Json string representation
       */
-    private def mapAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, map : scala.collection.mutable.Map[Any,Any]) = {
+    private def mapAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, map : scala.collection.mutable.Map[_,_]) = {
         val keyType = attribType.getKeyTypeCategory
         val valType = attribType.getValTypeCategory
         val quoteValue = useQuotesOnValue(valType)
 
         keyType match {
-            case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => ;
+            case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => ;
             case _ => throw new UnsupportedObjectException(s"json serialize doesn't support maps as with complex key types, keyType: ${keyType.name}", null)
         }
         val indentStr = getIndentStr(indentLevel)
@@ -214,17 +222,18 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
             sb.append(mapJsonHead)
             keyAsJson(sb, 0, k.toString)
             valType match {
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => valueAsJson(sb, 0, v, quoteValue);
-                case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
-                case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[Any]])
+                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, v, quoteValue);
+                case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[_, _]])
+                case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[_]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, v.asInstanceOf[ContainerInterface])
+                case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
             }
             sb.append(mapJsonTail)
         })
         sb.append(mapJsonTail)
     }
 
-    private def mapGenericAsJson(sb: StringBuilder, indentLevel: Int, map : scala.collection.mutable.Map[Any,Any]) = {
+    private def mapGenericAsJson(sb: StringBuilder, indentLevel: Int, map : scala.collection.mutable.Map[_,_]) = {
         val indentStr = getIndentStr(indentLevel)
         // @TODO: for now, write entire map as a single line.. later it can be done in multi line using the passed in indentation as basis
         val mapJsonHead = "{ "
@@ -238,13 +247,13 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
             idx += 1
             sb.append(mapJsonHead)
             keyAsJson(sb, 0, k.toString)
-            valueAsJson(sb, 0, v, isInstanceOf[String])
+            valueAsJson(sb, 0, v, v.isInstanceOf[String])
             sb.append(mapJsonTail)
         })
         sb.append(mapJsonTail)
     }
 
-    private def arrayGenericAsJson(sb: StringBuilder, indentLevel: Int, array : Array[Any]) = {
+    private def arrayGenericAsJson(sb: StringBuilder, indentLevel: Int, array : Array[_]) = {
         val indentStr = getIndentStr(indentLevel)
         // @TODO: for now, write entire map as a single line.. later it can be done in multi line using the passed in indentation as basis
         val mapJsonHead = "[ "
@@ -254,7 +263,7 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
         array.foreach(elem => {
             if(idx > 0) sb.append(", ")
             idx += 1
-            valueAsJson(sb, 0, elem, isInstanceOf[String])
+            valueAsJson(sb, 0, elem, elem.isInstanceOf[String])
         })
         sb.append(mapJsonTail)
     }
@@ -267,7 +276,7 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
       * @param array the array instance
       * @return a Json string representation
       */
-    private def arrayAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, array : Array[Any]) = {
+    private def arrayAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, array : Array[_]) = {
         val itemType = attribType.getValTypeCategory
         val quoteValue = useQuotesOnValue(itemType)
         val mapJsonHead = "[ "
@@ -278,10 +287,11 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
             if(idx > 0) sb.append(", ")
             idx += 1
             itemType match {
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => valueAsJson(sb, 0, itm, quoteValue);
-                case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
-                case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[Any]])
+                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, itm, quoteValue);
+                case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[_, _]])
+                case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[_]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, itm.asInstanceOf[ContainerInterface])
+                case _ => throw new UnsupportedObjectException("Not yet handled itemType:" + itemType, null)
             }
         })
         sb.append(mapJsonTail)
@@ -350,9 +360,11 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
                 val valType = at.getValTypeCategory
                 val fld = valType match {
                     case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => v
+                    case CHAR => { if (v != null && v.isInstanceOf[String] && v.asInstanceOf[String].size > 0) v.asInstanceOf[String].charAt(0) else ' ' }
                     case MAP => jsonAsMap(at, v.asInstanceOf[Map[String, Any]])
                     case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(v.asInstanceOf[Map[String,Any]])
                     case ARRAY => jsonAsArray(at, v.asInstanceOf[List[Any]])
+                    case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
                 }
                 ci.set(k, fld)
             }
@@ -378,6 +390,7 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
             val list : List[Any] = collElements.map(itm => {
                 val fld = itmType match {
                     case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => itm
+                    case CHAR => { if (itm != null && itm.isInstanceOf[String] && itm.asInstanceOf[String].size > 0) itm.asInstanceOf[String].charAt(0) else ' ' }
                     case MAP => itm.asInstanceOf[Map[String, Any]]
                     case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(itm.asInstanceOf[Map[String,Any]])
                     case ARRAY => itm.asInstanceOf[List[Any]].toArray
@@ -408,12 +421,12 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
             val value : Any = pair._2
             val fld = valType match {
                 case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => value
+                case CHAR => { if (value != null && value.isInstanceOf[String] && value.asInstanceOf[String].size > 0) value.asInstanceOf[String].charAt(0) else ' ' }
                 case MAP => value.asInstanceOf[Map[String, Any]]
                 case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(value.asInstanceOf[Map[String,Any]])
                 case ARRAY => value.asInstanceOf[List[Any]].toArray
                 case _ => throw new ObjectNotFoundException(s"jsonAsMap: invalid value type: ${valType.getValue}, fldName: ${valType.name} could not be resolved",null)
             }
-            fld
             (key, fld)
         }).toMap
 
@@ -433,18 +446,18 @@ class JSONSerDes extends SerializeDeserialize with LogTrait {
         try {
             implicit val jsonFormats: Formats = DefaultFormats
             val json = parse(configJson)
-            logger.debug("Parsed the json : " + configJson)
+            Debug("Parsed the json : " + configJson)
 
             val fullmap = json.values.asInstanceOf[Map[String, Any]]
 
             fullmap
         } catch {
             case e: MappingException => {
-                logger.debug("", e)
+                Debug("", e)
                 throw Json4sParsingException(e.getMessage, e)
             }
             case e: Exception => {
-                logger.debug("", e)
+                Debug("", e)
                 throw EngineConfigParsingException(e.getMessage, e)
             }
         }

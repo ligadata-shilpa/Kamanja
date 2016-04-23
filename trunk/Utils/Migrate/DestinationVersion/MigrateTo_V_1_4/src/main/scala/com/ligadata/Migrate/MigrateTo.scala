@@ -280,14 +280,17 @@ class MigrateTo_V_1_4 extends MigratableTo {
   override def isDataTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    _dataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
+    //_dataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
+    logger.info("Checking whether table for the container " + tblInfo.name + " exists ")
+    _dataStoreDb.isContainerExists(tblInfo.name)
   }
 
   override def isStatusTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     if (_statusStoreDb != null)
-      return _statusStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
+      //return _statusStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
+      return _statusStoreDb.isContainerExists(tblInfo.name)
     false
   }
 
@@ -305,7 +308,9 @@ class MigrateTo_V_1_4 extends MigratableTo {
       executor.execute(new Runnable() {
         override def run() = {
           try {
-            storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+	    logger.info("Copy the table " + backupTblInfo.srcTable + " to " + backupTblInfo.dstTable)
+            //storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+            storeDb.copyContainer(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
           } catch {
             case e: Exception => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
             case e: Throwable => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
@@ -531,7 +536,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private def DepJars(depJars1: List[String]): List[String] = {
 
     // Removing jars which are not valid any more, All these jars are consolidated(or assembled) into three fat jars: "ExtDependencyLibs_2.11-1.4.0.jar","KamanjaInternalDeps_2.11-1.4.0.jar","ExtDependencyLibs2_2.11-1.4.0.jar".
-    val depJars = (depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar", "log4j-1.2.17.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar","scala-2.10.0.jar","kvbase_2.10-0.1.0.jar", "kamanjautils_2.10-1.0.jar","kamanjabase_2.10-1.0.jar","customudflib_2.10-1.0.jar", "pmmlcompiler_2.10-1.0.jar","basetypes_2.10-0.1.0.jar","basefunctions_2.10-0.1.0.jar","json4s-core_2.10-3.2.9.jar","json4s-jackson_2.10-3.2.9.jar", "pmmlruntime_2.10-1.0.jar", "pmmludfs_2.10-1.0.jar","datadelimiters_2.10-1.0.jar","metadata_2.10-1.0.jar", "exceptions_2.10-1.0.jar","json4s-ast_2.10-3.2.9.jar", "json4s-native_2.10-3.2.9.jar", "bootstrap_2.10-1.0.jar","messagedef_2.10-1.0.jar", "guava-16.0.1.jar", "guava-18.0.jar", "guava-19.0.jar","scala-reflect-2.10.4.jar","scala-library-2.10.4.jar","jackson-databind-2.3.1.jar","jackson-core-2.3.1.jar","joda-time-2.8.2.jar","jackson-annotations-2.3.0.jar","joda-convert-1.6.jar","jsr305-1.3.9.jar")) 
+    val depJars = (depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar", "log4j-1.2.17.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar","scala-2.10.0.jar","kvbase_2.10-0.1.0.jar", "kamanjautils_2.10-1.0.jar","kamanjabase_2.10-1.0.jar","customudflib_2.10-1.0.jar", "pmmlcompiler_2.10-1.0.jar","basetypes_2.10-0.1.0.jar","basefunctions_2.10-0.1.0.jar","json4s-core_2.10-3.2.9.jar","json4s-jackson_2.10-3.2.9.jar", "pmmlruntime_2.10-1.0.jar", "pmmludfs_2.10-1.0.jar","datadelimiters_2.10-1.0.jar","metadata_2.10-1.0.jar", "exceptions_2.10-1.0.jar","json4s-ast_2.10-3.2.9.jar", "json4s-native_2.10-3.2.9.jar", "bootstrap_2.10-1.0.jar","messagedef_2.10-1.0.jar", "guava-16.0.1.jar", "guava-18.0.jar", "guava-19.0.jar","scala-reflect-2.10.4.jar","scala-library-2.10.4.jar","jackson-databind-2.3.1.jar","jackson-core-2.3.1.jar","joda-time-2.8.2.jar","jackson-annotations-2.3.0.jar","joda-convert-1.6.jar","jsr305-1.3.9.jar","log4j-api-2.4.1.jar","log4j-core-2.4.1.jar")) 
 
     // If source is 2.10 and destination is 2.11, then only tranform this. otherwise just leave them as it is. 
     if (_fromScalaVersion.equalsIgnoreCase("2.10") && _toScalaVersion.equalsIgnoreCase("2.11")) {
@@ -948,6 +953,86 @@ class MigrateTo_V_1_4 extends MigratableTo {
         throw new Exception("Failed to add metadata")
       }
     }
+  }
+
+  override def getMessagesAndContainers(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): java.util.List[String] = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+
+    val excludedMetadataTypes = if (excludeMetadata != null && excludeMetadata.length > 0) excludeMetadata.map(t => t.toLowerCase.trim).toSet else Set[String]()
+
+    // Order metadata to add in the given order.
+    // First get all the message & containers And also the excluded types we automatically add when we add messages & containers
+    val allTemp = ArrayBuffer[(String, Map[String, Any])]()
+    val types = ArrayBuffer[(String, Map[String, Any])]()
+    val messages = ArrayBuffer[(String, Map[String, Any])]()
+    val containers = ArrayBuffer[(String, Map[String, Any])]()
+    val functions = ArrayBuffer[(String, Map[String, Any])]()
+    val mdlConfig = ArrayBuffer[(String, Map[String, Any])]()
+    val models = ArrayBuffer[(String, Map[String, Any])]()
+    val jarDef = ArrayBuffer[(String, Map[String, Any])]()
+    val configDef = ArrayBuffer[(String, Map[String, Any])]()
+    val typesToIgnore = scala.collection.mutable.Set[String]()
+
+    val addedMessagesContainers: java.util.List[String] = new java.util.ArrayList[String]()
+
+    allMetadataElemsJson.foreach(mdf => {
+      val json = parse(mdf.objDataInJson)
+      val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
+
+      val isActiveStr = jsonObjMap.getOrElse("IsActive", "").toString.trim()
+      if (isActiveStr.size > 0) {
+        val isActive = jsonObjMap.getOrElse("IsActive", "").toString.trim().toBoolean
+        if (isActive) {
+          if (mdf.objType == "MessageDef") {
+
+            val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+
+            typesToIgnore += (namespace + ".arrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arraybufferof" + name).toLowerCase
+            typesToIgnore += (namespace + ".sortedsetof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arrayofarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".setof" + name).toLowerCase
+            typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
+
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              messages += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
+            }
+          } else if (mdf.objType == "ContainerDef") {
+
+            val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+
+            typesToIgnore += (namespace + ".arrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arraybufferof" + name).toLowerCase
+            typesToIgnore += (namespace + ".sortedsetof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arrayofarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".setof" + name).toLowerCase
+            typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
+
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              containers += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
+            }
+          } else {
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              allTemp += ((mdf.objType, jsonObjMap))
+            }
+          }
+        }
+      }
+    })
+    addedMessagesContainers
   }
 
   override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): java.util.List[String] = {
