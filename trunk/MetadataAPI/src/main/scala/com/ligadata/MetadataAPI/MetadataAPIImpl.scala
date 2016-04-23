@@ -3026,7 +3026,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
       case "adapterDef" | "nodeDef" | "clusterInfoDef" | "clusterDef" | "upDef"=> {
           zkMessage.Operation match {
-              case "Add" | "Update" => {
+              case "Add" | "Update" | "Remove" => {
                 updateClusterConfigForKey(zkMessage.ObjectType, zkMessage.Name, zkMessage.NameSpace, zkMessage.Operation)
               }
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
@@ -3996,15 +3996,21 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   private def updateClusterConfigForKey(elemType: String, key: String, clusterId: String, operation: String): Unit = {
 
     if (elemType.equalsIgnoreCase("adapterDef")) {
-      //val obj = GetObject("adapterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
-      MdMgr.GetMdMgr.AddAdapter(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
+        MdMgr.GetMdMgr.AddAdapter(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.name.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
+        MdMgr.GetMdMgr.AddAdapter(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.name.toLowerCase, storedInfo))
+        return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        MdMgr.GetMdMgr.RemoveAdapter(key)
+        MdMgr.GetMdMgr.addConfigChange((elemType + "." + "remove" + "." + key, null))
         return
       }
       return
@@ -4012,30 +4018,40 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("nodeDef")) {
      // val obj = GetObject("nodeinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
-      MdMgr.GetMdMgr.AddNode(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
+        MdMgr.GetMdMgr.AddNode(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.nodeId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
+        MdMgr.GetMdMgr.AddNode(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.nodeId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove node def - not supported")
       }
       return
     }
 
     if (elemType.equalsIgnoreCase("clusterInfoDef")) {
       //val obj = GetObject("clustercfginfo."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
-      MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
+        MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
+        MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove clusterInfoDef - not supported")
       }
       return
 
@@ -4044,30 +4060,40 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("clusterDef")) {
       //val obj = GetObject("clusterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
-      MdMgr.GetMdMgr.AddCluster(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
+        MdMgr.GetMdMgr.AddCluster(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
+        MdMgr.GetMdMgr.AddCluster(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove clusterDef - not supported")
       }
       return
     }
 
     if (elemType.equalsIgnoreCase("upDef")) {
       //val obj = GetObject("userproperties."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
-      MdMgr.GetMdMgr.AddUserProperty(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
+        MdMgr.GetMdMgr.AddUserProperty(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
+        MdMgr.GetMdMgr.AddUserProperty(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove User Properties - not supported")
       }
       return
     }

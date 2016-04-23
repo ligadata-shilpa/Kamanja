@@ -931,6 +931,14 @@ class KamanjaManager extends Observer {
       var csa: DataStore = null
 
       // If this is an add - just call updateAdapter, he will figure out if its input or output
+      if (action.equalsIgnoreCase("remove")) {
+        // SetUpdatePartitionsFlag
+        inputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) ad.Shutdown })
+        outputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName))  ad.Shutdown })
+        storageAdapters.foreach(ad => { if (ad != null && ad.adapterInfo != null && ad.adapterInfo.Name.equalsIgnoreCase(objectName))  ad.Shutdown })
+      }
+
+      // If this is an add - just call updateAdapter, he will figure out if its input or output
       if (action.equalsIgnoreCase("add")) {
         KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
         return true

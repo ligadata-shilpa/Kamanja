@@ -318,11 +318,17 @@ object KamanjaMdCfg {
     null
   }
 
+  /**
+    * upadateAdapter - given an adapter update the list of currently recongized adapters on a system.  Note, the new adapter, if its an update or remove
+    *                  better be shut down.
+    * @param inAdapter
+    * @param isNew
+    * @param inputAdapters
+    * @param outputAdapters
+    * @param storageAdapters
+    * @return
+    */
   def upadateAdapter(inAdapter: AdapterInfo, isNew: Boolean, inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[DataStore]): Boolean = {
-
-    println("Updating adapter ")
-    println(inAdapter.Name)
-
 
       val conf = new AdapterConfiguration  //BOOOYA
       conf.Name = inAdapter.Name.toLowerCase
@@ -337,6 +343,14 @@ object KamanjaMdCfg {
           val adapter = CreateInputAdapterFromConfig(conf, ExecContextFactoryImpl, KamanjaMetadata.gNodeContext).asInstanceOf[InputAdapter]
           if (adapter == null) return false
 
+          // Set up all the Bindings for this new adapter
+          adapter.setObjectResolver(KamanjaMetadata)
+          val adapterLevelBinding = mdMgr.AllAdapterMessageBindings.values.groupBy(_.adapterName.trim.toLowerCase)
+          val bindsInfo = adapterLevelBinding.getOrElse(adapter.getAdapterName.toLowerCase, null)
+          if (bindsInfo != null) {
+            adapter.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+          }
+
           // If this is a new adapter.. just add to the list of adapters. Else, remvoe the old one and replace with the new one.
           if (!isNew) {
             var i = 0
@@ -345,16 +359,26 @@ object KamanjaMdCfg {
               if (inAdapter.Name.equalsIgnoreCase(ad.inputConfig.Name)) pos = i
               i += 1
             })
-            println("Removing input adapter at pos " + pos)
+            LOG.warn("updating a new adater " + adapter.inputConfig.Name)
             inputAdapters.remove(pos)
           }
           inputAdapters.append(adapter)
-          println("adding input adapter")
+          LOG.warn("New Adapter added " + adapter.inputConfig.Name)
         }
 
         if (inAdapter.typeString.equalsIgnoreCase("output")) {
           val adapter = CreateOutputAdapterFromConfig(conf, KamanjaMetadata.gNodeContext).asInstanceOf[OutputAdapter]
           if (adapter == null) return false
+
+          adapter.setObjectResolver(KamanjaMetadata)
+          val adapterLevelBinding = mdMgr.AllAdapterMessageBindings.values.groupBy(_.adapterName.trim.toLowerCase())
+          val bindsInfo = adapterLevelBinding.getOrElse(adapter.getAdapterName.toLowerCase, null)
+          if (bindsInfo != null) {
+            // Message Name, Serializer Name & options.
+            adapter.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+          }
+
+
           // If this is a new adapter.. just add to the list of adapters. Else, remvoe the old one and replace with the new one.
           if (!isNew) {
             var i = 0
@@ -364,10 +388,10 @@ object KamanjaMdCfg {
               i += 1
             })
             outputAdapters.remove(pos)
-            println("Removing output adapter at pos " + pos)
+            LOG.warn("updating a new adater " + adapter.inputConfig.Name)
           }
           outputAdapters.append(adapter)
-          println("adding output adapter")
+          LOG.warn("New Adapter added " + adapter.inputConfig.Name)
         }
 
       } catch {
