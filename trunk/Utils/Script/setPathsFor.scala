@@ -16,8 +16,7 @@ exec scala "$0" "$@"
  *
  * Example:
  *
- * setPathsFor.scala --installDir $KAMANJA_HOME --templateFile $MetadataDir/
- templates/Engine1Config_Template.properties --scalaHome $SCALA_HOME --javaHome $JAVA_HOME --storeType cassandra --schemaName metadata --schemaLocation localhost` >/tmp/clusterconfig.json 
+ *  setPathsFor.scala --installDir /tmp/drdigital/KamanjaInstall-1.4.0_2.11 --templateFile ClusterConfig.1.4.0.json --scalaHome `which scala` --javaHome `which java` >/tmp/clusterconfig.json 
  *
  * The captured file then can be used for metadata ingestion (e.g., kamanja command ).
  *
@@ -55,7 +54,7 @@ class MapSubstitution(template: String, subMap: scala.collection.immutable.Map[S
 
 }
 
-object MapSubstitution extends App {
+object MapSubstitution {
 
 	def usage: String = {
     """
@@ -82,7 +81,7 @@ Note: An enhancement would be to pass in your keys that you wish to substitute.
 	}
 
 
-    override def main (args : Array[String]) {
+    def main (args : Array[String]) {
         val arglist = args.toList
         if (args.isEmpty) {
             println(usage)
