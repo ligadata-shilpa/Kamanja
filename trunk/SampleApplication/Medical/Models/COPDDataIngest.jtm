@@ -44,7 +44,7 @@
               "comment": "extract the type"
             }
           },
-          "where": "\"com.ligadata.kamanja.samples.messages.hl7\" == $typeName.toLowerCase",
+          "where": "\"com.ligadata.kamanja.samples.messages.hl7\" == $typeName.trim.toLowerCase",
           "mapbyposition": {
             "inpData" : [ "-", "desynpuf_id", "clm_id", "clm_from_dt", "clm_thru_dt", "bene_birth_dt", "bene_death_dt", "bene_sex_ident_cd", 
             				"bene_race_cd", "bene_esrd_ind", "sp_state_code", "bene_county_cd", "bene_hi_cvrage_tot_mons", "bene_smi_cvrage_tot_mons", 
@@ -71,7 +71,7 @@
               "comment": "extract the type"
             }
           },
-          "where": "\"com.ligadata.kamanja.samples.messages.outpatientclaim\" == $typeName.toLowerCase",
+          "where": "\"com.ligadata.kamanja.samples.messages.outpatientclaim\" == $typeName.trim.toLowerCase",
           "mapping": {
             "desynpuf_id": "$inpData(1)",
             "clm_id": "$inpData(2)",
@@ -101,7 +101,7 @@
               "comment": "extract the type"
             }
           },
-          "where": "\"com.ligadata.kamanja.samples.messages.inpatientclaim\" == $typeName.toLowerCase",
+          "where": "\"com.ligadata.kamanja.samples.messages.inpatientclaim\" == $typeName.trim.toLowerCase",
           "mapping": {
             "desynpuf_id": "$inpData(1)",
             "clm_id": "$inpData(2)",
@@ -136,7 +136,7 @@
               "comment": "extract the type"
             }
           },
-          "where": "\"com.ligadata.kamanja.samples.messages.beneficiary\" == $typeName.toLowerCase",
+          "where": "\"com.ligadata.kamanja.samples.messages.beneficiary\" == $typeName.trim.toLowerCase",
           "mapping": {
             "desynpuf_id": "$inpData(1)",
             "bene_birth_dt": "$inpData(2)",
