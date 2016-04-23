@@ -37,7 +37,7 @@ class COPDRiskAssessmentFactory(modelDef: ModelDef, nodeContext: NodeContext) ex
 
 class COPDRiskAssessment(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
-    var msgBeneficiary: Beneficiary = txnCtxt.getMessage().asInstanceOf[Beneficiary]
+    var msgBeneficiary: Beneficiary = execMsgsSet(0).asInstanceOf[Beneficiary]
     val smokingCodeSet: Array[String] = SmokeCodes.getRDD.map { x => (x.icd9code) }.toArray
     val sputumCodeSet: Array[String] = SputumCodes.getRDD.map { x => (x.icd9code) }.toArray
     val envExposureCodeSet: Array[String] = EnvCodes.getRDD.map { x => (x.icd9code) }.toArray

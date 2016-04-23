@@ -337,7 +337,7 @@ trait AdaptersSerializeDeserializers {
     return Serialization.write(map)
   }
 
-  private def resolveBinding(serName: String, options: Map[String, Any]): MsgBindingInfo = {
+  protected def resolveBinding(serName: String, options: Map[String, Any]): MsgBindingInfo = {
     if (objectResolver == null)
       throw new KamanjaException("Metadata/ObjectResolver manager is not yet set", null)
 
@@ -413,6 +413,12 @@ trait AdaptersSerializeDeserializers {
     }
     return retVal
   }
+
+  // No need to implement by default
+  def getDefaultSerializerDeserializer: MsgBindingInfo = null
+
+  // No need to implement by default
+  def setDefaultSerializerDeserializer(defaultSerDeser: String, serDeserOptions: Map[String, Any]): Unit = {}
 
   // This tuple has Message Name, Serializer Name & options.
   final def addMessageBinding(msgName: String, serName: String, options: Map[String, Any]): Unit = {
@@ -517,7 +523,8 @@ trait AdaptersSerializeDeserializers {
     val allMsgBindings = getAllMessageBindings
 
     outputContainers.map(c => {
-      val ser = allMsgBindings.getOrElse(c.getFullTypeName.toLowerCase(), null)
+      val tmpSer = allMsgBindings.getOrElse(c.getFullTypeName.toLowerCase(), null)
+      val ser = if (tmpSer != null) tmpSer else if (getDefaultSerializerDeserializer != null) getDefaultSerializerDeserializer else null
       if (ser != null && ser.serInstance != null) {
         try {
           val serData = ser.serInstance.serialize(c)
@@ -560,8 +567,8 @@ trait AdaptersSerializeDeserializers {
     logger.debug("called deserialize")
     // We are going thru getAllMessageBindings and get from it ourself?. So one read lock for every serialize fintion
     val allMsgBindings = getAllMessageBindings
-    if (allMsgBindings.size == 0) {
-      logger.debug("Not found any bindings to deserialize")
+    if (allMsgBindings.size == 0 && getDefaultSerializerDeserializer == null) {
+      logger.debug("Not found any bindings to deserialize (including default serializer)")
       return (null, null, null)
     }
 
@@ -569,7 +576,8 @@ trait AdaptersSerializeDeserializers {
       throw new KamanjaException("We can not deserialize more than one message from input adapter. Found:" + allMsgBindings.map(b => b._1), null)
     }
 
-    val ser = allMsgBindings.values.head
+    val tmpSer = allMsgBindings.values.head
+    val ser = if (tmpSer != null) tmpSer else if (getDefaultSerializerDeserializer != null) getDefaultSerializerDeserializer else null
     val msgName = allMsgBindings.keys.head
     if (ser != null && ser.serInstance != null) {
       try {
@@ -604,7 +612,8 @@ trait AdaptersSerializeDeserializers {
       return (null, null)
     }
 
-    val ser = getMessageBinding(msgName)
+    val tmpSer = getMessageBinding(msgName)
+    val ser = if (tmpSer != null) tmpSer else if (getDefaultSerializerDeserializer != null) getDefaultSerializerDeserializer else null
     if (ser != null && ser.serInstance != null) {
       try {
         val container = ser.serInstance.deserialize(data, msgName)
@@ -616,7 +625,7 @@ trait AdaptersSerializeDeserializers {
       }
     } else {
       val adapName = getAdapterName
-      logger.error(s"Did not find/load Serializer for container/message:${msgName} of schemaid:${schemaId}. Not returning container from Adapter:${adapName}")
+      logger.error(s"Did not find/load Serializer for container/message:${msgName} of schemaid:${schemaId} (including default serializer). Not returning container from Adapter:${adapName}")
       return (null, null)
     }
   }

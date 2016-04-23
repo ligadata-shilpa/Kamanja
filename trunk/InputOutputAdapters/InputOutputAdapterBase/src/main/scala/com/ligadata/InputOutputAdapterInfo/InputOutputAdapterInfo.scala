@@ -249,9 +249,11 @@ trait ExecContext {
   final def execute(data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
     val deserializer = ""
     val failedMsg = ""
+    var messageName = ""
 
     try {
       val (tMsg, tDeserializerName, msgName) = input.deserialize(data)
+      messageName = if (msgName != null) msgName else ""
       LOG.debug("Called Deserialize and got msg:" + (if (tMsg == null) "" else tMsg.getFullTypeName))
       val deserializer = if (tDeserializerName != null) tDeserializerName else ""
       val failedMsg = if (msgName != null) msgName else ""
@@ -277,7 +279,7 @@ trait ExecContext {
       }
     } catch {
       case e: Throwable => {
-        LOG.error("Failed to Deserialize/Execute", e)
+        LOG.error("Failed to Deserialize/Execute. MessageName:" + messageName, e)
         SendFailedEvent(data, deserializer, failedMsg, uniqueKey, uniqueVal, e)
       }
     }

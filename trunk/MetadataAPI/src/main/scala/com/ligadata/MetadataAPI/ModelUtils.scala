@@ -711,6 +711,7 @@ object ModelUtils {
     if (depsList != null)
       jarsList ++= depsList;
 
+/*
     val typesLst = MetadataAPIImpl.getModelMessagesContainers(modelName, userid)
 
       if (typesLst != null) {
@@ -735,6 +736,7 @@ object ModelUtils {
           }
         })
       }
+*/
 
     jarsList.toList
   }
@@ -864,7 +866,7 @@ object ModelUtils {
                     if (typDeps.isInstanceOf[Array[_]])
                       deps ++= typDeps.asInstanceOf[Array[String]]
                   }
-
+/*
                   val typesLst = {
                     val typDeps = modelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
                     if (typDeps != null) {
@@ -902,6 +904,7 @@ object ModelUtils {
                       }
                     })
                   }
+*/
                 }
                 catch {
                   case e: Throwable => {

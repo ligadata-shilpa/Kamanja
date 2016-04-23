@@ -738,7 +738,7 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
 
   // metadataElemsJson are used for dependency load
   // Callback function calls with container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
-  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], callbackFunction: DataObjectCallBack): Unit = {
+  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], msgsAndContainers:java.util.List[String], callbackFunction: DataObjectCallBack): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     throw new Exception("Not yet implemented")
