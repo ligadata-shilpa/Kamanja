@@ -137,7 +137,7 @@ class JSONSerDes extends SerializeDeserialize {
                 case MAP => { keyAsJson(sb, indentLevel+1, valueType.getName); mapAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Map[Any, Any]]) }
                 case ARRAY => { keyAsJson(sb, indentLevel+1, valueType.getName); arrayAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Array[Any]]) }
                 case (MESSAGE | CONTAINER) => { keyAsJson(sb, indentLevel+1, valueType.getName); containerAsJson(sb, indentLevel+1, rawValue.asInstanceOf[ContainerInterface]) }
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => nameValueAsJson(sb, indentLevel+1, valueType.getName, rawValue, quoteValue)
+                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => nameValueAsJson(sb, indentLevel+1, valueType.getName, rawValue, quoteValue)
                 case _ => throw new UnsupportedObjectException(s"container type ${valueType.getName} not currently serializable", null)
             }
             sb.append(commaSuffix)
@@ -204,7 +204,7 @@ class JSONSerDes extends SerializeDeserialize {
         val quoteValue = useQuotesOnValue(valType)
 
         keyType match {
-            case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => ;
+            case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => ;
             case _ => throw new UnsupportedObjectException(s"json serialize doesn't support maps as with complex key types, keyType: ${keyType.name}", null)
         }
         val indentStr = getIndentStr(indentLevel)
@@ -222,7 +222,7 @@ class JSONSerDes extends SerializeDeserialize {
             sb.append(mapJsonHead)
             keyAsJson(sb, 0, k.toString)
             valType match {
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => valueAsJson(sb, 0, v, quoteValue);
+                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, v, quoteValue);
                 case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
                 case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[Any]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, v.asInstanceOf[ContainerInterface])
@@ -287,7 +287,7 @@ class JSONSerDes extends SerializeDeserialize {
             if(idx > 0) sb.append(", ")
             idx += 1
             itemType match {
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => valueAsJson(sb, 0, itm, quoteValue);
+                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, itm, quoteValue);
                 case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
                 case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[Any]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, itm.asInstanceOf[ContainerInterface])
@@ -360,6 +360,7 @@ class JSONSerDes extends SerializeDeserialize {
                 val valType = at.getValTypeCategory
                 val fld = valType match {
                     case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => v
+                    case CHAR => { if (v != null && v.isInstanceOf[String] && v.asInstanceOf[String].size > 0) v.asInstanceOf[String].charAt(0) else ' ' }
                     case MAP => jsonAsMap(at, v.asInstanceOf[Map[String, Any]])
                     case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(v.asInstanceOf[Map[String,Any]])
                     case ARRAY => jsonAsArray(at, v.asInstanceOf[List[Any]])
@@ -389,6 +390,7 @@ class JSONSerDes extends SerializeDeserialize {
             val list : List[Any] = collElements.map(itm => {
                 val fld = itmType match {
                     case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => itm
+                    case CHAR => { if (itm != null && itm.isInstanceOf[String] && itm.asInstanceOf[String].size > 0) itm.asInstanceOf[String].charAt(0) else ' ' }
                     case MAP => itm.asInstanceOf[Map[String, Any]]
                     case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(itm.asInstanceOf[Map[String,Any]])
                     case ARRAY => itm.asInstanceOf[List[Any]].toArray
@@ -419,6 +421,7 @@ class JSONSerDes extends SerializeDeserialize {
             val value : Any = pair._2
             val fld = valType match {
                 case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => value
+                case CHAR => { if (value != null && value.isInstanceOf[String] && value.asInstanceOf[String].size > 0) value.asInstanceOf[String].charAt(0) else ' ' }
                 case MAP => value.asInstanceOf[Map[String, Any]]
                 case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(value.asInstanceOf[Map[String,Any]])
                 case ARRAY => value.asInstanceOf[List[Any]].toArray
