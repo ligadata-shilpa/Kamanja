@@ -16,8 +16,9 @@ class SchemaCompiler {
   val openBrace = "{";
   val closeBrace = "}";
   val integer = "integer";
-  val primitiveTypes = Array("null", "int", "long", "float", "double", "bytes", "string", "char", "boolean");
+  val primitiveTypes = Array("null", "int", "long", "float", "double", "bytes", "string", "boolean");
   val int = "int";
+  val scalrMap = Map("integer" -> "int", "char" -> "string")
 
   val logger = this.getClass.getName
   lazy val log = LogManager.getLogger(logger)
@@ -87,14 +88,24 @@ class SchemaCompiler {
             if (fieldTypestr.size == 1) { // this condition may not occur system by default it is system.fieldtype
               if (primitiveTypes.contains(field.Ttype)) {
                 fldStr = primitiveTypes(primitiveTypes.indexOf(field.Ttype));
-              } else if (field.Ttype.equalsIgnoreCase(integer)) {
-                fldStr = int;
+              } else if (scalrMap.contains(field.Ttype.toLowerCase())) { //if (field.Ttype.equalsIgnoreCase(integer)) {
+                fldStr = scalrMap(field.Ttype.toLowerCase());
               }
               retFldStr = generateFieldType(fldStr, bslash, quote)
             } else if (fieldTypestr.size == 2) {
+              val size = fieldTypestr(1).length()
               log.info("fieldTypestr(1).substring(7) " + fieldTypestr(1));
-              if (primitiveTypes.contains(fieldTypestr(1)) || primitiveTypes.contains(fieldTypestr(1).substring(7)) || primitiveTypes.contains(fieldTypestr(1).substring(5)) || fieldTypestr(1).equalsIgnoreCase(integer) || fieldTypestr(1).substring(7).equalsIgnoreCase(integer) || fieldTypestr(1).substring(5).equalsIgnoreCase(integer)) {
+
+              if (primitiveTypes.contains(fieldTypestr(1)) || scalrMap.contains(fieldTypestr(1).toLowerCase())) {
                 retFldStr = parseFldStr(fieldTypestr) //handling array of primitive types (scalar types)
+                log.info("retFldStr "+retFldStr);
+              
+              } else if (primitiveTypes.contains(fieldTypestr(1).substring(5)) || scalrMap.contains(fieldTypestr(1).substring(5).toLowerCase())) {
+                retFldStr = parseFldStr(fieldTypestr) //handling array of primitive types (scalar types)
+              
+              } else if (primitiveTypes.contains(fieldTypestr(1).substring(7)) || scalrMap.contains(fieldTypestr(1).substring(7).toLowerCase())) {
+                retFldStr = parseFldStr(fieldTypestr) //handling array of primitive types (scalar types)
+              
               } else {
                 retFldStr = parseContainer(field, mdMgr) //handling array of containers if the container if the namespace is one word
               }
@@ -141,9 +152,9 @@ class SchemaCompiler {
 
         fldStr = primitiveTypes(primitiveTypes.indexOf(fieldTypestr1));
         retFldStr = generateFieldType(fldStr, bslash, quote)
-      } else if (fieldTypestr(1).equalsIgnoreCase(integer)) {
+      } else if (scalrMap.contains(fieldTypestr(1).toLowerCase)) {
 
-        fldStr = int;
+        fldStr = scalrMap(fieldTypestr(1).toLowerCase);
         retFldStr = generateFieldType(fldStr, bslash, quote)
 
       } else if (fieldTypestr1.startsWith("array") || fieldTypestr1.startsWith("arraybuf")) {

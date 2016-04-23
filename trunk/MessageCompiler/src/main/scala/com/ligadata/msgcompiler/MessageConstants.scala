@@ -226,7 +226,7 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
         if (keyTypes.contains(key)) {
           valuesMap(key) = new AttributeValue(value, keyTypes(keyName))
         } else {
-          valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0))
+          valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0))
         }
       } catch {
         case e: Exception => {
