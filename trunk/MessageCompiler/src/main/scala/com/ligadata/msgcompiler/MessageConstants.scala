@@ -47,6 +47,7 @@ class MessageConstants {
   val isKV: String = "%soverride def IsKv: Boolean = %s; %s"; //false;
   val canPersist: String = "%soverride def CanPersist: Boolean = %s; %s"; //true;
   val getFullName: String = "%soverride def getFullName = getFullTypeName; %s";
+  val getRddTenantId: String = "%override def getRddTenantId = getTenantId; %s";
   val toJavaRDD: String = "%soverride def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this); %s";
 
   val paritionKeyData: String = "%soverride def getPartitionKey: Array[String] = %s ";

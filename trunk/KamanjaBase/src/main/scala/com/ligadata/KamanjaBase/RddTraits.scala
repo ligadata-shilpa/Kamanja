@@ -684,6 +684,12 @@ abstract class RDDObject[T: ClassTag] {
   def getFullName: String // Gets Message/Container Name
 
   /**
+    * Implemented by an actual Message or Container class that is generated during message/container deployment
+    * @return String
+    */
+  def getRddTenantId: String // Gets TenantId
+
+  /**
    * Implemented by an actual Message or Container class that is generated during message/container deployment
    * @return JavaRDDObject[T]
    */
@@ -705,7 +711,7 @@ abstract class RDDObject[T: ClassTag] {
   final def getRecent: Option[T] = {
     val txnContext = getCurrentTransactionContext
     if (txnContext != null) {
-      val fndVal = txnContext.getRecent(getFullName, txnContext.getMessage.getPartitionKey.toList, null, null)
+      val fndVal = txnContext.getRecent(getRddTenantId, getFullName, txnContext.getMessage.getPartitionKey.toList, null, null)
       if (fndVal != None)
         return Some(fndVal.get.asInstanceOf[T])
     }
@@ -734,7 +740,7 @@ abstract class RDDObject[T: ClassTag] {
   final def getRecent(key: Array[String]): Option[T] = {
     val txnContext = getCurrentTransactionContext
     if (txnContext != null) {
-      val fndVal = txnContext.getRecent(getFullName, key.toList, null, null)
+      val fndVal = txnContext.getRecent(getRddTenantId, getFullName, key.toList, null, null)
       if (fndVal != None)
         return Some(fndVal.get.asInstanceOf[T])
     }
@@ -763,7 +769,7 @@ abstract class RDDObject[T: ClassTag] {
   final def getOne(tmRange: TimeRange, f: ContainerInterface => Boolean): Option[T] = {
     val txnContext = getCurrentTransactionContext
     if (txnContext != null) {
-      val fndVal = txnContext.getRecent(getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, f)
+      val fndVal = txnContext.getRecent(getRddTenantId, getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, f)
       if (fndVal != None)
         return Some(fndVal.get.asInstanceOf[T])
     }
@@ -794,7 +800,7 @@ abstract class RDDObject[T: ClassTag] {
   final def getOne(key: Array[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[T] = {
     val txnContext = getCurrentTransactionContext
     if (txnContext != null) {
-      val fndVal = txnContext.getRecent(getFullName, key.toList, tmRange, f)
+      val fndVal = txnContext.getRecent(getRddTenantId, getFullName, key.toList, tmRange, f)
       if (fndVal != None)
         return Some(fndVal.get.asInstanceOf[T])
     }
@@ -825,7 +831,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, txnContext.getMessage.getPartitionKey.toList, null, f)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, txnContext.getMessage.getPartitionKey.toList, null, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -842,7 +848,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, null)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, null)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -860,7 +866,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, f)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, txnContext.getMessage.getPartitionKey.toList, tmRange, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -878,7 +884,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, null, null, null)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, null, null, null)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -897,7 +903,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, null, tmRange, f)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, null, tmRange, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -915,7 +921,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, null, tmRange, null)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, null, tmRange, null)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -933,7 +939,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, null, null, f)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, null, null, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -952,7 +958,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, key.toList, tmRange, f)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, key.toList, tmRange, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -970,7 +976,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, key.toList, null, f)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, key.toList, null, f)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -988,7 +994,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, key.toList, tmRange, null)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, key.toList, tmRange, null)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
@@ -1005,7 +1011,7 @@ abstract class RDDObject[T: ClassTag] {
     val txnContext = getCurrentTransactionContext
     var values: Array[T] = Array[T]()
     if (txnContext != null) {
-      val fndVal = txnContext.getRDD(getFullName, key.toList, null, null)
+      val fndVal = txnContext.getRDD(getRddTenantId, getFullName, key.toList, null, null)
       if (fndVal != null)
         values = fndVal.map(v => v.asInstanceOf[T])
     }
