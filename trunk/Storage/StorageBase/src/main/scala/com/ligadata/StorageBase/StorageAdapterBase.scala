@@ -247,7 +247,12 @@ trait DataStore extends DataStoreOperations with AdaptersSerializeDeserializers 
   var _defaultSerDeser: MsgBindingInfo = null
   var _serDeserOptions: Map[String, Any] = null
 
-  final def setDefaultSerializerDeserializer(defaultSerDeser: String, serDeserOptions: Map[String, Any]): Unit = {
+  final override def getDefaultSerializerDeserializer: MsgBindingInfo = _defaultSerDeser
+
+  final override def setDefaultSerializerDeserializer(defaultSerDeser: String, serDeserOptions: Map[String, Any]): Unit = {
+    _defaultSerDeser = null
+    _defaultSerDeserName = null
+    _serDeserOptions = null
     _defaultSerDeser = resolveBinding(defaultSerDeser, serDeserOptions)
     if (_defaultSerDeser != null) {
       _defaultSerDeserName = defaultSerDeser
