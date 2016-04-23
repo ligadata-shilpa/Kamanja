@@ -134,8 +134,8 @@ class JSONSerDes extends SerializeDeserialize {
             val commaSuffix = if (processCnt < fieldCnt) "," else ""
             val quoteValue = useQuotesOnValue(valueType)
             valueType.getTypeCategory match {
-                case MAP => { keyAsJson(sb, indentLevel+1, valueType.getName); mapAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Map[Any, Any]]) }
-                case ARRAY => { keyAsJson(sb, indentLevel+1, valueType.getName); arrayAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Array[Any]]) }
+                case MAP => { keyAsJson(sb, indentLevel+1, valueType.getName); mapAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Map[_, _]]) }
+                case ARRAY => { keyAsJson(sb, indentLevel+1, valueType.getName); arrayAsJson(sb, indentLevel+1, valueType, rawValue.asInstanceOf[Array[_]]) }
                 case (MESSAGE | CONTAINER) => { keyAsJson(sb, indentLevel+1, valueType.getName); containerAsJson(sb, indentLevel+1, rawValue.asInstanceOf[ContainerInterface]) }
                 case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => nameValueAsJson(sb, indentLevel+1, valueType.getName, rawValue, quoteValue)
                 case _ => throw new UnsupportedObjectException(s"container type ${valueType.getName} not currently serializable", null)
@@ -198,7 +198,7 @@ class JSONSerDes extends SerializeDeserialize {
       * @param map the map instance
       * @return a Json string representation
       */
-    private def mapAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, map : scala.collection.mutable.Map[Any,Any]) = {
+    private def mapAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, map : scala.collection.mutable.Map[_,_]) = {
         val keyType = attribType.getKeyTypeCategory
         val valType = attribType.getValTypeCategory
         val quoteValue = useQuotesOnValue(valType)
@@ -223,8 +223,8 @@ class JSONSerDes extends SerializeDeserialize {
             keyAsJson(sb, 0, k.toString)
             valType match {
                 case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, v, quoteValue);
-                case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
-                case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[Any]])
+                case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[_, _]])
+                case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[_]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, v.asInstanceOf[ContainerInterface])
                 case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
             }
@@ -233,7 +233,7 @@ class JSONSerDes extends SerializeDeserialize {
         sb.append(mapJsonTail)
     }
 
-    private def mapGenericAsJson(sb: StringBuilder, indentLevel: Int, map : scala.collection.mutable.Map[Any,Any]) = {
+    private def mapGenericAsJson(sb: StringBuilder, indentLevel: Int, map : scala.collection.mutable.Map[_,_]) = {
         val indentStr = getIndentStr(indentLevel)
         // @TODO: for now, write entire map as a single line.. later it can be done in multi line using the passed in indentation as basis
         val mapJsonHead = "{ "
@@ -253,7 +253,7 @@ class JSONSerDes extends SerializeDeserialize {
         sb.append(mapJsonTail)
     }
 
-    private def arrayGenericAsJson(sb: StringBuilder, indentLevel: Int, array : Array[Any]) = {
+    private def arrayGenericAsJson(sb: StringBuilder, indentLevel: Int, array : Array[_]) = {
         val indentStr = getIndentStr(indentLevel)
         // @TODO: for now, write entire map as a single line.. later it can be done in multi line using the passed in indentation as basis
         val mapJsonHead = "[ "
@@ -276,7 +276,7 @@ class JSONSerDes extends SerializeDeserialize {
       * @param array the array instance
       * @return a Json string representation
       */
-    private def arrayAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, array : Array[Any]) = {
+    private def arrayAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, array : Array[_]) = {
         val itemType = attribType.getValTypeCategory
         val quoteValue = useQuotesOnValue(itemType)
         val mapJsonHead = "[ "
@@ -288,8 +288,8 @@ class JSONSerDes extends SerializeDeserialize {
             idx += 1
             itemType match {
                 case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, itm, quoteValue);
-                case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[Any, Any]])
-                case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[Any]])
+                case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[_, _]])
+                case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[_]])
                 case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, itm.asInstanceOf[ContainerInterface])
                 case _ => throw new UnsupportedObjectException("Not yet handled itemType:" + itemType, null)
             }
