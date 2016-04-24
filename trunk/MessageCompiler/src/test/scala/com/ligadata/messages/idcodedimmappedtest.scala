@@ -25,6 +25,7 @@ object IdCodeDimMappedTest extends RDDObject[IdCodeDimMappedTest] with Container
   override def isFixed: Boolean = false;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.CONTAINER
   override def getFullName = getFullTypeName;
+  override def getRddTenantId = getTenantId;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
   def build = new T(this)

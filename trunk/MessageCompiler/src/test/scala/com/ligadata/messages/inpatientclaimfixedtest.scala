@@ -25,6 +25,7 @@ object InpatientClaimFixedTest extends RDDObject[InpatientClaimFixedTest] with C
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.CONTAINER
   override def getFullName = getFullTypeName;
+  override def getRddTenantId = getTenantId;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
   def build = new T(this)
@@ -352,18 +353,18 @@ class InpatientClaimFixedTest(factory: ContainerFactoryInterface, other: Inpatie
           else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
         }
         case 6 => {
-          if (value.isInstanceOf[scala.collection.immutable.Map[String, com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]])
-            this.idcodedimmap = value.asInstanceOf[scala.collection.immutable.Map[String, com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]];
+          if (value.isInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]])
+            this.idcodedimmap = value.asInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]].map(v => (v._1, v._2.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]));
           else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
         }
         case 7 => {
-          if (value.isInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest])
-            this.idcodedim = value.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest];
+          if (value.isInstanceOf[ContainerInterface])
+            this.idcodedim = value.asInstanceOf[ContainerInterface].asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest];
           else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
         }
         case 8 => {
-          if (value.isInstanceOf[scala.Array[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]])
-            this.idcodedims = value.asInstanceOf[scala.Array[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]];
+          if (value.isInstanceOf[scala.Array[ContainerInterface]])
+            this.idcodedims = value.asInstanceOf[scala.Array[ContainerInterface]].map(v => v.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]);
           else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
         }
 

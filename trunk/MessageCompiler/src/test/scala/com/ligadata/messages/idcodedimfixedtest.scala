@@ -25,6 +25,7 @@ object IdCodeDimFixedTest extends RDDObject[IdCodeDimFixedTest] with ContainerFa
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.CONTAINER
   override def getFullName = getFullTypeName;
+  override def getRddTenantId = getTenantId;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
   def build = new T(this)
