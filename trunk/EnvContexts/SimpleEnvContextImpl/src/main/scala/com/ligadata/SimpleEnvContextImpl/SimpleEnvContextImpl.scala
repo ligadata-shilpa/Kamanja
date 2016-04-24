@@ -3192,6 +3192,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
   override def getClusterInfo(): ClusterStatus = _clusterStatusInfo
 
   private def EnvCtxtEventChangeCallback(cs: ClusterStatus): Unit = {
+    logger.warn("DistributionCheck:EnvCtxtEventChangeCallback. Entered from EnvCtxtEventChangeCallback. Got new ClusterStatus. NodeId:%s, LeaderNodeId:%s, Participents:%s, isLeader:%s".format(cs.nodeId,
+      cs.leaderNodeId, if (cs.participantsNodeIds != null) cs.participantsNodeIds.mkString(",") else "", cs.isLeader.toString))
     WriteLock(_zkLeader_reent_lock)
     try {
       _clusterStatusInfo = cs
@@ -3205,9 +3207,19 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     try {
       _zkLeaderListeners.foreach(fn => {
         try {
-          fn.EventChangeCallback(cs)
+          if (fn != null && fn.EventChangeCallback != null) {
+            logger.warn("DistributionCheck:EnvCtxtEventChangeCallback. Sending ClusterStatus to funcitons. NodeId:%s, LeaderNodeId:%s, Participents:%s, isLeader:%s".format(cs.nodeId,
+              cs.leaderNodeId, if (cs.participantsNodeIds != null) cs.participantsNodeIds.mkString(",") else "", cs.isLeader.toString))
+            fn.EventChangeCallback(cs)
+          } else {
+            logger.warn("DistributionCheck:EnvCtxtEventChangeCallback. Can not send ClusterStatus (function is null). NodeId:%s, LeaderNodeId:%s, Participents:%s, isLeader:%s".format(cs.nodeId,
+              cs.leaderNodeId, if (cs.participantsNodeIds != null) cs.participantsNodeIds.mkString(",") else "", cs.isLeader.toString))
+          }
         } catch {
-          case e: Throwable => {} // Not doing anything
+          case e: Throwable => {
+            logger.error("DistributionCheck:Failed to send ClusterStatus. NodeId:%s, LeaderNodeId:%s, Participents:%s, isLeader:%s".format(cs.nodeId,
+              cs.leaderNodeId, if (cs.participantsNodeIds != null) cs.participantsNodeIds.mkString(",") else "", cs.isLeader.toString), e)
+          }
         }
       })
     } catch {
@@ -3215,6 +3227,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     } finally {
       ReadUnlock(_zkLeader_reent_lock)
     }
+    logger.warn("DistributionCheck:EnvCtxtEventChangeCallback. Exiting from EnvCtxtEventChangeCallback. NodeId:%s, LeaderNodeId:%s, Participents:%s, isLeader:%s".format(cs.nodeId,
+      cs.leaderNodeId, if (cs.participantsNodeIds != null) cs.participantsNodeIds.mkString(",") else "", cs.isLeader.toString))
   }
 
   // This will give either any node change or leader change
@@ -3225,13 +3239,18 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     WriteLock(_zkLeader_reent_lock)
     try {
       if (_zkLeaderLatch == null) {
+        logger.warn("DistributionCheck:registerNodesChangeNotification. Registering as new listener and starting leader")
         _zkLeaderLatch = new ZkLeaderLatch(_zkConnectString, _zkleaderNodePath, _nodeId, EnvCtxtEventChangeCallback, _zkSessionTimeoutMs, _zkConnectionTimeoutMs)
         _zkLeaderListeners += LeaderListenerCallback(EventChangeCallback)
         _zkLeaderLatch.SelectLeader
       } else {
+        logger.warn("DistributionCheck:registerNodesChangeNotification. Registering as new listener with existing leader")
         _zkLeaderListeners += LeaderListenerCallback(EventChangeCallback)
-        if (_clusterStatusInfo != null)
+        if (_clusterStatusInfo != null) {
           EventChangeCallback(_clusterStatusInfo)
+          logger.warn("DistributionCheck:registerNodesChangeNotification. Sending existing ClusterStatus. NodeId:%s, LeaderNodeId:%s, Participents:%s, isLeader:%s".format(_clusterStatusInfo.nodeId,
+            _clusterStatusInfo.leaderNodeId, if (_clusterStatusInfo.participantsNodeIds != null) _clusterStatusInfo.participantsNodeIds.mkString(",") else "", _clusterStatusInfo.isLeader.toString))
+        }
       }
     } catch {
       case e: Throwable => {
