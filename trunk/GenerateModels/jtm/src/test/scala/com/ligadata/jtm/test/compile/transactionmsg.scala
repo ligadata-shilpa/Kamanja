@@ -23,6 +23,7 @@ object TransactionMsg extends RDDObject[TransactionMsg] with MessageFactoryInter
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
   override def getFullName = getFullTypeName;
+  override def getRddTenantId = getTenantId;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
   override def getTenantId: String = ""

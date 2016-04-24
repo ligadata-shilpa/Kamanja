@@ -112,7 +112,7 @@ class LearningEngine {
         val execMdl = nodeIdModlsObj.getOrElse(execNode.nodeId, null)
         if (execMdl != null) {
           if (LOG.isDebugEnabled)
-            LOG.debug("LearningEngine:Executing Model:" + execMdl._1.mdl.getModelName())
+            LOG.debug("LearningEngine:Executing Model:%s,NodeId:%d, iesPos:%d".format(execMdl._1.mdl.getModelName(), execNode.nodeId, execNode.iesPos))
           val curMd =
             if (execMdl._1.mdl.isModelInstanceReusable()) {
               if (execMdl._2 == null) { // First time initialize this
@@ -158,8 +158,10 @@ class LearningEngine {
                             LOG.debug("Origin nodeid is not valid")
                             ""
                           }
+                        LOG.debug("Input message:" + tmpElem.get.FullName)
                         txnCtxt.getContainersOrConcepts(origin, tmpElem.get.FullName)
                       } else {
+                        LOG.debug("Input message:" + tmpElem.get.FullName)
                         txnCtxt.getContainersOrConcepts(tmpElem.get.FullName)
                       }
 

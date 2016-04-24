@@ -918,6 +918,85 @@ class MigrateTo_V_1_3 extends MigratableTo {
     }
   }
 
+  override def getMessagesAndContainers(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): java.util.List[String] = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+
+    val excludedMetadataTypes = if (excludeMetadata != null && excludeMetadata.length > 0) excludeMetadata.map(t => t.toLowerCase.trim).toSet else Set[String]()
+
+    // Order metadata to add in the given order.
+    // First get all the message & containers And also the excluded types we automatically add when we add messages & containers
+    val allTemp = ArrayBuffer[(String, Map[String, Any])]()
+    val types = ArrayBuffer[(String, Map[String, Any])]()
+    val messages = ArrayBuffer[(String, Map[String, Any])]()
+    val containers = ArrayBuffer[(String, Map[String, Any])]()
+    val functions = ArrayBuffer[(String, Map[String, Any])]()
+    val mdlConfig = ArrayBuffer[(String, Map[String, Any])]()
+    val models = ArrayBuffer[(String, Map[String, Any])]()
+    val jarDef = ArrayBuffer[(String, Map[String, Any])]()
+    val configDef = ArrayBuffer[(String, Map[String, Any])]()
+    val typesToIgnore = scala.collection.mutable.Set[String]()
+
+    val addedMessagesContainers: java.util.List[String] = new java.util.ArrayList[String]()
+
+    allMetadataElemsJson.foreach(mdf => {
+      val json = parse(mdf.objDataInJson)
+      val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
+
+      val isActiveStr = jsonObjMap.getOrElse("IsActive", "").toString.trim()
+      if (isActiveStr.size > 0) {
+        val isActive = jsonObjMap.getOrElse("IsActive", "").toString.trim().toBoolean
+        if (isActive) {
+          if (mdf.objType == "MessageDef") {
+
+            val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+
+            typesToIgnore += (namespace + ".arrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arraybufferof" + name).toLowerCase
+            typesToIgnore += (namespace + ".sortedsetof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arrayofarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".setof" + name).toLowerCase
+            typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
+
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              messages += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
+            }
+          } else if (mdf.objType == "ContainerDef") {
+
+            val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+            val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+
+            typesToIgnore += (namespace + ".arrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arraybufferof" + name).toLowerCase
+            typesToIgnore += (namespace + ".sortedsetof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".immutablemapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".arrayofarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofstringarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".mapofintarrayof" + name).toLowerCase
+            typesToIgnore += (namespace + ".setof" + name).toLowerCase
+            typesToIgnore += (namespace + ".treesetof" + name).toLowerCase
+
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              containers += ((mdf.objType, jsonObjMap))
+              addedMessagesContainers.add(namespace + "." + name)
+            }
+          } else {
+            if (excludedMetadataTypes.contains(mdf.objType.toLowerCase()) == false) {
+              allTemp += ((mdf.objType, jsonObjMap))
+            }
+          }
+        }
+      }
+    })
+  }
+
   override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): java.util.List[String] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")

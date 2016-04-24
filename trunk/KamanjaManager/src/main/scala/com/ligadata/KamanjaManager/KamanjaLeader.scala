@@ -1265,6 +1265,9 @@ object KamanjaLeader {
           }
         })
 
+        // Forcing to distribute data
+        SetUpdatePartitionsFlag
+
 //          zkLeaderLatch = new ZkLeaderLatch(zkConnectString, engineLeaderZkNodePath, nodeId, EventChangeCallback, zkSessionTimeoutMs, zkConnectionTimeoutMs)
 //        zkLeaderLatch.SelectLeader
         /*

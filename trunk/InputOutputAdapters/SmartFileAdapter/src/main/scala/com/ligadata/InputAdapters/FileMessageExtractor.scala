@@ -95,7 +95,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         return
       }
       case fio: IOException => {
-        logger.error("SMART_FILE_CONSUMER Exception accessing the file for processing the file ",fio)
+        logger.error("SMART_FILE_CONSUMER Exception accessing the file for processing ",fio)
         //setFileState(fileName,FileProcessor.MISSING)
         return
       }
@@ -192,16 +192,17 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     try {
       // markFileAsFinished(fileName)
       finished = true
-      executor.shutdown()
+
       if (fileHandler != null) fileHandler.close
 
       if(finishCallback != null)
         finishCallback(fileHandler, consumerContext)
       //bis = null
+
+      executor.shutdown()
     } catch {
       case ioe: IOException => {
-        logger.warn("SMART FILE CONSUMER: Unable to detect file as being processed " + fileName)
-        logger.warn("SMART FILE CONSUMER: Check to make sure the input directory does not still contain this file " + ioe)
+        logger.error("SMART FILE CONSUMER: Exception while accessing the file for processing " + fileName, ioe)
       }
     }
 

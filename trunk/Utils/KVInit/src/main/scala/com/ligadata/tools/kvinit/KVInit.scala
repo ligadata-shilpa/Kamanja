@@ -329,14 +329,8 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     isOk = false
   }
 
-  val dataStore = if (isOk) cluster.cfgMap.getOrElse("SystemCatalog", null) else null
-  if (isOk && dataStore == null) {
-    logger.error("SystemCatalog not found for Node %d  & ClusterId : %s".format(KvInitConfiguration.nodeId, nodeInfo.ClusterId))
-    isOk = false
-  }
-
   val zooKeeperInfo = if (isOk) cluster.cfgMap.getOrElse("ZooKeeperInfo", null) else null
-  if (isOk && dataStore == null) {
+  if (isOk && zooKeeperInfo == null) {
     logger.error("ZooKeeperInfo not found for Node %d  & ClusterId : %s".format(KvInitConfiguration.nodeId, nodeInfo.ClusterId))
     isOk = false
   }
@@ -351,8 +345,6 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     implicit val jsonFormats: Formats = DefaultFormats
     // val dataStoreInfo = parse(dataStore).extract[JDataStore]
     val zKInfo = parse(zooKeeperInfo).extract[JZKInfo]
-
-    dataDataStoreInfo = dataStore
 
     if (isOk) {
       zkConnectString = zKInfo.ZooKeeperConnectString.replace("\"", "").trim
@@ -377,6 +369,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
   }
 
   var typeNameCorrType: BaseTypeDef = _
+  var tenantId: String = ""
   var kvTableName: String = _
   var messageObj: MessageFactoryInterface = _
   var containerObj: ContainerFactoryInterface = _
@@ -389,8 +382,29 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
       logger.error("Not found valid type for " + typename.toLowerCase)
       isOk = false
     } else {
+      val msg = mdMgr.Message(typename.toLowerCase, -1, false)
+      val cnt = mdMgr.Container(typename.toLowerCase, -1, false)
+      tenantId = if (msg != None) msg.get.TenantId else if (cnt != None) cnt.get.TenantId else ""
       objFullName = typeNameCorrType.FullName.toLowerCase
       kvTableName = objFullName.replace('.', '_')
+    }
+  }
+
+  if (isOk && tenantId.trim.size == 0) {
+    logger.error("Not found valid tenantId for " + typename)
+    isOk = false
+  } else {
+    val tenatInfo = mdMgr.GetTenantInfo(tenantId.toLowerCase)
+    if (tenatInfo == null) {
+      logger.error("Not found tenantInfo for tenantId " + tenantId)
+      isOk = false
+    } else {
+      if (tenatInfo.primaryDataStore == null || tenatInfo.primaryDataStore.trim.size == 0) {
+        logger.error("Not found valid Primary Datastore for tenantId " + tenantId)
+        isOk = false
+      } else {
+        dataDataStoreInfo = tenatInfo.primaryDataStore
+      }
     }
   }
 
@@ -815,7 +829,8 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     }
 
     kvstore.setObjectResolver(this)
-    kvstore.addMessageBinding(typename, deserMsgBindingInfo.serName, deserMsgBindingInfo.options)
+    kvstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+    // kvstore.addMessageBinding(typename, deserMsgBindingInfo.serName, deserMsgBindingInfo.options)
 
     dataFiles.foreach(fl => {
       logger.info("%s: File:%s => About to process".format(GetCurDtTmStr, fl))

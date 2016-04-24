@@ -28,6 +28,8 @@ import java.io.{StringReader, File}
 import com.ligadata.runtime.Conversion
 import com.ligadata.jtm.nodes._
 
+import scala.collection.mutable.ArrayBuffer
+
 // Laundry list
 /*
 3) Support java
@@ -196,8 +198,53 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     val supportsInstanceSerialization : Boolean = false
     val isReusable: Boolean = true
 
+    val depJars = scala.collection.mutable.Set[String]()
+
+    outmessages.foreach(outputType1 => {
+      depJars ++=  GetDepJars(md, outputType1)
+    })
+
     val out: Array[String] = outmessages.toArray
 
+    // If we have same maps of messages (may or may not have different attributes), may be we need to fold it
+    // val inMsgsAndAttrs = scala.collection.mutable.Map[String, Array[MessageAndAttributes]]()
+    val inMsgsAndAttrsSets = ArrayBuffer[(Set[String], Array[MessageAndAttributes])]()
+
+    inmessages.foreach( s => {
+      val set1 = s.map( m => m._1.toLowerCase()).toSet
+      var foundSetIdx = -1
+      var idx = 0
+      while (foundSetIdx == -1 && idx < inMsgsAndAttrsSets.size) {
+        if (set1.size == inMsgsAndAttrsSets(idx)._1.size) {
+          val rest = set1 -- inMsgsAndAttrsSets(idx)._1
+          if (rest.size == 0)
+            foundSetIdx = idx
+        }
+        idx += 1
+      }
+
+      if (foundSetIdx >= 0) {
+        s.foreach( m => {
+          val msgAndAttribs = inMsgsAndAttrsSets(foundSetIdx)._2.filter(x => x.message.equalsIgnoreCase(m._1))
+          if (msgAndAttribs.size > 0) {
+            msgAndAttribs(0).attributes = msgAndAttribs(0).attributes ++ m._2
+          }
+        })
+      } else {
+        val msgsAndAttribs = s.map( m => {
+          // Collecting dependency jars
+          depJars ++=  GetDepJars(md, m._1)
+          val ma = new MessageAndAttributes
+          ma.origin = "" //FIXME:- Fill this if looking for specific input
+          ma.message = m._1
+          ma.attributes = m._2.toArray
+          ma
+        }).toArray
+        inMsgsAndAttrsSets += ((set1, msgsAndAttribs))
+      }
+    })
+
+/*
     val in: Array[Array[MessageAndAttributes]] = inmessages.map( s =>
           s.map( m => {
             val ma = new MessageAndAttributes
@@ -207,8 +254,9 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             ma
           }).toArray
     )
+*/
 
-    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, in, out, isReusable, supportsInstanceSerialization)
+    var model = new ModelDef(ModelRepresentation.JAR, MiningModelType.JTM, inMsgsAndAttrsSets.map(s => s._2).toArray, out, isReusable, supportsInstanceSerialization)
 
     // Append addtional attributes
     model.nameSpace = ModelNamespace
@@ -216,6 +264,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
     model.description = root.header.description
     model.ver = ModelVersionLong
     model.physicalName = PackageName + "." + FactoryName
+    model.dependencyJarNames = if (depJars != null) depJars.toArray else Array[String]()
+
     model
   }
 
@@ -424,6 +474,19 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
       throw new Exception("Metadata: unable to find class %s".format(classname))
     }
     classMd.get.physicalName
+  }
+
+  def GetDepJars(mgr: MdMgr, classname: String): Array[String] = {
+    var jars = ArrayBuffer[String]()
+    val classMd = md.Message(classname, 0, true)
+    if(!classMd.isEmpty)  {
+      if (classMd.get.JarName != null && classMd.get.JarName.trim.size > 0)
+        jars += classMd.get.JarName.trim
+      if (classMd.get.DependencyJarNames != null && classMd.get.DependencyJarNames.size > 0) {
+        jars ++= classMd.get.DependencyJarNames.filter(j => (j != null && j.trim.size > 0)).map(j => j.trim)
+      }
+    }
+    jars.toArray
   }
 
   /**

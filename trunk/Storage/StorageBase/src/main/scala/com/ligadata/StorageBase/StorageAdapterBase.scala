@@ -8,7 +8,7 @@ package com.ligadata.StorageBase
 
 import com.ligadata.Exceptions.{KamanjaException, NotImplementedFunctionException, InvalidArgumentException}
 import com.ligadata.HeartBeat.{MonitorComponentInfo, Monitorable}
-import com.ligadata.KamanjaBase.{NodeContext, AdaptersSerializeDeserializers, TransactionContext, ContainerInterface}
+import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.{ Key, TimeRange }
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
 import com.ligadata.kamanja.metadata.AdapterInfo
@@ -242,6 +242,23 @@ trait DataStore extends DataStoreOperations with AdaptersSerializeDeserializers 
   val _startTime: String = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
 
   override final def getAdapterName = if (adapterInfo != null) adapterInfo.Name else ""
+
+  var _defaultSerDeserName: String = null
+  var _defaultSerDeser: MsgBindingInfo = null
+  var _serDeserOptions: Map[String, Any] = null
+
+  final override def getDefaultSerializerDeserializer: MsgBindingInfo = _defaultSerDeser
+
+  final override def setDefaultSerializerDeserializer(defaultSerDeser: String, serDeserOptions: Map[String, Any]): Unit = {
+    _defaultSerDeser = null
+    _defaultSerDeserName = null
+    _serDeserOptions = null
+    _defaultSerDeser = resolveBinding(defaultSerDeser, serDeserOptions)
+    if (_defaultSerDeser != null) {
+      _defaultSerDeserName = defaultSerDeser
+      _serDeserOptions = serDeserOptions
+    }
+  }
 
   def Category = "Storage"
 
