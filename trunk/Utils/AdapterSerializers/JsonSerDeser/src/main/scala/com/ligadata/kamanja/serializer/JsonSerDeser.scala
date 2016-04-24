@@ -3,7 +3,7 @@ package com.ligadata.kamanja.serializer
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Formats, MappingException}
 
-import scala.collection.mutable.{ArrayBuffer, Map}
+import scala.collection.mutable.{ArrayBuffer}
 import scala.collection.JavaConverters._
 import java.io.{ByteArrayOutputStream, DataOutputStream}
 
@@ -13,6 +13,7 @@ import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory
 import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory._
 import com.ligadata.KamanjaBase._
 import org.apache.logging.log4j.LogManager
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
   * Meta fields found at the beginning of each JSON representation of a ContainerInterface object
@@ -160,10 +161,11 @@ class JSONSerDes extends SerializeDeserialize {
     }
 
     private def valueAsJson(sb: StringBuilder, indentLevel: Int, value : Any, quoteValue: Boolean)  = {
-        // val quote = if (quoteValue) s"\\${'"'}" else ""
-        val quote = if (quoteValue) "\"" else ""
-        // @TODO: need to encode string as proper json string
-        sb.append(quote+value+quote)
+        if (quoteValue) {
+            sb.append('\"' + StringEscapeUtils.escapeJson(value.toString) + '\"')
+        } else {
+            sb.append(value)
+        }
     }
 
     /**
@@ -198,7 +200,7 @@ class JSONSerDes extends SerializeDeserialize {
       * @param map the map instance
       * @return a Json string representation
       */
-    private def mapAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, map : scala.collection.mutable.Map[_,_]) = {
+    private def mapAsJson(sb: StringBuilder, indentLevel: Int, attribType : AttributeTypeInfo, map : Map[_,_]) = {
         val keyType = attribType.getKeyTypeCategory
         val valType = attribType.getValTypeCategory
         val quoteValue = useQuotesOnValue(valType)
@@ -316,7 +318,7 @@ class JSONSerDes extends SerializeDeserialize {
       */
     def configure(objResolver: ObjectResolver, config : java.util.Map[String,String]): Unit = {
         _objResolver = objResolver
-        _config = if (config != null) config.asScala else Map[String,String]()
+        _config = if (config != null) config.asScala.toMap else Map[String,String]()
         _isReady = _objResolver != null && _config != null
     }
 
@@ -328,16 +330,22 @@ class JSONSerDes extends SerializeDeserialize {
       */
     @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
     def deserialize(b: Array[Byte], containerName: String) : ContainerInterface = {
-        val rawJsonContainerStr: String = new String(b)
+      val rawJsonContainerStr: String = new String(b)
+      try {
         val containerInstanceMap: Map[String, Any] = jsonStringAsMap(rawJsonContainerStr)
         deserializeContainerFromJsonMap(containerInstanceMap)
+      } catch {
+        case e: Throwable => {
+          throw new KamanjaException("Failed to deserialize JSON:" + rawJsonContainerStr, e)
+        }
+      }
     }
 
     @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
     private def deserializeContainerFromJsonMap(containerInstanceMap : Map[String, Any]) : ContainerInterface = {
         /** Decode the map to produce an instance of ContainerInterface */
 
-        val schemaIdJson = containerInstanceMap.getOrElse(SchemaIDKeyName, "-1").asInstanceOf[Long]
+        val schemaIdJson = toLong(containerInstanceMap.getOrElse(SchemaIDKeyName, -1))
 
         if (schemaIdJson == -1) {
             throw new MissingPropertyException(s"the supplied map (from json) to deserialize does not have a known schemaid, id: $schemaIdJson", null)
@@ -353,24 +361,64 @@ class JSONSerDes extends SerializeDeserialize {
             val v = pair._2
 
             val at = ci.getAttributeType(k)
-            if(at == null)
+            if(at == null) {
+              if (! ci.isFixed)
                 ci.set(k, v)
+            }
             else {
                 // @@TODO: check the type compatibility between "value" field v with the target field
-                val valType = at.getValTypeCategory
+                val valType = at.getTypeCategory
                 val fld = valType match {
-                    case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => v
+                    case LONG => toLong(v)
+                    case INT => toInt(v)
+                    case BYTE => toByte(v)
+                    case (BOOLEAN | DOUBLE | FLOAT | STRING) => v
                     case CHAR => { if (v != null && v.isInstanceOf[String] && v.asInstanceOf[String].size > 0) v.asInstanceOf[String].charAt(0) else ' ' }
                     case MAP => jsonAsMap(at, v.asInstanceOf[Map[String, Any]])
                     case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(v.asInstanceOf[Map[String,Any]])
                     case ARRAY => jsonAsArray(at, v.asInstanceOf[List[Any]])
                     case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
                 }
+                // Warning("Key:%s, Idx:%d, valType:%d, Value:%s. Value Class:%s".format(k, at.getIndex, valType.getValue, fld.toString, fld.getClass.getName))
                 ci.set(k, fld)
             }
         })
         ci
     }
+
+    private def toLong(itm: Any): Long = {
+        if (itm.isInstanceOf[BigInt])
+            itm.asInstanceOf[BigInt].toLong
+        else if (itm.isInstanceOf[Long])
+            itm.asInstanceOf[Long]
+        else if (itm.isInstanceOf[Int])
+            itm.asInstanceOf[Int].toLong
+        else
+          throw new UnsupportedObjectException("Convert to long. Parameter is neither BigInt, Long or Int", null)
+    }
+
+  private def toInt(itm: Any): Int = {
+    if (itm.isInstanceOf[BigInt])
+      itm.asInstanceOf[BigInt].toInt
+    else if (itm.isInstanceOf[Long])
+      itm.asInstanceOf[Long].toInt
+    else if (itm.isInstanceOf[Int])
+      itm.asInstanceOf[Int]
+    else
+      throw new UnsupportedObjectException("Convert to long. Parameter is neither BigInt, Long or Int", null)
+  }
+
+  private def toByte(itm: Any): Byte = {
+    if (itm.isInstanceOf[BigInt])
+      itm.asInstanceOf[BigInt].toByte
+    else if (itm.isInstanceOf[Long])
+      itm.asInstanceOf[Long].toByte
+    else if (itm.isInstanceOf[Int])
+      itm.asInstanceOf[Int].toByte
+    else
+      throw new UnsupportedObjectException("Convert to long. Parameter is neither BigInt, Long or Int", null)
+  }
+
 
     /**
       * Coerce the list of mapped elements to an array of the mapped elements' values
@@ -379,30 +427,25 @@ class JSONSerDes extends SerializeDeserialize {
       * @param collElements the list of json elements for the array buffer
       * @return an array instance
       */
-    def jsonAsArray(arrayTypeInfo : AttributeTypeInfo, collElements : List[Any]) : Array[Any] = {
-        /**
-          * FIXME: if we intend to support arrays of hetergeneous items (i.e, Array[Any]), this has to change.  At the
-          * moment only arrays of homogeneous types are supported.
-          */
+    private def jsonAsArray(arrayTypeInfo : AttributeTypeInfo, collElements : List[Any]) : Any = {
+        var retVal: Any = Array[Any]()
 
         val itmType = arrayTypeInfo.getValTypeCategory
-        val array : Array[Any] = if (collElements.nonEmpty) {
-            val list : List[Any] = collElements.map(itm => {
-                val fld = itmType match {
-                    case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => itm
-                    case CHAR => { if (itm != null && itm.isInstanceOf[String] && itm.asInstanceOf[String].size > 0) itm.asInstanceOf[String].charAt(0) else ' ' }
-                    case MAP => itm.asInstanceOf[Map[String, Any]]
-                    case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(itm.asInstanceOf[Map[String,Any]])
-                    case ARRAY => itm.asInstanceOf[List[Any]].toArray
-                    case _ => throw new ObjectNotFoundException(s"jsonAsArray: invalid value type: ${itmType.getValue}, fldName: ${itmType.name} could not be resolved",null)
-                }
-                fld
-            })
-            list.toArray
-        } else {
-            Array[Any]()
+        val fld = itmType match {
+            case LONG => { retVal = collElements.map(itm => toLong(itm)).toArray }
+            case INT => { retVal = collElements.map(itm => toInt(itm)).toArray }
+            case BYTE => { retVal = collElements.map(itm => toByte(itm)).toArray }
+            case BOOLEAN => { retVal = collElements.map(itm => itm.asInstanceOf[Boolean]).toArray }
+            case DOUBLE => { retVal = collElements.map(itm => itm.asInstanceOf[Double]).toArray }
+            case FLOAT => { retVal = collElements.map(itm => itm.asInstanceOf[Float]).toArray }
+            case STRING => { retVal = collElements.map(itm => itm.asInstanceOf[String]).toArray }
+            case CHAR => { retVal = collElements.map(itm => if (itm != null && itm.isInstanceOf[String] && itm.asInstanceOf[String].size > 0) itm.asInstanceOf[String].charAt(0) else ' ' ).toArray }
+            case MAP => { retVal = collElements.map(itm => itm.asInstanceOf[Map[String, Any]]).toArray }
+            case (CONTAINER | MESSAGE) => { retVal = collElements.map(itm => deserializeContainerFromJsonMap(itm.asInstanceOf[Map[String,Any]])).toArray }
+            case ARRAY => { retVal = collElements.map(itm => itm.asInstanceOf[List[Any]].toArray ).toArray }
+            case _ => throw new ObjectNotFoundException(s"jsonAsArray: invalid value type: ${itmType.getValue}, fldName: ${itmType.name} could not be resolved",null)
         }
-        array
+        retVal
     }
 
     /**
@@ -420,7 +463,10 @@ class JSONSerDes extends SerializeDeserialize {
             val key : String = pair._1
             val value : Any = pair._2
             val fld = valType match {
-                case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING) => value
+              case LONG => toLong(value)
+              case INT => toInt(value)
+              case BYTE => toByte(value)
+              case (BOOLEAN | DOUBLE | FLOAT | STRING) => value
                 case CHAR => { if (value != null && value.isInstanceOf[String] && value.asInstanceOf[String].size > 0) value.asInstanceOf[String].charAt(0) else ' ' }
                 case MAP => value.asInstanceOf[Map[String, Any]]
                 case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(value.asInstanceOf[Map[String,Any]])

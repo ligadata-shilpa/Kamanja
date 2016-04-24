@@ -116,6 +116,7 @@ class MessageObjectGenerator {
       msgObjeGenerator.append(msgConstants.isFixed.format(msgConstants.pad1, isFixed, msgConstants.newline))
       msgObjeGenerator.append(getContainerType.format(msgConstants.pad1) + msgConstants.newline)
       msgObjeGenerator.append(msgConstants.getFullName.format(msgConstants.pad1, msgConstants.newline))
+      msgObjeGenerator.append(msgConstants.getRddTenantId.format(msgConstants.pad1, msgConstants.newline))
       msgObjeGenerator.append(msgConstants.toJavaRDD.format(msgConstants.pad1, msgConstants.newline))
 
     } catch {

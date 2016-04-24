@@ -23,6 +23,7 @@ object HL7 extends RDDObject[HL7] with MessageFactoryInterface {
   override def isFixed: Boolean = false;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
   override def getFullName = getFullTypeName;
+  override def getRddTenantId = getTenantId;
   override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);
 
   def build = new T(this)
