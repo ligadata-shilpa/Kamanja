@@ -372,7 +372,7 @@ class CassandraAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     toTableName(containerName)
   }
 
-  def getTableName(containerName: String): String = {
+  override def getTableName(containerName: String): String = {
     // we need to check for other restrictions as well
     // such as length of the table, special characters etc
     toTableName(containerName)
@@ -1392,6 +1392,12 @@ class CassandraAdapterTx(val parent: DataStore) extends Transaction {
 
   override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
     isTableExists(tableNamespace, tableName)
+  }
+
+  override def getTableName(containerName: String): String = {
+    // we need to check for other restrictions as well
+    // such as length of the table, special characters etc
+    parent.getTableName(containerName)
   }
 
   override def dropTables(tbls: Array[(String, String)]): Unit = {

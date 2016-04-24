@@ -456,7 +456,7 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   }
 
   // accessor used for testing
-  def getTableName(containerName: String): String = {
+  override def getTableName(containerName: String): String = {
     toTableName(containerName)
   }
 
@@ -1659,6 +1659,11 @@ class SqlServerAdapterTx(val parent: DataStore) extends Transaction {
 
   override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
     isTableExists(tableNamespace, tableName)
+  }
+
+  // accessor used for testing
+  override def getTableName(containerName: String): String = {
+    parent.getTableName(containerName)
   }
 
   override def dropTables(tbls: Array[(String, String)]): Unit = {
