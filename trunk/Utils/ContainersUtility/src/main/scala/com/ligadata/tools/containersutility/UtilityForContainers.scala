@@ -11,7 +11,7 @@ import com.ligadata.Serialize.JZKInfo
 import com.ligadata.StorageBase.DataStore
 import com.ligadata.Utils.{KamanjaClassLoader, Utils, KamanjaLoaderInfo}
 import com.ligadata.kamanja.metadata.MdMgr._
-import com.ligadata.kamanja.metadata.{BaseElem, BaseTypeDef, NodeInfo}
+import com.ligadata.kamanja.metadata.{MdMgr, BaseElem, BaseTypeDef, NodeInfo}
 import com.ligadata.keyvaluestore.KeyValueManager
 import org.apache.curator.framework.CuratorFramework
 import org.json4s.jackson.JsonMethods._
@@ -24,7 +24,7 @@ import scala.collection.immutable.Map
 /**
   * Created by Yousef on 3/9/2016.
   */
-class UtilityForContainers(val loadConfigs: Properties, val typename: String) extends LogTrait with MdBaseResolveInfo {
+class UtilityForContainers(val loadConfigs: Properties, val typename: String) extends LogTrait with ObjectResolver {
 
   var isOk: Boolean = true
   var zkcForSetData: CuratorFramework = null
@@ -64,14 +64,8 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
     isOk = false
   }
 
-  val dataStore = if (isOk) cluster.cfgMap.getOrElse("SystemCatalog", null) else null
-  if (isOk && dataStore == null) {
-    logger.error("DataStore not found for Node %d  & ClusterId : %s".format(containersUtilityConfiguration.nodeId, nodeInfo.ClusterId))
-    isOk = false
-  }
-
   val zooKeeperInfo = if (isOk) cluster.cfgMap.getOrElse("ZooKeeperInfo", null) else null
-  if (isOk && dataStore == null) {
+  if (isOk && zooKeeperInfo == null) {
     logger.error("ZooKeeperInfo not found for Node %d  & ClusterId : %s".format(containersUtilityConfiguration.nodeId, nodeInfo.ClusterId))
     isOk = false
   }
@@ -85,8 +79,6 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
   if (isOk) {
     implicit val jsonFormats: Formats = DefaultFormats
     val zKInfo = parse(zooKeeperInfo).extract[JZKInfo]
-
-    dataDataStoreInfo = dataStore
 
     if (isOk) {
       zkConnectString = zKInfo.ZooKeeperConnectString.replace("\"", "").trim
@@ -111,6 +103,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
   }
 
   var typeNameCorrType: BaseTypeDef = _
+  var tenantId: String = ""
   var kvTableName: String = _
   var messageObj: MessageFactoryInterface = _
   var containerObj: ContainerFactoryInterface = _
@@ -122,8 +115,29 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
       logger.error("Not found valid type for " + typename.toLowerCase)
       isOk = false
     } else {
+      val msg = mdMgr.Message(typename.toLowerCase, -1, false)
+      val cnt = mdMgr.Container(typename.toLowerCase, -1, false)
+      tenantId = if (msg != None) msg.get.TenantId else if (cnt != None) cnt.get.TenantId else ""
       objFullName = typeNameCorrType.FullName.toLowerCase
       kvTableName = objFullName.replace('.', '_')
+    }
+  }
+
+  if (isOk && tenantId.trim.size == 0) {
+    logger.error("Not found valid tenantId for " + typename)
+    isOk = false
+  } else {
+    val tenatInfo = mdMgr.GetTenantInfo(tenantId.toLowerCase)
+    if (tenatInfo == null) {
+      logger.error("Not found tenantInfo for tenantId " + tenantId)
+      isOk = false
+    } else {
+      if (tenatInfo.primaryDataStore == null || tenatInfo.primaryDataStore.trim.size == 0) {
+        logger.error("Not found valid Primary Datastore for tenantId " + tenantId)
+        isOk = false
+      } else {
+        dataDataStoreInfo = tenatInfo.primaryDataStore
+      }
     }
   }
 
@@ -251,7 +265,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
     true
   }
 
-  override def getMessgeOrContainerInstance(MsgContainerType: String): ContainerInterface = {
+  override def getInstance(MsgContainerType: String): ContainerInterface = {
     if (MsgContainerType.compareToIgnoreCase(objFullName) != 0)
       return null
     // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type
@@ -261,6 +275,21 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
       return containerObj.createInstance.asInstanceOf[ContainerInterface]
     return null
   }
+
+  override def getInstance(schemaId: Long): ContainerInterface = {
+    //BUGBUG:: For now we are getting latest class. But we need to get the old one too.
+    if (mdMgr == null)
+      throw new KamanjaException("Metadata Not found", null)
+
+    val contOpt = mdMgr.ContainerForSchemaId(schemaId.toInt)
+
+    if (contOpt == None)
+      throw new KamanjaException("Container Not found for schemaid:" + schemaId, null)
+
+    getInstance(contOpt.get.FullName)
+  }
+
+  override def getMdMgr: MdMgr = mdMgr
 
    def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String): DataStore = {
     try {

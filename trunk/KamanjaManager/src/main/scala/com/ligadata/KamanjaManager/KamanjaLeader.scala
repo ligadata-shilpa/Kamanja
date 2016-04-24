@@ -485,6 +485,7 @@ object KamanjaLeader {
   private def SetClusterStatus(cs: ClusterStatus): Unit = lock1.synchronized {
     clusterStatus = cs
     updatePartitionsFlag = true
+    logger.warn("SetClusterStatus - Got updatePartitionsFlag. Waiting for distribution")
   }
 
   def GetClusterStatus: ClusterStatus = lock1.synchronized {
@@ -503,6 +504,7 @@ object KamanjaLeader {
   }
 
   private def SetUpdatePartitionsFlag: Unit = lock1.synchronized {
+    logger.warn("SetUpdatePartitionsFlag - Got updatePartitionsFlag. Waiting for distribution")
     updatePartitionsFlag = true
   }
 
@@ -518,10 +520,11 @@ object KamanjaLeader {
 
   // Here Leader can change or Participants can change
   private def EventChangeCallback(cs: ClusterStatus): Unit = {
+    logger.warn("DistributionCheck:EventChangeCallback got new ClusterStatus")
     LOG.debug("EventChangeCallback => Enter")
     KamanjaConfiguration.participentsChangedCntr += 1
     SetClusterStatus(cs)
-    LOG.warn("NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}".format(cs.nodeId, cs.isLeader.toString, cs.leaderNodeId, cs.participantsNodeIds.mkString(",")))
+    LOG.warn("DistributionCheck:NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}, participentsChangedCntr:%d".format(cs.nodeId, cs.isLeader.toString, cs.leaderNodeId, cs.participantsNodeIds.mkString(","), KamanjaConfiguration.participentsChangedCntr))
     LOG.debug("EventChangeCallback => Exit")
   }
 
@@ -549,7 +552,7 @@ object KamanjaLeader {
             val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
 
             val maxParts = adapMaxPartsMap.getOrElse(name, 0)
-            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
+            LOG.info("DistributionCheck:On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
 
             LOG.debug("Deserializing Keys")
             val keys = uAK.map(k => ia.DeserializeKey(k))
@@ -1145,7 +1148,9 @@ object KamanjaLeader {
         }
 
         SetCanRedistribute(true)
+        logger.warn("DistributionCheck:Going to do registerNodesChangeNotification in KamanjaLeader")
         envCtxt.registerNodesChangeNotification(EventChangeCallback)
+        logger.warn("DistributionCheck:Done registerNodesChangeNotification in KamanjaLeader")
 
         distributionExecutor.execute(new Runnable() {
           override def run() = {
@@ -1166,9 +1171,15 @@ object KamanjaLeader {
                 }
               }
 
+              if (LOG.isDebugEnabled())
+                LOG.debug("DistributionCheck:Checking for Distribution information. IsLeaderNode:%s, GetUpdatePartitionsFlag:%s, distributionExecutor.isShutdown:%s".format(
+                  IsLeaderNode.toString, GetUpdatePartitionsFlag.toString, distributionExecutor.isShutdown.toString))
+
               var execDefaultPath = true
               if (IsLeaderNode && GetUpdatePartitionsFlag && distributionExecutor.isShutdown == false) {
                 val curParticipentChngCntr = KamanjaConfiguration.participentsChangedCntr
+                LOG.warn("DistributionCheck:Found some change. IsLeaderNode:%s, GetUpdatePartitionsFlag:%s, distributionExecutor.isShutdown:%s, lastParticipentChngCntr:%d, curParticipentChngCntr:%d".format(
+                  IsLeaderNode.toString, GetUpdatePartitionsFlag.toString, distributionExecutor.isShutdown.toString, lastParticipentChngCntr, curParticipentChngCntr))
                 if (lastParticipentChngCntr != curParticipentChngCntr) {
                   lastParticipentChngCntr = curParticipentChngCntr
                   val cs = GetClusterStatus
