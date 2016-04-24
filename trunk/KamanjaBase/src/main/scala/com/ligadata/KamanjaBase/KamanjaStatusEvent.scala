@@ -111,7 +111,7 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
   private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
     var attributeTypes = new Array[AttributeTypeInfo](3);
     attributeTypes(0) = new AttributeTypeInfo("nodeid", 0, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes(1) = new AttributeTypeInfo("eventtime", 1, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
+    attributeTypes(1) = new AttributeTypeInfo("eventtime", 1, AttributeTypeInfo.TypeCategory.STRING, 4, 4, 0)
     attributeTypes(2) = new AttributeTypeInfo("statusstring", 2, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
 
     return attributeTypes
@@ -132,7 +132,7 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
   }
 
   var nodeid: String = _;
-  var eventtime: Long = _;
+  var eventtime: String = _;
   var statusstring: String = _;
 
   private def getWithReflection(key: String): AnyRef = {
@@ -272,7 +272,7 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
         }
         case 1 => {
           if (value.isInstanceOf[Long])
-            this.eventtime = value.asInstanceOf[Long];
+            this.eventtime = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaStatusEvent")
         }
         case 2 => {
@@ -298,7 +298,7 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
 
   private def fromFunc(other: KamanjaStatusEvent): KamanjaStatusEvent = {
     this.nodeid = com.ligadata.BaseTypes.StringImpl.Clone(other.nodeid);
-    this.eventtime = com.ligadata.BaseTypes.LongImpl.Clone(other.eventtime);
+    this.eventtime = com.ligadata.BaseTypes.StringImpl.Clone(other.eventtime);
     this.statusstring = com.ligadata.BaseTypes.StringImpl.Clone(other.statusstring);
 
     //this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);

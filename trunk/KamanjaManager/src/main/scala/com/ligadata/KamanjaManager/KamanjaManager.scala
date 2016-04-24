@@ -659,11 +659,10 @@ class KamanjaManager extends Observer {
           stats.append(x.getComponentSimpleStats)
         })
         val statsStr = stats.mkString("~")
-        val dispStr = "PD,%d,%s,%s".format(KamanjaConfiguration.nodeId, Utils.GetCurDtTmStr, statsStr)
         val statusMsg: com.ligadata.KamanjaBase.KamanjaStatusEvent = KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatusEvent").asInstanceOf[KamanjaStatusEvent]
         statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
         statusMsg.statusstring = statsStr
-        statusMsg.eventtime = Utils.GetCurDtTmInMs // GetCurDtTmStr
+        statusMsg.eventtime =  Utils.GetCurDtTmStr // GetCurDtTmStr
         KamanjaMetadata.envCtxt.postMessages(Array[ContainerInterface](statusMsg))
       }
     }
@@ -916,6 +915,7 @@ class KamanjaManager extends Observer {
 
     val statEvent: com.ligadata.KamanjaBase.KamanjaStatisticsEvent = KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatisticsEvent").asInstanceOf[KamanjaStatisticsEvent]
     statEvent.statistics = compact(render(allMetrics))
+    KamanjaMetadata.envCtxt.postMessages(Array[ContainerInterface](statEvent))
     // get the envContext.
     KamanjaLeader.SetNewDataToZkc(zkHeartBeatNodePath, compact(render(allMetrics)).getBytes)
     if (isLogDebugEnabled)
