@@ -350,7 +350,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       }
     })
 
-    LOG.error("Smart File Consumer - currentStatusMap is {}", currentStatusMap)
+    LOG.debug("Smart File Consumer - currentStatusMap is {}", currentStatusMap)
 
     currentStatusMap
   }
