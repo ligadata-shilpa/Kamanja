@@ -46,6 +46,7 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, nodeContext: Node
   private var ugi: UserGroupInformation = null
   private var partitionStreams: collection.mutable.Map[String,OutputStream] = collection.mutable.Map[String,OutputStream]()
   
+  private var shutDown:Boolean = false
   private val nodeId = nodeContext.getEnvCtxt().getNodeId()
   private val FAIL_WAIT = 2000
   private var numOfRetries = 0
@@ -72,11 +73,11 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, nodeContext: Node
     LOG.debug("Kerberos security authentication enabled.")
     if (fc.connectionConfig.principal == null || fc.connectionConfig.principal.size == 0)
       throw FatalAdapterException("Principal should be specified for Kerberos authentication", new Exception("Invalid Parameters"))
-    LOG.debug("Using Kerberos principal: " + fc.connectionConfig.principal)
+    LOG.debug("Smart File Producer " + fc.Name + " Using Kerberos principal: " + fc.connectionConfig.principal)
 
     if (fc.connectionConfig.keytab == null || fc.connectionConfig.keytab.size == 0)
       throw FatalAdapterException("Keytab should be specified for Kerberos authentication", new Exception("Invalid Parameters"))
-    LOG.debug("Using Kerberos keytab file: " + fc.connectionConfig.keytab)
+    LOG.debug("Smart File Producer " + fc.Name + " Using Kerberos keytab file: " + fc.connectionConfig.keytab)
   }
 
   val compress = (fc.producerConfig.compressionString != null)
@@ -86,20 +87,53 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, nodeContext: Node
       CompressorStreamFactory.XZ.equalsIgnoreCase(fc.producerConfig.compressionString) ||
       CompressorStreamFactory.PACK200.equalsIgnoreCase(fc.producerConfig.compressionString))
       //CompressorStreamFactory.DEFLATE.equalsIgnoreCase(fc.CompressionString))
-      LOG.debug("Using compression: " + fc.producerConfig.compressionString)
+      LOG.debug("Smart File Producer " + fc.Name + " Using compression: " + fc.producerConfig.compressionString)
     else
       throw FatalAdapterException("Unsupported compression type " + fc.producerConfig.compressionString, new Exception("Invalid Parameters"))
   }
 
-  val partitionVariable = "\\$\\{([^\\}]+)\\}".r
-  val partitionDateFormats = partitionVariable.findAllMatchIn(fc.producerConfig.partitionFormat).map(x => try {
+  var partitionFormatString:String = null
+  var partitionDateFormats:List[SimpleDateFormat] = null
+  if (fc.producerConfig.partitionFormat != null) {
+    val partitionVariable = "\\$\\{([^\\}]+)\\}".r
+    partitionDateFormats = partitionVariable.findAllMatchIn(fc.producerConfig.partitionFormat).map(x => try {
       new SimpleDateFormat(x.group(1))
     } catch {
-      case e: Exception => { throw FatalAdapterException(x.group(1) + " is not a valid date format string.", e)}
+      case e: Exception => { throw FatalAdapterException(x.group(1) + " is not a valid date format string.", e) }
     }).toList
-  val partitionFormatString = partitionVariable.replaceAllIn(fc.producerConfig.partitionFormat, "%s")
+    partitionFormatString = partitionVariable.replaceAllIn(fc.producerConfig.partitionFormat, "%s")
+  }
+
+  var fileRoller: Thread = null
+  if (fc.producerConfig.rolloverInterval > 0) {
+    LOG.info("Smart File Producer " + fc.Name + ": File rollover is configured. Will rollover files every " + fc.producerConfig.rolloverInterval + " seconds.")
+    fileRoller = new Thread {
+      override def run {
+        LOG.info("Smart File Producer " + fc.Name + ": Rolling over files.")
+        Thread.sleep(fc.producerConfig.rolloverInterval * 1000)
+        while (!shutDown) {
+          _lock.synchronized {
+            for ((name, os) <- partitionStreams) {
+              if (os != null) {
+                LOG.debug("Smart File Producer " + fc.Name + ": Rolling file at " + name)
+                try {
+                  os.close
+                } catch {
+                  case e: Exception => LOG.debug("Smart File Producer " + fc.Name + ": Error closing file: ", e)
+                }
+              }
+            }
+            partitionStreams.clear()
+          }
+        }
+      }
+    }
+
+    fileRoller.start
+  }
   
   private def openFile(fileName: String) = if("hdfs".equalsIgnoreCase(fc._type)) openHdfsFile(fileName) else openFsFile(fileName)
+  private def write(os: OutputStream, message: Array[Byte]) = if("hdfs".equalsIgnoreCase(fc._type)) writeToHdfs(os, message) else writeToFs(os, message)
 
   private def openFsFile(fileName: String): OutputStream = {
     var os: OutputStream = null
@@ -168,9 +202,14 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, nodeContext: Node
   }
 
   private def getOutputStream(record: ContainerInterface) : OutputStream = {
+    var key = record.getTypeName();
     val dateTime = record.getTimePartitionData()
-    val values = partitionDateFormats.map(fmt => fmt.format(dateTime))
-    val key = record.getTypeName() + "/" + partitionFormatString.format(values: _*)
+  
+    if(dateTime > 0 && partitionFormatString != null && partitionDateFormats != null) {
+      val values = partitionDateFormats.map(fmt => fmt.format(dateTime))
+      key = record.getTypeName() + "/" + partitionFormatString.format(values: _*)
+    }
+    
     if(!partitionStreams.contains(key)) {
       val fileName = "%s/%s/%s-%d-%d.dat".format(fc.producerConfig.location, key, fc.producerConfig.fileNamePrefix, nodeId, System.currentTimeMillis())
       var os = openFile(fileName)
@@ -183,6 +222,24 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, nodeContext: Node
     return partitionStreams(key)
   }
   
+  private def writeToFs(os: OutputStream, message: Array[Byte]) = {
+    os.write(message);
+  }
+
+  private def writeToHdfs(os: OutputStream, message: Array[Byte]) = {
+    try {
+      os.write(message);
+    } catch {
+      case e: Exception => {
+        if (kerberosEnabled) {
+          LOG.debug("Smart File Producer " + fc.Name + ": Error writing to HDFS. Will relogin and try.")
+          ugi.reloginFromTicketCache()
+          os.write(message);
+        }
+      }
+    }
+  }
+
   // Locking before we write into file
   // To send an array of messages. messages.size should be same as partKeys.size
   protected override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface], serializedContainerData: Array[Array[Byte]], serializerNames: Array[String]): Unit = _lock.synchronized {
@@ -201,7 +258,8 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, nodeContext: Node
         while (!isSuccess) {
           try {
             val os = getOutputStream(record);
-            os.write(message);
+            //os.write(message);
+            write(os, message)
             isSuccess = true
             LOG.debug("finished writing message")
           } catch {
@@ -231,9 +289,16 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, nodeContext: Node
   }
 
   override def Shutdown(): Unit = _lock.synchronized {
-    if (os != null) {
-      LOG.debug("closing file")
-      os.close
+    shutDown = true
+    
+    if(fileRoller != null)
+      fileRoller.interrupt
+  
+    for ( (name, os) <- partitionStreams ) {
+      if (os != null) {
+        LOG.debug("Smart File Producer " + fc.Name + ": closing file at " + name)
+        os.close
+      }
     }
   }
 

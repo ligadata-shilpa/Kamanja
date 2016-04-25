@@ -40,10 +40,11 @@ class FileAdapterMonitoringConfig {
 }
 
 class FileAdapterProducerConfig {
-  var location : String = _ //folder to write files
-  var compressionString: String = _ // If it is null or empty we treat it as TEXT file
-  var partitionFormat: String = "${yyyy}/${MM}/${dd}" // folder structure for partitions
+  var location : String = null //folder to write files
+  var compressionString: String = null // If it is null or empty we treat it as TEXT file
+  var partitionFormat: String = null // folder structure for partitions
   var fileNamePrefix: String = "Data" // prefix for the file names
+  var rolloverInterval: Int = 0 // in seconds. create new output file every rolloverInterval secs 
 }
 
 object SmartFileAdapterConfiguration{
@@ -181,6 +182,8 @@ object SmartFileAdapterConfiguration{
           producerConfig.partitionFormat = kv._2.trim
         } else if (kv._1.compareToIgnoreCase("FileNamePrefix") == 0) {
           producerConfig.fileNamePrefix = kv._2.trim
+        } else if (kv._1.compareToIgnoreCase("rolloverInterval") == 0) {
+          producerConfig.rolloverInterval = kv._2.trim.toInt
         }
       })
     }
