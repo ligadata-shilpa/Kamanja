@@ -160,6 +160,21 @@
           }
         },
         {
+          "Name": "TestFailedEvents_1",
+          "TypeString": "Output",
+          "TenantId": "tenant1",
+          "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
+          "DependencyJars": [
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
+          ],
+          "AdapterSpecificCfg": {
+            "HostList": "localhost:9092",
+            "TopicName": "testfailedevents_1"
+          }
+        },
+        {
           "Name": "TestStatus_1",
           "TypeString": "Output",
           "TenantId": "System",
