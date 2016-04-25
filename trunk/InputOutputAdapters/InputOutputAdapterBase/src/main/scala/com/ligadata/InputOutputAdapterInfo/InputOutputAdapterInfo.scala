@@ -235,6 +235,7 @@ trait ExecContext {
       }
       txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       txnCtxt.setInitialMessage("", msg)
+      ThreadLocalStorage.txnContextInfo.set(txnCtxt)
       executeMessage(txnCtxt)
     } catch {
       case e: Throwable => {
@@ -242,6 +243,7 @@ trait ExecContext {
       }
     } finally {
       commitData(txnCtxt);
+      ThreadLocalStorage.txnContextInfo.remove
     }
   }
 

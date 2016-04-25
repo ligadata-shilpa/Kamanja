@@ -143,6 +143,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private var _ignoreFirstMsg : Boolean = _
 
   val statusUpdateInterval = 60000 //ms
+  private var keepCheckingStatus = false
 
   private val allNodesStartInfo = scala.collection.mutable.Map[String, List[(Int, String, Int, Boolean)]]()
 
@@ -194,12 +195,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         allNodesStartInfo.clear()
         envContext.createListenerForCacheChildern(sendStartInfoToLeaderParentPath, collectStartInfo)// listen to start info
 
-        leaderExecutor = Executors.newFixedThreadPool(2)
+        leaderExecutor = Executors.newFixedThreadPool(1)
         val statusCheckerThread = new Runnable() {
           var lastStatus : scala.collection.mutable.Map[String, Long] = null
           override def run(): Unit = {
 
-           while(true){
+           while(keepCheckingStatus){
              lastStatus = checkParticipantsStatus(lastStatus)
              try {
                Thread.sleep(statusUpdateInterval)
@@ -208,6 +209,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
            }
           }
         }
+        keepCheckingStatus = true
         leaderExecutor.execute(statusCheckerThread)
 
         //now register listeners for new requests (other than initial ones)
@@ -350,7 +352,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       }
     })
 
-    LOG.error("Smart File Consumer - currentStatusMap is {}", currentStatusMap)
+    LOG.debug("Smart File Consumer - currentStatusMap is {}", currentStatusMap)
 
     currentStatusMap
   }
@@ -1006,8 +1008,11 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     if(monitorController!=null)
       monitorController.stopMonitoring
 
-    if(leaderExecutor != null)
-      leaderExecutor.shutdownNow()
+    if(leaderExecutor != null) {
+      LOG.debug("Smart File Consumer - shutting down leader executor service")
+      keepCheckingStatus = false
+      leaderExecutor.shutdown()
+    }
 
     clearCache
 

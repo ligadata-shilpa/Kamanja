@@ -35,6 +35,9 @@ public interface MigratableTo {
   public abstract void setStatusFromDataStore(String key, String value);
   public abstract FailedMetadataKey[] getFailedMetadataKeys();
   public abstract void createMetadataTables();
+  public abstract String getMetadataTableName(String containerName);
+  public abstract String getDataTableName(String containerName);
+  public abstract String getDataTableSchemaName();
 
   public abstract java.util.List<String> getMessagesAndContainers(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata); // Returns Added Messages & Containers Full Qualified Names
 }

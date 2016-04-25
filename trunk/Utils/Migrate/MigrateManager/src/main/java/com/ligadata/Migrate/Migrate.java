@@ -564,30 +564,47 @@ public class Migrate {
                     allMetadataTbls = migrateFrom.getAllMetadataTableNames();
                     logger.debug("Getting metadata from old version");
                     sendStatus("Getting metadata from old version", "DEBUG");
+		    // Special Processing if source version > 1.1
+		    // Read metadata_objects to figure out names of messages and containers
+		    // We need this so we can identify the tableNames for messages and containers
+		    // In 1.1 all the data objects are stored in a single table called "AllDATA"
 		    // metadata_objects table is not backed up at this moment
 		    // Just use the original table (backupTblSuffix => "")
-                    migrateFrom.getAllMetadataObjs("",
-                            new MdCallback(), excludeMetadata);
-                    logger.debug("Got all metadata");
-                    sendStatus("Got all metadata", "DEBUG");
+		    if( ! srcVer.equalsIgnoreCase("1.1") ){
+			// MdCallback fills a structure called allMetadata
+			migrateFrom.getAllMetadataObjs("",new MdCallback(), excludeMetadata);
+			logger.debug("Got all metadata");
+			sendStatus("Got all metadata", "DEBUG");
+		    }
 		}
 
                 if (canUpgradeData) {
-		    MetadataFormat[] metadataArr = allMetadata
-                        .toArray(new MetadataFormat[allMetadata.size()]);
-
-		    for( MetadataFormat mdf: metadataArr ){
-			logger.info("objType => " + mdf.objType);
-			logger.info("objDataInJson => " + mdf.objDataInJson);
+		    if( srcVer.equalsIgnoreCase("1.1") ){
+			// all the data tables are known in 1.1. "AllData", "ClusterCounts"
+			TableName[] tbls = migrateFrom.getAllDataTableNames();
+			for (TableName tbl : tbls) {
+			    allDataTbls.add(tbl);
+			}
 		    }
+		    else{
+			// Use the contents of metadata_objects o figure out
+			// the table names
+			MetadataFormat[] metadataArr = allMetadata
+			    .toArray(new MetadataFormat[allMetadata.size()]);
 
-                    msgsAndContainers = 
-			migrateTo.getMessagesAndContainers(metadataArr, true, excludeMetadata);
-		    for (String msgName : msgsAndContainers) {
-			logger.info("Message => " + msgName);
-			// NEED TO BE FIXED: hardcoded the namespace here.
-			TableName tInfo =  new TableName("testdata",msgName);
-			allDataTbls.add(tInfo);
+			for( MetadataFormat mdf: metadataArr ){
+			    logger.info("objType => " + mdf.objType);
+			    logger.info("objDataInJson => " + mdf.objDataInJson);
+			}
+			msgsAndContainers = 
+			    migrateTo.getMessagesAndContainers(metadataArr, true, excludeMetadata);
+			for (String msgName : msgsAndContainers) {
+			    logger.info("Message => " + msgName);
+			    String schemaName = migrateTo.getDataTableSchemaName();
+			    String tableName  = migrateTo.getDataTableName(msgName);
+			    TableName tInfo =  new TableName(schemaName,tableName);
+			    allDataTbls.add(tInfo);
+			}
 		    }
                     allStatusTbls = migrateFrom.getAllStatusTableNames();
                 }
@@ -648,7 +665,7 @@ public class Migrate {
 		int tablesNotFound = 0;
                 for (TableName tblInfo : allDataTbls) {
 		    String fullTableName = tblInfo.namespace + "." + tblInfo.name;
-		    logger.info("Backup the table " + fullTableName);
+		    logger.info("Check the backup status for the table " + fullTableName);
                     BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
                             tblInfo.name, tblInfo.name + backupTblSufix);
                     if (migrateTo.isDataTableExists(tblInfo)) {
@@ -660,17 +677,21 @@ public class Migrate {
                         dataDelTbls.add(tblInfo);
                     }
 		    else{
-			logger.error("The table " + fullTableName + " doesn't exist ");
-			tablesNotFound = tablesNotFound + 1;
+			logger.info("The table " + fullTableName + " doesn't exist ");
+			if( ! srcVer.equalsIgnoreCase("1.1") ){
+			    tablesNotFound = tablesNotFound + 1;
+			}
 		    }
                 }
 
 		// FIX: Revisit this about what do you do if one or more data tables do not exist
-		if( tablesNotFound > 0 ){
-		    logger.error("Unable to find one or more tables, but continue ..");
-		}
-		if( tablesNotFound > 0  && tablesNotFound == allDataTbls.size() ){
-		    logger.error("Did not find even one data table, but continue ..");
+		if( ! srcVer.equalsIgnoreCase("1.1") ){
+		    if( tablesNotFound > 0 ){
+			logger.error("Unable to find one or more tables, but continue ..");
+		    }
+		    if( tablesNotFound > 0  && tablesNotFound == allDataTbls.size() ){
+			logger.error("Did not find even one data table, but continue ..");
+		    }
 		}
 
                 for (TableName tblInfo : allStatusTbls) {

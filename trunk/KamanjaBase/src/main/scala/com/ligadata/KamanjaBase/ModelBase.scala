@@ -877,20 +877,21 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   }
 
   // containerName is full name of the message
-  final def getRecent(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface] = {
+  final def getRecent(tenantId: String, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface] = {
     var tmpMsgs = getContainersList(containerName, partKey, tmRange, f)
     if (tmpMsgs.size > 0)
       return Some(tmpMsgs(tmpMsgs.size - 1)._2) // Take the last one
 
     if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
-      return getNodeCtxt.getEnvCtxt.getRecent(null, containerName, partKey, tmRange, f)
+      return getNodeCtxt.getEnvCtxt.getRecent(tenantId, containerName, partKey, tmRange, f)
     None
   }
 
-  final def getRDD(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface] = {
+  final def getRDD(tenantId: String, containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[ContainerInterface] = {
     val tmpList =
-      if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
-        getNodeCtxt.getEnvCtxt.getRDD(null, containerName, partKey, tmRange, f)
+      if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null) {
+        getNodeCtxt.getEnvCtxt.getRDD(tenantId, containerName, partKey, tmRange, f)
+      }
       else
         Array[ContainerInterface]()
 
@@ -901,7 +902,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
         //BUGBUG:: Yet to fix -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
         //FIXME:- Fix this -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
         // May be we can create the map of current list and loop thru the list we got tmpList
-        tmpList
+        tmpList ++ tmpList
       } else if (currentList.size > 0) {
         currentList.map(m => m._2)
       } else {
