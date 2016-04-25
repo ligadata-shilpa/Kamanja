@@ -232,6 +232,10 @@ class HashMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     toTableName(containerName)
   }
 
+  override def getTableName(containerName: String): String = {
+    toTableName(containerName)
+  }
+
   private def CreateContainer(containerName: String): Unit = lock.synchronized {
     if (containerList.contains(containerName) == false) {
       var tableName = toTableName(containerName)
@@ -1002,6 +1006,11 @@ class HashMapAdapterTx(val parent: DataStore) extends Transaction {
   override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
     parent.isTableExists(tableNamespace, tableName)
   }
+
+  override def getTableName(containerName: String): String = {
+    parent.getTableName(containerName)
+  }
+
 }
 
 // To create HashMap Datastore instance

@@ -456,10 +456,10 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 
   // accessor used for testing
-  def getTableName(containerName: String): String = {
-    // we need to check for other restrictions as well
-    // such as length of the table, special characters etc
-    toTableName(containerName)
+  override def getTableName(containerName: String): String = {
+    val t = toTableName(containerName)
+    // Remove namespace and send only tableName
+    t.stripPrefix(namespace + ":")
   }
 
   private def CreateContainer(containerName: String,isMetadata: Boolean, apiType: String): Unit = lock.synchronized {
@@ -1733,6 +1733,10 @@ class HBaseAdapterTx(val parent: DataStore) extends Transaction {
 
   override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
     parent.isTableExists(tableNamespace, tableName)
+  }
+
+  override def getTableName(containerName: String): String = {
+    parent.getTableName(containerName)
   }
 }
 
