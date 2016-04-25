@@ -252,8 +252,9 @@ object PersistenceUtils {
     * database connection( which itself can be mean different things depending on the type
     * of datastore, such as cassandra, hbase, etc..)
     *
-    * @param objList
-    * @param typeName
+    * @param objList the array of BaseElemDef to persist
+    * @param typeName the container name in the storage that will receive these objects
+    *
     */
   def SaveObjectList(objList: Array[BaseElemDef], typeName: String) {
 
@@ -264,7 +265,7 @@ object PersistenceUtils {
     try {
       var i = 0;
       objList.foreach(obj => {
-        obj.tranId = tranId
+        obj.tranId = tranId /** NOTE: SAME xid for each key saved */
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
         var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes //serializer.SerializeObjectToByteArray(obj)
         keyList(i) = key
@@ -287,7 +288,7 @@ object PersistenceUtils {
     * database connection( which itself can be mean different things depending on the type
     * of datastore, such as cassandra, hbase, etc..)
     *
-    * @param objList
+    * @param objList the array of BaseElemDef to persist
     */
   def SaveObjectList(objList: Array[BaseElemDef]) {
     logger.debug("Save " + objList.length + " objects in a single transaction ")
@@ -297,12 +298,13 @@ object PersistenceUtils {
     try {
       var i = 0;
       objList.foreach(obj => {
-        obj.tranId = tranId
+        obj.tranId = tranId  /** NOTE: SAME xid for each key saved */
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
         var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes//serializer.SerializeObjectToByteArray(obj)
         val elemTyp = getMdElemTypeName(obj)
 
-        val k = Key(storageDefaultTime, Array(key), storageDefaultTxnId, 0)
+        // Use the same tranId for each key as well
+        val k = Key(storageDefaultTime, Array(key), tranId, 0)
 
         val ab = saveDataMap.getOrElse(elemTyp, null)
         if (ab != null) {
@@ -730,6 +732,7 @@ object PersistenceUtils {
     */
   def DeleteObject(bucketKeyStr: String, typeName: String) {
     val (containerName, store) = GetContainerNameAndDataStore(typeName)
+
     store.del(containerName, Array(Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)))
   }
 

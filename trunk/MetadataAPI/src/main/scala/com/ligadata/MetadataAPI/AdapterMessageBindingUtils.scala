@@ -37,7 +37,7 @@ object AdapterMessageBindingUtils {
     private def AddAdapterMessageBinding(adapterName : String
                                  , messageName : String
                                  , serializerName : String
-                                 , options : scala.collection.immutable.Map[String,String]
+                                 , options : scala.collection.immutable.Map[String,Any]
                                  , userId : Option[String]) : (String, BaseElemDef) = {
         val (acceptableBinding, errorMsgs) : (Boolean, String) = SemanticChecks(adapterName, messageName, serializerName, options)
         val result : (String, BaseElemDef) = if (acceptableBinding) {
@@ -119,22 +119,25 @@ object AdapterMessageBindingUtils {
         val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(fqBindingName)
 
         val result : String = if (binding != null) {
-            MetadataAPIImpl.DeleteObject(binding)
-            binding.tranId = MetadataAPIImpl.GetNewTranId
-            MetadataAPIImpl.UpdateTranId(Array(binding))
+
+            /** Assign a current transaction id to the object so that we don't rezero the counter in NotifyEngine */
+            val xid : Long = PersistenceUtils.GetNewTranId
+            binding.tranId = xid
+
+            ConfigUtils.RemoveAdapterMessageBindingFromCache(fqBindingName)
             val displayKey : String = binding.FullBindingName
 
             /** Notify the cluster via zookeeper of removal */
             val bindingsRemoved : Array[BaseElemDef] = Array[BaseElemDef](binding)
             val operations : Array[String] = bindingsRemoved.map(binding => "Remove")
             val bindingsThatWereRemoved : String = bindingsRemoved.map(b => b.FullName).mkString(", ")
-            logger.debug(s"Notify cluster via zookeeper that these bindings have been added... $bindingsThatWereRemoved")
+            logger.debug(s"Notify cluster via zookeeper that this binding has been removed... $bindingsThatWereRemoved")
             MetadataAPIImpl.NotifyEngine(bindingsRemoved, operations)
 
-            val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding", null, ErrorCodeConstants.Remove_Type_Successful + " : " + displayKey)
+            val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding", null, ErrorCodeConstants.Remove_AdapterMessageBinding_Successful + " : " + displayKey)
             apiResult.toString()
         } else {
-            val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding", null, ErrorCodeConstants.Remove_Type_Successful + " : " + fqBindingName)
+            val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding", null, ErrorCodeConstants.Remove_AdapterMessageBinding_Failed + " : " + fqBindingName)
             apiResult.toString()
         }
 
@@ -198,10 +201,10 @@ object AdapterMessageBindingUtils {
             val messageName: String = bindingMap.getOrElse(MessageNameKey, "**invalid message name**").asInstanceOf[String].trim
             val messageNames: List[String] = bindingMap.getOrElse(MessageNamesKey, List[String]()).asInstanceOf[List[String]]
             val serializerName: String = bindingMap.getOrElse(SerializerKey, "**invalid serializer name**").asInstanceOf[String].trim
-            val options: scala.collection.immutable.Map[String, String] = 
+            val options: scala.collection.immutable.Map[String, Any] =
 				if (bindingMap.contains(OptionsKey) &&  bindingMap(OptionsKey) != null) {
 					try {
-						bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, String]]
+						bindingMap(OptionsKey).asInstanceOf[scala.collection.immutable.Map[String, Any]]
 					} catch {
 						case e : Exception => {
 							logger.error("Options should be a map of any values, not an array")
@@ -209,7 +212,7 @@ object AdapterMessageBindingUtils {
 						}
 					}
 				} else {
-					scala.collection.immutable.Map[String, String]()
+					scala.collection.immutable.Map[String, Any]()
 				}
 
             val multipleMessages : Boolean = messageNames.length > 0
@@ -260,7 +263,7 @@ object AdapterMessageBindingUtils {
     private def SemanticChecks(adapterName: String
                                , messageName: String
                                , serializerName: String
-                               , options: scala.collection.immutable.Map[String,String]) : (Boolean, String) = {
+                               , options: scala.collection.immutable.Map[String,Any]) : (Boolean, String) = {
         val buffer : StringBuilder = new StringBuilder
 
         /** 1) if the names start with "**" it means that the name was not supplied ... issue name error */
@@ -356,14 +359,19 @@ object AdapterMessageBindingUtils {
       */
     private def CatalogResults(processingResults : List[(String,BaseElemDef)] ) : String = {
 
-        /** Check if all bindings found in the json input were acceptable and AdapterMessageBinding instances created */
+        /** Check if all bindings found in the json input were acceptable and AdapterMessageBinding instances created.
+          * This is indicated by the BaseElemDef value (pair._2 being null */
         val acceptable : Boolean = ! processingResults.exists(pair => pair._2 == null)
         val resultString : String = if (acceptable) {
 
             /** add the AdapterMessageBinding instances to the cache */
             var allResultsCached : Boolean = true /** optimisim */
+            val tranId : Long = PersistenceUtils.GetNewTranId
             val cachedResults : List[(String,BaseElemDef)] = processingResults.map(bindingPair => {
                     val (messages, elem) : (String, BaseElemDef) = bindingPair
+
+                    elem.tranId = tranId
+
                     val binding : AdapterMessageBinding = elem.asInstanceOf[AdapterMessageBinding]
                     if (! mdMgr.AddAdapterMessageBinding(binding)) {
                         allResultsCached = false
