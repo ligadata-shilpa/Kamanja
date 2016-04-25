@@ -189,6 +189,10 @@ class TreeMapAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig
     toTableName(containerName)
   }
 
+  override def getTableName(containerName: String): String = {
+    toTableName(containerName)
+  }
+
   private def CreateContainer(containerName: String): Unit = lock.synchronized {
     var tableName = toTableName(containerName)
     var fullTableName = toFullTableName(containerName)
@@ -915,6 +919,10 @@ class TreeMapAdapterTx(val parent: DataStore) extends Transaction {
 
   override def isTableExists(tableNamespace: String, tableName: String): Boolean = {
     parent.isTableExists(tableNamespace, tableName)
+  }
+
+  override def getTableName(containerName: String): String = {
+    parent.getTableName(containerName)
   }
 }
 

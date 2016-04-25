@@ -231,6 +231,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
   def copyTable(namespace: String, srcTableName: String, destTableName: String, forceCopy: Boolean): Unit
   def isTableExists(tableName: String): Boolean // here tableName is full qualified name (including namespace)
   def isTableExists(tableNamespace: String, tableName: String): Boolean
+  def getTableName(containerName: String): String
 }
 
 trait DataStore extends DataStoreOperations with AdaptersSerializeDeserializers with Monitorable  {
