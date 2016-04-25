@@ -271,6 +271,18 @@ class MigrateTo_V_1_4 extends MigratableTo {
     _statusStoreInfo
   }
 
+  override def getMetadataTableName(containerName: String) : String = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    _metaDataStoreDb.getTableName(containerName)
+  }
+
+  override def getDataTableName(containerName: String) : String = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+    _dataStoreDb.getTableName(containerName)
+  }
+    
   override def isMetadataTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
@@ -280,18 +292,44 @@ class MigrateTo_V_1_4 extends MigratableTo {
   override def isDataTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
-    //_dataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
     logger.info("Checking whether table for the container " + tblInfo.name + " exists ")
-    _dataStoreDb.isContainerExists(tblInfo.name)
+    _dataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
+    //_dataStoreDb.isContainerExists(tblInfo.name)
   }
 
   override def isStatusTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     if (_statusStoreDb != null)
-      //return _statusStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
-      return _statusStoreDb.isContainerExists(tblInfo.name)
+      return _statusStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
+      //return _statusStoreDb.isContainerExists(tblInfo.name)
     false
+  }
+
+
+  override def getDataTableSchemaName: String = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+
+    if (_dataStoreInfo.trim.size == 0)
+      return null
+
+    var parsed_json: Map[String, Any] = null
+    try {
+      val json = parse(_dataStoreInfo)
+      if (json == null || json.values == null) {
+        val msg = "Failed to parse JSON configuration string:" + _dataStoreInfo
+        throw new Exception(msg)
+      }
+      parsed_json = json.values.asInstanceOf[Map[String, Any]]
+    } catch {
+      case e: Exception => {
+        throw new Exception("Failed to parse JSON configuration string:" + _dataStoreInfo, e)
+      }
+    }
+
+    val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
+    namespace
   }
 
   override def createMetadataTables(): Unit = {
@@ -309,8 +347,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
         override def run() = {
           try {
 	    logger.info("Copy the table " + backupTblInfo.srcTable + " to " + backupTblInfo.dstTable)
-            //storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
-            storeDb.copyContainer(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+            storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
+            //storeDb.copyContainer(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
           } catch {
             case e: Exception => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)
             case e: Throwable => AddToGlobalException(errMsgTemplate + "(" + backupTblInfo.namespace + "," + backupTblInfo.srcTable + " => " + backupTblInfo.namespace + "," + backupTblInfo.dstTable + ")", e)

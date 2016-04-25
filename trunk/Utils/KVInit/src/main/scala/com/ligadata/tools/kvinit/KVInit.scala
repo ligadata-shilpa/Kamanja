@@ -231,8 +231,9 @@ Sample uses:
 
       val kvmaker: KVInit = new KVInit(loadConfigs, typename.toLowerCase, dataFiles, keyfieldnames, deserializer, optionsjson, ignoreerrors, ignoreRecords, commitBatchSize)
       if (kvmaker.isOk) {
+        var dstore: DataStore = null;
         try {
-          val dstore = kvmaker.GetDataStoreHandle(KvInitConfiguration.jarPaths, kvmaker.dataDataStoreInfo)
+          dstore = kvmaker.GetDataStoreHandle(KvInitConfiguration.jarPaths, kvmaker.dataDataStoreInfo)
           if (dstore != null) {
             try {
               kvmaker.buildContainerOrMessage(dstore)
@@ -243,10 +244,13 @@ Sample uses:
             } finally {
               if (dstore != null)
                 dstore.Shutdown()
+              dstore = null
               com.ligadata.transactions.NodeLevelTransService.Shutdown
               if (kvmaker.zkcForSetData != null)
                 kvmaker.zkcForSetData.close()
             }
+          } else {
+            logger.error("Failed to connect to datastore:" + kvmaker.dataDataStoreInfo)
           }
         } catch {
           case e: FatalAdapterException => {
@@ -270,6 +274,10 @@ Sample uses:
           case e: Throwable => {
             logger.error("Failed to connect to Datastore.", e)
           }
+        } finally {
+          if (dstore != null)
+            dstore.Shutdown()
+          dstore = null
         }
       }
       MetadataAPIImpl.CloseDbStore
@@ -335,11 +343,20 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     isOk = false
   }
 
+  var sysCatalogDataStoreInfo: String = null
   var dataDataStoreInfo: String = null
   var zkConnectString: String = null
   var zkNodeBasePath: String = null
   var zkSessionTimeoutMs: Int = 0
   var zkConnectionTimeoutMs: Int = 0
+
+  if (isOk) {
+    sysCatalogDataStoreInfo = if (isOk) cluster.cfgMap.getOrElse("SystemCatalog", null) else null
+    if (isOk && sysCatalogDataStoreInfo == null) {
+      logger.error("SystemCatalog not found for Node %d  & ClusterId : %s".format(KvInitConfiguration.nodeId, nodeInfo.ClusterId))
+      isOk = false
+    }
+  }
 
   if (isOk) {
     implicit val jsonFormats: Formats = DefaultFormats
@@ -808,7 +825,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     if (zkConnectString != null && zkNodeBasePath != null && zkConnectString.size > 0 && zkNodeBasePath.size > 0) {
       try {
         // TransactionId
-        com.ligadata.transactions.NodeLevelTransService.init(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs, zkNodeBasePath, 1, dataDataStoreInfo, KvInitConfiguration.jarPaths)
+        com.ligadata.transactions.NodeLevelTransService.init(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs, zkNodeBasePath, 1, sysCatalogDataStoreInfo, KvInitConfiguration.jarPaths)
         transService = new com.ligadata.transactions.SimpleTransService
         transService.init(1)
         transId = transService.getNextTransId // Getting first transaction. It may get wasted if we don't have any lines to save.

@@ -1,6 +1,6 @@
 [
   {
-    "AdapterName": "testin_1",
+    "AdapterName": "MedicalInput",
     "MessageName": "com.ligadata.kamanja.samples.messages.COPDInputMessage",
     "Serializer": "com.ligadata.kamanja.serializer.csvserdeser",
     "Options": {

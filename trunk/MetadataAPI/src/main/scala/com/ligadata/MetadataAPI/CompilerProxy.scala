@@ -422,6 +422,11 @@ class CompilerProxy {
         msgDefHelperClassFilePath)
       logger.debug("Status => " + status)
 
+      if (status != 0) {
+        logger.error("Compilation of MessgeDef scala file has failed, Message is not added")
+        throw MsgCompilationFailedException(msgDefStr, null)
+      }
+
       // This is a java file
       val msgDefHelperClassFilePathLocal = compiler_work_dir + "/" + realClassName + "Factory.java"
       dumpStrTextToFile(r_classStrNoVerJava, msgDefHelperClassFilePathLocal)
@@ -443,7 +448,7 @@ class CompilerProxy {
 
       logger.debug("Status => " + status2)
 
-      if (status != 0) {
+      if (status2 != 0) {
         logger.error("Compilation of MessgeDef scala file has failed, Message is not added")
         throw MsgCompilationFailedException(msgDefStr, null)
       }
@@ -558,7 +563,7 @@ class CompilerProxy {
     }
 
     // Create a new clean directory
-    val buildDir = s"mkdir $compiler_work_dir/" + currentWorkFolder
+    val buildDir = s"mkdir -p $compiler_work_dir/" + currentWorkFolder
     val tmpdirRc = Process(buildDir).!
 
     /** create a clean space to work in */

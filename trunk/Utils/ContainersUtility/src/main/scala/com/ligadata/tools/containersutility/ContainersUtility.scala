@@ -148,11 +148,13 @@ Sample uses:
     containersUtilityConfiguration.configFile = cfgfile.toString
 
     val utilmaker: UtilityForContainers = new UtilityForContainers(loadConfigs, containerName.toLowerCase)
-if (utilmaker.isOk) {
+    if (utilmaker.isOk) {
       try {
         val dstore = utilmaker.GetDataStoreHandle(containersUtilityConfiguration.jarPaths, utilmaker.dataDataStoreInfo)
         if (dstore != null) {
           try {
+            dstore.setObjectResolver(utilmaker)
+            dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
             if (operation != null) {
               if (operation.equalsIgnoreCase("truncate")) {
                 utilmaker.TruncateContainer(containerName, dstore)

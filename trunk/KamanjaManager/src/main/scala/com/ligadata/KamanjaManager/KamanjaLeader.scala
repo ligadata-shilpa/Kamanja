@@ -229,6 +229,7 @@ object KamanjaLeader {
                         ("Adaps" -> kv._2.map(kv1 => ("Adap" -> kv1._1) ~
                           ("Parts" -> kv1._2.toList)))))
                 val sendJson = compact(render(distribute))
+                LOG.warn("Partition Distribution: " + sendJson)
                 SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
               }
             } else {
@@ -485,6 +486,7 @@ object KamanjaLeader {
   private def SetClusterStatus(cs: ClusterStatus): Unit = lock1.synchronized {
     clusterStatus = cs
     updatePartitionsFlag = true
+    logger.warn("SetClusterStatus - Got updatePartitionsFlag. Waiting for distribution")
   }
 
   def GetClusterStatus: ClusterStatus = lock1.synchronized {
@@ -503,6 +505,7 @@ object KamanjaLeader {
   }
 
   private def SetUpdatePartitionsFlag: Unit = lock1.synchronized {
+    logger.warn("SetUpdatePartitionsFlag - Got updatePartitionsFlag. Waiting for distribution")
     updatePartitionsFlag = true
   }
 
@@ -518,10 +521,11 @@ object KamanjaLeader {
 
   // Here Leader can change or Participants can change
   private def EventChangeCallback(cs: ClusterStatus): Unit = {
+    logger.warn("DistributionCheck:EventChangeCallback got new ClusterStatus")
     LOG.debug("EventChangeCallback => Enter")
     KamanjaConfiguration.participentsChangedCntr += 1
     SetClusterStatus(cs)
-    LOG.warn("NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}".format(cs.nodeId, cs.isLeader.toString, cs.leaderNodeId, cs.participantsNodeIds.mkString(",")))
+    LOG.warn("DistributionCheck:NodeId:%s, IsLeader:%s, Leader:%s, AllParticipents:{%s}, participentsChangedCntr:%d".format(cs.nodeId, cs.isLeader.toString, cs.leaderNodeId, cs.participantsNodeIds.mkString(","), KamanjaConfiguration.participentsChangedCntr))
     LOG.debug("EventChangeCallback => Exit")
   }
 
@@ -549,7 +553,7 @@ object KamanjaLeader {
             val uKV = uAK.map(uk => { GetUniqueKeyValue(uk) })
 
             val maxParts = adapMaxPartsMap.getOrElse(name, 0)
-            LOG.info("On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
+            LOG.info("DistributionCheck:On Node %s for Adapter %s with Max Partitions %d UniqueKeys %s, UniqueValues %s".format(nodeId, name, maxParts, uAK.mkString(","), uKV.mkString(",")))
 
             LOG.debug("Deserializing Keys")
             val keys = uAK.map(k => ia.DeserializeKey(k))
@@ -640,26 +644,30 @@ object KamanjaLeader {
 
   // Using canRedistribute as startup mechanism here, because until we do bootstap ignore all the messages from this 
   private def ActionOnAdaptersDistImpl(receivedJsonStr: String): Unit = lock.synchronized {
-    // LOG.debug("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
 
     if (receivedJsonStr == null || receivedJsonStr.size == 0 || canRedistribute == false) {
       // nothing to do
-      LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+      if (LOG.isDebugEnabled)
+        LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
       return
     }
 
     if (IsLeaderNodeAndUpdatePartitionsFlagSet) {
-      LOG.debug("Already got Re-distribution request. Ignoring any actions from ActionOnAdaptersDistImpl") // Atleast this happens on main node
+      if (LOG.isDebugEnabled)
+        LOG.debug("Already got Re-distribution request. Ignoring any actions from ActionOnAdaptersDistImpl") // Atleast this happens on main node
       return
     }
 
-    LOG.info("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isInfoEnabled)
+      LOG.info("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
 
     try {
       // Perform the action here (STOP or DISTRIBUTE for now)
       val json = parse(receivedJsonStr)
       if (json == null || json.values == null) { // Not doing any action if not found valid json
-        LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+        LOG.error("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
         return
       }
 
@@ -812,7 +820,8 @@ object KamanjaLeader {
       }
     }
 
-    LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
   }
 
   private def ActionOnAdaptersDistribution(receivedJsonStr: String): Unit = {
@@ -820,10 +829,12 @@ object KamanjaLeader {
   }
 
   private def ActionOnDataChngImpl(receivedJsonStr: String): Unit = lock.synchronized {
-    // LOG.debug("ActionOnDataChngImpl => receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnDataChngImpl => receivedJsonStr: " + receivedJsonStr)
     if (receivedJsonStr == null || receivedJsonStr.size == 0) {
       // nothing to do
-      // LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+      if (LOG.isDebugEnabled)
+        LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
       return
     }
 
@@ -967,7 +978,8 @@ object KamanjaLeader {
       }
     }
 
-    LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
   }
 
   private def ActionOnDataChange(receivedJsonStr: String): Unit = {
@@ -975,19 +987,23 @@ object KamanjaLeader {
   }
 
   private def ParticipentsAdaptersStatus(eventType: String, eventPath: String, eventPathData: Array[Byte], childs: Array[(String, Array[Byte])]): Unit = {
-    // LOG.debug("ParticipentsAdaptersStatus => Enter, eventType:%s, eventPath:%s ".format(eventType, eventPath))
+    if (LOG.isDebugEnabled)
+      LOG.debug("ParticipentsAdaptersStatus => Enter, eventType:%s, eventPath:%s ".format(eventType, eventPath))
     if (IsLeaderNode == false) { // Not Leader node
-      // LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
+      if (LOG.isDebugEnabled)
+        LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
       return
     }
 
     if (IsLeaderNodeAndUpdatePartitionsFlagSet) {
-      LOG.debug("Already got Re-distribution request. Ignoring any actions from ParticipentsAdaptersStatus")
+      if (LOG.isDebugEnabled)
+        LOG.debug("Already got Re-distribution request. Ignoring any actions from ParticipentsAdaptersStatus")
       return
     }
 
     UpdatePartitionsNodeData(eventType, eventPath, eventPathData)
-    // LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
+    if (LOG.isDebugEnabled)
+      LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
   }
 
   private def CheckForPartitionsChange: Unit = {
@@ -1144,9 +1160,6 @@ object KamanjaLeader {
           }
         }
 
-        SetCanRedistribute(true)
-        envCtxt.registerNodesChangeNotification(EventChangeCallback)
-
         distributionExecutor.execute(new Runnable() {
           override def run() = {
             var updatePartsCntr = 0
@@ -1166,9 +1179,15 @@ object KamanjaLeader {
                 }
               }
 
+              if (LOG.isDebugEnabled())
+                LOG.debug("DistributionCheck:Checking for Distribution information. IsLeaderNode:%s, GetUpdatePartitionsFlag:%s, distributionExecutor.isShutdown:%s".format(
+                  IsLeaderNode.toString, GetUpdatePartitionsFlag.toString, distributionExecutor.isShutdown.toString))
+
               var execDefaultPath = true
               if (IsLeaderNode && GetUpdatePartitionsFlag && distributionExecutor.isShutdown == false) {
                 val curParticipentChngCntr = KamanjaConfiguration.participentsChangedCntr
+                LOG.warn("DistributionCheck:Found some change. IsLeaderNode:%s, GetUpdatePartitionsFlag:%s, distributionExecutor.isShutdown:%s, lastParticipentChngCntr:%d, curParticipentChngCntr:%d".format(
+                  IsLeaderNode.toString, GetUpdatePartitionsFlag.toString, distributionExecutor.isShutdown.toString, lastParticipentChngCntr, curParticipentChngCntr))
                 if (lastParticipentChngCntr != curParticipentChngCntr) {
                   lastParticipentChngCntr = curParticipentChngCntr
                   val cs = GetClusterStatus
@@ -1265,8 +1284,13 @@ object KamanjaLeader {
           }
         })
 
-        // Forcing to distribute data
-        SetUpdatePartitionsFlag
+        SetCanRedistribute(true)
+        logger.warn("DistributionCheck:Going to do registerNodesChangeNotification in KamanjaLeader")
+        envCtxt.registerNodesChangeNotification(EventChangeCallback)
+        logger.warn("DistributionCheck:Done registerNodesChangeNotification in KamanjaLeader")
+
+        // Forcing to distribute
+        // SetUpdatePartitionsFlag
 
 //          zkLeaderLatch = new ZkLeaderLatch(zkConnectString, engineLeaderZkNodePath, nodeId, EventChangeCallback, zkSessionTimeoutMs, zkConnectionTimeoutMs)
 //        zkLeaderLatch.SelectLeader
