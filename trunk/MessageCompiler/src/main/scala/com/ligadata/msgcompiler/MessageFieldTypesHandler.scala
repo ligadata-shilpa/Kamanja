@@ -38,7 +38,7 @@ class MessageFieldTypesHandler {
           // to do - check null pointer if type is not avaialble.....
           field.FldMetaataType = typ.get
 
-          val types = getMetadataTypesForMsgFields(field, mdMgr)
+          val types = getMetadataTypesForMsgFields(field, mdMgr, message.Name)
           field.FieldTypePhysicalName = types(0).asInstanceOf[String]
           field.FieldTypeImplementationName = types(1).asInstanceOf[String]
           field.AttributeTypeInfo = types(2).asInstanceOf[ArrtibuteInfo]
@@ -104,7 +104,7 @@ class MessageFieldTypesHandler {
    * Get MetadataType based on the type of field
    */
 
-  private def getMetadataTypesForMsgFields(field: Element, mdMgr: MdMgr): Array[Any] = {
+  private def getMetadataTypesForMsgFields(field: Element, mdMgr: MdMgr, msgName: String): Array[Any] = {
 
     val fieldBaseType: BaseTypeDef = field.FldMetaataType
     var types: Array[Any] = new Array[Any](3);
@@ -132,12 +132,15 @@ class MessageFieldTypesHandler {
             arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
             types(0) = arrayType.typeString
             types(1) = arrayType.elemDef.implementationName
-            types(2) = getAttributeTypeInfo(arrayType.elemDef.tTypeType.toString().toLowerCase(), arrayType.elemDef, mdMgr)
+            types(2) = getAttributeTypeInfo(arrayType.elemDef.tTypeType.toString().toLowerCase(), arrayType.elemDef, mdMgr, field.Name, msgName)
 
           }
           case "tstruct" => {
             var msgDef: ContainerDef = null;
             msgDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (msgDef != null) {
+              throw new Exception("Message " + field.Name + " cannot be a field in Message/Container " + msgName)
+            }
             if (msgDef == null)
               msgDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
 
@@ -146,10 +149,15 @@ class MessageFieldTypesHandler {
               types(1) = msgDef.FullName
               val valTypeId = -1
               val keyTypeId = -1
-              types(2) = new ArrtibuteInfo("MESSAGE", valTypeId, keyTypeId, msgDef.containerType.SchemaId)
+              types(2) = new ArrtibuteInfo("CONTAINER", valTypeId, keyTypeId, msgDef.containerType.SchemaId)
             } else throw new Exception("struct not exists in metadata" + field.Ttype)
           }
           case "tmsgmap" => {
+            var msgDef: ContainerDef = null;
+            msgDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (msgDef != null)
+              throw new Exception("Message " + field.Name + " cannot be a field in Message/Container " + msgName)
+
             var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
             types(0) = ctrDef.PhysicalName
             types(1) = ctrDef.FullName
@@ -163,7 +171,7 @@ class MessageFieldTypesHandler {
             types(0) = maptypeDef.typeString
             types(1) = maptypeDef.valDef.implementationName
 
-            val valTypeIdInfo = getMapAttributeTypeInfo(maptypeDef.valDef.tTypeType.toString().toLowerCase(), maptypeDef.valDef, mdMgr)
+            val valTypeIdInfo = getMapAttributeTypeInfo(maptypeDef.valDef.tTypeType.toString().toLowerCase(), maptypeDef.valDef, mdMgr, field.Name, msgName)
             val keyTypeId = AttributeTypeInfo.TypeCategory.STRING.getValue;
             types(2) = new ArrtibuteInfo("MAP", valTypeIdInfo.valTypeId, keyTypeId, valTypeIdInfo.valSchemaId)
           }
@@ -201,7 +209,7 @@ class MessageFieldTypesHandler {
     return -1
   }
 
-  private def getAttributeTypeInfo(typeInfo: String, typtytpe: BaseTypeDef, mdMgr: MdMgr): ArrtibuteInfo = {
+  private def getAttributeTypeInfo(typeInfo: String, typtytpe: BaseTypeDef, mdMgr: MdMgr, fieldName: String, msgName: String): ArrtibuteInfo = {
 
     var typetyprStr: String = typtytpe.tType.toString().toLowerCase()
     typeInfo match {
@@ -217,9 +225,12 @@ class MessageFieldTypesHandler {
 
             var msgDef: ContainerDef = null;
             msgDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (msgDef != null) {
+              throw new Exception("Array of Messages cannot be allowed for field "+ fieldName +" in Message/Container "+msgName)
+            }
+
             if (msgDef == null)
               msgDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-            println("==========================================msgDef" + msgDef.Name)
             val valTypeId = AttributeTypeInfo.TypeCategory.CONTAINER.getValue
             val keyTypeId = -1
             val SchemaId = msgDef.containerType.SchemaId
@@ -228,6 +239,10 @@ class MessageFieldTypesHandler {
           case "tmsgmap" => {
             var ctrDef: ContainerDef = null;
             ctrDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (ctrDef != null) {
+              throw new Exception("Array of Messages cannot be allowed for field "+ fieldName +" in Message/Container "+msgName)
+            }
+
             if (ctrDef == null)
               ctrDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
 
@@ -248,12 +263,12 @@ class MessageFieldTypesHandler {
     }
     return null
   }
-  
+
   /*
    * Handle maps
    */
 
-  private def getMapAttributeTypeInfo(typeInfo: String, typtytpe: BaseTypeDef, mdMgr: MdMgr): ArrtibuteInfo = {
+  private def getMapAttributeTypeInfo(typeInfo: String, typtytpe: BaseTypeDef, mdMgr: MdMgr, fieldName: String, msgName: String): ArrtibuteInfo = {
 
     var typetyprStr: String = typtytpe.tType.toString().toLowerCase()
     typeInfo match {
@@ -269,9 +284,12 @@ class MessageFieldTypesHandler {
 
             var msgDef: ContainerDef = null;
             msgDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (msgDef != null) {
+              throw new Exception("Message cannot be a Value Type of field "+fieldName + " Message/Container "+msgName)
+            }
+
             if (msgDef == null)
               msgDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
-            println("==========================================msgDef" + msgDef.Name)
             val valTypeId = AttributeTypeInfo.TypeCategory.CONTAINER.getValue
             val keyTypeId = 1
             val SchemaId = msgDef.containerType.SchemaId
@@ -280,6 +298,10 @@ class MessageFieldTypesHandler {
           case "tmsgmap" => {
             var ctrDef: ContainerDef = null;
             ctrDef = mdMgr.Message(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+            if (ctrDef != null) {
+              throw new Exception("Message cannot be a Value Type of field "+fieldName + " Message/Container "+msgName)
+            }
+
             if (ctrDef == null)
               ctrDef = mdMgr.Container(typtytpe.FullName, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
 
