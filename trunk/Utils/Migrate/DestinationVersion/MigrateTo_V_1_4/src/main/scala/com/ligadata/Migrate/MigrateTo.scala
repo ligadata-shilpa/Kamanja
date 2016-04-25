@@ -336,7 +336,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     // Create metadataTables
-    val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadatacounters","avroschemainfo")
+    val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadatacounters","avroschemainfo","elementinfo")
     _metaDataStoreDb.CreateMetadataContainer(metadataTables)
   }
 
