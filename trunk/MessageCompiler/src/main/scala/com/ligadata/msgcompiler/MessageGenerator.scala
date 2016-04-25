@@ -55,14 +55,14 @@ class MessageGenerator {
       messageGenerator = messageGenerator.append(generateGetAttributeType());
       if (message.Fixed.equalsIgnoreCase("true")) {
         messageGenerator = messageGenerator.append(msgConstants.newline + generatedMsgVariables(message));
-        messageGenerator = messageGenerator.append(getGetSetMethodsFixed(message));
+        messageGenerator = messageGenerator.append(getGetSetMethodsFixed(message, mdMgr));
         messageGenerator = messageGenerator.append(getFromFuncFixed(message, mdMgr));
       } else if (message.Fixed.equalsIgnoreCase("false")) {
         var fieldIndexMap: Map[String, Int] = msgConstants.getScalarFieldindex(message.Elements)
         messageGenerator = messageGenerator.append(msgConstants.getGetSetMethods);
         messageGenerator = messageGenerator.append(mappedMsgGen.getFromFuncFixed(message, mdMgr))
       }
-
+      messageGenerator = messageGenerator.append(msgConstants.generateWithMethods(message))
       messageGenerator = messageGenerator.append(messageContructor(message))
       messageGenerator = messageGenerator.append(msgConstants.newline + msgConstants.closeBrace);
       messageVerGenerator = messageVerGenerator.append(messageGenerator.toString())
@@ -103,7 +103,7 @@ class MessageGenerator {
   /*
    * getSet methods for Fixed Message
    */
-  private def getGetSetMethodsFixed(message: Message): String = {
+  private def getGetSetMethodsFixed(message: Message, mdMgr: MdMgr): String = {
     var getSetFixed = new StringBuilder(8 * 1024)
     try {
       getSetFixed = getSetFixed.append(msgConstants.getAttributeTypesMethodFixed)
@@ -117,7 +117,8 @@ class MessageGenerator {
       getSetFixed = getSetFixed.append(getAllAttributeValuesFixed(message));
       getSetFixed = getSetFixed.append(getAttributeNameAndValueIterator);
       getSetFixed = getSetFixed.append(setByKeyFunc(message));
-      getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name));
+      if (message.Elements != null)
+        getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name, mdMgr));
       getSetFixed = getSetFixed.append(setValueAndValueTypeByKeyFunc);
     } catch {
       case e: Exception => {
@@ -371,9 +372,9 @@ class MessageGenerator {
   }
 
   /*
-   * Set By Ordinal Function generation
+   * Set By Ordinal Function generation  -- setByOffset(fields, msgName) 
    */
-  private def setFuncByOffset(fields: List[Element], msgName: String): String = {
+  private def setFuncByOffset(fields: List[Element], msgName: String, mdMgr: MdMgr): String = {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
       
@@ -381,13 +382,235 @@ class MessageGenerator {
       if (value == null) throw new Exception(s"Value is null for index $index in message """ + msgName + """ ")
       try{
         index match {
- """ + setByOffset(fields, msgName) + """
+ """ + getSetByIndexStr(fields, msgName, mdMgr) + """
         case _ => throw new Exception(s"$index is a bad index for message """ + msgName + """");
         }
     	}""" + msgConstants.catchStmt + """
     }      
     """
     return getFuncByOffset
+  }
+
+  /*
+   * Set method by index for fixed Messages
+   */
+
+  private def getSetByIndexStr(fields: List[Element], msgName: String, mdMgr: MdMgr): String = {
+    var getSetByIndexStr = new StringBuilder(8 * 1024)
+    try {
+      fields.foreach(field => {
+        val fieldBaseType: BaseTypeDef = field.FldMetaataType
+        val fieldType = fieldBaseType.tType.toString().toLowerCase()
+        val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
+        fieldTypeType match {
+          case "tscalar" => {
+            getSetByIndexStr = getSetByIndexStr.append(setByIndexScalar(field, msgName))
+          }
+          case "tcontainer" => {
+            fieldType match {
+              case "tarray" => {
+                var arrayType: ArrayTypeDef = null
+                arrayType = fieldBaseType.asInstanceOf[ArrayTypeDef]
+                getSetByIndexStr = getSetByIndexStr.append(setByIndexArrays(field, msgName))
+              }
+              case "tstruct" => {
+                var ctrDef: ContainerDef = null;
+                ctrDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                if (ctrDef == null)
+                  ctrDef = mdMgr.Message(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                getSetByIndexStr = getSetByIndexStr.append(setByIndexContainer(field, msgName))
+              }
+              case "tmap" => {
+                getSetByIndexStr = getSetByIndexStr.append(setByIndexForMapFixed(field, msgName, mdMgr))
+              }
+              case "tmsgmap" => {
+                var ctrDef: ContainerDef = mdMgr.Container(field.Ttype, -1, true).getOrElse(null) //field.FieldtypeVer is -1 for now, need to put proper version
+                getSetByIndexStr = getSetByIndexStr.append(setByIndexContainer(field, msgName))
+              }
+              case _ => {
+                throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+              }
+            }
+          }
+          case _ => {
+            throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+          }
+        }
+      })
+    } catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    }
+    return getSetByIndexStr.toString();
+  }
+
+  /*
+   * Set By Ordinal Function generation
+   */
+  private def setByIndexScalar(field: Element, msgName: String): String = {
+    var setByOffset = new StringBuilder(8 * 1024)
+    try {
+      if (field != null) {
+        setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
+        setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
+        setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
+      }
+    } catch {
+      case e: Exception => {
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        log.debug("StackTrace:" + stackTrace)
+        throw e
+      }
+    }
+    return setByOffset.toString
+  }
+
+  private def setByIndexArrays(field: Element, msgName: String): String = {
+    var setByOffset = new StringBuilder(8 * 1024)
+    var ttype: String = ""
+    try {
+      val implName = field.FieldTypeImplementationName
+      var arrayType = field.FldMetaataType.asInstanceOf[ArrayTypeDef]
+      val typetype = arrayType.elemDef.tTypeType.toString().toLowerCase()
+
+      if (typetype.equals("tscalar")) {
+        if (implName != null && implName.trim() != "") {
+          ttype = "_"
+          //setByOffset.append(setByIndexArrayScalar(field, msgName));
+        }
+      } else if (typetype.equals("tcontainer")) {
+        ttype = "ContainerInterface"
+
+      }
+      setByOffset.append(setByIndexForArrayContainerFixed(field, msgName, ttype));
+
+    } catch {
+      case e: Exception => throw e
+    }
+    setByOffset.toString
+  }
+
+  /*
+   *Set ByIndex for Array of Containerinterface
+   */
+  private def setByIndexForArrayContainerFixed(field: Element, msgName: String, ttype: String): String = {
+    var setByOffset = new StringBuilder(8 * 1024)
+    try {
+      val implName = field.FieldTypeImplementationName
+      var arrayType = field.FldMetaataType.asInstanceOf[ArrayTypeDef]
+      var typeStr: String = ""
+      if (field.FldMetaataType.typeString.toString().split("\\[").size == 2) {
+        typeStr = field.FldMetaataType.typeString.toString().split("\\[")(1)
+      }
+      if (field != null) {
+        setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
+        setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%selse if(value.isInstanceOf[scala.Array[%s]]) %s".format(msgConstants.pad4, ttype, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[scala.Array[%s]].map(v => v.asInstanceOf[%s); %s".format(msgConstants.pad4, field.Name, ttype, typeStr, msgConstants.newline))
+        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
+        setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
+      }
+    } catch {
+      case e: Exception => throw e
+    }
+    setByOffset.toString
+  }
+
+  /*
+   * Set By Ordinal Function generation
+   */
+  private def setByIndexContainer(field: Element, msgName: String): String = {
+    var setByOffset = new StringBuilder(8 * 1024)
+    try {
+      if (field != null) {
+
+        setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
+        setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%selse if(value.isInstanceOf[ContainerInterface]) %s".format(msgConstants.pad4, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
+        setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
+      }
+    } catch {
+      case e: Exception => {
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        log.debug("StackTrace:" + stackTrace)
+        throw e
+      }
+    }
+    return setByOffset.toString
+  }
+
+  /*
+   * Set Byindex - type Map of Scalar, Container
+   */
+  private def setByIndexForMapFixed(field: Element, msgName: String, mdMgr: MdMgr): String = {
+    var setByOffset = new StringBuilder(8 * 1024)
+    try {
+
+      var maptypeDef = field.FldMetaataType.asInstanceOf[MapTypeDef]
+      val typeInfo = maptypeDef.valDef.tTypeType.toString().toLowerCase()
+      var typetyprStr: String = maptypeDef.valDef.tType.toString().toLowerCase()
+      typeInfo match {
+        case "tscalar" => {
+          setByOffset = setByOffset.append(setByIndexScalar(field, msgName))
+        }
+        case "tcontainer" => {
+          typetyprStr match {
+            case "tarray" => { throw new Exception("Not supporting array of array"); }
+            case "tstruct" => {
+
+              var msgDef: ContainerDef = null;
+              msgDef = mdMgr.Message(maptypeDef.valDef.FullName, -1, true).getOrElse(null)
+              if (msgDef == null)
+                msgDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null)
+              setByOffset = setByOffset.append(setByIndexForMapofContainerFixed(field, msgName, msgDef))
+            }
+            case "tmsgmap" => {
+              var ctrDef: ContainerDef = null;
+              ctrDef = mdMgr.Message(maptypeDef.valDef.FullName, -1, true).getOrElse(null)
+              if (ctrDef == null)
+                ctrDef = mdMgr.Container(maptypeDef.valDef.FullName, -1, true).getOrElse(null)
+              setByOffset = setByOffset.append(setByIndexForMapofContainerFixed(field, msgName, ctrDef))
+            }
+            case "tmap" => { throw new Exception("Not supporting map of array"); }
+            case _ => {
+              throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+            }
+          }
+        }
+        case _ => {
+          throw new Exception("This types is not handled at this time ") // BUGBUG - Need to handled other cases
+        }
+      }
+    } catch {
+      case e: Exception => throw e
+    }
+    setByOffset.toString
+
+  }
+  /*
+   * Set By induax map of container
+   */
+
+  private def setByIndexForMapofContainerFixed(field: Element, msgName: String, ctrDef: ContainerDef): String = {
+    var setByOffset = new StringBuilder(8 * 1024)
+    if (field != null) {
+      setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
+      setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+      setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+      setByOffset.append("%selse if(value.isInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]]) %s".format(msgConstants.pad4, msgConstants.newline))
+      setByOffset.append("%s  this.%s = value.asInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]].map(v => (v._1, v._2.asInstanceOf[%s])); %s".format(msgConstants.pad4, field.Name, ctrDef.PhysicalName, msgConstants.newline))
+      setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
+      setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
+    }
+    setByOffset.toString;
   }
 
   /*
@@ -662,7 +885,7 @@ class MessageGenerator {
   private def getByName(message: Message): String = {
     """
     private def getByName(key: String): AnyRef = {
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container """+message.Name +"""");
+      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container """ + message.Name + """");
       return get(keyTypes(key).getIndex)
   }
   """
