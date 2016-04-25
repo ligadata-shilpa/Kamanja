@@ -43,7 +43,7 @@ import org.json4s.native.Serialization.{ read, write, writePretty }
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
-case class adapterMessageBinding(var AdapterName: String,var MessageNames: List[String], var Options: Map[String,String], var Serializer: String)
+case class adapterMessageBinding(var AdapterName: String,var TypeString: String,var MessageNames: List[String], var Options: Map[String,String], var Serializer: String)
 
 
 class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
@@ -176,17 +176,18 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
       adapters.foreach( a => {
 	logger.info("a => " + a)
 	val adapter = a.asInstanceOf[Map[String,Any]]
-	var am = new adapterMessageBinding(new String(),Array[String]().toList,Map[String,String](),new String())
+	var am = new adapterMessageBinding(new String(),null,Array[String]().toList,Map[String,String](),new String())
 	adapter.keys.foreach( k => {
 	  logger.info(k + " => " + adapter(k))
 	  k.toUpperCase match {
 	    case "NAME" => am.AdapterName = adapter(k).asInstanceOf[String]
+	    case "TYPESTRING" => am.TypeString = adapter(k).asInstanceOf[String]
 	    case "ASSOCIATEDMESSAGE" => am.MessageNames = Array(adapter(k).asInstanceOf[String]).toList
 	    case "DATAFORMAT" => {
 	      adapter(k).asInstanceOf[String].toUpperCase match {
 		case "CSV" => am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
 		case "JSON" => am.Serializer = "com.ligadata.kamanja.serializer.JsonSerDeser"
-		case _ => am.Serializer = "com.ligadata.kamanja.serializer.KBinarySerDeser"
+		case _ => am.Serializer = "com.ligadata.kamanja.serializer.JsonSerDeser"
 	      }
 	    }
 	    case "FIELDDELIMITER" => am.Options = am.Options + ("fieldDelimiter" -> adapter(k).asInstanceOf[String])
@@ -199,7 +200,34 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	  am.Options = am.Options + ("produceHeader" -> "true")
 	  am.Options = am.Options + ("alwaysQuotedFields" -> "false")
 	}
-	ambs = ambs :+ am
+
+	
+
+	if( am.TypeString != null ){
+	  if( ( am.TypeString.equalsIgnoreCase("Input") || 
+	      am.TypeString.equalsIgnoreCase("Status")) ){
+	    if( am.MessageNames != null && am.MessageNames.length > 0 ){
+	      // for status adapters, message always defults 
+	      // to com.ligadata.KamanjaBase.KamanjaStatusEvent
+	      if( am.TypeString.equalsIgnoreCase("Status") ){
+		am.MessageNames = Array("com.ligadata.KamanjaBase.KamanjaStatusEvent").toList
+		am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
+		if( ! am.Options.contains("fieldDelimiter") ){
+		  am.Options = am.Options + ("fieldDelimiter" -> ",")
+		}
+	      }
+	      ambs = ambs :+ am
+	    }
+	    else{
+	      logger.info("Associated Message is not defined, A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	    }
+	  }
+	  else{
+	    logger.info("The adapterType is Output type, A adapter-message binding is not generated for the adapter " + am.AdapterName)	  }
+	}
+	else{
+	  logger.info("Unable to determine adapterType(Input/output/status), A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	}
       })
       ambs
     } catch {
@@ -390,7 +418,7 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 
 	And("Check number of the adapters")
 	var adapters = MdMgr.GetMdMgr.Adapters
-	assert(adapters.size == 2)
+	assert(adapters.size == 4)
 
       })
     }
