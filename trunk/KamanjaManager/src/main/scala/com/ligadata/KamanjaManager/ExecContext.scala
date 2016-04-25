@@ -213,7 +213,8 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         })
       }
       if (txnCtxt != null && nodeContext != null && nodeContext.getEnvCtxt() != null) {
-        nodeContext.getEnvCtxt().setAdapterUniqueKeyValue(txnCtxt.origin.key, txnCtxt.origin.value)
+        if (txnCtxt.origin.key != null && txnCtxt.origin.value != null && txnCtxt.origin.key.trim.size > 0 && txnCtxt.origin.value.trim.size > 0)
+          nodeContext.getEnvCtxt().setAdapterUniqueKeyValue(txnCtxt.origin.key, txnCtxt.origin.value)
       }
       else {
         if (logger.isDebugEnabled)
