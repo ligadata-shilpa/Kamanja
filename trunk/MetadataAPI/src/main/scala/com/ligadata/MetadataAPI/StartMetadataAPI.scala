@@ -181,11 +181,11 @@ object StartMetadataAPI {
                           expectRemoveBindingKey = false
                           extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
                           argVar = "" // Make sure we dont add to the routing command
-                      } else {
-                        if (removeCmdFound && !isRemoveAdded) {
-                          action += "remove"
-                          isRemoveAdded = true
-                        }
+//                      } else {
+//                        if (removeCmdFound && !isRemoveAdded) {
+//                          action += "remove"
+//                          isRemoveAdded = true
+//                        }
                       }
                       if (expectBindingFromString) {
                           extraCmdArgs(FROMSTRING) = arg
