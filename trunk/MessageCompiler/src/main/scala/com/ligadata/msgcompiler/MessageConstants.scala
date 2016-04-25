@@ -34,7 +34,7 @@ class MessageConstants {
   val name: String = "%soverride def getTypeName: String = \"%s\"; %s"; //CustAlertHistory"
   val version: String = "%soverride def getTypeVersion: String = \"%s\"; %s"; //000000.000001.000000"
   val schemaId: String = "%soverride def getSchemaId: Int = %s; %s"; //10
-  val tenantId: String = "%soverride def getTenantId: String = \"%s\"; %s"; 
+  val tenantId: String = "%soverride def getTenantId: String = \"%s\"; %s";
   val createInstance = "%soverride def createInstance: %s = new %s(%s); %s"; //ContainerInterface = new CustAlertHistory()
   val containerInstanceType = "ContainerInterface";
   val messageInstanceType = "MessageInterface";
@@ -227,7 +227,7 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
         if (keyTypes.contains(key)) {
           valuesMap(key) = new AttributeValue(value, keyTypes(keyName))
         } else {
-          valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, 0, 0, 0))
+          valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0))
         }
       } catch {
         case e: Exception => {
@@ -440,4 +440,50 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
   override def Deserialize(dis: DataInputStream, mdResolver: MdBaseResolveInfo, loader: java.lang.ClassLoader, savedDataVersion: String): Unit = { throw new Exception("Deserialize method in message is deprecated   "); };
 """
   }
+
+  /*
+  * Generate with methods for the fields in the message
+  */
+
+  def generateWithMethods(message: Message): String = {
+    val Fixed = isFixedFunc(message);
+    if (Fixed) {
+      return generateWithMethodsFixed(message)
+    } else {
+
+      return generateWithMethodsMapped(message)
+    }
+  }
+
+  /*
+   * Generate with methods for Mapped message/container
+   */
+  private def generateWithMethodsMapped(message: Message): String = {
+    var withMethodsBuf = new StringBuilder(8 * 1024)
+    if (message.Elements != null) {
+      message.Elements.foreach(field => {
+        withMethodsBuf = withMethodsBuf.append("%s def with%s(value: %s) : %s = {%s".format(pad1, field.Name, field.FldMetaataType.typeString, message.Name, newline))
+        withMethodsBuf = withMethodsBuf.append("%s valuesMap(\"%s\") = new AttributeValue(value, keyTypes(\"%s\")) %s".format(pad2, field.Name, field.Name, newline))
+        withMethodsBuf = withMethodsBuf.append("%s return this %s %s } %s".format(pad1, newline, pad1, newline))
+      })
+      return withMethodsBuf.toString()
+    } else return ""
+  }
+
+  /*
+   * Generate with methods for Fixed message/container
+   */
+  private def generateWithMethodsFixed(message: Message): String = {
+    var withMethodsBuf = new StringBuilder(8 * 1024)
+    if (message.Elements != null) {
+      message.Elements.foreach(field => {
+        withMethodsBuf = withMethodsBuf.append("%s def with%s(value: %s) : %s = {%s".format(pad1, field.Name, field.FldMetaataType.typeString, message.Name, newline))
+        withMethodsBuf = withMethodsBuf.append("%s this.%s = value %s".format(pad2, field.Name, newline))
+        withMethodsBuf = withMethodsBuf.append("%s return this %s %s } %s".format(pad2, newline, pad1, newline))
+
+      })
+      return withMethodsBuf.toString()
+    } else return ""
+  }
+
 }
