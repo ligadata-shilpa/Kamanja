@@ -700,6 +700,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       _adapterUniqKeyValBktlocks(bktIdx).writeLock().unlock()
     }
     val oneContData = Array(("AdapterUniqKvData", Array((Key(KvBaseDefalts.defaultTime, Array(key), 0, 0), "", value.getBytes().asInstanceOf[Any]))))
+    if (logger.isDebugEnabled)
+      logger.debug(s"Saving AdapterUniqKvData key:${key}, value:${value}")
     callSaveData(_sysCatalogDatastore, oneContData)
   }
 

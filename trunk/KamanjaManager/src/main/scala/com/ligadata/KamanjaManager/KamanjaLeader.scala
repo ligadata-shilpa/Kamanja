@@ -229,6 +229,7 @@ object KamanjaLeader {
                         ("Adaps" -> kv._2.map(kv1 => ("Adap" -> kv1._1) ~
                           ("Parts" -> kv1._2.toList)))))
                 val sendJson = compact(render(distribute))
+                LOG.warn("Partition Distribution: " + sendJson)
                 SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
               }
             } else {

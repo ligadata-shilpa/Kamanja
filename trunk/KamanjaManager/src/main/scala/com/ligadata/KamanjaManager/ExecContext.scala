@@ -209,9 +209,15 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         })
 
         validDataToCommit.foreach(kv => {
-          txnCtxt.getNodeCtxt().getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
+          nodeContext.getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
         })
-        txnCtxt.getNodeCtxt().getEnvCtxt().setAdapterUniqueKeyValue(txnCtxt.origin.key, txnCtxt.origin.value)
+      }
+      if (txnCtxt != null && nodeContext != null && nodeContext.getEnvCtxt() != null) {
+        nodeContext.getEnvCtxt().setAdapterUniqueKeyValue(txnCtxt.origin.key, txnCtxt.origin.value)
+      }
+      else {
+        if (logger.isDebugEnabled)
+          logger.debug(s"Not Saving AdapterUniqKvData key:${txnCtxt.origin.key}, value:${txnCtxt.origin.value}. txnCtxt: ${txnCtxt}, nodeContext: ${nodeContext}")
       }
     } catch {
       case e: Throwable => throw e
