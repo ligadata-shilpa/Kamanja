@@ -211,6 +211,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         validDataToCommit.foreach(kv => {
           txnCtxt.getNodeCtxt().getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
         })
+        txnCtxt.getNodeCtxt().getEnvCtxt().setAdapterUniqueKeyValue(txnCtxt.origin.key, txnCtxt.origin.value)
       }
     } catch {
       case e: Throwable => throw e

@@ -699,6 +699,8 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     } finally {
       _adapterUniqKeyValBktlocks(bktIdx).writeLock().unlock()
     }
+    val oneContData = Array(("AdapterUniqKvData", Array((Key(KvBaseDefalts.defaultTime, Array(key), 0, 0), "", value.getBytes().asInstanceOf[Any]))))
+    callSaveData(_sysCatalogDatastore, oneContData)
   }
 
   // Get Status information from Final table
