@@ -23,6 +23,7 @@ import java.io.{File, PrintWriter}
 import com.ligadata.kamanja.metadata.MdMgr
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.MetadataAPI.MetadataAPIImpl
+import com.ligadata.MetadataAPI.AdapterMessageBindingUtils
 import com.ligadata.MetadataAPI.MetadataAPI
 import com.ligadata.Serialize.JsonSerializer
 import org.json4s._
@@ -40,6 +41,8 @@ import com.ligadata.kamanja.metadata.ModelCompilationConstants
 import com.ligadata.Exceptions._
 
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
+
+case class adapterMessageBinding(var AdapterName: String,var TypeString: String,var MessageNames: List[String], var Options: Map[String,String], var Serializer: String)
 
 class MigrateTo_V_1_4 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
@@ -66,6 +69,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private var _parallelDegree = 0
   private var _mergeContainerAndMessages = true
   private var _tenantId: Option[String] = None
+  private var _adapterMessageBindings: Option[String] = None
 
   private val globalExceptions = ArrayBuffer[(String, Throwable)]()
 
@@ -122,7 +126,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
     implicit val jsonFormats: Formats = DefaultFormats
     val lst = List(v)
-    val str = Serialization.write(lst)
+    val str = org.json4s.jackson.Serialization.write(lst)
     if (str.size > 2) {
       return str.substring(1, str.size - 1)
     }
@@ -179,7 +183,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     }
   }
 
-  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String, parallelDegree: Int, mergeContainerAndMessages: Boolean, fromScalaVersion: String, toScalaVersion: String, tenantId: String): Unit = {
+  override def init(destInstallPath: String, apiConfigFile: String, clusterConfigFile: String, sourceVersion: String, unhandledMetadataDumpDir: String, curMigrationSummaryFlPath: String, parallelDegree: Int, mergeContainerAndMessages: Boolean, fromScalaVersion: String, toScalaVersion: String, tenantId: String, adapterMessageBindings: String): Unit = {
     isValidPath(apiConfigFile, false, true, "apiConfigFile")
     isValidPath(clusterConfigFile, false, true, "clusterConfigFile")
 
@@ -248,6 +252,14 @@ class MigrateTo_V_1_4 extends MigratableTo {
     else{
       throw new Exception("tenantId can't be null")
     }
+
+    if (adapterMessageBindings != null && adapterMessageBindings.size > 0){
+      _adapterMessageBindings = Some(adapterMessageBindings)
+    }
+    else{
+      throw new Exception("adapterMessageBindings can't be null")
+    }
+
     _bInit = true
   }
 
@@ -806,7 +818,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                   })
 
                   implicit val jsonFormats: Formats = DefaultFormats
-                  val newMdlCfgStr = Serialization.write(changedCfg)
+                  val newMdlCfgStr = org.json4s.jackson.Serialization.write(changedCfg)
                   val retRes = MetadataAPIImpl.UploadModelsConfig(newMdlCfgStr, Some[String](namespace), null) // Considering namespace as userid
 		  logger.info("AddConfig: Response => " + retRes)
                   failed = isFailedStatus(retRes)
@@ -947,6 +959,12 @@ class MigrateTo_V_1_4 extends MigratableTo {
     mdFailed.toArray
   }
 
+  def getCCParams(cc: Product) : scala.collection.mutable.Map[String,Any] = {          
+    val values = cc.productIterator
+    val m = cc.getClass.getDeclaredFields.map( _.getName -> values.next ).toMap
+    scala.collection.mutable.Map(m.toSeq: _*) 
+  }
+
   private def ProcessMdObjectsParallel(mdObjs: ArrayBuffer[(String, Map[String, Any])], errorStr: String): Unit = {
     if (mdObjs.length > 0) {
       var executor: ExecutorService = null
@@ -989,6 +1007,24 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
       if (LogGlobalException) {
         throw new Exception("Failed to add metadata")
+      }
+    }
+    // handle adapterMessageBindings here
+    try{
+      implicit val jsonFormats: Formats = DefaultFormats
+      var ambsAsJson = Source.fromFile(_adapterMessageBindings.get).mkString
+      val ambs1 = parse(ambsAsJson).extract[Array[adapterMessageBinding]]
+      val ambsMap:Array[scala.collection.mutable.Map[String,Any]] = ambs1.map(amb => { val ambMap = getCCParams(amb); ambMap })
+      val retRes = AdapterMessageBindingUtils.AddAdapterMessageBinding(ambsMap.toList,defaultUserId)
+      logger.info(retRes)
+      val failed = isFailedStatus(retRes)
+      if( failed == true ){
+	throw new Exception("Failed to add adapter-message-bindings")
+      }
+    } catch {
+      case e: Exception => {
+        logger.error("Failed", e)
+	throw new Exception("Failed to add adapter-message-bindings")
       }
     }
   }

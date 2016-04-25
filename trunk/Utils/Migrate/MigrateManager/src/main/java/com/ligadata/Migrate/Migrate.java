@@ -50,7 +50,7 @@ public class Migrate {
         String versionInstallPath = null;
         String implemtedClass = null;
         List<String> jars = null;
-	String tenantId = null;
+
         VersionConfig() {
         }
     }
@@ -66,7 +66,7 @@ public class Migrate {
         boolean excludeData = false;
         int parallelDegree = 0;
         boolean mergeContainersAndMessages = true;
-
+	String tenantId = "kamanja";
         Configuration() {
         }
     }
@@ -352,7 +352,6 @@ public class Migrate {
         URLClassLoader dstKamanjaLoader = null;
         int retCode = 1;
         boolean foundError = false;
-	java.util.List<String> msgsAndContainers = null;
 
         try {
             if (configuration == null) {
@@ -367,7 +366,6 @@ public class Migrate {
             String dstVer = configuration.migratingTo.version.trim();
             String scalaFrom = configuration.migratingFrom.scalaVersion.trim();
             String scalaTo = configuration.migratingTo.scalaVersion.trim();
-            String tenantId = configuration.migratingTo.tenantId.trim();
 
             if (srcVer.equalsIgnoreCase("1.1") == false
                     && srcVer.equalsIgnoreCase("1.2") == false 
@@ -534,8 +532,9 @@ public class Migrate {
                         configuration.parallelDegree,
                         configuration.mergeContainersAndMessages,
                         scalaFrom,
-                        scalaTo,
-                        tenantId);
+		        scalaTo,
+                        configuration.tenantId);
+
 
                 String metadataStoreInfo = migrateTo.getMetadataStoreInfo();
                 String dataStoreInfo = migrateTo.getDataStoreInfo();
@@ -548,64 +547,14 @@ public class Migrate {
                         metadataStoreInfo, dataStoreInfo, statusStoreInfo,
                         sourceReadFailuresFilePath);
 
-                String[] excludeMetadata = new String[0];
-                if (configuration.excludeMetadata != null
-                        && configuration.excludeMetadata.size() > 0) {
-                    excludeMetadata = configuration.excludeMetadata
-                            .toArray((new String[configuration.excludeMetadata
-                                    .size()]));
-                }
-
                 TableName[] allMetadataTbls = new TableName[0];
-                List<TableName> allDataTbls = new ArrayList<TableName>();
+                TableName[] allDataTbls = new TableName[0];
                 TableName[] allStatusTbls = new TableName[0];
 
-                if (canUpgradeMetadata){
+                if (canUpgradeMetadata)
                     allMetadataTbls = migrateFrom.getAllMetadataTableNames();
-                    logger.debug("Getting metadata from old version");
-                    sendStatus("Getting metadata from old version", "DEBUG");
-		    // Special Processing if source version > 1.1
-		    // Read metadata_objects to figure out names of messages and containers
-		    // We need this so we can identify the tableNames for messages and containers
-		    // In 1.1 all the data objects are stored in a single table called "AllDATA"
-		    // metadata_objects table is not backed up at this moment
-		    // Just use the original table (backupTblSuffix => "")
-		    if( ! srcVer.equalsIgnoreCase("1.1") ){
-			// MdCallback fills a structure called allMetadata
-			migrateFrom.getAllMetadataObjs("",new MdCallback(), excludeMetadata);
-			logger.debug("Got all metadata");
-			sendStatus("Got all metadata", "DEBUG");
-		    }
-		}
-
                 if (canUpgradeData) {
-		    if( srcVer.equalsIgnoreCase("1.1") ){
-			// all the data tables are known in 1.1. "AllData", "ClusterCounts"
-			TableName[] tbls = migrateFrom.getAllDataTableNames();
-			for (TableName tbl : tbls) {
-			    allDataTbls.add(tbl);
-			}
-		    }
-		    else{
-			// Use the contents of metadata_objects o figure out
-			// the table names
-			MetadataFormat[] metadataArr = allMetadata
-			    .toArray(new MetadataFormat[allMetadata.size()]);
-
-			for( MetadataFormat mdf: metadataArr ){
-			    logger.info("objType => " + mdf.objType);
-			    logger.info("objDataInJson => " + mdf.objDataInJson);
-			}
-			msgsAndContainers = 
-			    migrateTo.getMessagesAndContainers(metadataArr, true, excludeMetadata);
-			for (String msgName : msgsAndContainers) {
-			    logger.info("Message => " + msgName);
-			    String schemaName = migrateTo.getDataTableSchemaName();
-			    String tableName  = migrateTo.getDataTableName(msgName);
-			    TableName tInfo =  new TableName(schemaName,tableName);
-			    allDataTbls.add(tInfo);
-			}
-		    }
+                    allDataTbls = migrateFrom.getAllDataTableNames();
                     allStatusTbls = migrateFrom.getAllStatusTableNames();
                 }
 
@@ -661,11 +610,7 @@ public class Migrate {
                     throw new Exception("Did not find any metadata table and also not found any backed up tables.");
                 }
 
-		// Back up data tables
-		int tablesNotFound = 0;
                 for (TableName tblInfo : allDataTbls) {
-		    String fullTableName = tblInfo.namespace + "." + tblInfo.name;
-		    logger.info("Check the backup status for the table " + fullTableName);
                     BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
                             tblInfo.name, tblInfo.name + backupTblSufix);
                     if (migrateTo.isDataTableExists(tblInfo)) {
@@ -676,23 +621,8 @@ public class Migrate {
                         dataBackupTbls.add(bkup);
                         dataDelTbls.add(tblInfo);
                     }
-		    else{
-			logger.info("The table " + fullTableName + " doesn't exist ");
-			if( ! srcVer.equalsIgnoreCase("1.1") ){
-			    tablesNotFound = tablesNotFound + 1;
-			}
-		    }
-                }
 
-		// FIX: Revisit this about what do you do if one or more data tables do not exist
-		if( ! srcVer.equalsIgnoreCase("1.1") ){
-		    if( tablesNotFound > 0 ){
-			logger.error("Unable to find one or more tables, but continue ..");
-		    }
-		    if( tablesNotFound > 0  && tablesNotFound == allDataTbls.size() ){
-			logger.error("Did not find even one data table, but continue ..");
-		    }
-		}
+                }
 
                 for (TableName tblInfo : allStatusTbls) {
                     BackupTableInfo bkup = new BackupTableInfo(tblInfo.namespace,
@@ -794,16 +724,13 @@ public class Migrate {
                 sendStatus("Completed dropping tables", "INFO");
                 logger.info("Completed dropping tables");
 
-		// 1.4.0 change. Because of the way we save keys in metadata tables
-		// is different from non-metadata tables, we need to create tabels
-		// ahead.
-                logger.info("Create metadata tables again");
-		migrateTo.createMetadataTables();
-
-		// For 1.2 and 1.3, clear allMetadata
-		if( ! srcVer.equalsIgnoreCase("1.1") ){
-		    allMetadata.clear();
-		}
+                String[] excludeMetadata = new String[0];
+                if (configuration.excludeMetadata != null
+                        && configuration.excludeMetadata.size() > 0) {
+                    excludeMetadata = configuration.excludeMetadata
+                            .toArray((new String[configuration.excludeMetadata
+                                    .size()]));
+                }
 
                 if (canUpgradeMetadata) {
                     logger.debug("Getting metadata from old version");
@@ -825,11 +752,11 @@ public class Migrate {
                     sendStatus("Dropped saved messages/container tables if there are any", "DEBUG");
                 }
 
-                msgsAndContainers = null;
+                java.util.List<String> msgsAndContaienrs = null;
                 if (canUpgradeMetadata) {
                     logger.debug("Adding metadata to new version");
                     sendStatus("Adding metadata to new version", "DEBUG");
-                    msgsAndContainers = migrateTo.addMetadata(metadataArr, true, excludeMetadata);
+                    msgsAndContaienrs = migrateTo.addMetadata(metadataArr, true, excludeMetadata);
 
                     FailedMetadataKey[] failedMetadataKeys = migrateTo.getFailedMetadataKeys();
                     if (failedMetadataKeys != null && failedMetadataKeys.length > 0) {
@@ -853,10 +780,10 @@ public class Migrate {
 
                 if (canUpgradeData) {
 
-                    if (msgsAndContainers != null) {
+                    if (msgsAndContaienrs != null) {
                         StringBuilder sb = new StringBuilder();
                         sb.append("MessagesAndContainers To create Tables from Data Migration:{\n");
-                        for (String cName : msgsAndContainers) {
+                        for (String cName : msgsAndContaienrs) {
                             sb.append("\t" + cName + "\n");
                         }
                         sb.append("}\n");
@@ -883,7 +810,7 @@ public class Migrate {
                     DataCallback dataCallback = new DataCallback(migrateTo,
                             collectedData, kSaveThreshold, srcVer, dstVer, executor);
 
-                    migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,msgsAndContainers,
+                    migrateFrom.getAllDataObjs(backupTblSufix, metadataArr,
                             dataCallback);
 
                     if (collectedData.size() > 0) {

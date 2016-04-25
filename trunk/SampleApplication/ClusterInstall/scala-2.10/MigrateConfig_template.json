@@ -25,7 +25,8 @@
       "{NewPackageInstallPath}/lib/system/ExtDependencyLibs_{ScalaToVersion}-1.4.0.jar",
       "{NewPackageInstallPath}/lib/system/ExtDependencyLibs2_{ScalaToVersion}-1.4.0.jar"
     ],
-    "tenantId" : "{TenantId}"
+    "tenantId" : "{TenantId}",
+    "adapterMessageBindings" : "{AdapterMessageBidnings}"
   },
   "dataSaveThreshold": 2048,
   "parallelDegree": 16,
