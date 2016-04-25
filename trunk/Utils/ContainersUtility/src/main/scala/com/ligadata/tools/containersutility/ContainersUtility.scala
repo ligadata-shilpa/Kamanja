@@ -132,7 +132,7 @@ Sample uses:
           if (dstore != null) {
             try {
               dstore.setObjectResolver(utilmaker)
-              dstore.DefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
               if (operation != null) {
                 if (operation.equalsIgnoreCase("truncate")) {
                   utilmaker.TruncateContainer(containerName, dstore)
