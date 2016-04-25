@@ -3035,7 +3035,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }
       }
-      case "AdapterMsgBinding"=> {
+      case "AdapterMessageBinding"=> {
           /** Restate the key to use the binding key (see AdapterMessageBinding class decl in Metadata project) for form. */
           val bindingKey : String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
           zkMessage.Operation match {

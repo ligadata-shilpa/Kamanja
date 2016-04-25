@@ -231,28 +231,28 @@ class BaseElemDef extends BaseElem {
       }
     }
 
-    var uniqueId: Long = 0 // uniqueId is unque for each element. If we have different versions of any element it will have different ids.
-    var mdElementId: Long = 0 // mdElementId is unque for each element with different versions
-    var creationTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
-    var modTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
+    var uniqueId: Long = 0L // uniqueId is unque for each element. If we have different versions of any element it will have different ids.
+    var mdElementId: Long = 0L // mdElementId is unque for each element with different versions
+    var creationTime: Long = 0L // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
+    var modTime: Long = 0L // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
 
-    var origDef: String = _ // string associated with this definition
-    var description: String = _
-    var author: String = _
-    var nameSpace: String = _ //
-    var name: String = _ // simple name - may not be unique across all name spaces (coupled with mNameSpace, it will be unique)
-    var ver: Long = _ // version number - nnnnnn.nnnnnn.nnnnnn form (without decimal)
-    var jarName: String = _ // JAR file name in which the generated metadata info is placed (classes, functions, etc.,)
+    var origDef: String = "" // string associated with this definition
+    var description: String = ""
+    var author: String = ""
+    var nameSpace: String = "" //
+    var name: String = "" // simple name - may not be unique across all name spaces (coupled with mNameSpace, it will be unique)
+    var ver: Long = 0L // version number - nnnnnn.nnnnnn.nnnnnn form (without decimal)
+    var jarName: String = "" // JAR file name in which the generated metadata info is placed (classes, functions, etc.,)
     var dependencyJarNames: Array[String] = _ // These are the dependency jars for this
     var mdElemStructVer: Int = DefaultMdElemStructVer.Version // Metadata Element Structure version. By default whole metadata will have same number
-    var physicalName: String = _ // Mapping from Logical name to Physical Name when we generate code. This is Case sensitive.
+    var physicalName: String = "" // Mapping from Logical name to Physical Name when we generate code. This is Case sensitive.
     var active: Boolean = true // Represent whether element is active or deactive. By default it is active.
     var deleted: Boolean = false // Represent whether element is deleted. By default it is false.
-    var tranId: Long = 0
-    var objectDefinition: String = _
+    var tranId: Long = 0L
+    var objectDefinition: String = ""
     var objectFormat: ObjFormatType.FormatType = fJSON
-    var ownerId: String = _
-    var tenantId: String = _
+    var ownerId: String = ""
+    var tenantId: String = ""
 }
 
 // All these metadata elements should have specialized serialization and deserialization

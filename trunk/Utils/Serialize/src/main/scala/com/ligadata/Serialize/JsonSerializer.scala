@@ -826,7 +826,10 @@ object JsonSerializer {
                 ("Operation" -> operation) ~
                 ("NameSpace" -> o.adapterName) ~
                 ("Name" -> o.FullBindingName) ~
-                ("Version" -> "0"))
+                ("Version" -> "0") ~
+                ("PhysicalName" -> "") ~
+                ("JarName" -> "") ~
+                ("DependantJars" -> List[String]()))
             pretty(render(json))
         }
         case _ => {
