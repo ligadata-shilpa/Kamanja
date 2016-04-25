@@ -454,7 +454,8 @@ class KamanjaMetadata(var envCtxt: EnvContext) {
     })
 
     containerDefs.foreach(container => {
-      PrepareContainer(container, false, baseContainersPhyName.contains(container.PhysicalName.trim)) // Already Loaded required dependency jars before calling this
+      PrepareContainer(container, false, (container.PhysicalName.equalsIgnoreCase("com.ligadata.KamanjaBase.KamanjaModelEvent$") == false) && baseContainersPhyName.contains(container.PhysicalName.trim)) // Already Loaded required dependency jars before calling this
+      //PrepareContainer(container, false, baseContainersPhyName.contains(container.PhysicalName.trim)) // Already Loaded required dependency jars before calling this
     })
 
   }
