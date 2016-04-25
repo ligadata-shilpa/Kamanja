@@ -111,7 +111,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
     var attributeTypes = new Array[AttributeTypeInfo](4);
     attributeTypes(0) = new AttributeTypeInfo("id", 0, AttributeTypeInfo.TypeCategory.INT, -1, -1, 0)
     attributeTypes(1) = new AttributeTypeInfo("code", 1, AttributeTypeInfo.TypeCategory.INT, -1, -1, 0)
-    attributeTypes(2) = new AttributeTypeInfo("description", 2, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
+    attributeTypes(2) = new AttributeTypeInfo("description", 2, AttributeTypeInfo.TypeCategory.CHAR, -1, -1, 0)
     attributeTypes(3) = new AttributeTypeInfo("codes", 3, AttributeTypeInfo.TypeCategory.MAP, 0, 1, 0)
 
     return attributeTypes
@@ -167,7 +167,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
 
   var id: Int = _;
   var code: Int = _;
-  var description: String = _;
+  var description: Char = _;
   var codes: scala.collection.immutable.Map[String, Int] = _;
 
   override def getAttributeTypes(): Array[AttributeTypeInfo] = {
@@ -310,22 +310,22 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
         case 0 => {
           if (value.isInstanceOf[Int])
             this.id = value.asInstanceOf[Int];
-          else throw new Exception(s"Value is the not the correct type for index $index in message IdCodeDimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field id in message IdCodeDimFixedTest")
         }
         case 1 => {
           if (value.isInstanceOf[Int])
             this.code = value.asInstanceOf[Int];
-          else throw new Exception(s"Value is the not the correct type for index $index in message IdCodeDimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field code in message IdCodeDimFixedTest")
         }
         case 2 => {
-          if (value.isInstanceOf[String])
-            this.description = value.asInstanceOf[String];
-          else throw new Exception(s"Value is the not the correct type for index $index in message IdCodeDimFixedTest")
+          if (value.isInstanceOf[Char])
+            this.description = value.asInstanceOf[Char];
+          else throw new Exception(s"Value is the not the correct type for field description in message IdCodeDimFixedTest")
         }
         case 3 => {
           if (value.isInstanceOf[scala.collection.immutable.Map[String, Int]])
             this.codes = value.asInstanceOf[scala.collection.immutable.Map[String, Int]];
-          else throw new Exception(s"Value is the not the correct type for index $index in message IdCodeDimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field codes in message IdCodeDimFixedTest")
         }
 
         case _ => throw new Exception(s"$index is a bad index for message IdCodeDimFixedTest");
@@ -346,7 +346,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
   private def fromFunc(other: IdCodeDimFixedTest): IdCodeDimFixedTest = {
     this.id = com.ligadata.BaseTypes.IntImpl.Clone(other.id);
     this.code = com.ligadata.BaseTypes.IntImpl.Clone(other.code);
-    this.description = com.ligadata.BaseTypes.StringImpl.Clone(other.description);
+    this.description = com.ligadata.BaseTypes.CharImpl.Clone(other.description);
     if (other.codes != null) {
       this.codes = other.codes.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), com.ligadata.BaseTypes.IntImpl.Clone(a._2)) }.toMap
     } else this.codes = null;
@@ -363,7 +363,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
     this.code = value
     return this
   }
-  def withdescription(value: String): IdCodeDimFixedTest = {
+  def withdescription(value: Char): IdCodeDimFixedTest = {
     this.description = value
     return this
   }

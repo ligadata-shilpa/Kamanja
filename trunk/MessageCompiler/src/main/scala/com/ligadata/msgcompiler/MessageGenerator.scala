@@ -456,7 +456,7 @@ class MessageGenerator {
         setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
         setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
         setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
-        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for index $index in message %s\") %s".format(msgConstants.pad4, msgName, msgConstants.newline))
+        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
         setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
       }
     } catch {
@@ -471,6 +471,7 @@ class MessageGenerator {
 
   private def setByIndexArrays(field: Element, msgName: String): String = {
     var setByOffset = new StringBuilder(8 * 1024)
+    var ttype: String = ""
     try {
       val implName = field.FieldTypeImplementationName
       var arrayType = field.FldMetaataType.asInstanceOf[ArrayTypeDef]
@@ -478,12 +479,15 @@ class MessageGenerator {
 
       if (typetype.equals("tscalar")) {
         if (implName != null && implName.trim() != "") {
-          setByOffset.append(setByIndexScalar(field, msgName));
+          ttype = "_"
+          //setByOffset.append(setByIndexArrayScalar(field, msgName));
         }
       } else if (typetype.equals("tcontainer")) {
-        setByOffset.append(setByIndexForArrayContainerFixed(field, msgName));
+        ttype = "ContainerInterface"
 
       }
+      setByOffset.append(setByIndexForArrayContainerFixed(field, msgName, ttype));
+
     } catch {
       case e: Exception => throw e
     }
@@ -493,7 +497,7 @@ class MessageGenerator {
   /*
    *Set ByIndex for Array of Containerinterface
    */
-  private def setByIndexForArrayContainerFixed(field: Element, msgName: String): String = {
+  private def setByIndexForArrayContainerFixed(field: Element, msgName: String, ttype: String): String = {
     var setByOffset = new StringBuilder(8 * 1024)
     try {
       val implName = field.FieldTypeImplementationName
@@ -504,9 +508,11 @@ class MessageGenerator {
       }
       if (field != null) {
         setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
-        setByOffset.append("%sif(value.isInstanceOf[scala.Array[ContainerInterface]]) %s".format(msgConstants.pad4, msgConstants.newline))
-        setByOffset.append("%s  this.%s = value.asInstanceOf[scala.Array[ContainerInterface]].map(v => v.asInstanceOf[%s); %s".format(msgConstants.pad4, field.Name, typeStr, msgConstants.newline))
-        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for index $index in message %s\") %s".format(msgConstants.pad4, msgName, msgConstants.newline))
+        setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%selse if(value.isInstanceOf[scala.Array[%s]]) %s".format(msgConstants.pad4, ttype, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[scala.Array[%s]].map(v => v.asInstanceOf[%s); %s".format(msgConstants.pad4, field.Name, ttype, typeStr, msgConstants.newline))
+        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
         setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
       }
     } catch {
@@ -524,9 +530,11 @@ class MessageGenerator {
       if (field != null) {
 
         setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
-        setByOffset.append("%sif(value.isInstanceOf[ContainerInterface]) %s".format(msgConstants.pad4, msgConstants.newline))
-        setByOffset.append("%s  this.%s = value.asInstanceOf[ContainerInterface].asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
-        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for index $index in message %s\") %s".format(msgConstants.pad4, msgName, msgConstants.newline))
+        setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%selse if(value.isInstanceOf[ContainerInterface]) %s".format(msgConstants.pad4, msgConstants.newline))
+        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
         setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
       }
     } catch {
@@ -595,9 +603,11 @@ class MessageGenerator {
     var setByOffset = new StringBuilder(8 * 1024)
     if (field != null) {
       setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
-      setByOffset.append("%sif(value.isInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]]) %s".format(msgConstants.pad4, msgConstants.newline))
+      setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+      setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+      setByOffset.append("%selse if(value.isInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]]) %s".format(msgConstants.pad4, msgConstants.newline))
       setByOffset.append("%s  this.%s = value.asInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]].map(v => (v._1, v._2.asInstanceOf[%s])); %s".format(msgConstants.pad4, field.Name, ctrDef.PhysicalName, msgConstants.newline))
-      setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for index $index in message %s\") %s".format(msgConstants.pad4, msgName, msgConstants.newline))
+      setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
       setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
     }
     setByOffset.toString;

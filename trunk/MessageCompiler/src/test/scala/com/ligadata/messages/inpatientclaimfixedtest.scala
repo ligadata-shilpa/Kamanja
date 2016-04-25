@@ -325,47 +325,57 @@ class InpatientClaimFixedTest(factory: ContainerFactoryInterface, other: Inpatie
         case 0 => {
           if (value.isInstanceOf[String])
             this.desynpuf_id = value.asInstanceOf[String];
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field desynpuf_id in message InpatientClaimFixedTest")
         }
         case 1 => {
           if (value.isInstanceOf[Long])
             this.clm_id = value.asInstanceOf[Long];
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field clm_id in message InpatientClaimFixedTest")
         }
         case 2 => {
           if (value.isInstanceOf[scala.Array[String]])
             this.icd9_dgns_cds = value.asInstanceOf[scala.Array[String]];
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else if (value.isInstanceOf[scala.Array[_]])
+            this.icd9_dgns_cds = value.asInstanceOf[scala.Array[_]].map(v => v.asInstanceOf[String]);
+          else throw new Exception(s"Value is the not the correct type for field icd9_dgns_cds in message InpatientClaimFixedTest")
         }
         case 3 => {
           if (value.isInstanceOf[scala.Array[Int]])
             this.icd9_prcdr_cds = value.asInstanceOf[scala.Array[Int]];
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else if (value.isInstanceOf[scala.Array[_]])
+            this.icd9_prcdr_cds = value.asInstanceOf[scala.Array[_]].map(v => v.asInstanceOf[Int]);
+          else throw new Exception(s"Value is the not the correct type for field icd9_prcdr_cds in message InpatientClaimFixedTest")
         }
         case 4 => {
           if (value.isInstanceOf[Boolean])
             this.icd9_check = value.asInstanceOf[Boolean];
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field icd9_check in message InpatientClaimFixedTest")
         }
         case 5 => {
           if (value.isInstanceOf[scala.collection.immutable.Map[String, Double]])
             this.hcpcs_cds = value.asInstanceOf[scala.collection.immutable.Map[String, Double]];
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field hcpcs_cds in message InpatientClaimFixedTest")
         }
         case 6 => {
-          if (value.isInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]])
+          if (value.isInstanceOf[scala.collection.immutable.Map[String, com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]])
+            this.idcodedimmap = value.asInstanceOf[scala.collection.immutable.Map[String, com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]];
+          else if (value.isInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]])
             this.idcodedimmap = value.asInstanceOf[scala.collection.immutable.Map[String, ContainerInterface]].map(v => (v._1, v._2.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]));
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field idcodedimmap in message InpatientClaimFixedTest")
         }
         case 7 => {
-          if (value.isInstanceOf[ContainerInterface])
-            this.idcodedim = value.asInstanceOf[ContainerInterface].asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest];
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          if (value.isInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest])
+            this.idcodedim = value.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest];
+          else if (value.isInstanceOf[ContainerInterface])
+            this.idcodedim = value.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest];
+          else throw new Exception(s"Value is the not the correct type for field idcodedim in message InpatientClaimFixedTest")
         }
         case 8 => {
-          if (value.isInstanceOf[scala.Array[ContainerInterface]])
+          if (value.isInstanceOf[scala.Array[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]])
+            this.idcodedims = value.asInstanceOf[scala.Array[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]];
+          else if (value.isInstanceOf[scala.Array[ContainerInterface]])
             this.idcodedims = value.asInstanceOf[scala.Array[ContainerInterface]].map(v => v.asInstanceOf[com.ligadata.messages.V1000000000000.IdCodeDimFixedTest]);
-          else throw new Exception(s"Value is the not the correct type for index $index in message InpatientClaimFixedTest")
+          else throw new Exception(s"Value is the not the correct type for field idcodedims in message InpatientClaimFixedTest")
         }
 
         case _ => throw new Exception(s"$index is a bad index for message InpatientClaimFixedTest");
