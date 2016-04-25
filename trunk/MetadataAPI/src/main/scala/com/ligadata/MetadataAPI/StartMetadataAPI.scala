@@ -86,7 +86,7 @@ object StartMetadataAPI {
   var expectAdapterFilter = false
   var expectMessageFilter = false
   var expectSerializerFilter = false
-
+  var isRemoveAdded = false
   var varmap: scala.collection.mutable.Map[String,String] = scala.collection.mutable.Map[String,String]()
   var expectTid: Boolean = false
   var expectMDep: Boolean = false
@@ -181,6 +181,11 @@ object StartMetadataAPI {
                           expectRemoveBindingKey = false
                           extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
                           argVar = "" // Make sure we dont add to the routing command
+                      } else {
+                        if (removeCmdFound && !isRemoveAdded) {
+                          action += "remove"
+                          isRemoveAdded = true
+                        }
                       }
                       if (expectBindingFromString) {
                           extraCmdArgs(FROMSTRING) = arg
@@ -464,7 +469,7 @@ object StartMetadataAPI {
         case Action.UPLOADCLUSTERCONFIG => response = ConfigService.uploadClusterConfig(input)
         case Action.UPLOADCOMPILECONFIG => response = ConfigService.uploadCompileConfig(input)
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
-        case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
+        case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig(input)
 
         // adapter message bindings
         case Action.ADDADAPTERMESSAGEBINDING => {
