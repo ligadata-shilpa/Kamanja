@@ -800,6 +800,11 @@ public class Migrate {
                 logger.info("Create metadata tables again");
 		migrateTo.createMetadataTables();
 
+		// For 1.2 and 1.3, clear allMetadata
+		if( ! srcVer.equalsIgnoreCase("1.1") ){
+		    allMetadata.clear();
+		}
+
                 if (canUpgradeMetadata) {
                     logger.debug("Getting metadata from old version");
                     sendStatus("Getting metadata from old version", "DEBUG");
