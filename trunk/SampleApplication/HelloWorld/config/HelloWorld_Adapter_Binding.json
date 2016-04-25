@@ -1,11 +1,11 @@
 [
   {
-    "AdapterName": "testin_1",
-    "MessageName": "com.ligadata.kamanja.samples.messages.inmsg1",
+    "AdapterName": "HelloWorldInput",
+    "MessageName": "com.ligadata.kamanja.samples.messages.msg1",
     "Serializer": "com.ligadata.kamanja.serializer.csvserdeser",
     "Options": {
       "alwaysQuoteFields": false,
-      "fieldDelimiter": "\\x01"
+      "fieldDelimiter": ","
     }
   },
   {
