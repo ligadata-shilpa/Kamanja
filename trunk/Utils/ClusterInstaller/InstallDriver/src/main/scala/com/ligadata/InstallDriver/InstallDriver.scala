@@ -1780,8 +1780,8 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
 
   def KafkaConnections: String = {
     val kafkaAdapters: List[Map[String, Any]] = adapters.filter(adapterMap => {
-      val adapterJars: List[String] = adapterMap.getOrElse("DependencyJars", List[String]()).asInstanceOf[List[String]]
-      val hasKafka: Boolean = adapterJars.filter(jarName => jarName.contains("kafka_2")).nonEmpty
+      val clsName = adapterMap.getOrElse("ClassName", "").asInstanceOf[String].trim
+      val hasKafka: Boolean = (clsName.startsWith("com.ligadata.OutputAdapters.KafkaProducer") || clsName.startsWith("com.ligadata.InputAdapters.KafkaSimpleConsumer"))
       hasKafka
     })
     val hostConnections: List[String] = kafkaAdapters.map(adapter => {
