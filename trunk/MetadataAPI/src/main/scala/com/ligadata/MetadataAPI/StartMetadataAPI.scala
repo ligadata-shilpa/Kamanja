@@ -33,7 +33,7 @@ import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object StartMetadataAPI {
 
-  var response = ""
+  var response=""
   //get default config
   val defaultConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~" )) + "/config/MetadataAPIConfig.properties"
   val loggerName = this.getClass.getName
@@ -239,13 +239,13 @@ object StartMetadataAPI {
       }
     }
     catch {
-      case nosuchelement: NoSuchElementException => {
-        logger.error("", nosuchelement)
+      case e: NoSuchElementException => {
+        logger.error("Route not found",e.getMessage)
         /** preserve the original response ... */
-        response = s"Invalid command action! action=$action"
-
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
         /** one more try ... going the alternate route */  // do we still need this ??
-        val altResponse: String = AltRoute(args)
+       /* val altResponse: String = AltRoute(args)
         if (altResponse != null) {
           //response = altResponse
           println(response)
@@ -254,13 +254,27 @@ object StartMetadataAPI {
           /* if the AltRoute doesn't produce a valid result, we will complain with the original failure */
           println(response)
           usage
-        }
+        }*/
       }
-      case fio: java.io.FileNotFoundException => {
-        logger.error("Unable to read a file, the file either does not exist or is inaccessible ", fio)
+      case e: java.io.FileNotFoundException => {
+        logger.error("Unable to read a file, the file either does not exist or is inaccessible ", e.getMessage)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
       }
       case e: Throwable => {
         logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: Exception => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: RuntimeException => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
       }
     } finally {
       MetadataAPIImpl.shutdown
@@ -541,18 +555,24 @@ object StartMetadataAPI {
       }
     }
     catch {
+      case e: java.util.NoSuchElementException => {
+        logger.error("Unable to access route: "+ fileinquesiton)
+        response = new ApiResult(-1, "StartMetadataAPI/route", null, s"Unable to execute command for action = $action").toString
+      }
       case fio: java.io.FileNotFoundException => {
         logger.error("Unable to access file: "+ fileinquesiton)
-        return s"Unable to execute command for action = $action"
+        response=new ApiResult(-1, "StartMetadataAPI/route", null, s"Unable to execute command for action = $action").toString
       }
+
       case e: Exception => {
         logger.warn("", e)
         /** tentative answer of unidentified command type failure. */
-        response = s"Unexpected action! action = $action"
+        response=new ApiResult(-1, "StartMetadataAPI/route", null,  s"Unexpected action! action = $action").toString
         /** one more try ... going the alternate route.
           *
           * ''Do we still need this ?'' Let's keep it for now.
           */
+       /*
         val altResponse: String = AltRoute(originalArgs)
         if (altResponse != null) {
             //response = altResponse  ... typically a parse error that is only meaningful for AltRoute processing
@@ -563,6 +583,7 @@ object StartMetadataAPI {
           printf(response)
           sys.exit(1)
         }
+        */
       }
 
     }
