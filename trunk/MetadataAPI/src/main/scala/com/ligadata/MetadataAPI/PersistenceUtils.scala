@@ -354,8 +354,7 @@ object PersistenceUtils {
   def SaveSchemaInformation(schemaId: Int, nameSpace: String, name: String, version: Long, physicalName: String, avroSchema: String, containerType: String): Unit = {
     val (containerName, store) = GetContainerNameAndDataStore("AvroSchemaInfo")
 
-    val json = "AvroSchemaInfo" ->
-      ("SchemaId" -> schemaId) ~
+    val json = ("SchemaId" -> schemaId) ~
         ("NameSpace" -> nameSpace) ~
         ("Name" -> name) ~
         ("Version" -> version) ~
