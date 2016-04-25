@@ -1,0 +1,14 @@
+[
+  {
+    "AdapterName": "TestStatus_1",
+    "MessageNames": [
+      "com.ligadata.KamanjaBase.KamanjaStatusEvent"
+    ],
+    "Serializer": "com.ligadata.kamanja.serializer.csvserdeser",
+    "Options": {
+      "alwaysQuoteFields": false,
+      "fieldDelimiter": ","
+    }
+  }
+]
+
