@@ -1756,7 +1756,7 @@ object ConfigUtils {
       * LoadAdapterMessageBindingIntoCache
       *
       * @param key string of the form "s"${zkMessage.ObjectType}.${zkMessage.Name}" where the object type is the
-      *            "AdapterMsgBinding" and the Name is the FullBindingName of the object to fetch
+      *            "AdapterMessageBinding" and the Name is the FullBindingName of the object to fetch
       */
     def LoadAdapterMessageBindingIntoCache(key: String) {
         try {
@@ -1778,6 +1778,35 @@ object ConfigUtils {
         }
     }
 
+    /**
+      * Remove the supplied binding the the supplied zookeeper object and binding specific key.
+      *
+      * @param bindingKey "<adapter name>,<namespace.msgname>,<namespace.serializername>"
+      */
+    def RemoveAdapterMessageBindingFromCache(bindingKey : String): Unit = {
+      try {
+          val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(bindingKey)
+
+          /** Note that even if it the binding is not in the mdMgr cache, we will proceed to remove it if possible
+            * from the Storage. The MetadataAPI can delete it (it doesn't necessarily notify the engine... NOTIFY_ENGINE = NO... and get it
+            * deleted on the back side during call back.  */
+          val key = s"AdapterMessageBinding.$bindingKey"
+          MetadataAPIImpl.DeleteObject(key.toLowerCase, "adapter_message_bindings")
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveAdapterMessageBindingFromCache", null, ErrorCodeConstants.Remove_AdapterMessageBinding_Successful + ":" + bindingKey)
+          apiResult.toString()
+
+      } catch {
+          case e: Exception => {
+              /**
+                * This is not necessarily catastrophic.  The binding could have been removed earlier depending upon the cluster
+                * configuration. It will attemtp to delete twice when Notify_Engine = yes
+                */
+              logger.debug("", e)
+              val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveAdapterMessageBindingFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_AdapterMessageBinding_Failed + ":" + s"AdapterMessageBinding.$bindingKey")
+              apiResult.toString()
+          }
+      }
+    }
 
 
 }

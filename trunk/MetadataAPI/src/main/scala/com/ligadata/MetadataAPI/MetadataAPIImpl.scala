@@ -2880,7 +2880,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           val unHandledFunctions = ArrayBuffer[(Key, Array[Byte])]()
           functionsYetToProcess.foreach(fun => {
             try {
-              DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
+                DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
             } catch {
               case e: Throwable => {
                 unHandledFunctions += fun
@@ -2897,7 +2897,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             {
               val data = v.asInstanceOf[Array[Byte]]
               try {
-                DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId, ignoreExistingObjectsOnStartup)
+                  val maxTranId = PersistenceUtils.GetTranId
+                  MetadataAPIImpl.setCurrentTranLevel(maxTranId)
+
+                  DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId, ignoreExistingObjectsOnStartup)
               } catch {
                 case e: Throwable => {
                   if (typ.equalsIgnoreCase("types")) {
@@ -3032,7 +3035,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }
       }
-      case "AdapterMsgBinding"=> {
+      case "AdapterMessageBinding"=> {
           /** Restate the key to use the binding key (see AdapterMessageBinding class decl in Metadata project) for form. */
           val bindingKey : String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
           zkMessage.Operation match {
@@ -3040,7 +3043,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                   ConfigUtils.LoadAdapterMessageBindingIntoCache(bindingKey)
               }
               case "Remove" => {
-                  //ConfigUtils.RemoveAdapterMessageBindingFromCache(bindingKey)
+                  ConfigUtils.RemoveAdapterMessageBindingFromCache(bindingKey)
               }
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }
@@ -4304,7 +4307,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * UpdateMetadata - This is a callback function for the Zookeeper Listener.  It will get called when we detect Metadata being updated from
      *                  a different metadataImpl service.
      *
-     * @param receivedJsonStr message from another cluster node
+     * @param receivedJsonStr zk message from another cluster node
      */
   def UpdateMetadata(receivedJsonStr: String): Unit = {
     logger.debug("Process ZooKeeper notification " + receivedJsonStr)
@@ -4320,8 +4323,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * InitMdMgr
-      *
-      * @param mgr
+     *
+     * @param mgr the metadata manager instance
      * @param jarPathsInfo
      * @param databaseInfo
      */
