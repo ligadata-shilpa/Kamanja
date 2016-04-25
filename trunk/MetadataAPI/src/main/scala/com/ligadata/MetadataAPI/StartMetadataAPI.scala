@@ -81,6 +81,7 @@ object StartMetadataAPI {
   var foundMessageName = false
   var expectBindingFromFile = false
   var expectBindingFromString = false
+  var removeCmdFound = false
   var expectRemoveBindingKey = false
   var expectListBindingFilter = false
   var expectAdapterFilter = false
@@ -177,15 +178,16 @@ object StartMetadataAPI {
                           expectMessageName = false
                           argVar = "" // Make sure we dont add to the routing command
                       }
-                      if (expectRemoveBindingKey) {
+                      if (removeCmdFound && expectRemoveBindingKey) {
+                          removeCmdFound = false
                           expectRemoveBindingKey = false
                           extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
                           argVar = "" // Make sure we dont add to the routing command
-//                      } else {
-//                        if (removeCmdFound && !isRemoveAdded) {
-//                          action += "remove"
-//                          isRemoveAdded = true
-//                        }
+                      } else {
+                        if (removeCmdFound && !isRemoveAdded) {
+                          action += "remove"
+                          isRemoveAdded = true
+                        }
                       }
                       if (expectBindingFromString) {
                           extraCmdArgs(FROMSTRING) = arg
