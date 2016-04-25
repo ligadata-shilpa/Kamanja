@@ -17,10 +17,10 @@ object SftpUtility{
       throw new KamanjaException("Smart File Adapter Hostslist cannot be empty for SFTP", null)
     //"sftp://" + username + ":" + password + "@" + hostName + "/" + remoteFilePath
     if(connectionConf.keyFile != null && connectionConf.keyFile.length != 0)
-      "sftp://" + connectionConf.userId + "@" + connectionConf.hostsList(0) + "/" +  remoteFilePath
+      "sftp://" + connectionConf.userId + "@" + connectionConf.hostsList(0) + "" +  remoteFilePath
     else
       "sftp://" + connectionConf.userId + ":" + URLEncoder.encode(connectionConf.password) +
-        "@" + connectionConf.hostsList(0) + "/" +  remoteFilePath
+        "@" + connectionConf.hostsList(0) + "" +  remoteFilePath
   }
 
   /**

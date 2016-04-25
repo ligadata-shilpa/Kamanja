@@ -151,6 +151,11 @@ class PosixFileHandler extends SmartFileHandler{
   override def isFile: Boolean = new File(fileFullPath).isFile
 
   override def isDirectory: Boolean = new File(fileFullPath).isDirectory
+
+  override def isAccessible : Boolean = {
+    val file = new File(fileFullPath)
+    file.exists() && file.canRead && file.canWrite
+  }
 }
 
 

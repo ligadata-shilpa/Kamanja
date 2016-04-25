@@ -192,6 +192,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       if(initialized == false || ! clusterStatus.leaderNodeId.equals(prevRegLeader)){
         LOG.debug("Smart File Consumer - Leader is running on node " + clusterStatus.nodeId)
 
+        monitorController = new MonitorController(adapterConfig, newFileDetectedCallback)
+        monitorController.checkConfigDirsAccessibility//throw an exception if a folder is not accissible
+
         allNodesStartInfo.clear()
         envContext.createListenerForCacheChildern(sendStartInfoToLeaderParentPath, collectStartInfo)// listen to start info
 
@@ -271,7 +274,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       initialFilesHandled = true//nothing to handle
 
     //now run the monitor
-    monitorController = new MonitorController(adapterConfig, newFileDetectedCallback, initialFilesToProcess.toArray)
+    monitorController.init(initialFilesToProcess.toArray)
     monitorController.startMonitoring()
 
   }
