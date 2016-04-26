@@ -1797,7 +1797,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
           val fld = valType match {
             case LONG => container.set(at.getIndex, com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis))
             case INT => container.set(at.getIndex, com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis))
-            case BYTE => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis))
+            case BYTE => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis).toByte)
             case BOOLEAN => container.set(at.getIndex, com.ligadata.BaseTypes.BoolImpl.DeserializeFromDataInputStream(dis))
             case DOUBLE => container.set(at.getIndex, com.ligadata.BaseTypes.DoubleImpl.DeserializeFromDataInputStream(dis))
             case FLOAT => container.set(at.getIndex, com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis))
@@ -1832,7 +1832,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                 case BYTE => {
                   val arr = new Array[Byte](arraySize)
                   for (i <- 0 until arraySize)
-                    arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis)
+                    arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis).toByte
                   container.set(at.getIndex, arr)
                 }
                 case BOOLEAN => {
@@ -1887,6 +1887,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
         })
       } else {
         // Mapped is yet to handle
+        throw new Exception("Not yet handled data migration for mapped message:" + typName)
       }
       dis.close
       return container
