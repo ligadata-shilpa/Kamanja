@@ -48,7 +48,7 @@ case class AdapterUniqueValueDes_1_3(T: Long, V: String, Out: Option[List[List[S
 
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
 
-case class adapterMessageBinding(var AdapterName: String, var TypeString: String, var MessageNames: List[String], var Options: Map[String, String], var Serializer: String)
+case class adapterMessageBinding(var AdapterName: String, var MessageNames: List[String], var Options: Map[String, String], var Serializer: String)
 
 class MigrateTo_V_1_4 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
@@ -535,6 +535,10 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
     if (dataStoreInfo == null || dataStoreInfo.size == 0) {
       throw new Exception("Not found valid DataStore info in " + clusterConfigFile)
+    }
+
+    if (tenantDatastoreInfo == null || tenantDatastoreInfo.size == 0) {
+      logger.info("Could Not find valid tenantDatastoreInfo in " + clusterConfigFile)
     }
 
     val sysPath = new File(destInstallPath + "/lib/system")
