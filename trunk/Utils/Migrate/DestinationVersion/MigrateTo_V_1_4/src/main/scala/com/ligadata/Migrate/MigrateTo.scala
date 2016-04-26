@@ -1734,6 +1734,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   override def populateAndSaveData(data: Array[DataFormat]): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+    initDataConversion
     val containersData = data.groupBy(_.containerName.toLowerCase)
     val data_list = containersData.map(kv => (kv._1, kv._2.map(d => {
       val sendVal =
@@ -1936,7 +1937,6 @@ class MigrateTo_V_1_4 extends MigratableTo {
   }
 
   private def convertDataTo1_4_x(containerName: String, serType: String, serInfo: Array[Byte], timePartition: Long, transactionid: Long, rowid: Int): ContainerInterface = {
-    initDataConversion
     val container = deserializeContainer(serType, serInfo)
     if (container == null) {
       throw new Exception("Failed to get instance of " + containerName)

@@ -19,8 +19,8 @@ import java.sql.DriverManager
 import java.sql.{ Statement, PreparedStatement, CallableStatement, DatabaseMetaData, ResultSet }
 import java.sql.Connection
 import com.ligadata.KamanjaBase.NodeContext
-import com.ligadata.KvBase.{ Key, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
+import com.ligadata.KvBase.{ Key, TimeRange, Value }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory }
 import java.nio.ByteBuffer
 import com.ligadata.kamanja.metadata.AdapterInfo
 import org.apache.logging.log4j._

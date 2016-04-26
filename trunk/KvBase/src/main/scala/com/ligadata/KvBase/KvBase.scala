@@ -20,6 +20,7 @@ package com.ligadata.KvBase
 import java.util.{ Comparator };
 
 case class Key(timePartition: Long, bucketKey: Array[String], transactionId: Long, rowId: Int)
+case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
 case class TimeRange(beginTime: Long, endTime: Long)
 
 object KvBaseDefalts {
