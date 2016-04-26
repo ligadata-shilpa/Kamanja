@@ -18,10 +18,10 @@ package com.ligadata.Migrate
 
 import com.ligadata.Utils._
 import com.ligadata.MigrateBase._
-import java.io.{ DataOutputStream, ByteArrayOutputStream, File, PrintWriter }
+import java.io.{DataOutputStream, ByteArrayOutputStream, File, PrintWriter}
 import org.apache.logging.log4j._
 import scala.collection.mutable.ArrayBuffer
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{Key, Value, TimeRange}
 import com.ligadata.StorageBase._
 import com.ligadata.keyvaluestore.KeyValueManager
 import com.ligadata.Serialize._
@@ -32,8 +32,9 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization
 import com.ligadata.KamanjaBase._
 import scala.util.control.Breaks._
-import scala.reflect.runtime.{ universe => ru }
+import scala.reflect.runtime.{universe => ru}
 import com.ligadata.Exceptions._
+
 // import scala.collection.JavaConversions._
 
 class MigrateFrom_V_1_3 extends MigratableFrom {
@@ -781,7 +782,7 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
         dataStore.get(containerName, callbackFunction)
         doneGet = true
       } catch {
-        case e @ (_: ObjectNotFoundException | _: KeyNotFoundException) => {
+        case e@(_: ObjectNotFoundException | _: KeyNotFoundException) => {
           logger.debug("Failed to get data from container:%s".format(containerName), e)
           doneGet = true
         }
@@ -807,7 +808,9 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
           logger.error("Failed to get data from datastore. Waiting for another %d milli seconds and going to start them again.".format(failedWaitTime))
           Thread.sleep(failedWaitTime)
         } catch {
-          case e: Exception => { logger.warn("", e) }
+          case e: Exception => {
+            logger.warn("", e)
+          }
         }
         // Adjust time for next time
         if (failedWaitTime < maxFailedWaitTime) {
@@ -871,12 +874,20 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
               }
             }
           } catch {
-            case e: Exception => { dumpKeyValueFailures(k, v); logger.warn("", e); }
-            case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn("", e); }
+            case e: Exception => {
+              dumpKeyValueFailures(k, v); logger.warn("", e);
+            }
+            case e: Throwable => {
+              dumpKeyValueFailures(k, v); logger.warn("", e);
+            }
           }
         } catch {
-          case e: Exception => { dumpKeyValueFailures(k, v); logger.warn("", e); }
-          case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn("", e); }
+          case e: Exception => {
+            dumpKeyValueFailures(k, v); logger.warn("", e);
+          }
+          case e: Throwable => {
+            dumpKeyValueFailures(k, v); logger.warn("", e);
+          }
         }
       }
 
@@ -917,8 +928,12 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
               }
             }
           } catch {
-            case e: Exception => { dumpKeyValueFailures(k, v); logger.warn("", e); }
-            case e: Throwable => { dumpKeyValueFailures(k, v); logger.warn("", e); }
+            case e: Exception => {
+              dumpKeyValueFailures(k, v); logger.warn("", e);
+            }
+            case e: Throwable => {
+              dumpKeyValueFailures(k, v); logger.warn("", e);
+            }
           }
         }
         callGetData(_metadataStore, "model_config_objects" + backupTblSufix, buildMdlCfglOne)
@@ -931,7 +946,7 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
     }
   }
 
-  private def ExtractDataFromTupleData(containerType:String,key: Key, value: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
+  private def ExtractDataFromTupleData(containerType: String, key: Key, value: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
     val serType = value.serializerType
     val arr = value.serializedInfo
     Array(new DataFormat(containerType, key.timePartition, key.bucketKey, key.transactionId, key.rowId, serType, arr))
@@ -943,7 +958,7 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
       val a = objs.add(k)
     }
     try {
-      store.getKeys(containerName,getObjFn)
+      store.getKeys(containerName, getObjFn)
       objs
     } catch {
       case e: ObjectNotFoundException => {
@@ -958,12 +973,12 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
   }
 
   def GetValue(containerName: String, key: Key, store: DataStore): Value = {
-    var value:Value = null
+    var value: Value = null
     val getObjFn = (k: Key, v: Value) => {
       value = v
     }
     try {
-      store.get(containerName,Array(key),getObjFn)
+      store.get(containerName, Array(key), getObjFn)
       value
     } catch {
       case e: ObjectNotFoundException => {
@@ -980,7 +995,7 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
 
   // metadataElemsJson are used for dependency load
   // Callback function calls with container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
-  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat],msgsAndContainers: java.util.List[String], callbackFunction: DataObjectCallBack): Unit = {
+  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], msgsAndContainers: java.util.List[String], callbackFunction: DataObjectCallBack): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -1031,25 +1046,25 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
 
     try {
       // Load all data objects
-      breakable{
-	msgsAndContainers.toArray.foreach( msg => {
-	  val msgName = msg.asInstanceOf[String]
-	  var keys = scala.collection.mutable.Set[Key]()
-	  keys = GetKeys(msgName + backupTblSufix, _dataStore)
-	  if (keys.size == 0 ){
+      breakable {
+        msgsAndContainers.toArray.foreach(msg => {
+          val msgName = msg.asInstanceOf[String]
+          var keys = scala.collection.mutable.Set[Key]()
+          keys = GetKeys(msgName + backupTblSufix, _dataStore)
+          if (keys.size == 0) {
             val szMsg = "No objects available in " + msgName
             logger.warn(szMsg)
             break
-	  }
-	  keys.foreach(key => {
-            val v = GetValue(msgName + backupTblSufix,key, _dataStore)
-            val retData = ExtractDataFromTupleData(msgName,key, v, bos, dos)
+          }
+          keys.foreach(key => {
+            val v = GetValue(msgName + backupTblSufix, key, _dataStore)
+            val retData = ExtractDataFromTupleData(msgName, key, v, bos, dos)
             if (retData.size > 0 && callbackFunction != null) {
               if (callbackFunction.call(retData) == false)
-		throw new Exception("Data failed to consume")
+                throw new Exception("Data failed to consume")
             }
-	  })
-	})
+          })
+        })
       }
     } catch {
       case e: Exception => {

@@ -615,6 +615,11 @@ public class Migrate {
                         }
                         msgsAndContainers = migrateTo.getMessagesAndContainers(metadataArr, true, excludeMetadata);
 
+                        //BUGBUG::- FIXME:- For now we are adding adapteruniqkvdata & globalcounters to msgsAndContainers.
+                        msgsAndContainers.add("adapteruniqkvdata");
+                        msgsAndContainers.add("globalcounters");
+
+/*
                         // Adding sys catalog tables to backup
                         String schemaName = migrateTo.getDataTableSchemaName();
                         String tableName = "adapteruniqkvdata";
@@ -625,12 +630,12 @@ public class Migrate {
                         tableName = "globalcounters";
                         tInfo = new TableName(schemaName, tableName);
                         allDataTbls.add(tInfo);
-
+*/
                         for (String msgName : msgsAndContainers) {
                             logger.info("Message => " + msgName);
-                            schemaName = migrateTo.getTenantTableSchemaName();
-                            tableName = migrateTo.getDataTableName(msgName);
-                            tInfo = new TableName(schemaName, tableName);
+                            String schemaName = migrateTo.getTenantTableSchemaName();
+                            String tableName = migrateTo.getDataTableName(msgName);
+                            TableName tInfo = new TableName(schemaName, tableName);
                             allDataTbls.add(tInfo);
                         }
                     }
