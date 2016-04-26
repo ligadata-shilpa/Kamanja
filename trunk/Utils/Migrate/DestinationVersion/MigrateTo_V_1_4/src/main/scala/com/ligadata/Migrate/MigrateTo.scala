@@ -16,11 +16,15 @@
 
 package com.ligadata.Migrate
 
+import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory._
+import com.ligadata.KamanjaBase.{ContainerFactoryInterface, MessageFactoryInterface, ContainerInterface, ObjectResolver}
+import com.ligadata.KamanjaManager.KamanjaConfiguration
 import com.ligadata.MigrateBase._
+import com.ligadata.Utils.{KamanjaLoaderInfo, Utils}
 import org.apache.logging.log4j._
-import java.io.{File, PrintWriter}
+import java.io.{DataInputStream, ByteArrayInputStream, File, PrintWriter}
 
-import com.ligadata.kamanja.metadata.MdMgr
+import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.MetadataAPI.AdapterMessageBindingUtils
@@ -36,7 +40,7 @@ import com.ligadata.KvBase.{KvBaseDefalts, TimeRange, Key}
 
 import com.ligadata.StorageBase.{DataStore, DataStoreOperations}
 import com.ligadata.keyvaluestore.KeyValueManager
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{HashMap, ArrayBuffer}
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
 import com.ligadata.Exceptions._
 
@@ -47,6 +51,285 @@ case class adapterMessageBinding(var AdapterName: String,var TypeString: String,
 class MigrateTo_V_1_4 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
+
+  class MdObjectRes(val mdMgr: MdMgr, val jarPaths: Set[String]) extends ObjectResolver {
+    private[this] var messageContainerObjects = new HashMap[String, ContainerFactoryInterface]
+    private[this] val metadataLoader = new KamanjaLoaderInfo
+
+    def GetAllJarsFromElem(elem: BaseElem): Set[String] = {
+      var allJars: Array[String] = null
+
+      val jarname = if (elem.JarName == null) "" else elem.JarName.trim
+
+      if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0 && jarname.size > 0) {
+        allJars = elem.DependencyJarNames :+ jarname
+      } else if (elem.DependencyJarNames != null && elem.DependencyJarNames.size > 0) {
+        allJars = elem.DependencyJarNames
+      } else if (jarname.size > 0) {
+        allJars = Array(jarname)
+      } else {
+        return Set[String]()
+      }
+
+      return allJars.map(j => Utils.GetValidJarFile(jarPaths, j)).toSet
+    }
+
+    def LoadJarIfNeeded(elem: BaseElem): Boolean = {
+      val allJars = GetAllJarsFromElem(elem)
+      if (allJars.size > 0) {
+        return Utils.LoadJars(allJars.toArray, metadataLoader.loadedJars, metadataLoader.loader)
+      } else {
+        return true
+      }
+    }
+
+    private def PrepareMessages(tmpMsgDefs: Option[scala.collection.immutable.Set[MessageDef]]): Unit = {
+      if (tmpMsgDefs == None) // Not found any messages
+        return
+
+      val msgDefs = tmpMsgDefs.get
+
+      // Load all jars first
+      msgDefs.foreach(msg => {
+        LoadJarIfNeeded(msg)
+      })
+
+      msgDefs.foreach(msg => {
+        PrepareMessage(msg, false) // Already Loaded required dependency jars before calling this
+      })
+    }
+
+
+    private def PrepareContainers(tmpContainerDefs: Option[scala.collection.immutable.Set[ContainerDef]]): Unit = {
+      if (tmpContainerDefs == None) // Not found any containers
+        return
+
+      val containerDefs = tmpContainerDefs.get
+
+      // Load all jars first
+      containerDefs.foreach(container => {
+        LoadJarIfNeeded(container)
+      })
+
+      val baseContainersPhyName = scala.collection.mutable.Set[String]()
+      val baseContainerInfo = MetadataLoad.ContainerInterfacesInfo
+      baseContainerInfo.foreach(bc => {
+        baseContainersPhyName += bc._3
+      })
+
+      containerDefs.foreach(container => {
+        PrepareContainer(container, false, (container.PhysicalName.equalsIgnoreCase("com.ligadata.KamanjaBase.KamanjaModelEvent$") == false) && baseContainersPhyName.contains(container.PhysicalName.trim)) // Already Loaded required dependency jars before calling this
+      })
+
+    }
+
+    private[this] def CheckAndPrepMessage(clsName: String, msg: MessageDef): Boolean = {
+      var isMsg = true
+      var curClass: Class[_] = null
+
+      try {
+        // If required we need to enable this test
+        // Convert class name into a class
+        var curClz = Class.forName(clsName, true, metadataLoader.loader)
+        curClass = curClz
+
+        isMsg = false
+
+        while (curClz != null && isMsg == false) {
+          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
+          if (isMsg == false)
+            curClz = curClz.getSuperclass()
+        }
+      } catch {
+        case e: Exception => {
+          logger.debug("Failed to get message classname :" + clsName, e)
+          return false
+        }
+      }
+
+      if (isMsg) {
+        try {
+          var objinst: Any = null
+          try {
+            // Trying Singleton Object
+            val module = metadataLoader.mirror.staticModule(clsName)
+            val obj = metadataLoader.mirror.reflectModule(module)
+            objinst = obj.instance
+          } catch {
+            case e: Exception => {
+              // Trying Regular Object instantiation
+              logger.debug("", e)
+              objinst = curClass.newInstance
+            }
+          }
+          if (objinst.isInstanceOf[MessageFactoryInterface]) {
+            val messageobj = objinst.asInstanceOf[MessageFactoryInterface]
+            val msgName = msg.FullName.toLowerCase
+            messageContainerObjects(msgName) = messageobj
+
+            logger.info("Created Message:" + msgName)
+            return true
+          } else {
+            logger.debug("Failed to instantiate message object :" + clsName)
+            return false
+          }
+        } catch {
+          case e: Exception => {
+            logger.debug("Failed to instantiate message object:" + clsName, e)
+            return false
+          }
+        }
+      }
+      return false
+    }
+
+    def PrepareMessage(msg: MessageDef, loadJars: Boolean): Unit = {
+      if (loadJars)
+        LoadJarIfNeeded(msg)
+      // else Assuming we are already loaded all the required jars
+
+      var clsName = msg.PhysicalName.trim
+      var orgClsName = clsName
+
+      var foundFlg = CheckAndPrepMessage(clsName, msg)
+
+      if (foundFlg == false) {
+        // if no $ at the end we are taking $
+        if (clsName.size > 0 && clsName.charAt(clsName.size - 1) != '$') {
+          clsName = clsName + "$"
+          foundFlg = CheckAndPrepMessage(clsName, msg)
+        }
+      }
+      if (foundFlg == false) {
+        logger.error("Failed to instantiate message object:%s, class name:%s".format(msg.FullName, orgClsName))
+      }
+    }
+
+    private[this] def CheckAndPrepContainer(clsName: String, container: ContainerDef): Boolean = {
+      var isContainer = true
+      var curClass: Class[_] = null
+
+      try {
+        // If required we need to enable this test
+        // Convert class name into a class
+        var curClz = Class.forName(clsName, true, metadataLoader.loader)
+        curClass = curClz
+
+        isContainer = false
+
+        while (curClz != null && isContainer == false) {
+          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ContainerFactoryInterface")
+          if (isContainer == false)
+            curClz = curClz.getSuperclass()
+        }
+      } catch {
+        case e: Exception => {
+          logger.debug("Failed to get container classname: " + clsName, e)
+          return false
+        }
+      }
+
+      if (isContainer) {
+        try {
+          var objinst: Any = null
+          try {
+            // Trying Singleton Object
+            val module = metadataLoader.mirror.staticModule(clsName)
+            val obj = metadataLoader.mirror.reflectModule(module)
+            objinst = obj.instance
+          } catch {
+            case e: Exception => {
+              logger.error("", e)
+              // Trying Regular Object instantiation
+              objinst = curClass.newInstance
+            }
+          }
+
+          if (objinst.isInstanceOf[ContainerFactoryInterface]) {
+            val containerobj = objinst.asInstanceOf[ContainerFactoryInterface]
+            val contName = container.FullName.toLowerCase
+            messageContainerObjects(contName) = containerobj
+
+            logger.info("Created Container:" + contName)
+            return true
+          } else {
+            logger.debug("Failed to instantiate container object :" + clsName)
+            return false
+          }
+        } catch {
+          case e: Exception => {
+            logger.debug("Failed to instantiate containerObjects object:" + clsName, e)
+            return false
+          }
+        }
+      }
+      return false
+    }
+
+    def PrepareContainer(container: ContainerDef, loadJars: Boolean, ignoreClassLoad: Boolean): Unit = {
+      if (loadJars)
+        LoadJarIfNeeded(container)
+      // else Assuming we are already loaded all the required jars
+
+      if (ignoreClassLoad) {
+        val contName = container.FullName.toLowerCase
+        messageContainerObjects(contName) = null
+        logger.debug("Added Base Container:" + contName)
+        return
+      }
+
+      var clsName = container.PhysicalName.trim
+      var orgClsName = clsName
+
+      var foundFlg = CheckAndPrepContainer(clsName, container)
+      if (foundFlg == false) {
+        // if no $ at the end we are taking $
+        if (clsName.size > 0 && clsName.charAt(clsName.size - 1) != '$') {
+          clsName = clsName + "$"
+          foundFlg = CheckAndPrepContainer(clsName, container)
+        }
+      }
+      if (foundFlg == false) {
+        logger.error("Failed to instantiate container object:%s, class name:%s".format(container.FullName, orgClsName))
+      }
+    }
+
+    def ResolveMessageAndContainers(): Unit = {
+      val tmpMsgDefs = mdMgr.Messages(true, true)
+      val tmpContainerDefs = mdMgr.Containers(true, true)
+      PrepareMessages(tmpMsgDefs)
+      PrepareContainers(tmpContainerDefs)
+    }
+
+    override def getInstance(msgOrContainerName: String): ContainerInterface = {
+      if (messageContainerObjects == null) return null
+      val v = messageContainerObjects.getOrElse(msgOrContainerName.toLowerCase, null)
+      if (v != null && v.isInstanceOf[MessageFactoryInterface]) {
+        return v.createInstance.asInstanceOf[ContainerInterface]
+      } else if (v != null && v.isInstanceOf[ContainerFactoryInterface]) {
+        // NOTENOTE: Not considering Base containers here
+        return v.createInstance.asInstanceOf[ContainerInterface]
+      }
+      return null
+    }
+
+    override def getInstance(schemaId: Long): ContainerInterface = {
+      //BUGBUG:: For now we are getting latest class. But we need to get the old one too.
+      val md = mdMgr
+
+      if (md == null)
+        throw new KamanjaException("Metadata Not found", null)
+
+      val contOpt = getMdMgr.ContainerForSchemaId(schemaId.toInt)
+
+      if (contOpt == None)
+        throw new KamanjaException("Container Not found for schemaid:" + schemaId, null)
+
+      getInstance(contOpt.get.FullName)
+    }
+
+    override def getMdMgr: MdMgr = mdMgr
+  }
 
   private var _unhandledMetadataDumpDir: String = _
   private var _curMigrationSummaryFlPath: String = _
@@ -59,9 +342,11 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private var _metaDataStoreInfo: String = _
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
+  private var _tenantDatastoreInfo: String = _
   private var _metaDataStoreDb: DataStore = _
   private var _dataStoreDb: DataStore = _
   private var _statusStoreDb: DataStore = _
+  private var _tenantDsDb: DataStore = _
   private var _jarPaths: collection.immutable.Set[String] = collection.immutable.Set[String]()
   private var _bInit = false
   private var _flCurMigrationSummary: PrintWriter = _
@@ -69,7 +354,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private var _parallelDegree = 0
   private var _mergeContainerAndMessages = true
   private var _tenantId: Option[String] = None
-  private var _adapterMessageBindings: Option[String] = None
+  private var _dataConversionInitLock = new Object()
+  private var _mdObjectRes: MdObjectRes = null
 
   private val globalExceptions = ArrayBuffer[(String, Throwable)]()
 
@@ -133,9 +419,11 @@ class MigrateTo_V_1_4 extends MigratableTo {
     return ""
   }
 
-  private def GetDataStoreStatusStoreInfo(cfgStr: String): (String, String) = {
+  private def GetDataStoreStatusStoreInfo(cfgStr: String): (String, String, String) = {
+    var tenantDsStr: String = null
     var dsStr: String = null
     var ssStr: String = ""
+
     try {
       // extract config objects
       val map = JsonSerializer.parseEngineConfig(cfgStr)
@@ -159,10 +447,30 @@ class MigrateTo_V_1_4 extends MigratableTo {
             if (ClusterId.size > 0 && cluster.contains("StatusInfo"))
               ssStr = getStringFromJsonNode(cluster.getOrElse("StatusInfo", null))
           }
+          if ((tenantDsStr == null || tenantDsStr.size == 0) && _tenantId != None) {
+            val givenTenantId = _tenantId.get
+            val cluster = clustny.asInstanceOf[Map[String, Any]]
+            val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
+            logger.debug("Processing the cluster => " + ClusterId)
+            if (ClusterId.size > 0 && cluster.contains("Tenants")) {
+              val tmpTenants = cluster.getOrElse("Tenants", null)
+              if (tmpTenants != null) {
+                val tenants = tmpTenants.asInstanceOf[List[Map[String, Any]]]
+                tenants.foreach(tInfo => {
+                  if ((tenantDsStr == null || tenantDsStr.size == 0) && tInfo != null) {
+                    val tName = tInfo.getOrElse("TenantId", "").asInstanceOf[String].trim.toLowerCase
+                    if (tName.equalsIgnoreCase(givenTenantId)) {
+                      tenantDsStr = getStringFromJsonNode(tInfo.getOrElse("PrimaryDataStore", null))
+                    }
+                  }
+                })
+              }
+            }
+          }
         })
       }
       logger.debug("Found Datastore String:%s and Statusstore String:%s".format(dsStr, ssStr));
-      (dsStr, ssStr)
+      (dsStr, ssStr, tenantDsStr)
     } catch {
       case e: Exception => {
         throw new Exception("Failed to parse clusterconfig", e)
@@ -199,11 +507,18 @@ class MigrateTo_V_1_4 extends MigratableTo {
     mdLoader.initialize
     MetadataAPIImpl.readMetadataAPIConfigFromPropertiesFile(apiConfigFile)
 
+    if (tenantId != null && tenantId.size > 0){
+      _tenantId = Some(tenantId)
+    }
+    else{
+      throw new Exception("tenantId can't be null")
+    }
+
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     val metaDataStoreInfo = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("METADATA_DATASTORE");
     val cfgStr = Source.fromFile(clusterConfigFile).mkString
-    val (dataStoreInfo, statusStoreInfo) = GetDataStoreStatusStoreInfo(cfgStr)
+    val (dataStoreInfo, statusStoreInfo, tenantDatastoreInfo) = GetDataStoreStatusStoreInfo(cfgStr)
 
     if (metaDataStoreInfo == null || metaDataStoreInfo.size == 0) {
       throw new Exception("Not found valid MetadataStore info in " + apiConfigFile)
@@ -225,6 +540,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     _metaDataStoreInfo = metaDataStoreInfo
     _dataStoreInfo = dataStoreInfo
     _statusStoreInfo = if (statusStoreInfo == null) "" else statusStoreInfo
+    _tenantDatastoreInfo = if (tenantDatastoreInfo == null) "" else tenantDatastoreInfo
     _jarPaths = toVersionJarPaths
     _sourceVersion = sourceVersion
     _fromScalaVersion = fromScalaVersion
@@ -246,12 +562,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     _parallelDegree = if (parallelDegree <= 1) 1 else parallelDegree
     _mergeContainerAndMessages = mergeContainerAndMessages
 
-    if (tenantId != null && tenantId.size > 0){
-      _tenantId = Some(tenantId)
-    }
-    else{
-      throw new Exception("tenantId can't be null")
-    }
+    _tenantDsDb = GetDataStoreHandle(toVersionJarPaths, tenantDatastoreInfo)
 
     if (adapterMessageBindings != null && adapterMessageBindings.size > 0){
       _adapterMessageBindings = Some(adapterMessageBindings)
@@ -292,6 +603,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   override def getDataTableName(containerName: String) : String = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+    //BUGBUG:: If this table is realted to _tenantDsDb, it may have different name
     _dataStoreDb.getTableName(containerName)
   }
     
@@ -305,7 +617,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     logger.info("Checking whether table for the container " + tblInfo.name + " exists ")
-    _dataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
+    _dataStoreDb.isTableExists(tblInfo.namespace, tblInfo.name) || _tenantDsDb.isTableExists(tblInfo.namespace, tblInfo.name)
     //_dataStoreDb.isContainerExists(tblInfo.name)
   }
 
@@ -337,6 +649,31 @@ class MigrateTo_V_1_4 extends MigratableTo {
     } catch {
       case e: Exception => {
         throw new Exception("Failed to parse JSON configuration string:" + _dataStoreInfo, e)
+      }
+    }
+
+    val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
+    namespace
+  }
+
+  override def getTenantTableSchemaName: String = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+
+    if (_tenantDatastoreInfo.trim.size == 0)
+      return null
+
+    var parsed_json: Map[String, Any] = null
+    try {
+      val json = parse(_tenantDatastoreInfo)
+      if (json == null || json.values == null) {
+        val msg = "Failed to parse JSON configuration string:" + _tenantDatastoreInfo
+        throw new Exception(msg)
+      }
+      parsed_json = json.values.asInstanceOf[Map[String, Any]]
+    } catch {
+      case e: Exception => {
+        throw new Exception("Failed to parse JSON configuration string:" + _tenantDatastoreInfo, e)
       }
     }
 
@@ -388,6 +725,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
       addBackupTablesToExecutor(executor, _metaDataStoreDb, metadataTblsToBackedUp, "Failed to backup metadata table:", force)
       addBackupTablesToExecutor(executor, _dataStoreDb, dataTblsToBackedUp, "Failed to backup data table:", force)
+      // addBackupTablesToExecutor(executor, _tenantDsDb, dataTblsToBackedUp, "Failed to backup data table:", force)
       executor.shutdown();
       try {
         executor.awaitTermination(Long.MaxValue, TimeUnit.NANOSECONDS);
@@ -512,7 +850,9 @@ class MigrateTo_V_1_4 extends MigratableTo {
           executor.execute(new Runnable() {
             override def run() = {
               try {
+                // Dropping both Syscatalog & tenant datastore
                 _dataStoreDb.DropContainer(Array(dropContainer))
+                _tenantDsDb.DropContainer(Array(dropContainer))
               } catch {
                 case e: Exception => AddToGlobalException("Failed to drop data message/container:" + dropContainer, e)
                 case e: Throwable => AddToGlobalException("Failed to drop data message/container:" + dropContainer, e)
@@ -1371,14 +1711,19 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     val containersData = data.groupBy(_.containerName.toLowerCase)
-    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, d.data.asInstanceOf[Any])).toArray)).toArray
+    val data_list = containersData.map(kv => (kv._1, kv._2.map(d => {
+      val container = convertDataTo1_4_x(d.containerName, d.serializername, d.data, d.timePartition, d.transactionid, d.rowid)
+      (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), "", container.asInstanceOf[Any])
+    }))).toArray
 
-    callSaveData(_dataStoreDb, data_list);
+    callSaveData(_tenantDsDb, data_list);
   }
 
   override def shutdown: Unit = {
     if (_metaDataStoreDb != null)
       _metaDataStoreDb.Shutdown()
+    if (_tenantDsDb != null)
+      _tenantDsDb.Shutdown()
     if (_dataStoreDb != null)
       _dataStoreDb.Shutdown()
     if (_statusStoreDb != null)
@@ -1386,6 +1731,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_flCurMigrationSummary != null)
       _flCurMigrationSummary.close()
     _metaDataStoreDb = null
+    _tenantDsDb = null
     _dataStoreDb = null
     _statusStoreDb = null
     _flCurMigrationSummary = null
@@ -1415,6 +1761,154 @@ class MigrateTo_V_1_4 extends MigratableTo {
       throw new Exception("Not found valid Datastore DB connection")
 
     callSaveData(_dataStoreDb, Array(("MigrateStatusInformation", Array((Key(KvBaseDefalts.defaultTime, Array(key.toLowerCase), 0, 0), "txt", value.getBytes().asInstanceOf[Any])))))
+  }
+
+  private def initDataConversion: Unit = {
+    if (_mdObjectRes != null) return
+    _dataConversionInitLock.synchronized {
+      if (_mdObjectRes != null) return
+      val mdObjectRes = new MdObjectRes(MdMgr.GetMdMgr, _jarPaths)
+      mdObjectRes.ResolveMessageAndContainers()
+      _mdObjectRes = mdObjectRes
+      _tenantDsDb.setObjectResolver(_mdObjectRes)
+      _tenantDsDb.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+    }
+  }
+
+  private def deserializeContainer(serType: String, serInfo: Array[Byte]): ContainerInterface = {
+      var dis = new DataInputStream(new ByteArrayInputStream(serInfo));
+
+      val typName = dis.readUTF
+      val version = dis.readUTF
+      val classname = dis.readUTF
+
+      try {
+        val container = _mdObjectRes.getInstance(typName)
+        if (container == null) {
+          throw new Exception("Failed to get instance of " + typName)
+        }
+        if (container.isFixed) {
+          val attribs = container.getAttributeTypes
+          attribs.foreach(at => {
+            val valType = at.getTypeCategory
+            val fld = valType match {
+              case LONG => container.set(at.getIndex, com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis))
+              case INT => container.set(at.getIndex, com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis))
+              case BYTE => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis))
+              case BOOLEAN => container.set(at.getIndex, com.ligadata.BaseTypes.BoolImpl.DeserializeFromDataInputStream(dis))
+              case DOUBLE => container.set(at.getIndex, com.ligadata.BaseTypes.DoubleImpl.DeserializeFromDataInputStream(dis))
+              case FLOAT => container.set(at.getIndex, com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis))
+              case STRING => container.set(at.getIndex, com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis))
+              case CHAR => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis))
+//              case MAP => { // BUGBUG:: Not really handled old maps }
+              case (CONTAINER | MESSAGE) => {
+                val length = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
+                if (length > 0) {
+                  var bytes = new Array[Byte](length);
+                  dis.read(bytes);
+                  val inst = deserializeContainer(serType, bytes)
+                  container.set(at.getIndex, inst)
+                }
+              }
+              case ARRAY => {
+                var arraySize = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis);
+                val itmType = at.getValTypeCategory
+                val fld = itmType match {
+                  case LONG => {
+                    val arr = new Array[Long](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+                  case INT => {
+                    val arr = new Array[Int](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+                  case BYTE => {
+                    val arr = new Array[Byte](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+                  case BOOLEAN => {
+                    val arr = new Array[Boolean](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.BoolImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+                  case DOUBLE => {
+                    val arr = new Array[Double](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.DoubleImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+                  case FLOAT => {
+                    val arr = new Array[Float](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+                  case STRING => {
+                    val arr = new Array[String](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+                  case CHAR => {
+                    val arr = new Array[Long](arraySize)
+                    for (i <- 0 until arraySize)
+                      arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis)
+                    container.set(at.getIndex, arr)
+                  }
+//                  case MAP => { // BUGBUG:: Not really handled old maps }
+                  case (CONTAINER | MESSAGE) => {
+                    val arr = new Array[ContainerInterface](arraySize)
+                    for (i <- 0 until arraySize) {
+                      val length = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
+                      if (length > 0) {
+                        var bytes = new Array[Byte](length);
+                        dis.read(bytes);
+                        arr(i) = deserializeContainer(serType, bytes)
+                      }
+                    }
+                    container.set(at.getIndex, arr)
+                  }
+//                  case ARRAY => { BUGBUG:- Not handling array in array }
+                  case _ => throw new ObjectNotFoundException("Array: invalid value type: ${itmType.getValue}, fldName: ${itmType.name} could not be resolved",null)
+                }
+              }
+              case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
+            }
+          })
+        } else {
+          // Mapped is yet to handle
+        }
+        dis.close
+        return container
+      } catch {
+        case e: Exception => {
+          // LOG.error("Failed to get classname :" + clsName, e)
+          logger.debug("Failed to Deserialize", e)
+          dis.close
+          throw e
+        }
+      }
+      null
+    }
+
+  private def convertDataTo1_4_x(containerName: String, serType: String, serInfo: Array[Byte], timePartition: Long, transactionid: Long, rowid: Int): ContainerInterface = {
+    initDataConversion
+    val container = deserializeContainer(serType, serInfo)
+    if (container == null) {
+      throw new Exception("Failed to get instance of " + containerName)
+    }
+
+    container.setTransactionId(transactionid)
+    container.setRowNumber(rowid)
+    container.setTimePartitionData(timePartition)
+    container
   }
 }
 

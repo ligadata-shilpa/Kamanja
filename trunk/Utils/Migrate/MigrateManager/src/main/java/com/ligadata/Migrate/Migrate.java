@@ -599,13 +599,24 @@ public class Migrate {
 			    logger.info("objType => " + mdf.objType);
 			    logger.info("objDataInJson => " + mdf.objDataInJson);
 			}
-			msgsAndContainers = 
-			    migrateTo.getMessagesAndContainers(metadataArr, true, excludeMetadata);
-			for (String msgName : msgsAndContainers) {
+			msgsAndContainers = migrateTo.getMessagesAndContainers(metadataArr, true, excludeMetadata);
+
+                // Adding sys catalog tables to backup
+                String schemaName = migrateTo.getDataTableSchemaName();
+                String tableName  = "adapteruniqkvdata";
+                TableName tInfo =  new TableName(schemaName,tableName);
+                allDataTbls.add(tInfo);
+
+                schemaName = migrateTo.getDataTableSchemaName();
+                tableName  = "globalcounters";
+                tInfo =  new TableName(schemaName,tableName);
+                allDataTbls.add(tInfo);
+
+                for (String msgName : msgsAndContainers) {
 			    logger.info("Message => " + msgName);
-			    String schemaName = migrateTo.getDataTableSchemaName();
-			    String tableName  = migrateTo.getDataTableName(msgName);
-			    TableName tInfo =  new TableName(schemaName,tableName);
+			    schemaName = migrateTo.getTenantTableSchemaName();
+			    tableName  = migrateTo.getDataTableName(msgName);
+			    tInfo =  new TableName(schemaName,tableName);
 			    allDataTbls.add(tInfo);
 			}
 		    }
