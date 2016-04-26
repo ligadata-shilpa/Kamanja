@@ -1374,12 +1374,15 @@ class MigrateTo_V_1_4 extends MigratableTo {
       logger.info(retRes)
       val failed = isFailedStatus(retRes)
       if (failed == true) {
-        throw new Exception("Failed to add adapter-message-bindings")
+        logger.error("Failed to add adapter-message-bindings" + retRes)
+        logger.error("******************************************************Make sure you add message bindings before you start clustesr******************************************************")
+//        throw new Exception("Failed to add adapter-message-bindings")
       }
     } catch {
-      case e: Exception => {
-        logger.error("Failed", e)
-        throw new Exception("Failed to add adapter-message-bindings")
+      case e: Throwable => {
+        logger.error("Failed to add adapter-message-bindings", e)
+        logger.error("******************************************************Make sure you add message bindings before you start clustesr******************************************************")
+//        throw new Exception("Failed to add adapter-message-bindings")
       }
     }
   }
