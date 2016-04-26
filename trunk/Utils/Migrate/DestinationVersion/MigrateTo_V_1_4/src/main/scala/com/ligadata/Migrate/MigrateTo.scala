@@ -46,7 +46,7 @@ import com.ligadata.Exceptions._
 
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
 
-case class adapterMessageBinding(var AdapterName: String,var TypeString: String,var MessageNames: List[String], var Options: Map[String,String], var Serializer: String)
+case class adapterMessageBinding(var AdapterName: String, var TypeString: String, var MessageNames: List[String], var Options: Map[String, String], var Serializer: String)
 
 class MigrateTo_V_1_4 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
@@ -507,10 +507,10 @@ class MigrateTo_V_1_4 extends MigratableTo {
     mdLoader.initialize
     MetadataAPIImpl.readMetadataAPIConfigFromPropertiesFile(apiConfigFile)
 
-    if (tenantId != null && tenantId.size > 0){
+    if (tenantId != null && tenantId.size > 0) {
       _tenantId = Some(tenantId)
     }
-    else{
+    else {
       throw new Exception("tenantId can't be null")
     }
 
@@ -564,10 +564,10 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
     _tenantDsDb = GetDataStoreHandle(toVersionJarPaths, tenantDatastoreInfo)
 
-    if (adapterMessageBindings != null && adapterMessageBindings.size > 0){
+    if (adapterMessageBindings != null && adapterMessageBindings.size > 0) {
       _adapterMessageBindings = Some(adapterMessageBindings)
     }
-    else{
+    else {
       throw new Exception("adapterMessageBindings can't be null")
     }
 
@@ -594,19 +594,19 @@ class MigrateTo_V_1_4 extends MigratableTo {
     _statusStoreInfo
   }
 
-  override def getMetadataTableName(containerName: String) : String = {
+  override def getMetadataTableName(containerName: String): String = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     _metaDataStoreDb.getTableName(containerName)
   }
 
-  override def getDataTableName(containerName: String) : String = {
+  override def getDataTableName(containerName: String): String = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     //BUGBUG:: If this table is realted to _tenantDsDb, it may have different name
     _dataStoreDb.getTableName(containerName)
   }
-    
+
   override def isMetadataTableExists(tblInfo: TableName): Boolean = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
@@ -626,7 +626,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
       throw new Exception("Not yet Initialized")
     if (_statusStoreDb != null)
       return _statusStoreDb.isTableExists(tblInfo.namespace, tblInfo.name)
-      //return _statusStoreDb.isContainerExists(tblInfo.name)
+    //return _statusStoreDb.isContainerExists(tblInfo.name)
     false
   }
 
@@ -685,7 +685,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
     // Create metadataTables
-    val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadatacounters","avroschemainfo","elementinfo")
+    val metadataTables = Array("metadata_objects", "jar_store", "config_objects", "model_config_objects", "transaction_id", "metadatacounters", "avroschemainfo", "elementinfo")
     _metaDataStoreDb.CreateMetadataContainer(metadataTables)
   }
 
@@ -695,7 +695,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
       executor.execute(new Runnable() {
         override def run() = {
           try {
-	    logger.info("Copy the table " + backupTblInfo.srcTable + " to " + backupTblInfo.dstTable)
+            logger.info("Copy the table " + backupTblInfo.srcTable + " to " + backupTblInfo.dstTable)
             storeDb.copyTable(backupTblInfo.namespace, backupTblInfo.srcTable, backupTblInfo.dstTable, force)
             //storeDb.copyContainer(backupTblInfo.srcTable, backupTblInfo.dstTable, force)
           } catch {
@@ -926,7 +926,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private def DepJars(depJars1: List[String]): List[String] = {
 
     // Removing jars which are not valid any more, All these jars are consolidated(or assembled) into three fat jars: "ExtDependencyLibs_2.11-1.4.0.jar","KamanjaInternalDeps_2.11-1.4.0.jar","ExtDependencyLibs2_2.11-1.4.0.jar".
-    val depJars = (depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar", "log4j-1.2.17.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar","scala-2.10.0.jar","kvbase_2.10-0.1.0.jar", "kamanjautils_2.10-1.0.jar","kamanjabase_2.10-1.0.jar","customudflib_2.10-1.0.jar", "pmmlcompiler_2.10-1.0.jar","basetypes_2.10-0.1.0.jar","basefunctions_2.10-0.1.0.jar","json4s-core_2.10-3.2.9.jar","json4s-jackson_2.10-3.2.9.jar", "pmmlruntime_2.10-1.0.jar", "pmmludfs_2.10-1.0.jar","datadelimiters_2.10-1.0.jar","metadata_2.10-1.0.jar", "exceptions_2.10-1.0.jar","json4s-ast_2.10-3.2.9.jar", "json4s-native_2.10-3.2.9.jar", "bootstrap_2.10-1.0.jar","messagedef_2.10-1.0.jar", "guava-16.0.1.jar", "guava-18.0.jar", "guava-19.0.jar","scala-reflect-2.10.4.jar","scala-library-2.10.4.jar","jackson-databind-2.3.1.jar","jackson-core-2.3.1.jar","joda-time-2.8.2.jar","jackson-annotations-2.3.0.jar","joda-convert-1.6.jar","jsr305-1.3.9.jar","log4j-api-2.4.1.jar","log4j-core-2.4.1.jar")) 
+    val depJars = (depJars1 diff List("methodextractor_2.10-1.0.jar", "methodextractor_2.11-1.0.jar", "log4j-1.2.17.jar", "log4j-1.2.17.jar", "log4j-1.2.16.jar", "scala-2.10.0.jar", "kvbase_2.10-0.1.0.jar", "kamanjautils_2.10-1.0.jar", "kamanjabase_2.10-1.0.jar", "customudflib_2.10-1.0.jar", "pmmlcompiler_2.10-1.0.jar", "basetypes_2.10-0.1.0.jar", "basefunctions_2.10-0.1.0.jar", "json4s-core_2.10-3.2.9.jar", "json4s-jackson_2.10-3.2.9.jar", "pmmlruntime_2.10-1.0.jar", "pmmludfs_2.10-1.0.jar", "datadelimiters_2.10-1.0.jar", "metadata_2.10-1.0.jar", "exceptions_2.10-1.0.jar", "json4s-ast_2.10-3.2.9.jar", "json4s-native_2.10-3.2.9.jar", "bootstrap_2.10-1.0.jar", "messagedef_2.10-1.0.jar", "guava-16.0.1.jar", "guava-18.0.jar", "guava-19.0.jar", "scala-reflect-2.10.4.jar", "scala-library-2.10.4.jar", "jackson-databind-2.3.1.jar", "jackson-core-2.3.1.jar", "joda-time-2.8.2.jar", "jackson-annotations-2.3.0.jar", "joda-convert-1.6.jar", "jsr305-1.3.9.jar", "log4j-api-2.4.1.jar", "log4j-core-2.4.1.jar"))
 
     // If source is 2.10 and destination is 2.11, then only tranform this. otherwise just leave them as it is. 
     if (_fromScalaVersion.equalsIgnoreCase("2.10") && _toScalaVersion.equalsIgnoreCase("2.11")) {
@@ -950,7 +950,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
         }
       })
 
-      newDeps = List("ExtDependencyLibs_2.11-1.4.0.jar","KamanjaInternalDeps_2.11-1.4.0.jar","ExtDependencyLibs2_2.11-1.4.0.jar") ::: newDeps
+      newDeps = List("ExtDependencyLibs_2.11-1.4.0.jar", "KamanjaInternalDeps_2.11-1.4.0.jar", "ExtDependencyLibs2_2.11-1.4.0.jar") ::: newDeps
 
       newDeps
     } else {
@@ -960,7 +960,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
         depJarsMap.getOrElse(d, d)
       })
 
-      newDeps = List("ExtDependencyLibs_2.10-1.4.0.jar","KamanjaInternalDeps_2.10-1.4.0.jar","ExtDependencyLibs2_2.10-1.4.0.jar") ::: newDeps
+      newDeps = List("ExtDependencyLibs_2.10-1.4.0.jar", "KamanjaInternalDeps_2.10-1.4.0.jar", "ExtDependencyLibs2_2.10-1.4.0.jar") ::: newDeps
       newDeps
     }
   }
@@ -986,16 +986,16 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
               logger.info("Adding model:" + dispkey + ", ModelType:" + mdlType + ", ObjectFormat:" + objFormat)
 
-              if (_sourceVersion.equalsIgnoreCase("1.1") || 
-		  _sourceVersion.equalsIgnoreCase("1.2") || 
-		  _sourceVersion.equalsIgnoreCase("1.3")) {
+              if (_sourceVersion.equalsIgnoreCase("1.1") ||
+                _sourceVersion.equalsIgnoreCase("1.2") ||
+                _sourceVersion.equalsIgnoreCase("1.3")) {
                 if ((objFormat.equalsIgnoreCase("JAVA")) || (objFormat.equalsIgnoreCase("scala"))) {
                   val mdlInfo = parse(mdlDefStr).values.asInstanceOf[Map[String, Any]]
                   val defStr = mdlInfo.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String]
                   // val phyName = mdlInfo.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String]
                   val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
-		  //returns current time as a unique number
+                  //returns current time as a unique number
                   val uniqueId = System.currentTimeMillis();
                   val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_4_" + uniqueId.toString;
 
@@ -1051,7 +1051,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
                   try {
                     val retRes = MetadataAPIImpl.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, _tenantId, Some(dispkey), Some(ver))
-		    logger.info("AddModel: Response => " + retRes)
+                    logger.info("AddModel: Response => " + retRes)
                     failed = isFailedStatus(retRes)
                   } catch {
                     case e: Exception => {
@@ -1081,7 +1081,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
                 try {
                   val retRes = MetadataAPIImpl.AddMessage(msgDefStr, "JSON", defaultUserId, _tenantId)
-		  logger.info("AddMessage: Response => " + retRes)
+                  logger.info("AddMessage: Response => " + retRes)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
@@ -1112,7 +1112,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
                 try {
                   val retRes = MetadataAPIImpl.AddContainer(contDefStr, "JSON", defaultUserId, _tenantId)
-		  logger.info("AddContainer: Response => " + retRes)
+                  logger.info("AddContainer: Response => " + retRes)
 
                   failed = isFailedStatus(retRes)
                 } catch {
@@ -1160,7 +1160,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                   implicit val jsonFormats: Formats = DefaultFormats
                   val newMdlCfgStr = org.json4s.jackson.Serialization.write(changedCfg)
                   val retRes = MetadataAPIImpl.UploadModelsConfig(newMdlCfgStr, Some[String](namespace), null) // Considering namespace as userid
-		  logger.info("AddConfig: Response => " + retRes)
+                  logger.info("AddConfig: Response => " + retRes)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
@@ -1187,7 +1187,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
                 try {
                   val retRes = MetadataAPIImpl.AddFunctions(fnCfg, "JSON", defaultUserId)
-		  logger.info("AddFunction: Response => " + retRes)
+                  logger.info("AddFunction: Response => " + retRes)
                   failed = isFailedStatus(retRes)
                 } catch {
                   case e: Exception => {
@@ -1299,10 +1299,10 @@ class MigrateTo_V_1_4 extends MigratableTo {
     mdFailed.toArray
   }
 
-  def getCCParams(cc: Product) : scala.collection.mutable.Map[String,Any] = {          
+  def getCCParams(cc: Product): scala.collection.mutable.Map[String, Any] = {
     val values = cc.productIterator
-    val m = cc.getClass.getDeclaredFields.map( _.getName -> values.next ).toMap
-    scala.collection.mutable.Map(m.toSeq: _*) 
+    val m = cc.getClass.getDeclaredFields.map(_.getName -> values.next).toMap
+    scala.collection.mutable.Map(m.toSeq: _*)
   }
 
   private def ProcessMdObjectsParallel(mdObjs: ArrayBuffer[(String, Map[String, Any])], errorStr: String): Unit = {
@@ -1350,21 +1350,23 @@ class MigrateTo_V_1_4 extends MigratableTo {
       }
     }
     // handle adapterMessageBindings here
-    try{
+    try {
       implicit val jsonFormats: Formats = DefaultFormats
       var ambsAsJson = Source.fromFile(_adapterMessageBindings.get).mkString
       val ambs1 = parse(ambsAsJson).extract[Array[adapterMessageBinding]]
-      val ambsMap:Array[scala.collection.mutable.Map[String,Any]] = ambs1.map(amb => { val ambMap = getCCParams(amb); ambMap })
-      val retRes = AdapterMessageBindingUtils.AddAdapterMessageBinding(ambsMap.toList,defaultUserId)
+      val ambsMap: Array[scala.collection.mutable.Map[String, Any]] = ambs1.map(amb => {
+        val ambMap = getCCParams(amb); ambMap
+      })
+      val retRes = AdapterMessageBindingUtils.AddAdapterMessageBinding(ambsMap.toList, defaultUserId)
       logger.info(retRes)
       val failed = isFailedStatus(retRes)
-      if( failed == true ){
-	throw new Exception("Failed to add adapter-message-bindings")
+      if (failed == true) {
+        throw new Exception("Failed to add adapter-message-bindings")
       }
     } catch {
       case e: Exception => {
         logger.error("Failed", e)
-	throw new Exception("Failed to add adapter-message-bindings")
+        throw new Exception("Failed to add adapter-message-bindings")
       }
     }
   }
@@ -1745,7 +1747,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
       throw new Exception("Not found valid Datastore DB connection")
 
     var ret = ""
-    val buildAdapOne = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
+    val buildAdapOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
       ret = new String(v.asInstanceOf[Array[Byte]])
     }
 
@@ -1776,127 +1778,127 @@ class MigrateTo_V_1_4 extends MigratableTo {
   }
 
   private def deserializeContainer(serType: String, serInfo: Array[Byte]): ContainerInterface = {
-      var dis = new DataInputStream(new ByteArrayInputStream(serInfo));
+    var dis = new DataInputStream(new ByteArrayInputStream(serInfo));
 
-      val typName = dis.readUTF
-      val version = dis.readUTF
-      val classname = dis.readUTF
+    val typName = dis.readUTF
+    val version = dis.readUTF
+    val classname = dis.readUTF
 
-      try {
-        val container = _mdObjectRes.getInstance(typName)
-        if (container == null) {
-          throw new Exception("Failed to get instance of " + typName)
-        }
-        if (container.isFixed) {
-          val attribs = container.getAttributeTypes
-          attribs.foreach(at => {
-            val valType = at.getTypeCategory
-            val fld = valType match {
-              case LONG => container.set(at.getIndex, com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis))
-              case INT => container.set(at.getIndex, com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis))
-              case BYTE => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis))
-              case BOOLEAN => container.set(at.getIndex, com.ligadata.BaseTypes.BoolImpl.DeserializeFromDataInputStream(dis))
-              case DOUBLE => container.set(at.getIndex, com.ligadata.BaseTypes.DoubleImpl.DeserializeFromDataInputStream(dis))
-              case FLOAT => container.set(at.getIndex, com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis))
-              case STRING => container.set(at.getIndex, com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis))
-              case CHAR => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis))
-//              case MAP => { // BUGBUG:: Not really handled old maps }
-              case (CONTAINER | MESSAGE) => {
-                val length = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
-                if (length > 0) {
-                  var bytes = new Array[Byte](length);
-                  dis.read(bytes);
-                  val inst = deserializeContainer(serType, bytes)
-                  container.set(at.getIndex, inst)
-                }
-              }
-              case ARRAY => {
-                var arraySize = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis);
-                val itmType = at.getValTypeCategory
-                val fld = itmType match {
-                  case LONG => {
-                    val arr = new Array[Long](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-                  case INT => {
-                    val arr = new Array[Int](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-                  case BYTE => {
-                    val arr = new Array[Byte](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-                  case BOOLEAN => {
-                    val arr = new Array[Boolean](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.BoolImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-                  case DOUBLE => {
-                    val arr = new Array[Double](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.DoubleImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-                  case FLOAT => {
-                    val arr = new Array[Float](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-                  case STRING => {
-                    val arr = new Array[String](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-                  case CHAR => {
-                    val arr = new Array[Long](arraySize)
-                    for (i <- 0 until arraySize)
-                      arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis)
-                    container.set(at.getIndex, arr)
-                  }
-//                  case MAP => { // BUGBUG:: Not really handled old maps }
-                  case (CONTAINER | MESSAGE) => {
-                    val arr = new Array[ContainerInterface](arraySize)
-                    for (i <- 0 until arraySize) {
-                      val length = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
-                      if (length > 0) {
-                        var bytes = new Array[Byte](length);
-                        dis.read(bytes);
-                        arr(i) = deserializeContainer(serType, bytes)
-                      }
-                    }
-                    container.set(at.getIndex, arr)
-                  }
-//                  case ARRAY => { BUGBUG:- Not handling array in array }
-                  case _ => throw new ObjectNotFoundException("Array: invalid value type: ${itmType.getValue}, fldName: ${itmType.name} could not be resolved",null)
-                }
-              }
-              case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
-            }
-          })
-        } else {
-          // Mapped is yet to handle
-        }
-        dis.close
-        return container
-      } catch {
-        case e: Exception => {
-          // LOG.error("Failed to get classname :" + clsName, e)
-          logger.debug("Failed to Deserialize", e)
-          dis.close
-          throw e
-        }
+    try {
+      val container = _mdObjectRes.getInstance(typName)
+      if (container == null) {
+        throw new Exception("Failed to get instance of " + typName)
       }
-      null
+      if (container.isFixed) {
+        val attribs = container.getAttributeTypes
+        attribs.foreach(at => {
+          val valType = at.getTypeCategory
+          val fld = valType match {
+            case LONG => container.set(at.getIndex, com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis))
+            case INT => container.set(at.getIndex, com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis))
+            case BYTE => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis))
+            case BOOLEAN => container.set(at.getIndex, com.ligadata.BaseTypes.BoolImpl.DeserializeFromDataInputStream(dis))
+            case DOUBLE => container.set(at.getIndex, com.ligadata.BaseTypes.DoubleImpl.DeserializeFromDataInputStream(dis))
+            case FLOAT => container.set(at.getIndex, com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis))
+            case STRING => container.set(at.getIndex, com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis))
+            case CHAR => container.set(at.getIndex, com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis))
+            //              case MAP => { // BUGBUG:: Not really handled old maps }
+            case (CONTAINER | MESSAGE) => {
+              val length = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
+              if (length > 0) {
+                var bytes = new Array[Byte](length);
+                dis.read(bytes);
+                val inst = deserializeContainer(serType, bytes)
+                container.set(at.getIndex, inst)
+              }
+            }
+            case ARRAY => {
+              var arraySize = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis);
+              val itmType = at.getValTypeCategory
+              val fld = itmType match {
+                case LONG => {
+                  val arr = new Array[Long](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.LongImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                case INT => {
+                  val arr = new Array[Int](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                case BYTE => {
+                  val arr = new Array[Byte](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                case BOOLEAN => {
+                  val arr = new Array[Boolean](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.BoolImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                case DOUBLE => {
+                  val arr = new Array[Double](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.DoubleImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                case FLOAT => {
+                  val arr = new Array[Float](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.FloatImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                case STRING => {
+                  val arr = new Array[String](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.StringImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                case CHAR => {
+                  val arr = new Array[Long](arraySize)
+                  for (i <- 0 until arraySize)
+                    arr(i) = com.ligadata.BaseTypes.CharImpl.DeserializeFromDataInputStream(dis)
+                  container.set(at.getIndex, arr)
+                }
+                //                  case MAP => { // BUGBUG:: Not really handled old maps }
+                case (CONTAINER | MESSAGE) => {
+                  val arr = new Array[ContainerInterface](arraySize)
+                  for (i <- 0 until arraySize) {
+                    val length = com.ligadata.BaseTypes.IntImpl.DeserializeFromDataInputStream(dis)
+                    if (length > 0) {
+                      var bytes = new Array[Byte](length);
+                      dis.read(bytes);
+                      arr(i) = deserializeContainer(serType, bytes)
+                    }
+                  }
+                  container.set(at.getIndex, arr)
+                }
+                //                  case ARRAY => { BUGBUG:- Not handling array in array }
+                case _ => throw new ObjectNotFoundException("Array: invalid value type: ${itmType.getValue}, fldName: ${itmType.name} could not be resolved", null)
+              }
+            }
+            case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
+          }
+        })
+      } else {
+        // Mapped is yet to handle
+      }
+      dis.close
+      return container
+    } catch {
+      case e: Exception => {
+        // LOG.error("Failed to get classname :" + clsName, e)
+        logger.debug("Failed to Deserialize", e)
+        dis.close
+        throw e
+      }
     }
+    null
+  }
 
   private def convertDataTo1_4_x(containerName: String, serType: String, serInfo: Array[Byte], timePartition: Long, transactionid: Long, rowid: Int): ContainerInterface = {
     initDataConversion
