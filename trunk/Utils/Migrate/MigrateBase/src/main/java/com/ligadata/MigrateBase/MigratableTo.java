@@ -38,6 +38,7 @@ public interface MigratableTo {
   public abstract String getMetadataTableName(String containerName);
   public abstract String getDataTableName(String containerName);
   public abstract String getDataTableSchemaName();
+  public abstract String getTenantTableSchemaName();
 
   public abstract java.util.List<String> getMessagesAndContainers(MetadataFormat[] allMetadataElemsJson, boolean uploadClusterConfig, String[] excludeMetadata); // Returns Added Messages & Containers Full Qualified Names
 }
