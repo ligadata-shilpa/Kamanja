@@ -687,8 +687,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     val processingThreadId = keyTokens(keyTokens.length - 1).toInt
     val processingNodeId = keyTokens(keyTokens.length - 2)
 
-    LOG.info("Smart File Consumer - Node Id = {}, Thread Id = {}, File ({}) was assigned to node {}",
-      fileToProcessName,clusterStatus.nodeId)
+    LOG.info("Smart File Consumer - Node Id = {}, Thread Id = {}, File ({}) was assigned",
+      processingNodeId, processingThreadId, fileToProcessName)
 
     //start processing the file
     val context = new SmartFileConsumerContext()
@@ -714,10 +714,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
                                              status : Int) : Unit = {
 
     if(status == SmartFileConsumer.FILE_STATUS_FINISHED)
-      LOG.debug ("SMART FILE CONSUMER - participant ({}), partition ({}) finished reading file ({})",
+      LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) finished reading file ({})",
         context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
     else
-      LOG.debug ("SMART FILE CONSUMER - participant ({}), partition ({}) reports file not found ({})",
+      LOG.warn("SMART FILE CONSUMER - participant node ({}), partition ({}) reports file not found ({})",
         context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
 
     //set file status as finished
