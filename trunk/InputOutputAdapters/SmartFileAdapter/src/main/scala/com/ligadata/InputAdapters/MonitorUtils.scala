@@ -11,6 +11,8 @@ import net.sf.jmimemagic._
 import org.apache.logging.log4j.LogManager
 import org.apache.tika.Tika
 import org.apache.tika.detect.DefaultDetector
+import scala.actors.threadpool.ExecutorService
+import scala.actors.threadpool.TimeUnit
 import FileType._
 /**
   * Created by Yasser on 3/15/2016.
@@ -53,6 +55,28 @@ object MonitorUtils {
       return null
 
     bytes.map(b => b.toChar)
+  }
+
+
+  def shutdownAndAwaitTermination(pool : ExecutorService, id : String) : Unit = {
+    pool.shutdown(); // Disable new tasks from being submitted
+    try {
+      // Wait a while for existing tasks to terminate
+      if (!pool.awaitTermination(1, TimeUnit.SECONDS)) {
+        pool.shutdownNow(); // Cancel currently executing tasks
+        // Wait a while for tasks to respond to being cancelled
+        if (!pool.awaitTermination(1, TimeUnit.SECONDS))
+          logger.warn("Pool did not terminate " + id);
+      }
+    } catch  {
+      case ie : InterruptedException => {
+        logger.debug("InterruptedException for " + id)
+        // (Re-)Cancel if current thread also interrupted
+        pool.shutdownNow();
+        // Preserve interrupt status
+        Thread.currentThread().interrupt();
+      }
+    }
   }
 }
 

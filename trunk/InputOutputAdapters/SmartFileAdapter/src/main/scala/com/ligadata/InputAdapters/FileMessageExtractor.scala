@@ -31,7 +31,8 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
   private var msgNum = 0
   private var globalOffset = 0
 
-  private val executor = Executors.newFixedThreadPool(2)
+  private val extractExecutor = Executors.newFixedThreadPool(1)
+  private val updatExecutor = Executors.newFixedThreadPool(1)
 
   private var finished = false
 
@@ -44,7 +45,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         readBytesChunksFromFile()
       }
     }
-    executor.execute(extractorThread)
+    extractExecutor.execute(extractorThread)
 
     //keep updating status so leader knows participant is working fine
     val statusUpdateThread = new Runnable() {
@@ -60,7 +61,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         }
       }
     }
-    executor.execute(statusUpdateThread)
+    updatExecutor.execute(statusUpdateThread)
   }
 
   private def readBytesChunksFromFile(): Unit = {
@@ -191,7 +192,6 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     // Done with this file... mark is as closed
     try {
       // markFileAsFinished(fileName)
-      finished = true
 
       if (fileHandler != null) fileHandler.close
 
@@ -199,11 +199,16 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         finishCallback(fileHandler, consumerContext)
       //bis = null
 
-      executor.shutdown()
     } catch {
       case ioe: IOException => {
         logger.error("SMART FILE CONSUMER: Exception while accessing the file for processing " + fileName, ioe)
       }
+    }
+
+    finally{
+      finished = true
+      MonitorUtils.shutdownAndAwaitTermination(updatExecutor, "file message extracting status updator")
+      MonitorUtils.shutdownAndAwaitTermination(extractExecutor, "file message extractor")
     }
 
   }
