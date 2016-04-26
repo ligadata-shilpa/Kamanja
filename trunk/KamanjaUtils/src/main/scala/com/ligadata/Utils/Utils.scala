@@ -41,8 +41,16 @@ object Utils {
     new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new java.util.Date(tmMs))
   }
 
+  def SimpDateFmtTimeFromMsWithTZ(tmMs: Long): String = {
+    new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS z").format(new java.util.Date(tmMs))
+  }
+
   def GetCurDtTmStr: String = {
     SimpDateFmtTimeFromMs(GetCurDtTmInMs)
+  }
+
+  def GetCurDtTmStrWithTZ: String = {
+    SimpDateFmtTimeFromMsWithTZ(GetCurDtTmInMs)
   }
 
   def GetCurDtTmInMs: Long = {
