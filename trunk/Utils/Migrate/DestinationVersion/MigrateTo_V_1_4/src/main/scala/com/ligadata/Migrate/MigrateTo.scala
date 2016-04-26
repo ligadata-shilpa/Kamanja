@@ -356,6 +356,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private var _tenantId: Option[String] = None
   private var _dataConversionInitLock = new Object()
   private var _mdObjectRes: MdObjectRes = null
+  private var _adapterMessageBindings: Option[String] = None
 
   private val globalExceptions = ArrayBuffer[(String, Throwable)]()
 
