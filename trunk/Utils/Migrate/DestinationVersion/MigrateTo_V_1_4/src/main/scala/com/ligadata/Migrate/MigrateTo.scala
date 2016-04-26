@@ -1754,7 +1754,6 @@ class MigrateTo_V_1_4 extends MigratableTo {
           d.data.asInstanceOf[Any]
         }
 
-      val container = convertDataTo1_4_x(d.containerName, d.serializername, d.data, d.timePartition, d.transactionid, d.rowid)
       (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, sendVal)
     }))).toArray
 
