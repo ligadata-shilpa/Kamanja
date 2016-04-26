@@ -9,7 +9,7 @@ package com.ligadata.StorageBase
 import com.ligadata.Exceptions.{KamanjaException, NotImplementedFunctionException, InvalidArgumentException}
 import com.ligadata.HeartBeat.{MonitorComponentInfo, Monitorable}
 import com.ligadata.KamanjaBase._
-import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.KvBase.{ Key, Value, TimeRange }
 import com.ligadata.Utils.{ KamanjaLoaderInfo }
 import com.ligadata.kamanja.metadata.AdapterInfo
 
@@ -17,8 +17,6 @@ import scala.collection.mutable.ArrayBuffer
 //import org.json4s._
 //import org.json4s.JsonDSL._
 //import org.json4s.jackson.JsonMethods._
-
-case class Value(schemaId: Int, serializerType: String, serializedInfo: Array[Byte])
 
 trait DataStoreOperations extends AdaptersSerializeDeserializers {
   // update operations, add & update semantics are different for relational databases
@@ -93,7 +91,7 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
       throw new InvalidArgumentException("Data should not be null", null)
 
     val putData = data_list.map(oneContainerData => {
-      val containerData: Array[(com.ligadata.KvBase.Key, com.ligadata.StorageBase.Value)] = oneContainerData._2.map(row => {
+      val containerData: Array[(com.ligadata.KvBase.Key, com.ligadata.KvBase.Value)] = oneContainerData._2.map(row => {
         if (row._3.isInstanceOf[ContainerInterface]) {
           val cont = row._3.asInstanceOf[ContainerInterface]
           val (containers, serData, serializers) = serialize(tnxCtxt, Array(cont))
@@ -269,7 +267,7 @@ trait DataStore extends DataStoreOperations with AdaptersSerializeDeserializers 
   }
 
   override def getComponentSimpleStats: String = {
-    ""
+    "Storage/"+getAdapterName+"/evtCnt" + "->" + "("+0 + ":" + 0 +")"
   }
 
   def beginTx(): Transaction

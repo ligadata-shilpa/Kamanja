@@ -209,8 +209,16 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         })
 
         validDataToCommit.foreach(kv => {
-          txnCtxt.getNodeCtxt().getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
+          nodeContext.getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
         })
+      }
+      if (txnCtxt != null && nodeContext != null && nodeContext.getEnvCtxt() != null) {
+        if (txnCtxt.origin.key != null && txnCtxt.origin.value != null && txnCtxt.origin.key.trim.size > 0 && txnCtxt.origin.value.trim.size > 0)
+          nodeContext.getEnvCtxt().setAdapterUniqueKeyValue(txnCtxt.origin.key, txnCtxt.origin.value)
+      }
+      else {
+        if (logger.isDebugEnabled)
+          logger.debug(s"Not Saving AdapterUniqKvData key:${txnCtxt.origin.key}, value:${txnCtxt.origin.value}. txnCtxt: ${txnCtxt}, nodeContext: ${nodeContext}")
       }
     } catch {
       case e: Throwable => throw e
@@ -569,7 +577,7 @@ object PostMessageExecutionQueue {
   private var isInit = false
   private val msgsQueue = scala.collection.mutable.Queue[ContainerInterface]()
   private val msgQLock = new Object()
-  private val processMsgs: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
+  private var processMsgs: ExecutorService = null
   private var execCtxt: ExecContext = null
 
   // Passing empty values
@@ -644,6 +652,7 @@ object PostMessageExecutionQueue {
     val curPartitionKey: PartitionUniqueRecordKey = new PostMsgUniqRecKey
     execCtxt = ExecContextFactoryImpl.CreateExecContext(input, curPartitionKey, nodeCtxt)
     nodeContext = nodeCtxt
+    processMsgs = scala.actors.threadpool.Executors.newFixedThreadPool(1)
 
 //
 //
@@ -692,7 +701,9 @@ object PostMessageExecutionQueue {
   }
 
   def shutdown(): Unit = {
-    processMsgs.shutdownNow()
+    if (processMsgs != null)
+      processMsgs.shutdownNow()
+    processMsgs = null
     //BUGBUG:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
     //FIXME:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
   }

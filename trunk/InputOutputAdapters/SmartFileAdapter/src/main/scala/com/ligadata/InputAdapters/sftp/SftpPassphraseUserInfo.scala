@@ -38,3 +38,37 @@ class SftpPassphraseUserInfo (val passphrase : String) extends UserInfo {
   }
 
 }
+
+class SftpUserInfo (val password : String, val passphrase : String) extends UserInfo {
+
+  /*private var passphrase : String = null
+  def this (pp : String)  {
+    this()
+    passphrase = pp
+  }*/
+
+  def  getPassphrase : String = {
+    passphrase
+  }
+
+  def getPassword : String = {
+    password
+  }
+
+  def promptPassphrase (arg0 : String ) : Boolean = {
+    passphrase != null
+  }
+
+  def promptPassword(arg0 : String) : Boolean = {
+    passphrase == null
+  }
+
+  def showMessage( message : String) : Unit = {
+
+  }
+
+  def promptYesNo(str : String): Boolean = {
+    true
+  }
+
+}

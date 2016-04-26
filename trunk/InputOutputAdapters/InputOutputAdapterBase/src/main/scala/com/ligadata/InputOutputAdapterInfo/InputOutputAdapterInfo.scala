@@ -19,6 +19,7 @@ package com.ligadata.InputOutputAdapterInfo
 import com.ligadata.Exceptions.{KamanjaException, StackTrace}
 import com.ligadata.KamanjaBase._
 import com.ligadata.HeartBeat._
+import com.ligadata.kamanja.metadata.MdMgr
 import com.ligadata.transactions.{NodeLevelTransService, SimpleTransService}
 
 //import org.json4s._
@@ -149,8 +150,8 @@ trait ExecContext {
   private val transService = new SimpleTransService
   transService.init(txnIdsRangeForPartition)
 
-  final def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, e: Throwable): Unit = {
-    val failedTm = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
+  final def SendFailedEvent(data: Array[Byte], deserializer: String, failedMsg: String, uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, e: Throwable, omsg: ContainerInterface): Unit = {
+    val failedTm: String = failedEventDtFormat.format(new java.util.Date(System.currentTimeMillis))
     val evntData = new String(data)
 
     var uk = ""
@@ -169,40 +170,33 @@ trait ExecContext {
     val stackTrace = if (e != null) StackTrace.ThrowableTraceString(e) else ""
 
     if (nodeContext != null && nodeContext.getEnvCtxt() != null) {
-      // getInstance of Failed Event
-      val msgType = "com.ligadata.KamanjaBase.FailedEvents"
-      val failEventPartInfo = "com.ligadata.KamanjaBase.FailedEventsPartitionKeyValue"
-      val failEventFailure = "com.ligadata.KamanjaBase.FailedEventsMessageInfo"
       try {
-        val failureInfo = nodeContext.getEnvCtxt().getContainerInstance(failEventFailure)
-        val partInfo = nodeContext.getEnvCtxt().getContainerInstance(failEventPartInfo)
-        val msg = nodeContext.getEnvCtxt().getContainerInstance(msgType)
+        val msg = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent").asInstanceOf[com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent]
         if (msg != null) {
           try {
-            partInfo.set("Key", uk)
-            partInfo.set("Value", uv)
+            if (omsg != null)
+              msg.msgid =  MdMgr.GetMdMgr.ElementIdForSchemaId(omsg.asInstanceOf[ContainerInterface].getSchemaId)
+            else
+              msg.msgid = -1
 
-            failureInfo.set("Message", failMsg)
-            failureInfo.set("StackTrace", stackTrace)
-
-            msg.set("MessageType", failedMsg)
-            msg.set("Deserializer", deserializer)
-            msg.set("SourceAdapter", input.inputConfig.Name)
-            msg.set("FailedAt", failedTm)
-            msg.set("EventData", evntData)
-            msg.set("Partition", partInfo)
-            msg.set("Failure", failureInfo)
+            msg.timeoferrorepochms = System.currentTimeMillis
+            msg.msgcontent = evntData
+            msg.msgadapterkey = uk
+            msg.msgadaptervalue = uv
+            msg.sourceadapter = input.inputConfig.Name
+            msg.deserializer = deserializer
+            msg.errordetail = stackTrace
 
             nodeContext.getEnvCtxt().postMessages(Array(msg))
           } catch {
             case e: Throwable => {
-              LOG.error("ailed to post message of type:" + msgType, e)
+              LOG.error("Failed to post message of type:" + omsg.Name , e)
             }
           }
         }
       } catch {
         case e: Throwable => {
-          LOG.error("Failed to create message for type:" + msgType, e)
+          LOG.error("Failed to create message for type:" +  omsg.Name, e)
         }
       }
     }
@@ -210,7 +204,7 @@ trait ExecContext {
 
   final def execute(msg: ContainerInterface, data: Array[Byte], uniqueKey: PartitionUniqueRecordKey, uniqueVal: PartitionUniqueRecordValue, readTmMilliSecs: Long): Unit = {
     if (msg == null) {
-      SendFailedEvent(data, "", "", uniqueKey, uniqueVal, null)
+      SendFailedEvent(data, "", "", uniqueKey, uniqueVal, null, msg)
       return
     }
 
@@ -229,10 +223,13 @@ trait ExecContext {
     var txnCtxt: TransactionContext = null
     try {
       val transId = transService.getNextTransId
-      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent")
+      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent").asInstanceOf[KamanjaMessageEvent]
       if (msgEvent == null) {
         LOG.warn("Not able to get com.ligadata.KamanjaBase.KamanjaMessageEvent")
       }
+      msgEvent.messagekey = uk
+      msgEvent.messagevalue = uv
+      msgEvent.error = ""
       txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       txnCtxt.setInitialMessage("", msg)
       ThreadLocalStorage.txnContextInfo.set(txnCtxt)
@@ -242,8 +239,15 @@ trait ExecContext {
         LOG.error("Failed to execute message : " + msg.getFullTypeName, e)
       }
     } finally {
-      commitData(txnCtxt);
-      ThreadLocalStorage.txnContextInfo.remove
+      try {
+        commitData(txnCtxt);
+      } catch {
+        case e: Throwable => {
+          LOG.error("Failed to commit data for executed message : " + msg.getFullTypeName, e)
+        }
+      } finally {
+        ThreadLocalStorage.txnContextInfo.remove
+      }
     }
   }
 
@@ -252,9 +256,11 @@ trait ExecContext {
     val deserializer = ""
     val failedMsg = ""
     var messageName = ""
+    var tempMsgInterface: ContainerInterface = null
 
     try {
       val (tMsg, tDeserializerName, msgName) = input.deserialize(data)
+      tempMsgInterface = tMsg
       messageName = if (msgName != null) msgName else ""
       LOG.debug("Called Deserialize and got msg:" + (if (tMsg == null) "" else tMsg.getFullTypeName))
       val deserializer = if (tDeserializerName != null) tDeserializerName else ""
@@ -277,12 +283,12 @@ trait ExecContext {
           }
           LOG.debug("Not able to deserialize data:%s at UK:%s, UV:%s".format((if (data != null) new String(data) else ""), uk, uv))
         }
-        SendFailedEvent(data, tDeserializerName, failedMsg, uniqueKey, uniqueVal, null)
+        SendFailedEvent(data, tDeserializerName, failedMsg, uniqueKey, uniqueVal, null, tempMsgInterface)
       }
     } catch {
       case e: Throwable => {
         LOG.error("Failed to Deserialize/Execute. MessageName:" + messageName, e)
-        SendFailedEvent(data, deserializer, failedMsg, uniqueKey, uniqueVal, e)
+        SendFailedEvent(data, deserializer, failedMsg, uniqueKey, uniqueVal, e, tempMsgInterface)
       }
     }
   }

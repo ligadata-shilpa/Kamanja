@@ -1,23 +1,28 @@
 
-package com.ligadata.KamanjaBase;
+package com.ligadata.KamanjaBase
 
-import org.json4s.jackson.JsonMethods._
-import org.json4s.DefaultFormats
-import org.json4s.Formats
+import org.json4s.jackson.JsonMethods._;
+import org.json4s.DefaultFormats;
+import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
-import com.ligadata.BaseTypes._
+import com.ligadata.BaseTypes._;
 import com.ligadata.Exceptions.StackTrace;
 import org.apache.logging.log4j.{ Logger, LogManager }
-import java.util.Date
+import java.util.Date;
+import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
+
+
 
 object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with MessageFactoryInterface {
-  type T = KamanjaMessageEvent;
+
+  val log = LogManager.getLogger(getClass)
+  type T = KamanjaMessageEvent ;
   override def getFullTypeName: String = "com.ligadata.KamanjaBase.KamanjaMessageEvent";
   override def getTypeNameSpace: String = "com.ligadata.KamanjaBase";
   override def getTypeName: String = "KamanjaMessageEvent";
-  override def getTypeVersion: String = "000001.000005.000000";
+  override def getTypeVersion: String = "000001.000008.000000";
   override def getSchemaId: Int = 1000006;
-  override def getTenantId: String= "System";
+  override def getTenantId: String = "System";
   override def createInstance: KamanjaMessageEvent = new KamanjaMessageEvent(KamanjaMessageEvent);
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
@@ -31,7 +36,9 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with MessageFa
 
   override def getPrimaryKeyNames: Array[String] = Array[String]();
 
-  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+
+  override def getTimePartitionInfo: TimePartitionInfo = { return null;}  // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+
 
   override def hasPrimaryKey(): Boolean = {
     val pKeys = getPrimaryKeyNames();
@@ -48,15 +55,16 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with MessageFa
     return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
   }
 
-  override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjamessageevent" , "fields":[{ "name" : "messageid" , "type" : "long"},{ "name" : "modelinfo" ,"type": {"type": "array", "items": { "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjamodelevent" , "fields":[{ "name" : "modelid" , "type" : "long"},{ "name" : "elapsedtimeinms" , "type" : "float"},{ "name" : "eventepochtime" , "type" : "long"},{ "name" : "isresultproduced" ,},{ "name" : "producedmessages" , "type" :  {"type" : "array", "items" : "long"}},{ "name" : "error" , "type" : "string"}]}}},{ "name" : "elapsedtimeinms" , "type" : "float"},{ "name" : "messagekey" , "type" : "string"},{ "name" : "messagevalue" , "type" : "string"},{ "name" : "error" , "type" : "string"}]}""";
+  override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjamessageevent1" , "fields":[{ "name" : "messageid" , "type" : "long"},{ "name" : "modelinfo" ,"type": {"type": "array", "items": { "type": "record",  "namespace" : "com.ligadata.kamanjabase" , "name" : "kamanjamodelevent" , "fields":[{ "name" : "modelid" , "type" : "long"},{ "name" : "elapsedtimeinms" , "type" : "float"},{ "name" : "eventepochtime" , "type" : "long"},{ "name" : "isresultproduced" , "type" : "boolean"},{ "name" : "producedmessages" , "type" :  {"type" : "array", "items" : "long"}},{ "name" : "error" , "type" : "string"}]}}},{ "name" : "elapsedtimeinms" , "type" : "float"},{ "name" : "messagekey" , "type" : "string"},{ "name" : "messagevalue" , "type" : "string"},{ "name" : "error" , "type" : "string"}]}""";
 
-final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
+  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
 
-  override def convertFrom(destObj: Any, srcObj: Any): ContainerInterface = {
+  override def convertFrom(newVerObj: Any, oldVerobj: Any): ContainerInterface = {
     try {
-      srcObj match {
+      if (oldVerobj == null) return null;
+      oldVerobj match {
 
-        case oldVerobj: com.ligadata.KamanjaBase.KamanjaMessageEvent => { return convertToNewVer(oldVerobj); }
+        case oldVerobj: com.ligadata.KamanjaBase.KamanjaMessageEvent => { return  convertToVer1000008000000(oldVerobj); }
         case _ => {
           throw new Exception("Unhandled Version Found");
         }
@@ -68,32 +76,49 @@ final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), s
     }
     return null;
   }
-  private def convertToNewVer(oldVerobj: com.ligadata.KamanjaBase.KamanjaMessageEvent): com.ligadata.KamanjaBase.KamanjaMessageEvent = {
+
+  private def convertToVer1000008000000(oldVerobj: com.ligadata.KamanjaBase.KamanjaMessageEvent): com.ligadata.KamanjaBase.KamanjaMessageEvent= {
     return oldVerobj
   }
 
-  /** Deprecated Methods **/
-  def NeedToTransformData: Boolean = false
+
+  /****   DEPRECATED METHODS ***/
   override def FullName: String = getFullTypeName
   override def NameSpace: String = getTypeNameSpace
   override def Name: String = getTypeName
   override def Version: String = getTypeVersion
-  def CreateNewMessage: BaseMsg = createInstance.asInstanceOf[BaseMsg];
-  def CreateNewContainer: BaseContainer = null;
-  def IsFixed: Boolean = true
-  def IsKv: Boolean = false
+  override def CreateNewMessage: BaseMsg= createInstance.asInstanceOf[BaseMsg];
+  override def CreateNewContainer: BaseContainer= null;
+  override def IsFixed: Boolean = true
+  override def IsKv: Boolean = false
   override def CanPersist: Boolean = false
   override def isMessage: Boolean = true
   override def isContainer: Boolean = false
   override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj KamanjaMessageEvent") };
   override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj KamanjaMessageEvent");
   override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj KamanjaMessageEvent");
+  override def NeedToTransformData: Boolean = false
 }
 
 class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessageEvent) extends MessageInterface(factory) {
 
-  private val log = LogManager.getLogger(getClass)
+  val log = KamanjaMessageEvent.log
+
   var attributeTypes = generateAttributeTypes;
+
+  private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
+    var attributeTypes = new Array[AttributeTypeInfo](6);
+    attributeTypes(0) = new AttributeTypeInfo("messageid", 0, AttributeTypeInfo.TypeCategory.LONG, -1, -1, 0)
+    attributeTypes(1) = new AttributeTypeInfo("modelinfo", 1, AttributeTypeInfo.TypeCategory.ARRAY, 1001, -1, 1000002)
+    attributeTypes(2) = new AttributeTypeInfo("elapsedtimeinms", 2, AttributeTypeInfo.TypeCategory.FLOAT, -1, -1, 0)
+    attributeTypes(3) = new AttributeTypeInfo("messagekey", 3, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
+    attributeTypes(4) = new AttributeTypeInfo("messagevalue", 4, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
+    attributeTypes(5) = new AttributeTypeInfo("error", 5, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
+
+
+    return attributeTypes
+  }
+
   var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
 
   if (other != null && other != this) {
@@ -101,7 +126,7 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
     fromFunc(other)
   }
 
-  override def save: Unit = { /* KamanjaMessageEvent.saveOne(this) */ }
+  override def save: Unit = { /* KamanjaMessageEvent.saveOne(this) */}
 
   def Clone(): ContainerOrConcept = { KamanjaMessageEvent.build(this) }
 
@@ -109,17 +134,15 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
 
   override def getPrimaryKey: Array[String] = Array[String]()
 
-  private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
-    var attributeTypes = new Array[AttributeTypeInfo](6);
-    attributeTypes(0) = new AttributeTypeInfo("messageid", 0, AttributeTypeInfo.TypeCategory.LONG, 4, 4, 0)
-    attributeTypes(1) = new AttributeTypeInfo("modelinfo", 1, AttributeTypeInfo.TypeCategory.MESSAGE, -1, -1, 2000020)
-    attributeTypes(2) = new AttributeTypeInfo("elapsedtimeinms", 2, AttributeTypeInfo.TypeCategory.FLOAT, 2, 2, 0)
-    attributeTypes(3) = new AttributeTypeInfo("messagekey", 3, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes(4) = new AttributeTypeInfo("messagevalue", 4, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-    attributeTypes(5) = new AttributeTypeInfo("error", 5, AttributeTypeInfo.TypeCategory.STRING, 1, 1, 0)
-
-    return attributeTypes
+  override def getAttributeType(name: String): AttributeTypeInfo = {
+    if (name == null || name.trim() == "") return null;
+    attributeTypes.foreach(attributeType => {
+      if(attributeType.getName == name.toLowerCase())
+        return attributeType
+    })
+    return null;
   }
+
 
   var messageid: Long = _;
   var modelinfo: scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent] = _;
@@ -131,15 +154,6 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
   override def getAttributeTypes(): Array[AttributeTypeInfo] = {
     if (attributeTypes == null) return null;
     return attributeTypes
-  }
-
-  override def getAttributeType(name: String): AttributeTypeInfo = {
-    if (name == null || name.trim() == "") return null;
-    attributeTypes.foreach(attributeType => {
-      if (attributeType.getName == name.toLowerCase())
-        return attributeType
-    })
-    return null;
   }
 
   private def getWithReflection(key: String): AnyRef = {
@@ -166,7 +180,7 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
   }
 
   private def getByName(key: String): AnyRef = {
-    if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
+    if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container KamanjaMessageEvent");
     return get(keyTypes(key).getIndex)
   }
 
@@ -181,6 +195,28 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
       }
     }
     return null;
+  }
+
+
+  override def get(index : Int) : AnyRef = { // Return (value, type)
+    try{
+      index match {
+        case 0 => return this.messageid.asInstanceOf[AnyRef];
+        case 1 => return this.modelinfo.asInstanceOf[AnyRef];
+        case 2 => return this.elapsedtimeinms.asInstanceOf[AnyRef];
+        case 3 => return this.messagekey.asInstanceOf[AnyRef];
+        case 4 => return this.messagevalue.asInstanceOf[AnyRef];
+        case 5 => return this.error.asInstanceOf[AnyRef];
+
+        case _ => throw new Exception(s"$index is a bad index for message KamanjaMessageEvent");
+      }
+    }catch {
+      case e: Exception => {
+        log.debug("", e)
+        throw e
+      }
+    };
+
   }
 
   override def getOrElse(index: Int, defaultVal: Any): AnyRef = { // Return (value,  type)
@@ -213,8 +249,8 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
   }
 
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has ( value, attributetypeinfo))
-    var attributeVals = new Array[AttributeValue](6);
-    try {
+  var attributeVals = new Array[AttributeValue](6);
+    try{
       attributeVals(0) = new AttributeValue(this.messageid, keyTypes("messageid"))
       attributeVals(1) = new AttributeValue(this.modelinfo, keyTypes("modelinfo"))
       attributeVals(2) = new AttributeValue(this.elapsedtimeinms, keyTypes("elapsedtimeinms"))
@@ -222,7 +258,7 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
       attributeVals(4) = new AttributeValue(this.messagevalue, keyTypes("messagevalue"))
       attributeVals(5) = new AttributeValue(this.error, keyTypes("error"))
 
-    } catch {
+    }catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -238,34 +274,13 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
 
   }
 
-  override def get(index: Int): AnyRef = { // Return (value, type)
-    try {
-      index match {
-        case 0 => return this.messageid.asInstanceOf[AnyRef];
-        case 1 => return this.modelinfo.asInstanceOf[AnyRef];
-        case 2 => return this.elapsedtimeinms.asInstanceOf[AnyRef];
-        case 3 => return this.messagekey.asInstanceOf[AnyRef];
-        case 4 => return this.messagevalue.asInstanceOf[AnyRef];
-        case 5 => return this.error.asInstanceOf[AnyRef];
-
-        case _ => throw new Exception(s"$index is a bad index for message KamanjaMessageEvent");
-      }
-    } catch {
-      case e: Exception => {
-        log.debug("", e)
-        throw e
-      }
-    };
-
-  }
-
   override def set(key: String, value: Any) = {
     try {
 
       if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message KamanjaMessageEvent")
       set(keyTypes(key).getIndex, value);
 
-    } catch {
+    }catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -274,44 +289,47 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
 
   }
 
-  def set(index: Int, value: Any): Unit = {
+
+  def set(index : Int, value :Any): Unit = {
     if (value == null) throw new Exception(s"Value is null for index $index in message KamanjaMessageEvent ")
-    try {
+    try{
       index match {
         case 0 => {
-          if (value.isInstanceOf[Long])
+          if(value.isInstanceOf[Long])
             this.messageid = value.asInstanceOf[Long];
-          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
+          else throw new Exception(s"Value is the not the correct type for field messageid in message KamanjaMessageEvent")
         }
         case 1 => {
-          if (value.isInstanceOf[scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]])
+          if(value.isInstanceOf[scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]])
             this.modelinfo = value.asInstanceOf[scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]];
-          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
+          else if(value.isInstanceOf[scala.Array[ContainerInterface]])
+            this.modelinfo = value.asInstanceOf[scala.Array[ContainerInterface]].map(v => v.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent]);
+          else throw new Exception(s"Value is the not the correct type for field modelinfo in message KamanjaMessageEvent")
         }
         case 2 => {
-          if (value.isInstanceOf[Float])
+          if(value.isInstanceOf[Float])
             this.elapsedtimeinms = value.asInstanceOf[Float];
-          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
+          else throw new Exception(s"Value is the not the correct type for field elapsedtimeinms in message KamanjaMessageEvent")
         }
         case 3 => {
-          if (value.isInstanceOf[String])
+          if(value.isInstanceOf[String])
             this.messagekey = value.asInstanceOf[String];
-          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
+          else throw new Exception(s"Value is the not the correct type for field messagekey in message KamanjaMessageEvent")
         }
         case 4 => {
-          if (value.isInstanceOf[String])
+          if(value.isInstanceOf[String])
             this.messagevalue = value.asInstanceOf[String];
-          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
+          else throw new Exception(s"Value is the not the correct type for field messagevalue in message KamanjaMessageEvent")
         }
         case 5 => {
-          if (value.isInstanceOf[String])
+          if(value.isInstanceOf[String])
             this.error = value.asInstanceOf[String];
-          else throw new Exception(s"Value is the not the correct type for index $index in message KamanjaMessageEvent")
+          else throw new Exception(s"Value is the not the correct type for field error in message KamanjaMessageEvent")
         }
 
         case _ => throw new Exception(s"$index is a bad index for message KamanjaMessageEvent");
       }
-    } catch {
+    }catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -321,25 +339,51 @@ class KamanjaMessageEvent(factory: MessageFactoryInterface, other: KamanjaMessag
   }
 
   override def set(key: String, value: Any, valTyp: String) = {
-    throw new Exception("Set Func for Value and ValueType By Key is not supported for Fixed Messages")
+    throw new Exception ("Set Func for Value and ValueType By Key is not supported for Fixed Messages" )
   }
 
   private def fromFunc(other: KamanjaMessageEvent): KamanjaMessageEvent = {
     this.messageid = com.ligadata.BaseTypes.LongImpl.Clone(other.messageid);
     if (other.modelinfo != null) {
       modelinfo = new scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent](other.modelinfo.length)
-      modelinfo = other.modelinfo.map(f => f.Clone.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent]);
-    } else modelinfo = null;
+      modelinfo = other.modelinfo.map(f => f.Clone.asInstanceOf[com.ligadata.KamanjaBase.KamanjaModelEvent] );
+    }
+    else modelinfo = null;
     this.elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.Clone(other.elapsedtimeinms);
     this.messagekey = com.ligadata.BaseTypes.StringImpl.Clone(other.messagekey);
     this.messagevalue = com.ligadata.BaseTypes.StringImpl.Clone(other.messagevalue);
     this.error = com.ligadata.BaseTypes.StringImpl.Clone(other.error);
 
-    //this.timePartitionData = com.ligadata.BaseTypes.LongImpl.Clone(other.timePartitionData);
+    this.setTimePartitionData(com.ligadata.BaseTypes.LongImpl.Clone(other.getTimePartitionData));
     return this;
   }
 
-  def this(factory: MessageFactoryInterface) = {
+  def withmessageid(value: Long) : KamanjaMessageEvent = {
+    this.messageid = value
+    return this
+  }
+  def withmodelinfo(value: scala.Array[com.ligadata.KamanjaBase.KamanjaModelEvent]) : KamanjaMessageEvent = {
+    this.modelinfo = value
+    return this
+  }
+  def withelapsedtimeinms(value: Float) : KamanjaMessageEvent = {
+    this.elapsedtimeinms = value
+    return this
+  }
+  def withmessagekey(value: String) : KamanjaMessageEvent = {
+    this.messagekey = value
+    return this
+  }
+  def withmessagevalue(value: String) : KamanjaMessageEvent = {
+    this.messagevalue = value
+    return this
+  }
+  def witherror(value: String) : KamanjaMessageEvent = {
+    this.error = value
+    return this
+  }
+
+  def this(factory:MessageFactoryInterface) = {
     this(factory, null)
   }
 

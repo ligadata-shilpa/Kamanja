@@ -174,6 +174,7 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
     try{
       var ambs = Array[adapterMessageBinding]()
       adapters.foreach( a => {
+	var typeString: String = null
 	logger.info("a => " + a)
 	val adapter = a.asInstanceOf[Map[String,Any]]
 	var am = new adapterMessageBinding(new String(),Array[String]().toList,Map[String,String](),new String())
@@ -181,12 +182,13 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	  logger.info(k + " => " + adapter(k))
 	  k.toUpperCase match {
 	    case "NAME" => am.AdapterName = adapter(k).asInstanceOf[String]
+	    case "TYPESTRING" => typeString = adapter(k).asInstanceOf[String]
 	    case "ASSOCIATEDMESSAGE" => am.MessageNames = Array(adapter(k).asInstanceOf[String]).toList
 	    case "DATAFORMAT" => {
 	      adapter(k).asInstanceOf[String].toUpperCase match {
 		case "CSV" => am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
 		case "JSON" => am.Serializer = "com.ligadata.kamanja.serializer.JsonSerDeser"
-		case _ => am.Serializer = "com.ligadata.kamanja.serializer.KBinarySerDeser"
+		case _ => am.Serializer = "com.ligadata.kamanja.serializer.JsonSerDeser"
 	      }
 	    }
 	    case "FIELDDELIMITER" => am.Options = am.Options + ("fieldDelimiter" -> adapter(k).asInstanceOf[String])
@@ -199,7 +201,34 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	  am.Options = am.Options + ("produceHeader" -> "true")
 	  am.Options = am.Options + ("alwaysQuotedFields" -> "false")
 	}
-	ambs = ambs :+ am
+
+	
+
+	if( typeString != null ){
+	  if( ( typeString.equalsIgnoreCase("Input") || 
+	      typeString.equalsIgnoreCase("Status")) ){
+	    if( am.MessageNames != null && am.MessageNames.length > 0 ){
+	      // for status adapters, message always defults 
+	      // to com.ligadata.KamanjaBase.KamanjaStatusEvent
+	      if( typeString.equalsIgnoreCase("Status") ){
+		am.MessageNames = Array("com.ligadata.KamanjaBase.KamanjaStatusEvent").toList
+		am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
+		if( ! am.Options.contains("fieldDelimiter") ){
+		  am.Options = am.Options + ("fieldDelimiter" -> ",")
+		}
+	      }
+	      ambs = ambs :+ am
+	    }
+	    else{
+	      logger.info("Associated Message is not defined, A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	    }
+	  }
+	  else{
+	    logger.info("The adapterType is Output type, A adapter-message binding is not generated for the adapter " + am.AdapterName)	  }
+	}
+	else{
+	  logger.info("Unable to determine adapterType(Input/output/status), A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	}
       })
       ambs
     } catch {
@@ -390,7 +419,7 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 
 	And("Check number of the adapters")
 	var adapters = MdMgr.GetMdMgr.Adapters
-	assert(adapters.size == 2)
+	assert(adapters.size == 4)
 
       })
     }

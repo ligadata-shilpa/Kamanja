@@ -207,6 +207,9 @@ class HdfsFileHandler extends SmartFileHandler{
     } finally {
     }
   }
+
+  //TODO : see if can check whether current user can read and write
+  override def isAccessible : Boolean = exists()
 }
 
 /**

@@ -132,6 +132,7 @@ class LearningEngine {
           if (curMd != null) {
             var modelEvent = txnCtxt.getNodeCtxt.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaModelEvent").asInstanceOf[KamanjaModelEvent]
             modelEvent.isresultproduced = false
+            modelEvent.error = ""
             modelEvent.producedmessages = Array[Long]()
             val modelStartTime = System.nanoTime
 
@@ -240,6 +241,7 @@ class LearningEngine {
         // throw e
       }
     }
+    thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
     thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
   }
 

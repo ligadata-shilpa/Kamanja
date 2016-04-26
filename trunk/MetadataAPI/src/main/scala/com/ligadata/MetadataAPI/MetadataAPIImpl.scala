@@ -148,8 +148,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   def GetSchemaId: Int = GetMetadataId("schemaid", true, 2000001).toInt // This should start atleast from 2,000,001. because 1 - 1,000,000 is reserved for System Containers & 1,000,001 - 2,000,000 is reserved for System Messages
-  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 100000) // This starts from 100000
-  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 100000) // This starts from 100000
+  def GetUniqueId: Long = GetMetadataId("uniqueid", true, 2000001) // This starts from 2000001
+  def GetMdElementId: Long = GetMetadataId("mdelementid", true, 2000001) // This starts from 2000001
 
   /**
    *  getHealthCheck - will return all the health-check information for the nodeId specified.
@@ -2880,7 +2880,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
           val unHandledFunctions = ArrayBuffer[(Key, Array[Byte])]()
           functionsYetToProcess.foreach(fun => {
             try {
-              DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
+                DeserializeAndAddObject(fun._1, fun._2, objectsChanged, operations, maxTranId)
             } catch {
               case e: Throwable => {
                 unHandledFunctions += fun
@@ -2897,7 +2897,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
             {
               val data = v.asInstanceOf[Array[Byte]]
               try {
-                DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId, ignoreExistingObjectsOnStartup)
+                  val maxTranId = PersistenceUtils.GetTranId
+                  MetadataAPIImpl.setCurrentTranLevel(maxTranId)
+
+                  DeserializeAndAddObject(k, data, objectsChanged, operations, maxTranId, ignoreExistingObjectsOnStartup)
               } catch {
                 case e: Throwable => {
                   if (typ.equalsIgnoreCase("types")) {
@@ -3026,13 +3029,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
       case "adapterDef" | "nodeDef" | "clusterInfoDef" | "clusterDef" | "upDef"=> {
           zkMessage.Operation match {
-              case "Add" | "Update" => {
+              case "Add" | "Update" | "Remove" => {
                 updateClusterConfigForKey(zkMessage.ObjectType, zkMessage.Name, zkMessage.NameSpace, zkMessage.Operation)
               }
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }
       }
-      case "AdapterMsgBinding"=> {
+      case "AdapterMessageBinding"=> {
           /** Restate the key to use the binding key (see AdapterMessageBinding class decl in Metadata project) for form. */
           val bindingKey : String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
           zkMessage.Operation match {
@@ -3040,7 +3043,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                   ConfigUtils.LoadAdapterMessageBindingIntoCache(bindingKey)
               }
               case "Remove" => {
-                  //ConfigUtils.RemoveAdapterMessageBindingFromCache(bindingKey)
+                  ConfigUtils.RemoveAdapterMessageBindingFromCache(bindingKey)
               }
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }
@@ -3996,15 +3999,21 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   private def updateClusterConfigForKey(elemType: String, key: String, clusterId: String, operation: String): Unit = {
 
     if (elemType.equalsIgnoreCase("adapterDef")) {
-      //val obj = GetObject("adapterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
-      MdMgr.GetMdMgr.AddAdapter(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
+        MdMgr.GetMdMgr.AddAdapter(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.name.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo: AdapterInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("adapterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[AdapterInfo]
+        MdMgr.GetMdMgr.AddAdapter(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.name.toLowerCase, storedInfo))
+        return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        MdMgr.GetMdMgr.RemoveAdapter(key)
+        MdMgr.GetMdMgr.addConfigChange((elemType + "." + "remove" + "." + key, null))
         return
       }
       return
@@ -4012,30 +4021,40 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("nodeDef")) {
      // val obj = GetObject("nodeinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
-      MdMgr.GetMdMgr.AddNode(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
+        MdMgr.GetMdMgr.AddNode(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.nodeId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("nodeinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[NodeInfo]
+        MdMgr.GetMdMgr.AddNode(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.nodeId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove node def - not supported")
       }
       return
     }
 
     if (elemType.equalsIgnoreCase("clusterInfoDef")) {
       //val obj = GetObject("clustercfginfo."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
-      MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
+        MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clustercfginfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterCfgInfo]
+        MdMgr.GetMdMgr.AddClusterCfg(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove clusterInfoDef - not supported")
       }
       return
 
@@ -4044,30 +4063,40 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     if (elemType.equalsIgnoreCase("clusterDef")) {
       //val obj = GetObject("clusterinfo."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
-      MdMgr.GetMdMgr.AddCluster(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
+        MdMgr.GetMdMgr.AddCluster(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("clusterinfo."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[ClusterInfo]
+        MdMgr.GetMdMgr.AddCluster(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove clusterDef - not supported")
       }
       return
     }
 
     if (elemType.equalsIgnoreCase("upDef")) {
       //val obj = GetObject("userproperties."+key.toLowerCase, "config_objects")
-      val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
-      MdMgr.GetMdMgr.AddUserProperty(storedInfo)
       if (operation.equalsIgnoreCase("add")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
+        MdMgr.GetMdMgr.AddUserProperty(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType +"."+"add"+"."+storedInfo.clusterId.toLowerCase, storedInfo))
         return
       }
       if (operation.equalsIgnoreCase("update")) {
+        val storedInfo = MetadataAPISerialization.deserializeMetadata(new String(GetObject("userproperties."+key.toLowerCase, "config_objects")._2.asInstanceOf[Array[Byte]])).asInstanceOf[UserPropertiesInfo]
+        MdMgr.GetMdMgr.AddUserProperty(storedInfo)
         MdMgr.GetMdMgr.addConfigChange((elemType + "." + "update" + "." + storedInfo.clusterId.toLowerCase, storedInfo))
         return
+      }
+      if (operation.equalsIgnoreCase("Remove")) {
+        logger.warn("Remove User Properties - not supported")
       }
       return
     }
@@ -4304,7 +4333,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * UpdateMetadata - This is a callback function for the Zookeeper Listener.  It will get called when we detect Metadata being updated from
      *                  a different metadataImpl service.
      *
-     * @param receivedJsonStr message from another cluster node
+     * @param receivedJsonStr zk message from another cluster node
      */
   def UpdateMetadata(receivedJsonStr: String): Unit = {
     logger.debug("Process ZooKeeper notification " + receivedJsonStr)
@@ -4320,8 +4349,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
 
     /**
      * InitMdMgr
-      *
-      * @param mgr
+     *
+     * @param mgr the metadata manager instance
      * @param jarPathsInfo
      * @param databaseInfo
      */

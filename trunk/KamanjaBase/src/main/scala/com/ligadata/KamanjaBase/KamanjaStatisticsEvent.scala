@@ -16,7 +16,7 @@ object KamanjaStatisticsEvent extends RDDObject[KamanjaStatisticsEvent] with Mes
   override def getTypeNameSpace: String = "com.ligadata.KamanjaBase";
   override def getTypeName: String = "KamanjaStatisticsEvent";
   override def getTypeVersion: String = "000001.000002.000000";
-  override def getSchemaId: Int = 1000003;
+  override def getSchemaId: Int = 1000002;
   override def getTenantId: String= "System";
   override def createInstance: KamanjaStatisticsEvent = new KamanjaStatisticsEvent(KamanjaStatisticsEvent);
   override def isFixed: Boolean = true;

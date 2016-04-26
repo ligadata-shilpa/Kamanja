@@ -17,6 +17,7 @@ package com.ligadata.models.samples.finance.V1
 import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
+import com.ligadata.runtime.Log
 import com.ligadata.runtime.Conversion
 class TransactionIngestFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def createModelInstance(): ModelInstance = return new TransactionIngest(this)
@@ -26,6 +27,8 @@ class TransactionIngestFactory(modelDef: ModelDef, nodeContext: NodeContext) ext
 }
 class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   val conversion = new com.ligadata.runtime.Conversion
+  val log = new com.ligadata.runtime.Log(this.getClass.getName)
+  import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     //
     //

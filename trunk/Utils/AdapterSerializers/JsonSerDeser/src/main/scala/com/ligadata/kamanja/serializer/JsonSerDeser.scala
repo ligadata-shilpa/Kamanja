@@ -161,6 +161,8 @@ class JSONSerDes extends SerializeDeserialize {
     }
 
     private def valueAsJson(sb: StringBuilder, indentLevel: Int, value : Any, quoteValue: Boolean)  = {
+        // FYI, if an object being serialized has a null it it , we are toast
+
         if (quoteValue) {
             sb.append('\"' + StringEscapeUtils.escapeJson(value.toString) + '\"')
         } else {

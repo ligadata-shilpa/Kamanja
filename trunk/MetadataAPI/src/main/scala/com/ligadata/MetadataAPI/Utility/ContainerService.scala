@@ -125,7 +125,7 @@ object ContainerService {
               case option => {
                 val containerDefs = getUserInputFromMainMenu(containers)
                 for (containerDef <- containerDefs) {
-                  response += MetadataAPIImpl.UpdateContainer(containerDef.toString, "JSON", userid)
+                  response += MetadataAPIImpl.UpdateContainer(containerDef.toString, "JSON", userid, finalTid)
                 }
               }
             }
@@ -140,7 +140,7 @@ object ContainerService {
       //input provided
       var container = new File(input.toString)
       val containerDef = Source.fromFile(container).mkString
-      response = MetadataAPIImpl.AddContainer(containerDef, "JSON", userid)
+      response = MetadataAPIImpl.AddContainer(containerDef, "JSON", userid,  finalTid)
     }
     //Got the container.
     response

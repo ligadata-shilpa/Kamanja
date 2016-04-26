@@ -74,6 +74,7 @@ object KamanjaLeader {
   private[this] var allPartitionsToValidate = scala.collection.mutable.Map[String, Set[String]]()
   private[this] var nodesStatus = scala.collection.mutable.Set[String]() // NodeId
   private[this] var expectedNodesAction: String = _
+  private[this] var nodesActionIssuedTime: Long = 0
   private[this] var curParticipents = Set[String]() // Derived from clusterStatus.participants
   private[this] var canRedistribute = false
   private[this] var inputAdapters: ArrayBuffer[InputAdapter] = _
@@ -229,6 +230,8 @@ object KamanjaLeader {
                         ("Adaps" -> kv._2.map(kv1 => ("Adap" -> kv1._1) ~
                           ("Parts" -> kv1._2.toList)))))
                 val sendJson = compact(render(distribute))
+                LOG.warn("Partition Distribution: " + sendJson)
+                nodesActionIssuedTime = System.currentTimeMillis
                 SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
               }
             } else {
@@ -413,6 +416,7 @@ object KamanjaLeader {
     adapterMaxPartitions.clear
     nodesStatus.clear
     expectedNodesAction = ""
+    nodesActionIssuedTime = System.currentTimeMillis
     curParticipents = if (cs.participantsNodeIds != null) cs.participantsNodeIds.toSet else Set[String]()
 
     try {
@@ -462,6 +466,7 @@ object KamanjaLeader {
       // Set STOP Action on engineDistributionZkNodePath
       val act = ("action" -> "stop")
       val sendJson = compact(render(act))
+      nodesActionIssuedTime = System.currentTimeMillis
       SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
     } catch {
       case e: Exception => {
@@ -643,26 +648,30 @@ object KamanjaLeader {
 
   // Using canRedistribute as startup mechanism here, because until we do bootstap ignore all the messages from this 
   private def ActionOnAdaptersDistImpl(receivedJsonStr: String): Unit = lock.synchronized {
-    // LOG.debug("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
 
     if (receivedJsonStr == null || receivedJsonStr.size == 0 || canRedistribute == false) {
       // nothing to do
-      LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+      if (LOG.isDebugEnabled)
+        LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
       return
     }
 
     if (IsLeaderNodeAndUpdatePartitionsFlagSet) {
-      LOG.debug("Already got Re-distribution request. Ignoring any actions from ActionOnAdaptersDistImpl") // Atleast this happens on main node
+      if (LOG.isDebugEnabled)
+        LOG.debug("Already got Re-distribution request. Ignoring any actions from ActionOnAdaptersDistImpl") // Atleast this happens on main node
       return
     }
 
-    LOG.info("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isInfoEnabled)
+      LOG.info("ActionOnAdaptersDistImpl => receivedJsonStr: " + receivedJsonStr)
 
     try {
       // Perform the action here (STOP or DISTRIBUTE for now)
       val json = parse(receivedJsonStr)
       if (json == null || json.values == null) { // Not doing any action if not found valid json
-        LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+        LOG.error("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
         return
       }
 
@@ -685,7 +694,9 @@ object KamanjaLeader {
               // STOP all Input Adapters on local node
               remInputAdaps.foreach(ia => {
                 try {
+                  LOG.warn("Stopping adapter " + ia.UniqueName)
                   ia.StopProcessing
+                  LOG.warn("Stopped adapter " + ia.UniqueName)
                 } catch {
                   case fae: FatalAdapterException => {
                     LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing", fae)
@@ -742,6 +753,7 @@ object KamanjaLeader {
               val adaptrStatusPathForNode = adaptersStatusPath + "/" + nodeId
               val act = ("action" -> "stopped")
               val sendJson = compact(render(act))
+              LOG.warn("New Action Stopped set to " + adaptrStatusPathForNode)
               SetNewDataToZkc(adaptrStatusPathForNode, sendJson.getBytes("UTF8"))
             }
           } catch {
@@ -815,7 +827,8 @@ object KamanjaLeader {
       }
     }
 
-    LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
   }
 
   private def ActionOnAdaptersDistribution(receivedJsonStr: String): Unit = {
@@ -823,10 +836,12 @@ object KamanjaLeader {
   }
 
   private def ActionOnDataChngImpl(receivedJsonStr: String): Unit = lock.synchronized {
-    // LOG.debug("ActionOnDataChngImpl => receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnDataChngImpl => receivedJsonStr: " + receivedJsonStr)
     if (receivedJsonStr == null || receivedJsonStr.size == 0) {
       // nothing to do
-      // LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+      if (LOG.isDebugEnabled)
+        LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
       return
     }
 
@@ -970,7 +985,8 @@ object KamanjaLeader {
       }
     }
 
-    LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
+    if (LOG.isDebugEnabled)
+      LOG.debug("ActionOnDataChngImpl => Exit. receivedJsonStr: " + receivedJsonStr)
   }
 
   private def ActionOnDataChange(receivedJsonStr: String): Unit = {
@@ -978,19 +994,23 @@ object KamanjaLeader {
   }
 
   private def ParticipentsAdaptersStatus(eventType: String, eventPath: String, eventPathData: Array[Byte], childs: Array[(String, Array[Byte])]): Unit = {
-    // LOG.debug("ParticipentsAdaptersStatus => Enter, eventType:%s, eventPath:%s ".format(eventType, eventPath))
+    if (LOG.isDebugEnabled)
+      LOG.debug("ParticipentsAdaptersStatus => Enter, eventType:%s, eventPath:%s ".format(eventType, eventPath))
     if (IsLeaderNode == false) { // Not Leader node
-      // LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
+      if (LOG.isDebugEnabled)
+        LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
       return
     }
 
     if (IsLeaderNodeAndUpdatePartitionsFlagSet) {
-      LOG.debug("Already got Re-distribution request. Ignoring any actions from ParticipentsAdaptersStatus")
+      if (LOG.isDebugEnabled)
+        LOG.debug("Already got Re-distribution request. Ignoring any actions from ParticipentsAdaptersStatus")
       return
     }
 
     UpdatePartitionsNodeData(eventType, eventPath, eventPathData)
-    // LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
+    if (LOG.isDebugEnabled)
+      LOG.debug("ParticipentsAdaptersStatus => Exit, eventType:%s, eventPath:%s ".format(eventType, eventPath))
   }
 
   private def CheckForPartitionsChange: Unit = {
@@ -1147,11 +1167,6 @@ object KamanjaLeader {
           }
         }
 
-        SetCanRedistribute(true)
-        logger.warn("DistributionCheck:Going to do registerNodesChangeNotification in KamanjaLeader")
-        envCtxt.registerNodesChangeNotification(EventChangeCallback)
-        logger.warn("DistributionCheck:Done registerNodesChangeNotification in KamanjaLeader")
-
         distributionExecutor.execute(new Runnable() {
           override def run() = {
             var updatePartsCntr = 0
@@ -1272,12 +1287,25 @@ object KamanjaLeader {
                   getValidateAdapCntr = 0
                 }
               }
+
+              // Waiting for a two mins after issuing stopped to redo the same actions again
+              val maxWaitForStop = 60000
+              if (GetUpdatePartitionsFlag == false && expectedNodesAction == "stopped" && (nodesActionIssuedTime + maxWaitForStop) < System.currentTimeMillis) {
+                // Redistribute. We did not get expected stopped message
+                logger.warn(s"From past ${maxWaitForStop} milli second we are waiting for adapters redistribution. Did not get the information so far. Going to stop & distribute again.")
+                SetUpdatePartitionsFlag
+              }
             }
           }
         })
 
-        // Forcing to distribute data
-        SetUpdatePartitionsFlag
+        SetCanRedistribute(true)
+        logger.warn("DistributionCheck:Going to do registerNodesChangeNotification in KamanjaLeader")
+        envCtxt.registerNodesChangeNotification(EventChangeCallback)
+        logger.warn("DistributionCheck:Done registerNodesChangeNotification in KamanjaLeader")
+
+        // Forcing to distribute
+        // SetUpdatePartitionsFlag
 
 //          zkLeaderLatch = new ZkLeaderLatch(zkConnectString, engineLeaderZkNodePath, nodeId, EventChangeCallback, zkSessionTimeoutMs, zkConnectionTimeoutMs)
 //        zkLeaderLatch.SelectLeader
