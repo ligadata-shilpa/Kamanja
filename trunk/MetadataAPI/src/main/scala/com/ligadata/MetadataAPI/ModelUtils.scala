@@ -325,6 +325,7 @@ object ModelUtils {
     var key = model.FullNameWithVer
     val dispkey = model.FullName + "." + MdMgr.Pad0s2Version(model.Version)
     try {
+      PersistenceUtils.SaveElementInformation(model.MdElementId, "Model", model.NameSpace, model.Name)
       MetadataAPIImpl.SaveObject(model, MdMgr.GetMdMgr)
       val apiResult = new ApiResult(ErrorCodeConstants.Success, "AddModel", null, ErrorCodeConstants.Add_Model_Successful + ":" + dispkey)
       apiResult.toString()

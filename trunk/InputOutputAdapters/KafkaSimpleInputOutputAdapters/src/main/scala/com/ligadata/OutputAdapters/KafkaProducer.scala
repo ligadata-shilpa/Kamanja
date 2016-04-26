@@ -79,7 +79,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
   val linger_ms = qc.otherconfigs.getOrElse("linger.ms", default_linger_ms).toString.trim()
   val timeout_ms = qc.otherconfigs.getOrElse("timeout.ms", default_timeout_ms).toString.trim()
   val metadata_fetch_timeout_ms = qc.otherconfigs.getOrElse("metadata.fetch.timeout.ms", default_metadata_fetch_timeout_ms).toString.trim()
-
+  private var msgCount = 0
   val counterLock = new Object
 
   private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
@@ -335,6 +335,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
 
   /**
    *
+   *
    * @return
    */
   override def getComponentStatusAndMetrics: MonitorComponentInfo = {
@@ -343,7 +344,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
   }
 
   override def getComponentSimpleStats: String = {
-    "" // Not implemented yet
+    return key + "->" + msgCount
   }
 
   /**
@@ -477,6 +478,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
         producer.send(msgAndCntr.msg, new Callback {
           override def onCompletion(metadata: RecordMetadata, exception: Exception): Unit = {
             val localMsgAndCntr = msgAndCntr
+            msgCount += 1
             if (exception != null) {
               LOG.warn(qc.Name + " Failed to send message into " + localMsgAndCntr.msg.topic, exception)
               addToFailedMap(localMsgAndCntr)

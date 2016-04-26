@@ -22,7 +22,7 @@ object KamanjaMessageEvent extends RDDObject[KamanjaMessageEvent] with MessageFa
   override def getTypeName: String = "KamanjaMessageEvent";
   override def getTypeVersion: String = "000001.000008.000000";
   override def getSchemaId: Int = 1000006;
-  override def getTenantId: String = "blah";
+  override def getTenantId: String = "System";
   override def createInstance: KamanjaMessageEvent = new KamanjaMessageEvent(KamanjaMessageEvent);
   override def isFixed: Boolean = true;
   override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE

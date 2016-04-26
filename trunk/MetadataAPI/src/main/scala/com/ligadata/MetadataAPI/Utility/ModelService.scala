@@ -719,7 +719,7 @@ object ModelService {
           for (modelDef <- modelDefs){
             println("Adding the next model in the queue.")
             if (dep.length > 0) {
-              response+= MetadataAPIImpl.UpdateModel( ModelType.JAVA, modelDef, userid, Some(userid.get+"."+dep), finalTid)
+              response+= MetadataAPIImpl.UpdateModel( ModelType.JAVA, modelDef, userid, finalTid, Some(userid.get+"."+dep))
             } else {
               //before adding a model, add its config file.
               var configKeys = MetadataAPIImpl.getModelConfigNames

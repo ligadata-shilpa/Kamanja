@@ -203,7 +203,7 @@ if [ "$cleanBuild" == "yes" ]; then
    sbt clean
 fi
 
-sbt '++ 2.10.4 package' '++ 2.10.4 ExtDependencyLibs/assembly' '++ 2.10.4 ExtDependencyLibs2/assembly' '++ 2.10.4 KamanjaInternalDeps/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 InstallDriver/assembly'
+sbt '++ 2.10.4 package' '++ 2.10.4 ExtDependencyLibs/assembly' '++ 2.10.4 ExtDependencyLibs2/assembly' '++ 2.10.4 KamanjaInternalDeps/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 InstallDriver/assembly' '++2.10.4 GenerateAdapterBindings/assembly'
 #   '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MigrateManager/assembly'
 
 #sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
@@ -244,6 +244,7 @@ cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/nodeinfoextract* $systemlib
 #cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0.jar $kamanjainstallsystemlib
 #cp ExtDependencyLibs2/target/scala-2.10/ExtDependencyLibs2_2.10-1.4.0.jar $kamanjainstallsystemlib
 #cp KamanjaInternalDeps/target/scala-2.10/KamanjaInternalDeps_2.10-1.4.0.jar $kamanjainstallsystemlib
+cp $srcPath/Utils/Migrate/GenerateAdapterBindings/target/scala-2.10/generateadapterbindings_2.10-1.4.0.jar $systemlib
 
 # copy jars used to reduce package size
 cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0.jar $systemlib
@@ -275,7 +276,7 @@ cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_2/target/scala-2.10/migr
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.10/migratefrom_v_1_3_2.10-1.4.0.jar $systemlib
 # cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.10/migrateto_v_1_3_2.10-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.10/migrateto_v_1_4_2.10-1.4.0.jar $systemlib
-
+cp $srcPath/Utils/Migrate/GenerateAdapterBindings/target/scala-2.10/generateadapterbindings_2.10-1.4.0.jar $systemlib
 
 #copy jars for kamanjainstallapplib
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.4.0.jar $systemlib
@@ -504,7 +505,7 @@ fi
 
 #Now do full build of 2.11
 
-sbt '++ 2.11.7 package' '++ 2.11.7 ExtDependencyLibs/assembly' '++ 2.11.7 ExtDependencyLibs2/assembly' '++ 2.11.7 KamanjaInternalDeps/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 InstallDriver/assembly'
+sbt '++ 2.11.7 package' '++ 2.11.7 ExtDependencyLibs/assembly' '++ 2.11.7 ExtDependencyLibs2/assembly' '++ 2.11.7 KamanjaInternalDeps/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 InstallDriver/assembly' '++2.11.7 GenerateAdapterBindings/assembly'
 #'++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MigrateManager/assembly'
 
 #sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly'
@@ -570,6 +571,7 @@ cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.4.0.jar $systemlib
 # cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_3/target/scala-2.11/migrateto_v_1_3_2.11-1.0.jar $systemlib
 cp $srcPath/Utils/Migrate/DestinationVersion/MigrateTo_V_1_4/target/scala-2.11/migrateto_v_1_4_2.11-1.4.0.jar $systemlib
 cp $srcPath/Utils/Migrate/SourceVersion/MigrateFrom_V_1_3/target/scala-2.11/migratefrom_v_1_3_2.11-1.4.0.jar $systemlib
+cp $srcPath/Utils/Migrate/GenerateAdapterBindings/target/scala-2.11/generateadapterbindings_2.11-1.4.0.jar $systemlib
 
 #copy jars for kamanjainstallapplib
 cp $srcPath/Utils/Migrate/MigrateBase/target/migratebase-1.4.0.jar $systemlib

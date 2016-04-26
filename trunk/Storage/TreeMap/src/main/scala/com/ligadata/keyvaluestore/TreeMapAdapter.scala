@@ -35,8 +35,8 @@ No schema setup
 package com.ligadata.keyvaluestore
 
 import com.ligadata.KamanjaBase.NodeContext
-import com.ligadata.KvBase.{ Key, TimeRange }
-import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory, Value }
+import com.ligadata.KvBase.{ Key, TimeRange, Value }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory }
 import com.ligadata.kamanja.metadata.AdapterInfo
 
 import org.mapdb._

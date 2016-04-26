@@ -354,8 +354,7 @@ object PersistenceUtils {
   def SaveSchemaInformation(schemaId: Int, nameSpace: String, name: String, version: Long, physicalName: String, avroSchema: String, containerType: String): Unit = {
     val (containerName, store) = GetContainerNameAndDataStore("AvroSchemaInfo")
 
-    val json = "AvroSchemaInfo" ->
-      ("SchemaId" -> schemaId) ~
+    val json = ("SchemaId" -> schemaId) ~
         ("NameSpace" -> nameSpace) ~
         ("Name" -> name) ~
         ("Version" -> version) ~
@@ -375,6 +374,32 @@ object PersistenceUtils {
       case e: Exception => {
         logger.error("Failed to insert/update object for schemaid: " + schemaId, e)
         throw UpdateStoreFailedException("Failed to insert/update object for schemaid: " + schemaId, e)
+      }
+    }
+  }
+
+  def SaveElementInformation(elementId: Long, typ: String, nameSpace: String, name: String): Unit = {
+    val (containerName, store) = GetContainerNameAndDataStore("ElementInfo")
+
+    val fullName = (nameSpace.trim + "." + name.trim).toLowerCase
+
+    val json = 
+      ("ElementId" -> elementId) ~
+        ("Type" -> typ.toLowerCase) ~
+        ("Name" -> fullName)
+
+    val outputJson = compact(render(json))
+
+    var storeObjects = new Array[(Key, String, Any)](1)
+    val k = Key(storageDefaultTime, Array(elementId.toString), storageDefaultTxnId, 0)
+    storeObjects(0) = (k, "JSON", outputJson.getBytes())
+
+    try {
+      store.put(null, Array((containerName, storeObjects)))
+    } catch {
+      case e: Exception => {
+        logger.error("Failed to insert/update object for ElementId: " + elementId, e)
+        throw UpdateStoreFailedException("Failed to insert/update object for ElementId: " + elementId, e)
       }
     }
   }
@@ -820,7 +845,7 @@ object PersistenceUtils {
     try {
       logger.debug("Creating MetadataTables")
       if (mainDS != null) {
-	val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadatacounters","avroschemainfo")
+	val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadatacounters","avroschemainfo","elementinfo")
         mainDS.CreateMetadataContainer(metadataTables)
         logger.debug("Created Metadata Tables")
       }

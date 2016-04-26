@@ -104,6 +104,7 @@ object MessageAndContainerUtils {
       var objectsAdded = AddMessageTypes(contDef, MdMgr.GetMdMgr, recompile)
       objectsAdded = objectsAdded :+ contDef
       PersistenceUtils.SaveSchemaInformation(contDef.cType.SchemaId, contDef.NameSpace, contDef.Name, contDef.Version, contDef.PhysicalName, contDef.cType.AvroSchema, "Container")
+      PersistenceUtils.SaveElementInformation(contDef.MdElementId, "Container", contDef.NameSpace, contDef.Name)
       MetadataAPIImpl.SaveObjectList(objectsAdded, "containers")
       val operations = for (op <- objectsAdded) yield "Add"
       MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
@@ -133,6 +134,7 @@ object MessageAndContainerUtils {
       var objectsAdded = AddMessageTypes(msgDef, MdMgr.GetMdMgr, recompile)
       objectsAdded = objectsAdded :+ msgDef
       PersistenceUtils.SaveSchemaInformation(msgDef.cType.SchemaId, msgDef.NameSpace, msgDef.Name, msgDef.Version, msgDef.PhysicalName, msgDef.cType.AvroSchema, "Message")
+      PersistenceUtils.SaveElementInformation(msgDef.MdElementId, "Message", msgDef.NameSpace, msgDef.Name)
       MetadataAPIImpl.SaveObjectList(objectsAdded, "messages")
       val operations = for (op <- objectsAdded) yield "Add"
       MetadataAPIImpl.NotifyEngine(objectsAdded, operations)
