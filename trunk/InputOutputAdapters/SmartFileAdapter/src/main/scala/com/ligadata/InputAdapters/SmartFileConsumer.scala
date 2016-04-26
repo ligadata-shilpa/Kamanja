@@ -56,7 +56,7 @@ object SmartFileConsumer extends InputAdapterFactory {
 
   val FILE_STATUS_FINISHED = 0
   val FILE_STATUS_NOT_FOUND = -1
-  val FILE_STATUS_NOT_COURRUPT = 22
+  val FILE_STATUS_CORRUPT = -2
 
   def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = new SmartFileConsumer(inputConfig, execCtxtObj, nodeContext)
 
@@ -688,7 +688,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     val processingNodeId = keyTokens(keyTokens.length - 2)
 
     LOG.info("Smart File Consumer - Node Id = {}, Thread Id = {}, File ({}) was assigned",
-      processingNodeId, processingThreadId, fileToProcessName)
+      processingNodeId, processingThreadId.toString, fileToProcessName)
 
     //start processing the file
     val context = new SmartFileConsumerContext()

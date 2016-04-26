@@ -110,33 +110,32 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         logger.error("SMART_FILE_CONSUMER Exception accessing the file for processing the file - File is missing",fio)
         //markFileProcessingEnd(fileName)
         //fileCacheRemove(fileName)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_NOT_FOUND)
         shutdownThreads
         return
       }
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER Exception accessing the file for processing ",fio)
-        //setFileState(fileName,FileProcessor.MISSING)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
         shutdownThreads
         return
       }
       case ex : Exception => {
         logger.error("", ex)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
         shutdownThreads
 
         return
       }
     }
 
-    // Intitialize the leftover area for this file reading.
-    var newFileLeftOvers = BufferLeftoversArea(0, Array[Byte](), -1)
-    //setLeftovers(newFileLeftOvers, 0)
-
     var waitedCntr = 0
     var tempFailure = 0
 
-    var previousLeftOverBytes : Array[Byte] = Array()
-    do {
-      /*waitedCntr = 0
+    try {
+      var previousLeftOverBytes: Array[Byte] = Array()
+      do {
+        /*waitedCntr = 0
       val st = System.currentTimeMillis
       while ((BufferCounters.inMemoryBuffersCntr.get * 2 + partitionSelectionNumber + 2) * maxlen > maxBufAllowed) { // One counter for bufferQ and one for msgQ and also taken concurrentKafkaJobsRunning and 2 extra in memory
         if (waitedCntr == 0) {
@@ -152,87 +151,95 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         logger.warn("%d:Got slot after waiting %dms".format(partitionId, timeDiff))
       }*/
 
-      BufferCounters.inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
-      var isLastChunk = false
-      try {
-        readlen = fileHandler.read(byteBuffer, maxlen - 1)
-        // if (readlen < (maxlen - 1)) isLastChunk = true
-      } catch {
-        /*case ze: ZipException => {
+        BufferCounters.inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
+        var isLastChunk = false
+        try {
+          readlen = fileHandler.read(byteBuffer, maxlen - 1)
+          // if (readlen < (maxlen - 1)) isLastChunk = true
+        } catch {
+          /*case ze: ZipException => {
           logger.error("Failed to read file, file currupted " + fileName, ze)
           //val buffer = MonitorUtils.toCharArray(byteBuffer)
           val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)
           return
         }*/
-        case ioe: IOException => {
-          logger.error("Failed to read file " + fileName, ioe)
-          /*val buffer = MonitorUtils.toCharArray(byteBuffer)
+          case ioe: IOException => {
+            logger.error("Failed to read file " + fileName, ioe)
+            /*val buffer = MonitorUtils.toCharArray(byteBuffer)
           val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.BROKEN_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)*/
-          shutdownThreads
-          return
-        }
-        case e: Exception => {
-          logger.error("Failed to read file, file corrupted " + fileName, e)
-          /*val buffer = MonitorUtils.toCharArray(byteBuffer)
+            finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
+            shutdownThreads
+            return
+          }
+          case e: Exception => {
+            logger.error("Failed to read file, file corrupted " + fileName, e)
+            /*val buffer = MonitorUtils.toCharArray(byteBuffer)
           val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)*/
-          shutdownThreads
-          return
+            finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
+            shutdownThreads
+            return
+          }
         }
-      }
-      if (readlen > 0) {
-        totalLen += readlen
-        len += readlen
-        val buffer = MonitorUtils.toCharArray(byteBuffer)
-        //val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, offset, isLastChunk, partMap)
-        val bytesToExtract = if(previousLeftOverBytes.length == 0) byteBuffer.slice(0, readlen) else previousLeftOverBytes ++ byteBuffer.slice(0, readlen)
-        val result = extractMessages(bytesToExtract)
-        previousLeftOverBytes = result
+        if (readlen > 0) {
+          totalLen += readlen
+          len += readlen
 
-      }
+          //val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, offset, isLastChunk, partMap)
+          val bytesToExtract = if (previousLeftOverBytes.length == 0) byteBuffer.slice(0, readlen) else previousLeftOverBytes ++ byteBuffer.slice(0, readlen)
+          val result = extractMessages(bytesToExtract)
+          previousLeftOverBytes = result
 
-    } while (readlen > 0)
-
-    if(previousLeftOverBytes.length > 0){
-      val lastMsg = previousLeftOverBytes
-      if(lastMsg.length == 1 && lastMsg(0) == message_separator){
-       //only separator is left
-      }
-      else{
-        currentMsgNum += 1
-        //println(s"*************** last message ($msgNum): " + new String(lastMsg))
-        if(currentMsgNum >= startOffset) {
-          val msgOffset = currentMsgNum // offset of the message in the file
-          val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, false, false, fileHandler, null, msgOffset)
-          messageFoundCallback(smartFileMessage, consumerContext)
         }
 
-        //a message is extracted to passed to engine, update offset in cache
-        globalOffset = globalOffset + lastMsg.length
-        //consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
+      } while (readlen > 0)
 
+      if (previousLeftOverBytes.length > 0) {
+        val lastMsg = previousLeftOverBytes
+        if (lastMsg.length == 1 && lastMsg(0) == message_separator) {
+          //only separator is left
+        }
+        else {
+          currentMsgNum += 1
+          //println(s"*************** last message ($msgNum): " + new String(lastMsg))
+          if (currentMsgNum >= startOffset) {
+            val msgOffset = currentMsgNum // offset of the message in the file
+            val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, false, false, fileHandler, null, msgOffset)
+            messageFoundCallback(smartFileMessage, consumerContext)
+          }
+
+          //a message is extracted to passed to engine, update offset in cache
+          globalOffset = globalOffset + lastMsg.length
+          //consumerContext.envContext.saveConfigInClusterCache(consumerContext.fileOffsetCacheKey, globalOffset.toString.getBytes)
+
+        }
+      }
+    }
+    catch {
+      case ioe: IOException => {
+        logger.error("SMART FILE CONSUMER: Exception while accessing the file for processing " + fileName, ioe)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
+        shutdownThreads
+        return
       }
     }
 
     // Done with this file... mark is as closed
     try {
       // markFileAsFinished(fileName)
-
       if (fileHandler != null) fileHandler.close
-
-      if(finishCallback != null)
-        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_FINISHED)
       //bis = null
 
     } catch {
       case ioe: IOException => {
-        logger.error("SMART FILE CONSUMER: Exception while accessing the file for processing " + fileName, ioe)
+        logger.error("SMART FILE CONSUMER: Exception while closing file " + fileName, ioe)
       }
     }
-
     finally{
+      if(finishCallback != null)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_FINISHED)
       shutdownThreads()
     }
 
