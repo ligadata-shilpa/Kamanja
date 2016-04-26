@@ -269,7 +269,7 @@ trait DataStore extends DataStoreOperations with AdaptersSerializeDeserializers 
   }
 
   override def getComponentSimpleStats: String = {
-    ""
+    "Storage/"+getAdapterName+"/evtCnt" + "->" + "("+0 + ":" + 0 +")"
   }
 
   def beginTx(): Transaction

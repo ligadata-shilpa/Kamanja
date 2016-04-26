@@ -149,6 +149,7 @@ Usage:
             [--preRequisitesCheckOnly]
             [--externalJarsDir <external jars directory to be copied to installation lib/application>]
             [--tenantId <a tenantId is applied to all metadata objects>]
+            [--adapterMessageBindings <a json file that contains adapter message bindings>]
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -190,6 +191,7 @@ Usage:
             Processing stops after the checks; installation and upgrade are not done.
         [--externalJarsDir <external jars directory to be copied to installation lib/application] External jars to be copied while installing/upgrading new package.
         [--tenantId <Tenant Id to be applied to all the meta data objects being migrated.
+        [--adapterMessageBindings <a json file that contains the adapter-message-binding definitions.
 
     The ClusterInstallerDriver-1.4.0 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
     or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
@@ -336,6 +338,8 @@ Usage:
           nextOption(map ++ Map('externalJarsDir -> value), tail)
         case "--tenantId" :: value :: tail =>
           nextOption(map ++ Map('tenantId -> value), tail)
+        case "--adapterMessageBindings" :: value :: tail =>
+          nextOption(map ++ Map('adapterMessageBindings -> value), tail)
         case "--version" :: tail =>
           nextOption(map ++ Map('version -> "true"), tail)
         case option :: tail =>
@@ -377,6 +381,7 @@ Usage:
     val preRequisitesCheckOnly: Boolean = if (options.contains('preRequisitesCheckOnly)) options.apply('preRequisitesCheckOnly) == "true" else false
     val externalJarsDir_opt: String = if (options.contains('externalJarsDir)) options.apply('externalJarsDir) else null
     val tenantId_opt: String = if (options.contains('tenantId)) options.apply('tenantId) else null
+    val adapterMessageBindings_opt: String = if (options.contains('adapterMessageBindings)) options.apply('adapterMessageBindings) else null
 
     val toKamanja: String = "1.4"
 
@@ -719,9 +724,24 @@ Try again.
             ""
           }
 
+        if (upgrade && (tenantId_opt == null || tenantId_opt.trim.size == 0)) {
+          printAndLogError("For upgrade, tenantid is must.", log)
+          printAndLogDebug(usage, log)
+          closeLog
+          sys.exit(1)
+        }
+
+        if (upgrade && (adapterMessageBindings_opt == null || adapterMessageBindings_opt.trim.size == 0)) {
+          printAndLogError("For upgrade, adapterMessageBindings empty/null does not import any bindings. Make sure you import them after installation.", log)
+        }
+
         val tenantId = if (tenantId_opt == null) {""} else{ tenantId_opt }
-	logger.info("tenantId => " + tenantId)
-	
+	      logger.info("tenantId => " + tenantId)
+
+
+        val adapterMessageBindings = if (adapterMessageBindings_opt == null) {""} else{ adapterMessageBindings_opt }
+        logger.info("adapterMessageBindings => " + adapterMessageBindings)
+
 
         /** Install the new installation */
         val nodes: String = ips.mkString(",")
@@ -741,7 +761,8 @@ Try again.
           , clusterId
           , metadataDataStore
           , externalJarsDir
-          , tenantId)
+          , tenantId
+          , adapterMessageBindings)
         if (installOk) {
           /** Do upgrade if necessary */
           if (upgrade) {
@@ -760,7 +781,8 @@ Try again.
               , newInstallDirName
               , physicalRootDir
               , rootDirPath
-              , tenantId)
+	      , tenantId
+	      , adapterMessageBindings)
             printAndLogDebug("Migration preparation " + (if (migratePreparationOk) "Succeeded" else "Failed"), log)
             if (!migratePreparationOk) {
               printAndLogError(s"Some thing failed to prepare migration configuration. The parameters for the migration may be incorrect... aborting installation", log)
@@ -1441,7 +1463,8 @@ Try again.
                      , clusterId: String
                      , metadataDataStore: String
                      , externalJarsDir: String
-                     , tenantId: String): Boolean = {
+                     , tenantId: String
+                     , adapterMessageBindings: String): Boolean = {
 
     val parentPath: String = rootDirPath.split('/').dropRight(1).mkString("/")
 
@@ -1474,7 +1497,14 @@ Try again.
     } else {
       ""
     }
-    val installCmd: Seq[String] = Seq("bash", "-c", s"$kamanjaClusterInstallPath --ClusterId '$clusterId' --WorkingDir '$workDir' --MetadataAPIConfig '$apiConfigPath' --NodeConfigPath '$nodeConfigPath' --TarballPath '$tarballPath' --ipAddrs '$ipDataFile' --ipIdTargPaths '$ipIdCfgTargDataFile' --ipPathPairs '$ipPathDataFile' --priorInstallDirPath '$priorInstallDirPath' --newInstallDirPath '$newInstallDirPath' --installVerificationFile '$verifyFilePath' $externalJarsDirOptStr $tenantIdOptStr")
+
+    val adapterMessageBindingsOptStr = if (adapterMessageBindings != null && adapterMessageBindings.nonEmpty) {
+      s" --adapterMessageBindings '$adapterMessageBindings' "
+    } else {
+      ""
+    }
+
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$kamanjaClusterInstallPath --ClusterId '$clusterId' --WorkingDir '$workDir' --MetadataAPIConfig '$apiConfigPath' --NodeConfigPath '$nodeConfigPath' --TarballPath '$tarballPath' --ipAddrs '$ipDataFile' --ipIdTargPaths '$ipIdCfgTargDataFile' --ipPathPairs '$ipPathDataFile' --priorInstallDirPath '$priorInstallDirPath' --newInstallDirPath '$newInstallDirPath' --installVerificationFile '$verifyFilePath' $externalJarsDirOptStr $tenantIdOptStr $adapterMessageBindingsOptStr")
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
@@ -1534,7 +1564,8 @@ Try again.
                           , newInstallDirName: String
                           , physicalRootDir: String
                           , rootDirPath: String
-			  , tenantId: String): Boolean = {
+			  , tenantId: String
+			  , adapterMessageBindings: String): Boolean = {
 
     val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.4" else if (fromKamanja == "1.2") "1.2=>1.4" else if (fromKamanja == "1.3") "1.3=>1.4" else "hmmm"
 
@@ -1561,6 +1592,7 @@ Try again.
           , physicalRootDir
           , rootDirPath
           , tenantId
+          , adapterMessageBindings
         )
         migratePending = true
         migrateConfig = migrateConfigJSON
@@ -1593,6 +1625,7 @@ Try again.
           , physicalRootDir
           , rootDirPath
           , tenantId
+          , adapterMessageBindings
         )
         migratePending = true
         migrateConfig = migrateConfigJSON
@@ -1617,6 +1650,7 @@ Try again.
           , physicalRootDir
           , rootDirPath
           , tenantId
+          , adapterMessageBindings
         )
         migratePending = true
         migrateConfig = migrateConfigJSON
@@ -1684,6 +1718,7 @@ Try again.
                             , physicalRootDir: String
                             , rootDirPath: String
 			    , tenantId: String
+			    , adapterMessageBindings: String
                            ): String = {
 
     val template: String = Source.fromFile(migrateConfigFilePath).mkString
@@ -1724,7 +1759,8 @@ Try again.
       , "{ScalaFromVersion}" -> scalaFromVersion
       , "{ScalaToVersion}" -> scalaToVersion
       , "{UnhandledMetadataDumpDir}" -> unhandledMetadataDumpDir
-      , "{TenantId}" -> tenantId)
+      , "{TenantId}" -> tenantId
+      , "{AdapterMessageBindings}" -> adapterMessageBindings)
 
     val substitutionMap: Map[String, String] = subPairs.toMap
     val varSub = new MapSubstitution(template, substitutionMap, logger, log)

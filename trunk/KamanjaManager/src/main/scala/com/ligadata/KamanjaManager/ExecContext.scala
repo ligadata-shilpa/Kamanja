@@ -577,7 +577,7 @@ object PostMessageExecutionQueue {
   private var isInit = false
   private val msgsQueue = scala.collection.mutable.Queue[ContainerInterface]()
   private val msgQLock = new Object()
-  private val processMsgs: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(1)
+  private var processMsgs: ExecutorService = null
   private var execCtxt: ExecContext = null
 
   // Passing empty values
@@ -652,6 +652,7 @@ object PostMessageExecutionQueue {
     val curPartitionKey: PartitionUniqueRecordKey = new PostMsgUniqRecKey
     execCtxt = ExecContextFactoryImpl.CreateExecContext(input, curPartitionKey, nodeCtxt)
     nodeContext = nodeCtxt
+    processMsgs = scala.actors.threadpool.Executors.newFixedThreadPool(1)
 
 //
 //
@@ -700,7 +701,9 @@ object PostMessageExecutionQueue {
   }
 
   def shutdown(): Unit = {
-    processMsgs.shutdownNow()
+    if (processMsgs != null)
+      processMsgs.shutdownNow()
+    processMsgs = null
     //BUGBUG:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
     //FIXME:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
   }

@@ -104,6 +104,10 @@ object MetadataLoad {
         List(("system", "msgid" , "system", "long", false, null),
           ("system", "timeoferrorepochms" , "system", "long", false, null),
           ("system", "msgcontent" , "system", "string", false, null),
+          ("system", "msgadapterkey" , "system", "string", false, null),
+          ("system", "msgadaptervalue" , "system", "string", false, null),
+          ("system", "sourceadapter" , "system", "string", false, null),
+          ("system", "deserializer" , "system", "string", false, null),
           ("system", "errordetail" , "system", "string", false, null)),
         1000004, "", 1000004) // Assigned SchemaId as 1000005. Never change this for this message
 

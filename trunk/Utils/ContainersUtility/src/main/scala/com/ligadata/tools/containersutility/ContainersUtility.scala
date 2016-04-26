@@ -23,6 +23,7 @@ trait LogTrait {
   val logger = LogManager.getLogger(loggerName)
 }
 
+case class containeropt(begintime: Option[String], endtime: Option[String], keys: Option[Array[Array[String]]])
 case class container(begintime: String, endtime: String, keys: Array[Array[String]])
 
 object ContainersUtility extends App with LogTrait {
@@ -99,7 +100,17 @@ Sample uses:
     val parsedKey = parse(filterFile)
     var containerObj:List[container]= null
     if (parsedKey != null) {
-      containerObj = parsedKey.extract[List[container]]
+      val optContainerObj = parsedKey.extract[List[containeropt]]
+      containerObj = optContainerObj.map(c => {
+        if (c.begintime == None && c.endtime == None && c.keys == None) {
+          logger.error("you should pass time range or key(s) or both")
+          sys.exit(1)
+        }
+        val bt = if (c.begintime != None) c.begintime.get else Long.MinValue.toString
+        val et = if (c.endtime != None) c.endtime.get else Long.MaxValue.toString
+        val keys = if (c.keys != None) c.keys.get else Array[Array[String]]()
+        container(bt, et, keys)
+      })
     } else if(!operation.equalsIgnoreCase("truncate")){
       logger.error("you should pass a filter file for select and delete operation")
     }
@@ -116,11 +127,11 @@ Sample uses:
       val (loadConfigs, failStr) = Utils.loadConfiguration(cfgfile.toString, true)
       if (failStr != null && failStr.size > 0) {
         logger.error(failStr)
-        return
+        sys.exit(1)
       }
       if (loadConfigs == null) {
         logger.error("Failed to load configurations from configuration file")
-        return
+        sys.exit(1)
       }
 
       containersUtilityConfiguration.configFile = cfgfile.toString
