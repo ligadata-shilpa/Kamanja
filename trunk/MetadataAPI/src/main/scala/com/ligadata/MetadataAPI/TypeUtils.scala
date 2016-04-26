@@ -180,19 +180,29 @@ object TypeUtils {
     val dispkey = typeNameSpace + "." + typeName + "." + MdMgr.Pad0s2Version(version)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.DELETEOBJECT, AuditConstants.TYPE, AuditConstants.SUCCESS, "", key)
     try {
+      logger.debug("typeNameSpace: "+typeNameSpace+" typeName: "+typeName)
       val typ = MdMgr.GetMdMgr.Type(typeNameSpace, typeName, version, true)
+      logger.debug("Typ is: "+typ)
+
       typ match {
         case None =>
           None
           logger.debug("Type " + dispkey + " is not found in the cache ")
           var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveType", null, ErrorCodeConstants.Remove_Type_Not_Found + ":" + dispkey)
           apiResult.toString()
-        case Some(ts) =>
-          MetadataAPIImpl.DeleteObject(ts.asInstanceOf[BaseElemDef])
-          ts.tranId = MetadataAPIImpl.GetNewTranId
-          MetadataAPIImpl.UpdateTranId(Array(ts))
-          var apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveType", null, ErrorCodeConstants.Remove_Type_Successful + ":" + dispkey)
+        case Some(ts) =>{
+          val cache_type=ts.asInstanceOf[BaseElemDef].getClass().getName().split("\\.").last
+          logger.debug("Deleting type "+cache_type)
+          //ArrayTypeDef & MapTypeDef cannot be serialized
+          if(!(cache_type=="StructTypeDef" || cache_type=="MappedMsgTypeDef")){
+            MetadataAPIImpl.DeleteObject(ts.asInstanceOf[BaseElemDef])
+            ts.tranId = MetadataAPIImpl.GetNewTranId
+            MetadataAPIImpl.UpdateTranId(Array(ts))
+
+          }
+          var apiResult=new ApiResult(ErrorCodeConstants.Success, "RemoveType", null, ErrorCodeConstants.Remove_Type_Successful + ":" + dispkey)
           apiResult.toString()
+        }
       }
     } catch {
       case e: ObjectNolongerExistsException => {
