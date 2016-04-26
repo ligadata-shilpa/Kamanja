@@ -149,6 +149,7 @@ Usage:
             [--preRequisitesCheckOnly]
             [--externalJarsDir <external jars directory to be copied to installation lib/application>]
             [--tenantId <a tenantId is applied to all metadata objects>]
+            [--adapterMessageBindings <a json file that contains adapter message bindings>]
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -749,7 +750,7 @@ Try again.
           , clusterId
           , metadataDataStore
           , externalJarsDir
-          , tenantId,
+          , tenantId
           , adapterMessageBindings)
         if (installOk) {
           /** Do upgrade if necessary */
@@ -769,7 +770,7 @@ Try again.
               , newInstallDirName
               , physicalRootDir
               , rootDirPath
-	      , tenantId,
+	      , tenantId
 	      , adapterMessageBindings)
             printAndLogDebug("Migration preparation " + (if (migratePreparationOk) "Succeeded" else "Failed"), log)
             if (!migratePreparationOk) {
