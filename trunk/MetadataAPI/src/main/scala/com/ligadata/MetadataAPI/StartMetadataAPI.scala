@@ -54,13 +54,15 @@ object StartMetadataAPI {
   val TENANTID = "tenantid"
   val INPUTLOC = "inputlocation"
   var expectDep = false
-  var expectOutputMsg = false
   var expectRemoveParm = false
   var depName: String = ""
   var parmName: String = ""
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
+  val CONTAINERNAME="CONTAINERNAME"
+  val TYPENAME="TYPENAME"
+  val FUNCTIONNAME="FUNCTIONNAME"
 
   /** AdapterMessageBinding tags */
   val FROMFILE="FROMFILE"
@@ -87,7 +89,6 @@ object StartMetadataAPI {
   var expectAdapterFilter = false
   var expectMessageFilter = false
   var expectSerializerFilter = false
-  var isRemoveAdded = false
   var varmap: scala.collection.mutable.Map[String,String] = scala.collection.mutable.Map[String,String]()
   var expectTid: Boolean = false
   var expectMDep: Boolean = false
@@ -117,7 +118,7 @@ object StartMetadataAPI {
             extraCmdArgs(INPUTLOC) = arg
             if (expectBindingFromFile) { /** the json test above can prevent the ordinary catch of the name below */
               extraCmdArgs(FROMFILE) = extraCmdArgs.getOrElse(INPUTLOC,null)
-                expectBindingFromFile = false
+              expectBindingFromFile = false
             }
 
           } else if (arg.endsWith(".properties")) {
@@ -137,8 +138,6 @@ object StartMetadataAPI {
                       expectModelVer = true
                   } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
                       expectMessageName = true
-                  } else if (arg.equalsIgnoreCase(OUTPUTMSG)) {
-                      expectOutputMsg = true
                   } else if (arg.equalsIgnoreCase(KEY)) {
                       expectRemoveBindingKey = true
                   } else if (arg.equalsIgnoreCase(FROMFILE)) {
@@ -178,16 +177,10 @@ object StartMetadataAPI {
                           expectMessageName = false
                           argVar = "" // Make sure we dont add to the routing command
                       }
-                      if (removeCmdFound && expectRemoveBindingKey) {
-                          removeCmdFound = false
+                      if (expectRemoveBindingKey) {
                           expectRemoveBindingKey = false
                           extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
                           argVar = "" // Make sure we dont add to the routing command
-                      } else {
-                        if (removeCmdFound && !isRemoveAdded) {
-                          action += "remove"
-                          isRemoveAdded = true
-                        }
                       }
                       if (expectBindingFromString) {
                           extraCmdArgs(FROMSTRING) = arg
@@ -214,10 +207,43 @@ object StartMetadataAPI {
                           expectSerializerFilter = false
                           argVar = "" // Make sure we dont add to the routing command
                       }
-                      if (expectOutputMsg) {
-                          extraCmdArgs(OUTPUTMSG) = arg
-                          logger.debug("Found output message definition " + arg + " in the command ")
-                          expectOutputMsg = false
+
+                      /**
+                        * FIXME:
+                        * FIXME: The removes have positional keys... right after the command.  Downside is that
+                        * the tenant id collection uses a named style, which means that it MUST follow the
+                        * object name to be removed.  When this thing gets reworked, the object key should also
+                        * have a name like "key" as is used with the REMOVEADAPTERMESSAGEBINDING. The name/value pairs can
+                        * then be expressed in any order to the liking of the user.
+                        */
+                      if (action.equalsIgnoreCase("removemodel")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(MODELNAME)) extraCmdArgs(MODELNAME) = arg
+                          argVar = "" // Make sure we dont add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("getmessage")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(MESSAGENAME)) extraCmdArgs(MESSAGENAME) = arg
+                          argVar = "" // Make sure we dont add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("removemessage")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(MESSAGENAME)) extraCmdArgs(MESSAGENAME) = arg
+                          argVar = "" // Make sure we dont add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("removecontainer")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(CONTAINERNAME)) extraCmdArgs(CONTAINERNAME) = arg
+                          argVar = "" // Make sure we dont add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("removetype")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(TYPENAME)) extraCmdArgs(TYPENAME) = arg
+                          argVar = "" // Make sure we dont add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("removefunction")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(FUNCTIONNAME)) extraCmdArgs(FUNCTIONNAME) = arg
                           argVar = "" // Make sure we dont add to the routing command
                       }
 
@@ -306,18 +332,20 @@ object StartMetadataAPI {
         case Action.ADDMESSAGE => response = MessageService.addMessage(input, tid)
         case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, tid)
         case Action.REMOVEMESSAGE => {
-          if (param.length == 0)
+          val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
+          if (msgName.length == 0)
             response = MessageService.removeMessage()
           else
-            response = MessageService.removeMessage(param)
+            response = MessageService.removeMessage(msgName)
         }
 
         case Action.GETALLMESSAGES => response = MessageService.getAllMessages
         case Action.GETMESSAGE => {
-          if (param.length == 0)
+          val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
+          if (msgName.length == 0)
             response = MessageService.getMessage()
           else
-            response = MessageService.getMessage(param)
+            response = MessageService.getMessage(msgName)
         }
 
         //model management
@@ -355,10 +383,11 @@ object StartMetadataAPI {
         }
 
         case Action.REMOVEMODEL => {
-          if (param.length == 0)
+          val modelName : String = extraCmdArgs.getOrElse(MODELNAME, "")
+          if (modelName.length == 0)
             response = ModelService.removeModel("", userId)
           else
-            response = ModelService.removeModel(param)
+            response = ModelService.removeModel(modelName)
         }
 
         case Action.ACTIVATEMODEL =>
@@ -419,12 +448,12 @@ object StartMetadataAPI {
         }
 
         case Action.GETALLCONTAINERS => response = ContainerService.getAllContainers
-
         case Action.REMOVECONTAINER => {
-          if (param.length == 0)
+          val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
+          if (containerName.length == 0)
             response = ContainerService.removeContainer()
           else
-            response = ContainerService.removeContainer(param)
+            response = ContainerService.removeContainer(containerName)
         }
 
         //Type management
@@ -438,10 +467,11 @@ object StartMetadataAPI {
 
         case Action.GETALLTYPES => response = TypeService.getAllTypes
         case Action.REMOVETYPE => response = {
-          if (param.length == 0)
+          val typeName : String = extraCmdArgs.getOrElse(TYPENAME,"")
+          if (typeName.length == 0)
             TypeService.removeType()
           else
-            TypeService.removeType(param)
+            TypeService.removeType(typeName)
 
         }
         case Action.LOADTYPESFROMAFILE => response = TypeService.loadTypesFromAFile(input)
@@ -457,10 +487,11 @@ object StartMetadataAPI {
 
         }
         case Action.REMOVEFUNCTION => response = {
+          val fcnName : String = extraCmdArgs.getOrElse(FUNCTIONNAME,"")
           if (param.length == 0)
             FunctionService.removeFunction()
           else
-            FunctionService.removeFunction(param)
+            FunctionService.removeFunction(fcnName)
         }
 
         case Action.UPDATEFUNCTION => response = FunctionService.updateFunction(input)
