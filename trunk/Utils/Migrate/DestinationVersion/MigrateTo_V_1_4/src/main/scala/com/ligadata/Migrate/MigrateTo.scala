@@ -44,6 +44,8 @@ import scala.collection.mutable.{HashMap, ArrayBuffer}
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
 import com.ligadata.Exceptions._
 
+case class AdapterUniqueValueDes_1_3(T: Long, V: String, Out: Option[List[List[String]]]) // TransactionId, Value, Queues & Result Strings. Adapter Name, Key and Result Strings
+
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
 
 case class adapterMessageBinding(var AdapterName: String, var TypeString: String, var MessageNames: List[String], var Options: Map[String, String], var Serializer: String)
@@ -299,6 +301,12 @@ class MigrateTo_V_1_4 extends MigratableTo {
       val tmpContainerDefs = mdMgr.Containers(true, true)
       PrepareMessages(tmpMsgDefs)
       PrepareContainers(tmpContainerDefs)
+    }
+
+    def isMsgOrContainer(msgOrContainerName: String): Boolean = {
+      if (messageContainerObjects == null) return false
+      val v = messageContainerObjects.getOrElse(msgOrContainerName.toLowerCase, null)
+      (v != null)
     }
 
     override def getInstance(msgOrContainerName: String): ContainerInterface = {
@@ -1715,8 +1723,20 @@ class MigrateTo_V_1_4 extends MigratableTo {
       throw new Exception("Not yet Initialized")
     val containersData = data.groupBy(_.containerName.toLowerCase)
     val data_list = containersData.map(kv => (kv._1, kv._2.map(d => {
+      val sendVal =
+        if (_mdObjectRes.isMsgOrContainer(d.containerName)) {
+          val container = convertDataTo1_4_x(d.containerName, d.serializername, d.data, d.timePartition, d.transactionid, d.rowid)
+          container.asInstanceOf[Any]
+        } else if (d.containerName.equalsIgnoreCase("AdapterUniqKvData")) {
+            implicit val jsonFormats: Formats = DefaultFormats
+            val uniqVal = parse(new String(d.data)).extract[AdapterUniqueValueDes_1_3]
+            uniqVal.V.asInstanceOf[Any]
+        } else {
+          d.data.asInstanceOf[Any]
+        }
+
       val container = convertDataTo1_4_x(d.containerName, d.serializername, d.data, d.timePartition, d.transactionid, d.rowid)
-      (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), "", container.asInstanceOf[Any])
+      (Key(d.timePartition, d.bucketKey, d.transactionid, d.rowid), d.serializername, sendVal)
     }))).toArray
 
     callSaveData(_tenantDsDb, data_list);
