@@ -1747,9 +1747,11 @@ class MigrateTo_V_1_4 extends MigratableTo {
           val container = convertDataTo1_4_x(d.containerName, d.serializername, d.data, d.timePartition, d.transactionid, d.rowid)
           container.asInstanceOf[Any]
         } else if (d.containerName.equalsIgnoreCase("AdapterUniqKvData")) {
+          containersData.synchronized {
             implicit val jsonFormats: Formats = DefaultFormats
             val uniqVal = parse(new String(d.data)).extract[AdapterUniqueValueDes_1_3]
             uniqVal.V.getBytes().asInstanceOf[Any]
+          }
         } else {
           d.data.asInstanceOf[Any]
         }
