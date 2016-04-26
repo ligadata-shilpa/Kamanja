@@ -54,6 +54,10 @@ object SmartFileConsumer extends InputAdapterFactory {
   val INIT_TIMEOUT = 250
   val ADAPTER_DESCRIPTION = "Smart File Consumer"
 
+  val FILE_STATUS_FINISHED = 0
+  val FILE_STATUS_NOT_FOUND = -1
+  val FILE_STATUS_NOT_COURRUPT = 22
+
   def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = new SmartFileConsumer(inputConfig, execCtxtObj, nodeContext)
 
   /*lazy val loggerName = this.getClass.getName
@@ -699,16 +703,23 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, fileToProcessName)
     //now read the file and call sendSmartFileMessageToEngin for each message, and when finished call fileMessagesExtractionFinished_Callback to update status
-    val fileMessageExtractor = new FileMessageExtractor(adapterConfig, fileHandler, offset, context, sendSmartFileMessageToEngin, fileMessagesExtractionFinished_Callback)
+    val fileMessageExtractor = new FileMessageExtractor(adapterConfig, fileHandler, offset, context,
+      sendSmartFileMessageToEngin, fileMessagesExtractionFinished_Callback)
     fileMessageExtractor.extractMessages()
   }
 
   //key: SmartFileCommunication/FileProcessing/<node>/<threadId>
   //val: file|status
-  def fileMessagesExtractionFinished_Callback(fileHandler: SmartFileHandler, context : SmartFileConsumerContext) : Unit = {
+  def fileMessagesExtractionFinished_Callback(fileHandler: SmartFileHandler, context : SmartFileConsumerContext,
+                                             status : Int) : Unit = {
 
-    LOG.debug ("SMART FILE CONSUMER - participant ({}), partition ({}) finished reading file ({})",
-      context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
+    if(status == SmartFileConsumer.FILE_STATUS_FINISHED)
+      LOG.debug ("SMART FILE CONSUMER - participant ({}), partition ({}) finished reading file ({})",
+        context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
+    else
+      LOG.debug ("SMART FILE CONSUMER - participant ({}), partition ({}) reports file not found ({})",
+        context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
+
     //set file status as finished
     val pathKey = fileProcessingPath + "/" + context.nodeId + "/" + context.partitionId
     val data = fileHandler.getFullPath + "|" + File_Processing_Status_Finished

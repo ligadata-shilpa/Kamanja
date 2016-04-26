@@ -21,7 +21,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
                            startOffset : Int,
                            consumerContext : SmartFileConsumerContext,
                            messageFoundCallback : (SmartFileMessage, SmartFileConsumerContext) => Unit,
-                           finishCallback : (SmartFileHandler, SmartFileConsumerContext) => Unit ) {
+                           finishCallback : (SmartFileHandler, SmartFileConsumerContext, Int) => Unit ) {
 
   private val maxlen: Int = adapterConfig.monitoringConfig.workerBufferSize * 1024 * 1024 //in MB
   private var message_separator : Char = adapterConfig.monitoringConfig.messageSeparator
@@ -34,34 +34,51 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
   private val extractExecutor = Executors.newFixedThreadPool(1)
   private val updatExecutor = Executors.newFixedThreadPool(1)
 
+  private val StatusUpdateInterval = 1000//ms
+
   private var finished = false
 
 
 
   def extractMessages() : Unit = {
-    //just run it in a separate thread
-    val extractorThread = new Runnable() {
-      override def run(): Unit = {
-        readBytesChunksFromFile()
-      }
+
+    if(!fileHandler.exists()){
+      finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_NOT_FOUND)
     }
-    extractExecutor.execute(extractorThread)
 
-    //keep updating status so leader knows participant is working fine
-    val statusUpdateThread = new Runnable() {
-      override def run(): Unit = {
-        while(!finished){
-          //put filename~offset~timestamp
-          val data = fileHandler.getFullPath + "~" + globalOffset + "~" + System.nanoTime
-          logger.debug("SMART FILE CONSUMER - Node {} with partition {} is updating status to value {}",
-            consumerContext.nodeId, consumerContext.partitionId.toString, data)
-          consumerContext.envContext.saveConfigInClusterCache(consumerContext.statusUpdateCacheKey, data.getBytes)
-
-          Thread.sleep(consumerContext.statusUpdateInterval)
+    else {
+      //just run it in a separate thread
+      val extractorThread = new Runnable() {
+        override def run(): Unit = {
+          readBytesChunksFromFile()
         }
       }
+      extractExecutor.execute(extractorThread)
+
+      //keep updating status so leader knows participant is working fine
+      val statusUpdateThread = new Runnable() {
+        override def run(): Unit = {
+          try {
+            while (!finished) {
+              //put filename~offset~timestamp
+              val data = fileHandler.getFullPath + "~" + globalOffset + "~" + System.nanoTime
+              logger.debug("SMART FILE CONSUMER - Node {} with partition {} is updating status to value {}",
+                consumerContext.nodeId, consumerContext.partitionId.toString, data)
+              consumerContext.envContext.saveConfigInClusterCache(consumerContext.statusUpdateCacheKey, data.getBytes)
+
+
+              Thread.sleep(StatusUpdateInterval)
+
+            }
+          }
+          catch {
+            case ie: InterruptedException => {}
+            case e: Exception => logger.error("", e)
+          }
+        }
+      }
+      updatExecutor.execute(statusUpdateThread)
     }
-    updatExecutor.execute(statusUpdateThread)
   }
 
   private def readBytesChunksFromFile(): Unit = {
@@ -93,11 +110,19 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         logger.error("SMART_FILE_CONSUMER Exception accessing the file for processing the file - File is missing",fio)
         //markFileProcessingEnd(fileName)
         //fileCacheRemove(fileName)
+        shutdownThreads
         return
       }
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER Exception accessing the file for processing ",fio)
         //setFileState(fileName,FileProcessor.MISSING)
+        shutdownThreads
+        return
+      }
+      case ex : Exception => {
+        logger.error("", ex)
+        shutdownThreads
+
         return
       }
     }
@@ -145,6 +170,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
           /*val buffer = MonitorUtils.toCharArray(byteBuffer)
           val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.BROKEN_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)*/
+          shutdownThreads
           return
         }
         case e: Exception => {
@@ -152,6 +178,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
           /*val buffer = MonitorUtils.toCharArray(byteBuffer)
           val GenericBufferToChunk = new BufferToChunk(readlen, byteBuffer.slice(0, readlen), chunkNumber, fileHandler, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(GenericBufferToChunk)*/
+          shutdownThreads
           return
         }
       }
@@ -196,7 +223,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
       if (fileHandler != null) fileHandler.close
 
       if(finishCallback != null)
-        finishCallback(fileHandler, consumerContext)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_FINISHED)
       //bis = null
 
     } catch {
@@ -206,11 +233,18 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     }
 
     finally{
-      finished = true
-      MonitorUtils.shutdownAndAwaitTermination(updatExecutor, "file message extracting status updator")
-      MonitorUtils.shutdownAndAwaitTermination(extractExecutor, "file message extractor")
+      shutdownThreads()
     }
 
+  }
+
+  private def shutdownThreads(): Unit ={
+    finished = true
+    logger.debug("File message Extractor - shutting down updatExecutor")
+    MonitorUtils.shutdownAndAwaitTermination(updatExecutor, "file message extracting status updator")
+
+    logger.debug("File message Extractor - shutting down extractExecutor")
+    MonitorUtils.shutdownAndAwaitTermination(extractExecutor, "file message extractor")
   }
 
   private def extractMessages(chunk : Array[Byte]) : Array[Byte] = {
