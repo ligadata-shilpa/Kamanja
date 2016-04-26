@@ -40,7 +40,8 @@ object Parts {
   val imports =
     """|import com.ligadata.KamanjaBase._
        |import com.ligadata.KvBase.TimeRange
-       |import com.ligadata.kamanja.metadata.ModelDef""".stripMargin
+       |import com.ligadata.kamanja.metadata.ModelDef
+       |import com.ligadata.runtime.Log""".stripMargin
 
   val factory =
     """|class {factoryclass.name}(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
@@ -54,6 +55,8 @@ object Parts {
   val model =
     """|class {modelclass.name}(factory: ModelInstanceFactory) extends ModelInstance(factory) {
        |  val conversion = new com.ligadata.runtime.Conversion
+       |  val log = new com.ligadata.runtime.Log(this.getClass.getName)
+       |  import log._
        |  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
        |    //
        |    {model.grok}
