@@ -992,10 +992,33 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
     }
   }
 
+  def collectVals(k: Key, v: Value, data: ArrayBuffer[(Key, Value)]): Unit = {
+    data += ((k, v))
+  }
+
+  def GetAllTableValue(containerName: String, store: DataStore): Array[(Key, Value)] = {
+    val data = ArrayBuffer[(Key, Value)]()
+    val getObjFn = (k: Key, v: Value) => {
+      collectVals(k, v, data)
+    }
+    try {
+      store.get(containerName, getObjFn)
+      data.toArray
+    } catch {
+      case e: ObjectNotFoundException => {
+        logger.debug("ObjectNotFound Exception", e)
+        throw e
+      }
+      case e: Exception => {
+        logger.debug("General Exception", e)
+        throw ObjectNotFoundException(e.getMessage(), e)
+      }
+    }
+  }
 
   // metadataElemsJson are used for dependency load
   // Callback function calls with container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
-  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], msgsAndContainers: java.util.List[String], callbackFunction: DataObjectCallBack): Unit = {
+  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], msgsAndContainers: java.util.List[String], catalogTables: java.util.List[String], callbackFunction: DataObjectCallBack): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -1064,6 +1087,23 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
                 throw new Exception("Data failed to consume")
             }
           })
+        })
+
+        // Collecting all data from catalog tables at once
+        catalogTables.toArray.foreach(msg => {
+          val tblName = msg.asInstanceOf[String]
+          val data = GetAllTableValue(tblName + backupTblSufix, _dataStore)
+          val retData = data.map(kv => {
+            val key = kv._1
+            val value = kv._2
+            val serType = value.serializerType
+            val arr = value.serializedInfo
+            if (logger.isDebugEnabled)
+              logger.debug("CatalogTablesData. containerName:%s, Key:%s, Value:%s".format(tblName, key.bucketKey.mkString(","), new String(arr)))
+            new DataFormat(tblName, key.timePartition, key.bucketKey, key.transactionId, key.rowId, serType, arr)
+          })
+          if (callbackFunction.call(retData) == false)
+            throw new Exception("Data failed to consume")
         })
       }
     } catch {

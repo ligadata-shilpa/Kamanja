@@ -355,8 +355,12 @@ public class Migrate {
         int retCode = 1;
         boolean foundError = false;
         java.util.List<String> msgsAndContainers = null;
+        java.util.List<String> catalogTables = new java.util.ArrayList<String>();
 
         try {
+            catalogTables.add("adapteruniqkvdata");
+            catalogTables.add("globalcounters");
+
             if (configuration == null) {
                 sendStatus("Found invalid configuration", "ERROR");
                 logger.error("Found invalid configuration");
@@ -615,22 +619,15 @@ public class Migrate {
                         }
                         msgsAndContainers = migrateTo.getMessagesAndContainers(metadataArr, true, excludeMetadata);
 
-                        //BUGBUG::- FIXME:- For now we are adding adapteruniqkvdata & globalcounters to msgsAndContainers.
-                        msgsAndContainers.add("adapteruniqkvdata");
-                        msgsAndContainers.add("globalcounters");
 
-/*
-                        // Adding sys catalog tables to backup
-                        String schemaName = migrateTo.getDataTableSchemaName();
-                        String tableName = "adapteruniqkvdata";
-                        TableName tInfo = new TableName(schemaName, tableName);
-                        allDataTbls.add(tInfo);
+                        for (String tblName : catalogTables) {
+                            logger.info("TableName => " + tblName);
+                            String schemaName = migrateTo.getTenantTableSchemaName();
+                            String tableName = migrateTo.getDataTableName(tblName);
+                            TableName tInfo = new TableName(schemaName, tableName);
+                            allDataTbls.add(tInfo);
+                        }
 
-                        schemaName = migrateTo.getDataTableSchemaName();
-                        tableName = "globalcounters";
-                        tInfo = new TableName(schemaName, tableName);
-                        allDataTbls.add(tInfo);
-*/
                         for (String msgName : msgsAndContainers) {
                             logger.info("Message => " + msgName);
                             String schemaName = migrateTo.getTenantTableSchemaName();
@@ -915,8 +912,7 @@ public class Migrate {
                     DataCallback dataCallback = new DataCallback(migrateTo,
                             collectedData, kSaveThreshold, srcVer, dstVer, executor);
 
-                    migrateFrom.getAllDataObjs(backupTblSufix, metadataArr, msgsAndContainers,
-                            dataCallback);
+                    migrateFrom.getAllDataObjs(backupTblSufix, metadataArr, msgsAndContainers, catalogTables, dataCallback);
 
                     if (collectedData.size() > 0) {
                         String msg = String.format("Adding final batch of Migrated data with " + collectedData.size() + " rows to write");
