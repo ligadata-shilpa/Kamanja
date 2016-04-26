@@ -28,7 +28,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
-  private var msgNum = 0
+  private var currentMsgNum = -1 // to start from zero
   private var globalOffset = 0
 
   private val extractExecutor = Executors.newFixedThreadPool(1)
@@ -61,7 +61,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
           try {
             while (!finished) {
               //put filename~offset~timestamp
-              val data = fileHandler.getFullPath + "~" + globalOffset + "~" + System.nanoTime
+              val data = fileHandler.getFullPath + "~" + currentMsgNum + "~" + System.nanoTime
               logger.debug("SMART FILE CONSUMER - Node {} with partition {} is updating status to value {}",
                 consumerContext.nodeId, consumerContext.partitionId.toString, data)
               consumerContext.envContext.saveConfigInClusterCache(consumerContext.statusUpdateCacheKey, data.getBytes)
@@ -201,10 +201,10 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
        //only separator is left
       }
       else{
-        msgNum += 1
+        currentMsgNum += 1
         //println(s"*************** last message ($msgNum): " + new String(lastMsg))
-        if(globalOffset >= startOffset) {
-          val msgOffset = globalOffset // offset of the message in the file
+        if(currentMsgNum >= startOffset) {
+          val msgOffset = currentMsgNum // offset of the message in the file
           val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, false, false, fileHandler, null, msgOffset)
           messageFoundCallback(smartFileMessage, consumerContext)
         }
@@ -256,10 +256,10 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
       if (x.asInstanceOf[Char] == message_separator) {
         val newMsg: Array[Byte] = chunk.slice(prevIndx, indx)
         if(newMsg.length > 0) {
-          msgNum += 1
+          currentMsgNum += 1
           //println(s"*************** new message ($msgNum): " + new String(newMsg))
-          if(globalOffset >= startOffset) {//send messages that are only after startOffset
-            val msgOffset = globalOffset // offset of the message in the file
+          if(currentMsgNum >= startOffset) {//send messages that are only after startOffset
+            val msgOffset = currentMsgNum // offset of the message in the file
             val smartFileMessage = new SmartFileMessage(newMsg, msgOffset, false, false, fileHandler, null, msgOffset)
             messageFoundCallback(smartFileMessage, consumerContext)
 
