@@ -47,8 +47,9 @@ import java.text.SimpleDateFormat
 
 class ExcludeLogger extends ExclusionStrategy {
   override def shouldSkipField(f: FieldAttributes): Boolean = {
-    val exclude = f.getName().endsWith("LOG")
-    //println(f.getName() + " exclude " + exclude)
+    //val exclude = f.getName().endsWith("LOG")
+    val exclude = f.getDeclaredClass().getName().equals("org.apache.log4j.Logger")
+    //println("name is " + f.getName() + "type is " + f.getDeclaredClass().getName() + " exclude " + exclude)
     return exclude
   }
   override def shouldSkipClass(c: Class[_]): Boolean = {
