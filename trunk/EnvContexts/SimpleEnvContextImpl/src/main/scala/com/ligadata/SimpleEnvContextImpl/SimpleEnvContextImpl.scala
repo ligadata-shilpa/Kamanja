@@ -3117,6 +3117,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     WriteLock(_zkListeners_reent_lock)
     try {
+      logger.warn("Creating ZkPathListener _zkConnectString:%s, znodePath:%s, _zkSessionTimeoutMs:%d, _zkConnectionTimeoutMs:%d".format(_zkConnectString, znodePath, _zkSessionTimeoutMs, _zkConnectionTimeoutMs))
       val zkDataChangeNodeListener = new ZooKeeperListener
       zkDataChangeNodeListener.CreateListener(_zkConnectString, znodePath, ListenCallback, _zkSessionTimeoutMs, _zkConnectionTimeoutMs)
       _zkListeners += zkDataChangeNodeListener
@@ -3135,6 +3136,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
 
     WriteLock(_zkListeners_reent_lock)
     try {
+      logger.warn("Creating ZkPathChildrenCacheListener _zkConnectString:%s, znodePath:%s, _zkSessionTimeoutMs:%d, _zkConnectionTimeoutMs:%d".format(_zkConnectString, znodePath, _zkSessionTimeoutMs, _zkConnectionTimeoutMs))
       val zkDataChangeNodeListener = new ZooKeeperListener
       zkDataChangeNodeListener.CreatePathChildrenCacheListener(_zkConnectString, znodePath, false, ListenCallback, _zkSessionTimeoutMs, _zkConnectionTimeoutMs)
       _zkListeners += zkDataChangeNodeListener

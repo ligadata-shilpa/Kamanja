@@ -3,6 +3,7 @@ package com.ligadata.InputAdapters
 import java.io.IOException
 
 import com.ligadata.AdaptersConfiguration.SmartFileAdapterConfiguration
+import com.ligadata.Exceptions.KamanjaException
 import org.apache.logging.log4j.LogManager
 
 import scala.actors.threadpool.{Executors, ExecutorService}
@@ -14,8 +15,7 @@ import scala.collection.mutable.ArrayBuffer
   * @param newFileDetectedCallback callback to notify leader whenever a file is detected
   */
 class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
-                        newFileDetectedCallback :(String) => Unit,
-                       initialFiles :  Array[(String, Int, String, Int)]) {
+                        newFileDetectedCallback :(String) => Unit) {
 
   val NOT_RECOVERY_SITUATION = -1
 
@@ -38,6 +38,24 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
+  private var initialFiles :  Array[(String, Int, String, Int)] = null
+
+  def init(files :  Array[(String, Int, String, Int)]): Unit ={
+    initialFiles = files
+  }
+
+  def checkConfigDirsAccessibility(): Unit ={
+    adapterConfig.monitoringConfig.locations.foreach(dir => {
+      val handler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, dir)
+      if(!handler.isAccessible)
+        throw new KamanjaException("Smart File Consumer - Dir to watch " + dir + " is not accessible. It must be readable and writable", null)
+    })
+
+    val handler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, adapterConfig.monitoringConfig.targetMoveDir)
+    if(!handler.isAccessible)
+      throw new KamanjaException("Smart File Consumer - Target Dir " + adapterConfig.monitoringConfig.targetMoveDir + " is not accessible. It must be readable and writable", null)
+  }
+
   def startMonitoring(): Unit ={
     smartFileMonitor = SmartFileMonitorFactory.createSmartFileMonitor(adapterConfig.Name, adapterConfig._type, fileDetectedCallback)
     smartFileMonitor.init(adapterConfig.adapterSpecificCfg)
@@ -57,7 +75,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   }
 
   def stopMonitoring(): Unit ={
-    smartFileMonitor.shutdown()
+    if(smartFileMonitor != null)
+      smartFileMonitor.shutdown()
 
     keepMontoringBufferingFiles = false
     globalFileMonitorService.shutdown()

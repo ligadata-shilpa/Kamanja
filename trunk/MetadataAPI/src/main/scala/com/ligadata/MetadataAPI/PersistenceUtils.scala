@@ -252,8 +252,9 @@ object PersistenceUtils {
     * database connection( which itself can be mean different things depending on the type
     * of datastore, such as cassandra, hbase, etc..)
     *
-    * @param objList
-    * @param typeName
+    * @param objList the array of BaseElemDef to persist
+    * @param typeName the container name in the storage that will receive these objects
+    *
     */
   def SaveObjectList(objList: Array[BaseElemDef], typeName: String) {
 
@@ -264,7 +265,7 @@ object PersistenceUtils {
     try {
       var i = 0;
       objList.foreach(obj => {
-        obj.tranId = tranId
+        obj.tranId = tranId /** NOTE: SAME xid for each key saved */
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
         var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes //serializer.SerializeObjectToByteArray(obj)
         keyList(i) = key
@@ -287,7 +288,7 @@ object PersistenceUtils {
     * database connection( which itself can be mean different things depending on the type
     * of datastore, such as cassandra, hbase, etc..)
     *
-    * @param objList
+    * @param objList the array of BaseElemDef to persist
     */
   def SaveObjectList(objList: Array[BaseElemDef]) {
     logger.debug("Save " + objList.length + " objects in a single transaction ")
@@ -297,12 +298,13 @@ object PersistenceUtils {
     try {
       var i = 0;
       objList.foreach(obj => {
-        obj.tranId = tranId
+        obj.tranId = tranId  /** NOTE: SAME xid for each key saved */
         val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
         var value = MetadataAPISerialization.serializeObjectToJson(obj).getBytes//serializer.SerializeObjectToByteArray(obj)
         val elemTyp = getMdElemTypeName(obj)
 
-        val k = Key(storageDefaultTime, Array(key), storageDefaultTxnId, 0)
+        // Use the same tranId for each key as well
+        val k = Key(storageDefaultTime, Array(key), tranId, 0)
 
         val ab = saveDataMap.getOrElse(elemTyp, null)
         if (ab != null) {
@@ -352,8 +354,7 @@ object PersistenceUtils {
   def SaveSchemaInformation(schemaId: Int, nameSpace: String, name: String, version: Long, physicalName: String, avroSchema: String, containerType: String): Unit = {
     val (containerName, store) = GetContainerNameAndDataStore("AvroSchemaInfo")
 
-    val json = "AvroSchemaInfo" ->
-      ("SchemaId" -> schemaId) ~
+    val json = ("SchemaId" -> schemaId) ~
         ("NameSpace" -> nameSpace) ~
         ("Name" -> name) ~
         ("Version" -> version) ~
@@ -373,6 +374,32 @@ object PersistenceUtils {
       case e: Exception => {
         logger.error("Failed to insert/update object for schemaid: " + schemaId, e)
         throw UpdateStoreFailedException("Failed to insert/update object for schemaid: " + schemaId, e)
+      }
+    }
+  }
+
+  def SaveElementInformation(elementId: Long, typ: String, nameSpace: String, name: String): Unit = {
+    val (containerName, store) = GetContainerNameAndDataStore("ElementInfo")
+
+    val fullName = (nameSpace.trim + "." + name.trim).toLowerCase
+
+    val json = 
+      ("ElementId" -> elementId) ~
+        ("Type" -> typ.toLowerCase) ~
+        ("Name" -> fullName)
+
+    val outputJson = compact(render(json))
+
+    var storeObjects = new Array[(Key, String, Any)](1)
+    val k = Key(storageDefaultTime, Array(elementId.toString), storageDefaultTxnId, 0)
+    storeObjects(0) = (k, "JSON", outputJson.getBytes())
+
+    try {
+      store.put(null, Array((containerName, storeObjects)))
+    } catch {
+      case e: Exception => {
+        logger.error("Failed to insert/update object for ElementId: " + elementId, e)
+        throw UpdateStoreFailedException("Failed to insert/update object for ElementId: " + elementId, e)
       }
     }
   }
@@ -730,6 +757,7 @@ object PersistenceUtils {
     */
   def DeleteObject(bucketKeyStr: String, typeName: String) {
     val (containerName, store) = GetContainerNameAndDataStore(typeName)
+
     store.del(containerName, Array(Key(storageDefaultTime, Array(bucketKeyStr), storageDefaultTxnId, 0)))
   }
 
@@ -817,7 +845,7 @@ object PersistenceUtils {
     try {
       logger.debug("Creating MetadataTables")
       if (mainDS != null) {
-	val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadatacounters","avroschemainfo")
+	val metadataTables = Array("metadata_objects","jar_store","config_objects","model_config_objects","transaction_id","metadatacounters","avroschemainfo","elementinfo")
         mainDS.CreateMetadataContainer(metadataTables)
         logger.debug("Created Metadata Tables")
       }

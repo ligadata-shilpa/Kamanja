@@ -454,6 +454,9 @@ object ConfigUtils {
      */
   def RemoveConfig(cfgStr: String, userid: Option[String], cobjects: String): String = {
     var keyList = new Array[String](0)
+      var clusterNotifications: ArrayBuffer[BaseElemDef] = new ArrayBuffer[BaseElemDef]
+      var clusterNotifyActions: ArrayBuffer[String] =  new ArrayBuffer[String]
+      //BOOOYA
     MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.REMOVECONFIG, cfgStr, AuditConstants.SUCCESS, "", cobjects)
     try {
       // extract config objects
@@ -470,9 +473,32 @@ object ConfigUtils {
           MdMgr.GetMdMgr.RemoveCluster(ClusterId)
           var key = "ClusterInfo." + ClusterId
           keyList = keyList :+ key.toLowerCase
+
+          if (ClusterId.length > 0) {
+            var clusterDef: ClusterConfigDef = new ClusterConfigDef
+            clusterDef.clusterId = ClusterId
+            clusterDef.elementType = "clusterDef"
+            clusterDef.nameSpace = "cluster"
+            clusterDef.name = ClusterId
+            clusterDef.tranId = MetadataAPIImpl.GetNewTranId
+            clusterNotifications.append(clusterDef)
+            clusterNotifyActions.append("Remove")
+          }
+
           MdMgr.GetMdMgr.RemoveClusterCfg(ClusterId)
           key = "ClusterCfgInfo." + ClusterId
           keyList = keyList :+ key.toLowerCase
+
+          if (ClusterId.length > 0) {
+            var clusterInfoDef: ClusterConfigDef = new ClusterConfigDef
+            clusterInfoDef.clusterId = ClusterId
+            clusterInfoDef.elementType = "clusterInfoDef"
+            clusterInfoDef.name = ClusterId
+            clusterInfoDef.nameSpace = "clusterInfo"
+            clusterInfoDef.tranId = MetadataAPIImpl.GetNewTranId
+            clusterNotifications.append(clusterInfoDef)
+            clusterNotifyActions.append("Remove")
+          }
 
           if (cluster.contains("Nodes")) {
             val nodes = cluster.get("Nodes").get.asInstanceOf[List[_]]
@@ -483,6 +509,15 @@ object ConfigUtils {
                 MdMgr.GetMdMgr.RemoveNode(nodeId.toLowerCase)
                 key = "NodeInfo." + nodeId
                 keyList = keyList :+ key.toLowerCase
+
+                var nodeDef: ClusterConfigDef = new ClusterConfigDef
+                nodeDef.name = nodeId
+                nodeDef.tranId = MetadataAPIImpl.GetNewTranId
+                nodeDef.nameSpace = "nodeIds"
+                nodeDef.clusterId = nodeId
+                nodeDef.elementType = "nodeDef"
+                clusterNotifications.append(nodeDef)
+                clusterNotifyActions.append("Remove")
               }
             })
           }
@@ -497,8 +532,16 @@ object ConfigUtils {
                 key = "TenantInfo." + tenantId.trim.toLowerCase()
                 keyList = keyList :+ key.toLowerCase
 
-                //BUGBUG:: Need to report to Engine and others
-                // FIXME:: Need to report to Engine and others
+                if (tenantId.length > 0) {
+                  val tenantDef: ClusterConfigDef = new ClusterConfigDef
+                  tenantDef.name =  tenantId.trim.toLowerCase()
+                  tenantDef.tranId = MetadataAPIImpl.GetNewTranId
+                  tenantDef.nameSpace = "Tenants"
+                  tenantDef.clusterId = ClusterId
+                  tenantDef.elementType = "TenantDef"
+                  clusterNotifications.append(tenantDef)
+                  clusterNotifyActions.append("Remove")
+                }
               }
             })
           }
@@ -523,13 +566,26 @@ object ConfigUtils {
                 MdMgr.GetMdMgr.RemoveAdapter(nm)
                 val key = "AdapterInfo." + nm
                 keyList = keyList :+ key.toLowerCase
+
+                if (nm.length > 0) {
+                  var adapterDef: ClusterConfigDef = new ClusterConfigDef
+                  adapterDef.name = nm
+                  adapterDef.nameSpace = ClusterId
+                  adapterDef.tranId = MetadataAPIImpl.GetNewTranId
+                  adapterDef.clusterId = ClusterId
+                  adapterDef.elementType = "adapterDef"
+                  clusterNotifications.append(adapterDef)
+                  clusterNotifyActions.append("Remove")
+                }
               }
             })
           }
         })
       }
-      if (keyList.size > 0)
+      if (keyList.size > 0) {
         MetadataAPIImpl.RemoveObjectList(keyList, "config_objects")
+        MetadataAPIImpl.NotifyEngine(clusterNotifications.toArray, clusterNotifyActions.toArray)
+      }
       var apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveConfig", null, ErrorCodeConstants.Remove_Config_Successful + ":" + cfgStr)
       apiResult.toString()
     } catch {
@@ -541,6 +597,7 @@ object ConfigUtils {
       }
     }
   }
+
 
     /**
      * Upload a model config.  These are for native models written in Scala or Java
@@ -1756,7 +1813,7 @@ object ConfigUtils {
       * LoadAdapterMessageBindingIntoCache
       *
       * @param key string of the form "s"${zkMessage.ObjectType}.${zkMessage.Name}" where the object type is the
-      *            "AdapterMsgBinding" and the Name is the FullBindingName of the object to fetch
+      *            "AdapterMessageBinding" and the Name is the FullBindingName of the object to fetch
       */
     def LoadAdapterMessageBindingIntoCache(key: String) {
         try {
@@ -1778,6 +1835,35 @@ object ConfigUtils {
         }
     }
 
+    /**
+      * Remove the supplied binding the the supplied zookeeper object and binding specific key.
+      *
+      * @param bindingKey "<adapter name>,<namespace.msgname>,<namespace.serializername>"
+      */
+    def RemoveAdapterMessageBindingFromCache(bindingKey : String): Unit = {
+      try {
+          val binding: AdapterMessageBinding  = mdMgr.RemoveAdapterMessageBinding(bindingKey)
+
+          /** Note that even if it the binding is not in the mdMgr cache, we will proceed to remove it if possible
+            * from the Storage. The MetadataAPI can delete it (it doesn't necessarily notify the engine... NOTIFY_ENGINE = NO... and get it
+            * deleted on the back side during call back.  */
+          val key = s"AdapterMessageBinding.$bindingKey"
+          MetadataAPIImpl.DeleteObject(key.toLowerCase, "adapter_message_bindings")
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveAdapterMessageBindingFromCache", null, ErrorCodeConstants.Remove_AdapterMessageBinding_Successful + ":" + bindingKey)
+          apiResult.toString()
+
+      } catch {
+          case e: Exception => {
+              /**
+                * This is not necessarily catastrophic.  The binding could have been removed earlier depending upon the cluster
+                * configuration. It will attemtp to delete twice when Notify_Engine = yes
+                */
+              logger.debug("", e)
+              val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveAdapterMessageBindingFromCache", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_AdapterMessageBinding_Failed + ":" + s"AdapterMessageBinding.$bindingKey")
+              apiResult.toString()
+          }
+      }
+    }
 
 
 }

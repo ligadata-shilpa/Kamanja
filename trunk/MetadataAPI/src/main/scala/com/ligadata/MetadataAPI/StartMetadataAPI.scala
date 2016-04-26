@@ -33,7 +33,7 @@ import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object StartMetadataAPI {
 
-  var response = ""
+  var response=""
   //get default config
   val defaultConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~" )) + "/config/MetadataAPIConfig.properties"
   val loggerName = this.getClass.getName
@@ -62,10 +62,12 @@ object StartMetadataAPI {
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
 
-  /** AdapterMessageBinding add tags */
+  /** AdapterMessageBinding tags */
   val FROMFILE="FROMFILE"
   val FROMSTRING="FROMSTRING"
-  val REMOVESTRING="REMOVE"
+  val KEY="KEY"
+  val ADAPTERMESSAGEBINDING = "ADAPTERMESSAGEBINDING"
+
   /** List AdapterMessageBinding filters */
   val ADAPTERFILTER="ADAPTERFILTER"
   val MESSAGEFILTER="MESSAGEFILTER"
@@ -85,7 +87,7 @@ object StartMetadataAPI {
   var expectAdapterFilter = false
   var expectMessageFilter = false
   var expectSerializerFilter = false
-
+  var isRemoveAdded = false
   var varmap: scala.collection.mutable.Map[String,String] = scala.collection.mutable.Map[String,String]()
   var expectTid: Boolean = false
   var expectMDep: Boolean = false
@@ -137,11 +139,7 @@ object StartMetadataAPI {
                       expectMessageName = true
                   } else if (arg.equalsIgnoreCase(OUTPUTMSG)) {
                       expectOutputMsg = true
-                  } else if (arg.equalsIgnoreCase(REMOVESTRING)) {
-                      removeCmdFound = true
-                  } else if (arg.equalsIgnoreCase(Action.REMOVEADAPTERMESSAGEBINDING.toString)) {
-                      expectRemoveBindingKey = true
-                  } else if (arg.equalsIgnoreCase(s"REMOVE${Action.REMOVEADAPTERMESSAGEBINDING.toString}")) {
+                  } else if (arg.equalsIgnoreCase(KEY)) {
                       expectRemoveBindingKey = true
                   } else if (arg.equalsIgnoreCase(FROMFILE)) {
                       expectBindingFromFile = true
@@ -185,6 +183,11 @@ object StartMetadataAPI {
                           expectRemoveBindingKey = false
                           extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
                           argVar = "" // Make sure we dont add to the routing command
+                      } else {
+                        if (removeCmdFound && !isRemoveAdded) {
+                          action += "remove"
+                          isRemoveAdded = true
+                        }
                       }
                       if (expectBindingFromString) {
                           extraCmdArgs(FROMSTRING) = arg
@@ -239,13 +242,13 @@ object StartMetadataAPI {
       }
     }
     catch {
-      case nosuchelement: NoSuchElementException => {
-        logger.error("", nosuchelement)
+      case e: NoSuchElementException => {
+        logger.error("Route not found",e.getMessage)
         /** preserve the original response ... */
-        response = s"Invalid command action! action=$action"
-
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
         /** one more try ... going the alternate route */  // do we still need this ??
-        val altResponse: String = AltRoute(args)
+       /* val altResponse: String = AltRoute(args)
         if (altResponse != null) {
           //response = altResponse
           println(response)
@@ -254,13 +257,27 @@ object StartMetadataAPI {
           /* if the AltRoute doesn't produce a valid result, we will complain with the original failure */
           println(response)
           usage
-        }
+        }*/
       }
-      case fio: java.io.FileNotFoundException => {
-        logger.error("Unable to read a file, the file either does not exist or is inaccessible ", fio)
+      case e: java.io.FileNotFoundException => {
+        logger.error("Unable to read a file, the file either does not exist or is inaccessible ", e.getMessage)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
       }
       case e: Throwable => {
         logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: Exception => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: RuntimeException => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
       }
     } finally {
       MetadataAPIImpl.shutdown
@@ -454,7 +471,7 @@ object StartMetadataAPI {
         case Action.UPLOADCLUSTERCONFIG => response = ConfigService.uploadClusterConfig(input)
         case Action.UPLOADCOMPILECONFIG => response = ConfigService.uploadCompileConfig(input)
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
-        case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
+        case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig(input)
 
         // adapter message bindings
         case Action.ADDADAPTERMESSAGEBINDING => {
@@ -483,7 +500,7 @@ object StartMetadataAPI {
                 println(s"Remove Adapter Message Binding syntax: \nkamanja <apiconfig> remove adaptermessagebinding '<adapter name>,<namespace.msgname>,namespace.serializername>'")
                 throw new RuntimeException(s"Remove Adapter Message Binding syntax: \nkamanja <apiconfig> remove adaptermessagebinding '<adapter name>,<namespace.msgname>,namespace.serializername>'")
             }
-            response = AdapterMessageBindingService.removeAdapterMessageBinding(input, userId)
+            response = AdapterMessageBindingService.removeAdapterMessageBinding(bindingKey, userId)
         }
 
         case Action.LISTADAPTERMESSAGEBINDINGS => {
@@ -541,18 +558,24 @@ object StartMetadataAPI {
       }
     }
     catch {
+      case e: java.util.NoSuchElementException => {
+        logger.error("Unable to access route: "+ fileinquesiton)
+        response = new ApiResult(-1, "StartMetadataAPI/route", null, s"Unable to execute command for action = $action").toString
+      }
       case fio: java.io.FileNotFoundException => {
         logger.error("Unable to access file: "+ fileinquesiton)
-        return s"Unable to execute command for action = $action"
+        response=new ApiResult(-1, "StartMetadataAPI/route", null, s"Unable to execute command for action = $action").toString
       }
+
       case e: Exception => {
         logger.warn("", e)
         /** tentative answer of unidentified command type failure. */
-        response = s"Unexpected action! action = $action"
+        response=new ApiResult(-1, "StartMetadataAPI/route", null,  s"Unexpected action! action = $action").toString
         /** one more try ... going the alternate route.
           *
           * ''Do we still need this ?'' Let's keep it for now.
           */
+       /*
         val altResponse: String = AltRoute(originalArgs)
         if (altResponse != null) {
             //response = altResponse  ... typically a parse error that is only meaningful for AltRoute processing
@@ -563,6 +586,7 @@ object StartMetadataAPI {
           printf(response)
           sys.exit(1)
         }
+        */
       }
 
     }

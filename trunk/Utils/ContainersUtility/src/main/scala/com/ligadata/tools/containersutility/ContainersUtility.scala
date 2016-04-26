@@ -23,8 +23,10 @@ trait LogTrait {
   val logger = LogManager.getLogger(loggerName)
 }
 
+case class container(begintime: String, endtime: String, keys: Array[Array[String]])
+
 object ContainersUtility extends App with LogTrait {
-case class data(key: String, value: String)
+  case class data(key: String, value: String)
   def usage: String = {
     """
 Usage: scala com.ligadata.containersutility.ContainersUtility
@@ -33,10 +35,8 @@ Usage: scala com.ligadata.containersutility.ContainersUtility
     --keyfieldname  <name of key for container>
     --operation <truncate, select, delete>
     --keyid <key ids for select or delete>
-
 Sample uses:
       java -jar /tmp/KamanjaInstall/ContainersUtility-1.0 --containername System.TestContainer --config /tmp/KamanjaInstall/EngineConfig.cfg --keyfieldname Id --oepration truncate
-
     """
   }
 
@@ -61,7 +61,7 @@ Sample uses:
   override def main(args: Array[String]) {
 
     logger.debug("ContainersUtility.main begins")
-
+    implicit val formats = DefaultFormats
     if (args.length == 0) logger.error(usage)
     val arglist = args.toList
     type OptionMap = Map[Symbol, String]
@@ -97,124 +97,102 @@ Sample uses:
     val filter = if(options.contains('filter)) options.apply('filter) else null // include keyid and timeranges
     val filterFile = scala.io.Source.fromFile(filter).mkString // read filter file config (JSON file)
     val parsedKey = parse(filterFile)
-    var timeRangeList = scala.collection.immutable.List.empty[TimeRange] //create an arrayBuffer to append data into it
-    var insideKeyList = scala.collection.immutable.List.empty[Array[String]] // create an ArrayBuffer to append data into it
+    var containerObj:List[container]= null
     if (parsedKey != null) {
-      val values = parsedKey.values.asInstanceOf[Map[String, Any]]
-      values.foreach(kv => {
-        if (kv._1.compareToIgnoreCase("keyid") == 0) {
-          val keyList = kv._2.asInstanceOf[List[List[Any]]]
-          keyList.foreach(listitem => {
-            if (listitem != null) {
-              insideKeyList =  insideKeyList :+ listitem.map(item => item.toString).toArray
-            }
-          })
-        } else if (kv._1.compareToIgnoreCase("timerange") == 0) {
-          val list = kv._2.asInstanceOf[List[Map[String, String]]]
-          list.foreach(listItem => {
-            if (!listItem("begintime").equalsIgnoreCase(null) && !listItem("endtime").equalsIgnoreCase(null)) {
-              var timeRangeObj = new TimeRange(listItem("begintime").toLong, listItem("endtime").toLong)
-              timeRangeList= timeRangeList :+ timeRangeObj
-            }
-          })
-        }
-      })
+      containerObj = parsedKey.extract[List[container]]
     } else if(!operation.equalsIgnoreCase("truncate")){
       logger.error("you should pass a filter file for select and delete operation")
     }
 
-    val timeRangeArray: Array[TimeRange] = timeRangeList.toArray // include a list list of TimeRange objects
-    val keysArray: Array[Array[String]] = insideKeyList.toArray // include a list of bucketKey
-
     var valid: Boolean = (cfgfile != null && containerName != null)
 
-  if (valid) {
-    cfgfile = cfgfile.trim
-    containerName = containerName.trim
-    valid = (cfgfile.size != 0 && containerName.size != 0)
-  }
-
-  if (valid) {
-    val (loadConfigs, failStr) = Utils.loadConfiguration(cfgfile.toString, true)
-    if (failStr != null && failStr.size > 0) {
-      logger.error(failStr)
-      return
-    }
-    if (loadConfigs == null) {
-      logger.error("Failed to load configurations from configuration file")
-      return
+    if (valid) {
+      cfgfile = cfgfile.trim
+      containerName = containerName.trim
+      valid = (cfgfile.size != 0 && containerName.size != 0)
     }
 
-    containersUtilityConfiguration.configFile = cfgfile.toString
+    if (valid) {
+      val (loadConfigs, failStr) = Utils.loadConfiguration(cfgfile.toString, true)
+      if (failStr != null && failStr.size > 0) {
+        logger.error(failStr)
+        return
+      }
+      if (loadConfigs == null) {
+        logger.error("Failed to load configurations from configuration file")
+        return
+      }
 
-    val utilmaker: UtilityForContainers = new UtilityForContainers(loadConfigs, containerName.toLowerCase)
-    if (utilmaker.isOk) {
-      try {
-        val dstore = utilmaker.GetDataStoreHandle(containersUtilityConfiguration.jarPaths, utilmaker.dataDataStoreInfo)
-        if (dstore != null) {
-          try {
-            dstore.setObjectResolver(utilmaker)
-            dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
-            if (operation != null) {
-              if (operation.equalsIgnoreCase("truncate")) {
-                utilmaker.TruncateContainer(containerName, dstore)
-              } else if (operation.equalsIgnoreCase("delete")) {
-                if(keysArray.length == 0 && timeRangeArray.length == 0)
-                  logger.error("Failed to delete data from %s container, at least one item (keyid, timerange) should not be null for delete operation".format(containerName))
-                else
-                  utilmaker.DeleteFromContainer(containerName,keysArray, timeRangeArray, dstore)
-              } else if (operation.equalsIgnoreCase("select")) {
-                if(keysArray.length == 0 && timeRangeArray.length == 0)
-                  logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
-                else
-                  writeToFile(utilmaker.GetFromContainer(containerName, keysArray, timeRangeArray, dstore),output, containerName)
+      containersUtilityConfiguration.configFile = cfgfile.toString
+
+      val utilmaker: UtilityForContainers = new UtilityForContainers(loadConfigs, containerName.toLowerCase)
+      if (utilmaker.isOk) {
+        try {
+          val dstore = utilmaker.GetDataStoreHandle(containersUtilityConfiguration.jarPaths, utilmaker.dataDataStoreInfo)
+          if (dstore != null) {
+            try {
+              dstore.setObjectResolver(utilmaker)
+              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+              if (operation != null) {
+                if (operation.equalsIgnoreCase("truncate")) {
+                  utilmaker.TruncateContainer(containerName, dstore)
+                } else if (operation.equalsIgnoreCase("delete")) {
+                  if(containerObj.size == 0)
+                    logger.error("Failed to delete data from %s container, at least one item (keyid, timerange) should not be null for delete operation".format(containerName))
+                  else
+                    utilmaker.DeleteFromContainer(containerName,containerObj, dstore)
+                } else if (operation.equalsIgnoreCase("select")) {
+                  if(containerObj.size == 0)
+                    logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
+                  else
+                    writeToFile(utilmaker.GetFromContainer(containerName, containerObj, dstore),output, containerName)
+                }
+              } else {
+                logger.error("Unknown operation you should use one of these options: select, delete, truncate")
               }
-            } else {
-              logger.error("Unknown operation you should use one of these options: select, delete, truncate")
+            } catch {
+              case e: Exception => {
+                logger.error("Failed to build Container or Message.", e)
+              }
+            } finally {
+              if (dstore != null)
+                dstore.Shutdown()
+              com.ligadata.transactions.NodeLevelTransService.Shutdown
+              if (utilmaker.zkcForSetData != null)
+                utilmaker.zkcForSetData.close()
             }
-          } catch {
-            case e: Exception => {
-              logger.error("Failed to build Container or Message.", e)
-            }
-          } finally {
-            if (dstore != null)
-              dstore.Shutdown()
-            com.ligadata.transactions.NodeLevelTransService.Shutdown
-            if (utilmaker.zkcForSetData != null)
-              utilmaker.zkcForSetData.close()
+          }
+        } catch {
+          case e: FatalAdapterException => {
+            logger.error("Failed to connect to Datastore.", e)
+          }
+          case e: StorageConnectionException => {
+            logger.error("Failed to connect to Datastore.", e)
+          }
+          case e: StorageFetchException => {
+            logger.error("Failed to connect to Datastore.", e)
+          }
+          case e: StorageDMLException => {
+            logger.error("Failed to connect to Datastore.", e)
+          }
+          case e: StorageDDLException => {
+            logger.error("Failed to connect to Datastore.", e)
+          }
+          case e: Exception => {
+            logger.error("Failed to connect to Datastore.", e)
+          }
+          case e: Throwable => {
+            logger.error("Failed to connect to Datastore.", e)
           }
         }
-      } catch {
-        case e: FatalAdapterException => {
-          logger.error("Failed to connect to Datastore.", e)
-        }
-        case e: StorageConnectionException => {
-          logger.error("Failed to connect to Datastore.", e)
-        }
-        case e: StorageFetchException => {
-          logger.error("Failed to connect to Datastore.", e)
-        }
-        case e: StorageDMLException => {
-          logger.error("Failed to connect to Datastore.", e)
-        }
-        case e: StorageDDLException => {
-          logger.error("Failed to connect to Datastore.", e)
-        }
-        case e: Exception => {
-          logger.error("Failed to connect to Datastore.", e)
-        }
-        case e: Throwable => {
-          logger.error("Failed to connect to Datastore.", e)
-        }
       }
-    }
-    MetadataAPIImpl.CloseDbStore
+      MetadataAPIImpl.CloseDbStore
 
-  } else {
-    logger.error("Illegal and/or missing arguments")
-    logger.error(usage)
+    } else {
+      logger.error("Illegal and/or missing arguments")
+      logger.error(usage)
+    }
   }
-}
 }
 
 object containersUtilityConfiguration {

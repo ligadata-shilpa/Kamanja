@@ -22,4 +22,6 @@ public interface SmartFileHandler {
     boolean exists() throws KamanjaException;
     boolean isFile() throws KamanjaException;
     boolean isDirectory() throws KamanjaException;
+
+    boolean isAccessible();
 }

@@ -74,6 +74,7 @@ object KamanjaLeader {
   private[this] var allPartitionsToValidate = scala.collection.mutable.Map[String, Set[String]]()
   private[this] var nodesStatus = scala.collection.mutable.Set[String]() // NodeId
   private[this] var expectedNodesAction: String = _
+  private[this] var nodesActionIssuedTime: Long = 0
   private[this] var curParticipents = Set[String]() // Derived from clusterStatus.participants
   private[this] var canRedistribute = false
   private[this] var inputAdapters: ArrayBuffer[InputAdapter] = _
@@ -230,6 +231,7 @@ object KamanjaLeader {
                           ("Parts" -> kv1._2.toList)))))
                 val sendJson = compact(render(distribute))
                 LOG.warn("Partition Distribution: " + sendJson)
+                nodesActionIssuedTime = System.currentTimeMillis
                 SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
               }
             } else {
@@ -414,6 +416,7 @@ object KamanjaLeader {
     adapterMaxPartitions.clear
     nodesStatus.clear
     expectedNodesAction = ""
+    nodesActionIssuedTime = System.currentTimeMillis
     curParticipents = if (cs.participantsNodeIds != null) cs.participantsNodeIds.toSet else Set[String]()
 
     try {
@@ -463,6 +466,7 @@ object KamanjaLeader {
       // Set STOP Action on engineDistributionZkNodePath
       val act = ("action" -> "stop")
       val sendJson = compact(render(act))
+      nodesActionIssuedTime = System.currentTimeMillis
       SetNewDataToZkc(engineDistributionZkNodePath, sendJson.getBytes("UTF8"))
     } catch {
       case e: Exception => {
@@ -690,7 +694,9 @@ object KamanjaLeader {
               // STOP all Input Adapters on local node
               remInputAdaps.foreach(ia => {
                 try {
+                  LOG.warn("Stopping adapter " + ia.UniqueName)
                   ia.StopProcessing
+                  LOG.warn("Stopped adapter " + ia.UniqueName)
                 } catch {
                   case fae: FatalAdapterException => {
                     LOG.error("Input adapter " + ia.UniqueName + "failed to stop processing", fae)
@@ -747,6 +753,7 @@ object KamanjaLeader {
               val adaptrStatusPathForNode = adaptersStatusPath + "/" + nodeId
               val act = ("action" -> "stopped")
               val sendJson = compact(render(act))
+              LOG.warn("New Action Stopped set to " + adaptrStatusPathForNode)
               SetNewDataToZkc(adaptrStatusPathForNode, sendJson.getBytes("UTF8"))
             }
           } catch {
@@ -1279,6 +1286,14 @@ object KamanjaLeader {
                   wait4ValidateCheck = 0 // Not leader node, don't check for it until we set it in redistribute
                   getValidateAdapCntr = 0
                 }
+              }
+
+              // Waiting for a two mins after issuing stopped to redo the same actions again
+              val maxWaitForStop = 60000
+              if (GetUpdatePartitionsFlag == false && expectedNodesAction == "stopped" && (nodesActionIssuedTime + maxWaitForStop) < System.currentTimeMillis) {
+                // Redistribute. We did not get expected stopped message
+                logger.warn(s"From past ${maxWaitForStop} milli second we are waiting for adapters redistribution. Did not get the information so far. Going to stop & distribute again.")
+                SetUpdatePartitionsFlag
               }
             }
           }
