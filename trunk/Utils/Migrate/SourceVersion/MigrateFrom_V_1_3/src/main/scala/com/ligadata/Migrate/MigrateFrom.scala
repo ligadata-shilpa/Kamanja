@@ -992,10 +992,9 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
     }
   }
 
-
   // metadataElemsJson are used for dependency load
   // Callback function calls with container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
-  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], msgsAndContainers: java.util.List[String], callbackFunction: DataObjectCallBack): Unit = {
+  override def getAllDataObjs(backupTblSufix: String, metadataElemsJson: Array[MetadataFormat], msgsAndContainers: java.util.List[String], catalogTables: java.util.List[String], callbackFunction: DataObjectCallBack): Unit = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
@@ -1059,6 +1058,25 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
           keys.foreach(key => {
             val v = GetValue(msgName + backupTblSufix, key, _dataStore)
             val retData = ExtractDataFromTupleData(msgName, key, v, bos, dos)
+            if (retData.size > 0 && callbackFunction != null) {
+              if (callbackFunction.call(retData) == false)
+                throw new Exception("Data failed to consume")
+            }
+          })
+        })
+
+        catalogTables.toArray.foreach(msg => {
+          val tblName = msg.asInstanceOf[String]
+          var keys = scala.collection.mutable.Set[Key]()
+          keys = GetKeys(tblName + backupTblSufix, _dataStore)
+          if (keys.size == 0) {
+            val szMsg = "No objects available in " + tblName
+            logger.warn(szMsg)
+            break
+          }
+          keys.foreach(key => {
+            val v = GetValue(tblName + backupTblSufix, key, _dataStore)
+            val retData = ExtractDataFromTupleData(tblName, key, v, bos, dos)
             if (retData.size > 0 && callbackFunction != null) {
               if (callbackFunction.call(retData) == false)
                 throw new Exception("Data failed to consume")
