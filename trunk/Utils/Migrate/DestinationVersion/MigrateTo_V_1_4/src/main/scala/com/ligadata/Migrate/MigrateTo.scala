@@ -48,7 +48,7 @@ case class AdapterUniqueValueDes_1_3(T: Long, V: String, Out: Option[List[List[S
 
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
 
-case class adapterMessageBinding(var AdapterName: String, var TypeString: String, var MessageNames: List[String], var Options: Map[String, String], var Serializer: String)
+case class adapterMessageBinding(var AdapterName: String, var MessageNames: List[String], var Options: Map[String, String], var Serializer: String)
 
 class MigrateTo_V_1_4 extends MigratableTo {
   lazy val loggerName = this.getClass.getName
