@@ -153,10 +153,15 @@ Transformations
 
 ### Deep-dive transformation section 
 
+## Logging
+
+The model has 5 logging methods with 3 overloads each. The tracing can be configured through log4j.
+
+Functions: Trace, Warning, Info, Error, Debug
+Overloads: <Function>(str: String), <Function>(str: String, e: Throwable) AND <Function>(e: Throwable)
+
 
 ===================== Other =============================
-
-
 jtm structure:
         1. grok match - common grok match expressions across all transformations
         2. computes - common computed values used by all transformations
