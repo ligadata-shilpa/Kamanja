@@ -537,6 +537,10 @@ class MigrateTo_V_1_4 extends MigratableTo {
       throw new Exception("Not found valid DataStore info in " + clusterConfigFile)
     }
 
+    if (tenantDatastoreInfo == null || tenantDatastoreInfo.trim.size == 0) {
+      throw new Exception("Not found valid PrimaryDataStore for given tenantId:" + _tenantId.get)
+    }
+
     val sysPath = new File(destInstallPath + "/lib/system")
     val appPath = new File(destInstallPath + "/lib/application")
 
