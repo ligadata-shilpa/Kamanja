@@ -1750,6 +1750,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
           containersData.synchronized {
             implicit val jsonFormats: Formats = DefaultFormats
             val uniqVal = parse(new String(d.data)).extract[AdapterUniqueValueDes_1_3]
+            if (logger.isDebugEnabled)
+              logger.debug("AdapterUniqKvData. Key:%s, Value:%s. Original Data:%s".format(d.bucketKey.mkString(","), uniqVal.V, new String(d.data)))
             uniqVal.V.getBytes().asInstanceOf[Any]
           }
         } else {

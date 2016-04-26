@@ -1078,6 +1078,8 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
             val v = GetValue(tblName + backupTblSufix, key, _dataStore)
             val retData = ExtractDataFromTupleData(tblName, key, v, bos, dos)
             if (retData.size > 0 && callbackFunction != null) {
+              if (logger.isDebugEnabled)
+                logger.debug("CatalogTablesData. containerName:%s, Key:%s, Value:%s".format(retData(0).containerName, retData(0).bucketKey.mkString(","), new String(retData(0).data))))
               if (callbackFunction.call(retData) == false)
                 throw new Exception("Data failed to consume")
             }
