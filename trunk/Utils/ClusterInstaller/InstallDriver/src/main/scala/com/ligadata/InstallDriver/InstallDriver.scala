@@ -724,13 +724,24 @@ Try again.
             ""
           }
 
+        if (upgrade && (tenantId_opt == null || tenantId_opt.trim.size == 0)) {
+          printAndLogError("For upgrade, tenantid is must.", log)
+          printAndLogDebug(usage, log)
+          closeLog
+          sys.exit(1)
+        }
+
+        if (upgrade && (adapterMessageBindings_opt == null || adapterMessageBindings_opt.trim.size == 0)) {
+          printAndLogError("For upgrade, adapterMessageBindings empty/null does not import any bindings. Make sure you import them after installation.", log)
+        }
+
         val tenantId = if (tenantId_opt == null) {""} else{ tenantId_opt }
-	logger.info("tenantId => " + tenantId)
-	
+	      logger.info("tenantId => " + tenantId)
+
 
         val adapterMessageBindings = if (adapterMessageBindings_opt == null) {""} else{ adapterMessageBindings_opt }
-	logger.info("adapterMessageBindings => " + adapterMessageBindings)
-	
+        logger.info("adapterMessageBindings => " + adapterMessageBindings)
+
 
         /** Install the new installation */
         val nodes: String = ips.mkString(",")
