@@ -43,7 +43,7 @@ import org.json4s.native.Serialization.{ read, write, writePretty }
 
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
-case class adapterMessageBinding(var AdapterName: String,var TypeString: String,var MessageNames: List[String], var Options: Map[String,String], var Serializer: String)
+case class adapterMessageBinding(var AdapterName: String,var MessageNames: List[String], var Options: Map[String,String], var Serializer: String)
 
 
 class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAfter with BeforeAndAfterAll with GivenWhenThen {
@@ -174,14 +174,15 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
     try{
       var ambs = Array[adapterMessageBinding]()
       adapters.foreach( a => {
+	var typeString: String = null
 	logger.info("a => " + a)
 	val adapter = a.asInstanceOf[Map[String,Any]]
-	var am = new adapterMessageBinding(new String(),null,Array[String]().toList,Map[String,String](),new String())
+	var am = new adapterMessageBinding(new String(),Array[String]().toList,Map[String,String](),new String())
 	adapter.keys.foreach( k => {
 	  logger.info(k + " => " + adapter(k))
 	  k.toUpperCase match {
 	    case "NAME" => am.AdapterName = adapter(k).asInstanceOf[String]
-	    case "TYPESTRING" => am.TypeString = adapter(k).asInstanceOf[String]
+	    case "TYPESTRING" => typeString = adapter(k).asInstanceOf[String]
 	    case "ASSOCIATEDMESSAGE" => am.MessageNames = Array(adapter(k).asInstanceOf[String]).toList
 	    case "DATAFORMAT" => {
 	      adapter(k).asInstanceOf[String].toUpperCase match {
@@ -203,13 +204,13 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 
 	
 
-	if( am.TypeString != null ){
-	  if( ( am.TypeString.equalsIgnoreCase("Input") || 
-	      am.TypeString.equalsIgnoreCase("Status")) ){
+	if( typeString != null ){
+	  if( ( typeString.equalsIgnoreCase("Input") || 
+	      typeString.equalsIgnoreCase("Status")) ){
 	    if( am.MessageNames != null && am.MessageNames.length > 0 ){
 	      // for status adapters, message always defults 
 	      // to com.ligadata.KamanjaBase.KamanjaStatusEvent
-	      if( am.TypeString.equalsIgnoreCase("Status") ){
+	      if( typeString.equalsIgnoreCase("Status") ){
 		am.MessageNames = Array("com.ligadata.KamanjaBase.KamanjaStatusEvent").toList
 		am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
 		if( ! am.Options.contains("fieldDelimiter") ){
