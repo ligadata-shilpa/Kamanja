@@ -1362,6 +1362,9 @@ class MigrateTo_V_1_4 extends MigratableTo {
         throw new Exception("Failed to add metadata")
       }
     }
+  }
+
+  private def AddMsgBindings: Unit = {
     // handle adapterMessageBindings here
     try {
       implicit val jsonFormats: Formats = DefaultFormats
@@ -1607,6 +1610,9 @@ class MigrateTo_V_1_4 extends MigratableTo {
       ProcessMdObjectsParallel(containers, "Failed to add container")
       ProcessMdObjectsParallel(messages, "Failed to add message")
     }
+
+    if (_adapterMessageBindings != None)
+      AddMsgBindings
 
     val failedMsgsContainer = GetFailedMessageOrContainer
 
