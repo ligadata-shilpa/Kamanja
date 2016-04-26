@@ -1749,7 +1749,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
         } else if (d.containerName.equalsIgnoreCase("AdapterUniqKvData")) {
             implicit val jsonFormats: Formats = DefaultFormats
             val uniqVal = parse(new String(d.data)).extract[AdapterUniqueValueDes_1_3]
-            uniqVal.V.asInstanceOf[Any]
+            uniqVal.V.getBytes().asInstanceOf[Any]
         } else {
           d.data.asInstanceOf[Any]
         }
