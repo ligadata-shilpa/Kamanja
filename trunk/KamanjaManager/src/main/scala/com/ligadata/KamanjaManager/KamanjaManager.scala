@@ -658,9 +658,12 @@ class KamanjaManager extends Observer {
         inputAdapters.foreach(x => {
           stats.append(x.getComponentSimpleStats)
         })
+        storageAdapters.foreach(x => {
+          stats.append(x.getComponentSimpleStats)
+        })
         val statsStr = stats.mkString("~")
         val statusMsg: com.ligadata.KamanjaBase.KamanjaStatusEvent = KamanjaMetadata.envCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaStatusEvent").asInstanceOf[KamanjaStatusEvent]
-        statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
+        statusMsg.nodeid = "PD," + KamanjaConfiguration.nodeId.toString
         statusMsg.statusstring = statsStr
         statusMsg.eventtime =  Utils.GetCurDtTmStr // GetCurDtTmStr
         KamanjaMetadata.envCtxt.postMessages(Array[ContainerInterface](statusMsg))

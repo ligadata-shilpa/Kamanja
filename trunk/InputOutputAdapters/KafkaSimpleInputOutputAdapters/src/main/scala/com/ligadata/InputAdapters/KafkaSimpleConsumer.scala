@@ -165,8 +165,7 @@ class KafkaSimpleConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj
   }
 
   override def getComponentSimpleStats: String = {
-
-    return qc.topic + "-" + msgCount
+    return "Input/"+qc.topic+"/evtCnt" + "->" + msgCount
   }
 
   /**
