@@ -30,13 +30,28 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   val log = new com.ligadata.runtime.Log(this.getClass.getName)
   import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+
+    Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%d".format(txnCtxt.transId, triggerdSetIndex, outputDefault))
+    if(isDebugEnabled)
+    {
+      execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
+    }
+
     //
     //
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg1): Array[MessageInterface] = {
+      Debug("exeGenerated_test1_1")
+
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
       def process_o1(): Array[MessageInterface] = {
-        if (!(msg1.in2 != -1 && msg1.in2 < 100)) return Array.empty[MessageInterface]
+
+        Debug("exeGenerated_test1_1::process_o1")
+        if (!(msg1.in2 != -1 && msg1.in2 < 100)) {
+          Debug("Filtered: exeGenerated_test1_1::process_o1")
+          return Array.empty[MessageInterface]
+        }
+
         val t1: String = "s:" + msg1.in2.toString()
         val result = com.ligadata.kamanja.test.V1000000.msg2.createInstance
         result.out4 = msg1.in3
@@ -58,6 +73,12 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       } else {
         Array.empty[MessageInterface]
       }
+
+    if(isDebugEnabled)
+    {
+      results.foreach(m => Debug( s"Output %s -> %s".format(m.getFullTypeName, m.toString())))
+    }
+
     results.asInstanceOf[Array[ContainerOrConcept]]
   }
 }
