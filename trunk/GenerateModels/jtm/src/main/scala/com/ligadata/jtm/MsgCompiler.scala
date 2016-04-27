@@ -25,11 +25,6 @@ import org.rogach.scallop.ScallopConf
 import scala.io.Source
 import com.ligadata.msgcompiler._
 
-class ConfMsgCompiler (arguments: Seq[String] ) extends ScallopConf (arguments)  with LogTrait {
-
-  val in = opt[String] (required = true, descr = "Json to compile", default = None )
-  val out = opt[String] (required = true, descr = "Scalaouput", default = None )
-}
 /*
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg1.json   --out ~/msg1.scala
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg2.json   --out ~/msg2.scala
@@ -38,6 +33,12 @@ run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadat
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/hl7_Medical.json --out /tmp/hl7.scala
  */
 object MsgCompiler extends App with LogTrait {
+
+  class ConfMsgCompiler (arguments: Seq[String] ) extends ScallopConf (arguments)  with LogTrait {
+
+    val in = opt[String] (required = true, descr = "Json to compile", default = None )
+    val out = opt[String] (required = true, descr = "Scalaouput", default = None )
+  }
 
   override def main (args: Array[String] ) {
 
