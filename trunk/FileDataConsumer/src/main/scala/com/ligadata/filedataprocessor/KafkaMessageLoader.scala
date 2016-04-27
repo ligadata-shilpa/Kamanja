@@ -205,11 +205,16 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
             }
           }
         } catch {
-          case mfe: KVMessageFormatingException =>
+          case mfe: KVMessageFormatingException => {
+            logger.warn("Unknown message format in partition " + partIdx, mfe)
             writeErrorMsg(msg)
+          }
           case e: Exception => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.warn("Unknown message format in partition " + partIdx + " \n" + stackTrace)
+            logger.warn("Unknown message format in partition " + partIdx, e)
+            writeErrorMsg(msg)
+          }
+          case e: Throwable => {
+            logger.warn("Unknown message format in partition " + partIdx, e)
             writeErrorMsg(msg)
           }
         }
@@ -325,6 +330,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     } catch {
       case e: Exception =>
         logger.error("SMART FILE CONSUMER ("+partIdx+") Could not add to the queue due to an Exception " + e.getMessage, e)
+      case e: Throwable => {logger.error("SMART FILE CONSUMER ("+partIdx+") Could not add to the queue due to an Exception " + e.getMessage, e)}
     }
     FileProcessor.KAFKA_SEND_SUCCESS
   }
@@ -346,6 +352,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         return (FileProcessor.KAFKA_SEND_DEAD_PRODUCER, -1)
       }
       case e: Exception => {logger.error("CHECK_MESSAGE: Unknown error from Kafka ",e);throw e}
+      case e: Throwable => {logger.error("CHECK_MESSAGE: Unknown error from Kafka ",e);throw e}
     }
   }
 
@@ -382,7 +389,12 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     } catch {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
-        
+        //var tokenName = fileName.split("/")
+        //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
+        FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
+      }
+      case e: Throwable => {
+        logger.error("Exception moving the file ",e)
         //var tokenName = fileName.split("/")
         //FileProcessor.setFileState(tokenName(tokenName.size - 1),FileProcessor.FINISHED_FAILED_TO_COPY)
         FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
@@ -436,9 +448,10 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       }
     } catch {
       case e: Exception => {
-        logger.warn(partIdx + " SMART FILE CONSUMER: Unable to externalize status message")
-        val stackTrace = StackTrace.ThrowableTraceString(e)
-        logger.warn(stackTrace)
+        logger.warn(partIdx + " SMART FILE CONSUMER: Unable to externalize status message", e)
+      }
+      case e: Throwable => {
+        logger.warn(partIdx + " SMART FILE CONSUMER: Unable to externalize status message", e)
       }
     }
   }
@@ -572,8 +585,13 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
     } catch {
       case e: Exception => {
         shutdown
-        logger.error("Unable to to parse message defintion")
-        throw UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
+        logger.error("Unable to to parse message defintion", e)
+        throw new UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
+      }
+      case e: Throwable => {
+        shutdown
+        logger.error("Unable to to parse message defintion", e)
+        throw new UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
       }
     }
 
@@ -600,7 +618,11 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         Class.forName(clsName, true, loaderInfo.loader)
       } catch {
         case e: Exception => {
-          logger.error("Failed to load Model class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
+          logger.error("Failed to load Model class " + clsName, e)
+          throw e // Rethrow
+        }
+        case e: Throwable => {
+          logger.error("Failed to load Model class " + clsName, e)
           throw e // Rethrow
         }
       }
@@ -624,13 +646,23 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
         } catch {
           case e: java.lang.NoClassDefFoundError => {
-            val stackTrace = StackTrace.ThrowableTraceString(e)
-            logger.error(stackTrace)
+            logger.error("SMART FILE CONSUMER:  ERROR", e)
             throw e
           }
           case e: Exception => {
-            objInst = tempCurClass.newInstance
-            return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
+            try {
+              objInst = tempCurClass.newInstance
+              return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
+            } catch {
+              case e: Throwable => {
+                logger.error("SMART FILE CONSUMER:  ERROR", e)
+                throw e
+              }
+            }
+          }
+          case e: Throwable => {
+            logger.warn("SMART FILE CONSUMER:  ERROR", e)
+            throw e
           }
         }
       }
@@ -649,6 +681,10 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         }
       } catch {
         case e: Exception => {
+          logger.warn("SMART FILE CONSUMER:  ERROR in getPartition", e)
+        }
+        case e: Throwable => {
+          logger.warn("SMART FILE CONSUMER:  ERROR in getPartition", e)
         }
       }
     }

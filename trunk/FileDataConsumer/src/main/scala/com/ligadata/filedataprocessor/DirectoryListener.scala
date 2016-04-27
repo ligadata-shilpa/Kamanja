@@ -38,7 +38,12 @@ object LocationWatcher {
           } catch {
             case iobe: IndexOutOfBoundsException => {
               logger.error("SMART FILE CONSUMER: Invalid format in the configuration file " + config)
-              logger.error("SMART FILE CONSUMER: unable to determine the value for property " + lProp(0))
+              logger.error("SMART FILE CONSUMER: unable to determine the value for property " + lProp(0), iobe)
+              return
+            }
+            case e: Throwable => {
+              logger.error("SMART FILE CONSUMER: Invalid format in the configuration file " + config)
+              logger.error("SMART FILE CONSUMER: unable to determine the value for property " + lProp(0), e)
               return
             }
           }
@@ -78,7 +83,11 @@ object LocationWatcher {
          
       } catch {
         case e: IOException => {
-          logger.error ("Unable to find the directory to watch")
+          logger.error ("Unable to find the directory to watch", e)
+          return
+        }
+        case e: Throwable => {
+          logger.error ("Unable to find the directory to watch", e)
           return
         }
       }
@@ -88,13 +97,26 @@ object LocationWatcher {
 
       try {
         for (i <- 1 to numberOfProcessors) {
-          var processor = new FileProcessor(path,i)
-          processor.init(properties)
-          val watch_thread = new Thread(processor)
-          watch_thread.start
+          try {
+            val processor = new FileProcessor(path,i)
+            processor.init(properties)
+            val watch_thread = new Thread(processor)
+            watch_thread.start
+          } catch {
+            case e: Exception => {
+              logger.error("Failure", e)
+            }
+            case e: Throwable => {
+              logger.error("Failure", e)
+            }
+          }
         }
       } catch {
         case e: Exception => {
+          logger.error("SMART FILE CONSUMER:  ERROR in starting SMART FILE CONSUMER ", e)
+          return
+        }
+        case e: Throwable => {
           logger.error("SMART FILE CONSUMER:  ERROR in starting SMART FILE CONSUMER ", e)
           return
         }

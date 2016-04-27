@@ -127,7 +127,11 @@ object FileProcessor {
     } catch {
       case e: Exception => {
         logger.error("SMART FILE CONSUMER (global): unable to connect to zookeeper using " + zkcConnectString, e )
-        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage())
+        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage(), e)
+      }
+      case e: Throwable => {
+        logger.error("SMART FILE CONSUMER (global): unable to connect to zookeeper using " + zkcConnectString, e )
+        throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + "): " + e.getMessage(), e)
       }
     }
   }
@@ -168,7 +172,8 @@ object FileProcessor {
         zkc.delete.forPath(znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
 
       } catch {
-        case e: Exception => e.printStackTrace()
+        case e: Exception => logger.warn("SmartFileConsumer - Failure", e)
+        case e:Throwable => logger.warn("SmartFileConsumer - Failure", e)
       }
     }
   }
@@ -316,19 +321,46 @@ object FileProcessor {
     isBufferMonitorRunning = true
     globalFileMonitorService.execute(new Runnable() {
       override def run() = {
-        monitorBufferingFiles
+        try {
+          monitorBufferingFiles
+        } catch {
+          case e: Exception => {
+            logger.error("Failure", e)
+          }
+          case e: Throwable => {
+            logger.error("Failure", e)
+          }
+        }
       }
     })
 
     globalFileMonitorService.execute(new Runnable() {
       override def run() = {
-        runFileWatcher
+        try {
+          runFileWatcher
+        } catch {
+          case e: Exception => {
+            logger.error("Failure", e)
+          }
+          case e: Throwable => {
+            logger.error("Failure", e)
+          }
+        }
       }
     })
 
     globalFileMonitorService.execute(new Runnable() {
       override def run() = {
-        monitorActiveFiles
+        try {
+          monitorActiveFiles
+        } catch {
+          case e: Exception => {
+            logger.error("Failure", e)
+          }
+          case e: Throwable => {
+            logger.error("Failure", e)
+          }
+        }
       }
     })
   }
@@ -483,15 +515,15 @@ object FileProcessor {
         contentType = tika.detect(fis)
       }catch{
         case e:IOException =>{
-          logger.warn("SmartFileConsumer - Tika unable to read from InputStream - "+e.getMessage)
+          logger.warn("SmartFileConsumer - Tika unable to read from InputStream - "+e.getMessage, e)
           throw e
         }
         case e:Exception =>{
-          logger.warn("SmartFileConsumer - Tika processing generic exception - "+e.getMessage)
+          logger.warn("SmartFileConsumer - Tika processing generic exception - "+e.getMessage, e)
           throw e
         }
         case e:Throwable =>{
-          logger.warn("SmartFileConsumer - Tika processing runtime exception - "+e.getMessage)
+          logger.warn("SmartFileConsumer - Tika processing runtime exception - "+e.getMessage, e)
           throw e
         }
       } finally {
@@ -507,26 +539,25 @@ object FileProcessor {
 		        contentType = magicMatcher.getMimeType
 		    }catch{
 		      case e:MagicParseException =>{
-		        logger.warn("SmartFileConsumer - MimeMagic caught a parsing exception - "+e.getMessage)
+		        logger.warn("SmartFileConsumer - MimeMagic caught a parsing exception - "+e.getMessage, e)
             throw e
 		      }
 		      case e:MagicMatchNotFoundException =>{
-		        logger.warn("SmartFileConsumer -MimeMagic Mime Not Found -"+e.getMessage)
+		        logger.warn("SmartFileConsumer -MimeMagic Mime Not Found -"+e.getMessage, e)
             throw e
 		      }
 		      case e:MagicException =>{
-		        logger.warn("SmartFileConsumer - MimeMagic generic exception - "+e.getMessage)
+		        logger.warn("SmartFileConsumer - MimeMagic generic exception - "+e.getMessage, e)
             throw e
 		      }
 		      case e:Exception =>{
-            logger.warn("SmartFileConsumer - MimeMagic processing generic exception - "+e.getMessage)
+            logger.warn("SmartFileConsumer - MimeMagic processing generic exception - "+e.getMessage, e)
             throw e
           }
           case e:Throwable =>{
-            logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - "+e.getMessage)
+            logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - "+e.getMessage, e)
             throw e
           }
-
 		    }
       }
 
@@ -646,6 +677,10 @@ object FileProcessor {
                   logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
                   errorWaitTime = scala.math.min((errorWaitTime * 2), FileProcessor.MAX_WAIT_TIME)
                 }
+                case e: Throwable => {
+                  logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
+                  errorWaitTime = scala.math.min((errorWaitTime * 2), FileProcessor.MAX_WAIT_TIME)
+                }
               }
             }
             //TODO C&S - Need to parameterize
@@ -656,6 +691,7 @@ object FileProcessor {
       case ie: InterruptedException => logger.error("InterruptedException: " + ie)
       case ioe: IOException         => logger.error("Unable to find the directory to watch, Shutting down File Consumer", ioe)
       case e: Exception             => logger.error("Exception: ", e)
+      case e: Throwable             => logger.error("Throwable: ", e)
     }
   }
 
@@ -680,7 +716,12 @@ object FileProcessor {
         }
       } catch {
         case fio: IOException => {
+          logger.warn("SMART FILE CONSUMER: ERROR", fio)
           isWatchedFileSystemAccesible = false
+        }
+        case e: Throwable => {
+          logger.warn("SMART FILE CONSUMER: ERROR", e)
+          isTargetFileSystemAccesible = false
         }
       }
 
@@ -693,6 +734,11 @@ object FileProcessor {
         }
       } catch {
         case fio: IOException => {
+          logger.warn("SMART FILE CONSUMER: ERROR", fio)
+          isTargetFileSystemAccesible = false
+        }
+        case e: Throwable => {
+          logger.warn("SMART FILE CONSUMER: ERROR", e)
           isTargetFileSystemAccesible = false
         }
       }
@@ -710,7 +756,13 @@ object FileProcessor {
           } catch {
             case e: IOException => {
               // Interesting,  we have just died, and need to move the newly added files to the queue
-              logger.warn("SMART FILE CONSUMER (gloabal): Unable to connect to watch directory, will try to shut it down and recreate again")
+              logger.warn("SMART FILE CONSUMER (gloabal): Unable to connect to watch directory, will try to shut it down and recreate again", e)
+              isWatchedFileSystemAccesible = false
+              afterErrorConditions = true
+            }
+            case e: Throwable => {
+              // Interesting,  we have just died, and need to move the newly added files to the queue
+              logger.warn("SMART FILE CONSUMER (gloabal): Unable to connect to watch directory, will try to shut it down and recreate again", e)
               isWatchedFileSystemAccesible = false
               afterErrorConditions = true
             }
@@ -775,7 +827,10 @@ object FileProcessor {
       case ioe: IOException => {
         logger.error("Exception moving the file ",ioe)
         FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
-
+      }
+      case e: Throwable => {
+        logger.error("Exception moving the file ",e)
+        FileProcessor.setFileState(fileName,FileProcessor.FINISHED_FAILED_TO_COPY)
       }
     }
   }
@@ -851,80 +906,99 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
    * @param props
    */
   def init(props: scala.collection.mutable.Map[String, String]): Unit = {
-    message_separator = props.getOrElse(SmartFileAdapterConstants.MSG_SEPARATOR, "10").toInt.toChar
-    dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
-    dirToMoveTo = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
-    NUMBER_OF_BEES = props.getOrElse(SmartFileAdapterConstants.PAR_DEGREE_OF_FILE_CONSUMER, "1").toInt
-    maxlen = props.getOrElse(SmartFileAdapterConstants.WORKER_BUFFER_SIZE, "4").toInt * 1024 * 1024
-    partitionSelectionNumber = props(SmartFileAdapterConstants.NUMBER_OF_FILE_CONSUMERS).toInt
-
-    //Code commented
-    readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
-
-    maxBufAllowed = props.getOrElse(SmartFileAdapterConstants.MAX_MEM, "512").toLong * 1024L *1024L
-    throttleTime = props.getOrElse(SmartFileAdapterConstants.THROTTLE_TIME, "250").toInt
-    var mdConfig = props.getOrElse(SmartFileAdapterConstants.METADATA_CONFIG_FILE,null)
-    var msgName = props.getOrElse(SmartFileAdapterConstants.MESSAGE_NAME, null)
-    var kafkaBroker = props.getOrElse(SmartFileAdapterConstants.KAFKA_BROKER, null)
-
-    //Default allowed content types -
-    var cTypes  = props.getOrElse(SmartFileAdapterConstants.VALID_CONTENT_TYPES, "text/plain;application/gzip")
-
-    for(cType <- cTypes.split(";")){
-      //logger.info("SMART_FILE_CONSUMER Putting "+cType+" into allowed content types")
-      if(!FileProcessor.contentTypes.contains(cType))
-        FileProcessor.contentTypes.put(cType, cType)
-    }
-
-
-    kafkaTopic = props.getOrElse(SmartFileAdapterConstants.KAFKA_TOPIC, null)
-
-    // Bail out if dirToWatch, Topic are not set
-    if (kafkaTopic == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
-      shutdown
-      throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_TOPIC)
-    }
-
-    if (dirToWatch == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
-      shutdown
-      throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_WATCH)
-    }
-
-    if (dirToMoveTo == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Destination directory must be specified")
-      shutdown
-      throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO)
-    }
-
-    if (mdConfig == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
-      shutdown
-      throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.METADATA_CONFIG_FILE)
-    }
-
-    if (msgName == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Message name must be specified")
-      shutdown
-      throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MESSAGE_NAME)
-    }
-
-    if (kafkaBroker == null) {
-      logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Broker details must be specified")
-      shutdown
-      throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER)
-    }
-
-    FileProcessor.setProperties(props, path)
-    FileProcessor.startGlobalFileMonitor
-
-    logger.info("SMART_FILE_CONSUMER ("+partitionId+") Initializing Kafka loading process")
-    // Initialize threads
     try {
-      kml = new KafkaMessageLoader(partitionId, props)
+      message_separator = props.getOrElse(SmartFileAdapterConstants.MSG_SEPARATOR, "10").toInt.toChar
+      dirToWatch = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
+      dirToMoveTo = props.getOrElse(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
+      NUMBER_OF_BEES = props.getOrElse(SmartFileAdapterConstants.PAR_DEGREE_OF_FILE_CONSUMER, "1").toInt
+      maxlen = props.getOrElse(SmartFileAdapterConstants.WORKER_BUFFER_SIZE, "4").toInt * 1024 * 1024
+      partitionSelectionNumber = props(SmartFileAdapterConstants.NUMBER_OF_FILE_CONSUMERS).toInt
+
+      //Code commented
+      readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
+
+      maxBufAllowed = props.getOrElse(SmartFileAdapterConstants.MAX_MEM, "512").toLong * 1024L *1024L
+      throttleTime = props.getOrElse(SmartFileAdapterConstants.THROTTLE_TIME, "250").toInt
+      var mdConfig = props.getOrElse(SmartFileAdapterConstants.METADATA_CONFIG_FILE,null)
+      var msgName = props.getOrElse(SmartFileAdapterConstants.MESSAGE_NAME, null)
+      var kafkaBroker = props.getOrElse(SmartFileAdapterConstants.KAFKA_BROKER, null)
+
+      //Default allowed content types -
+      var cTypes  = props.getOrElse(SmartFileAdapterConstants.VALID_CONTENT_TYPES, "text/plain;application/gzip")
+
+      for(cType <- cTypes.split(";")){
+        //logger.info("SMART_FILE_CONSUMER Putting "+cType+" into allowed content types")
+        if(!FileProcessor.contentTypes.contains(cType))
+          FileProcessor.contentTypes.put(cType, cType)
+      }
+
+
+      kafkaTopic = props.getOrElse(SmartFileAdapterConstants.KAFKA_TOPIC, null)
+
+      // Bail out if dirToWatch, Topic are not set
+      if (kafkaTopic == null) {
+        logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
+        shutdown
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_TOPIC)
+      }
+
+      if (dirToWatch == null) {
+        logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
+        shutdown
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_WATCH)
+      }
+
+      if (dirToMoveTo == null) {
+        logger.error("SMART_FILE_CONSUMER ("+partitionId+") Destination directory must be specified")
+        shutdown
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO)
+      }
+
+      if (mdConfig == null) {
+        logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.METADATA_CONFIG_FILE)
+      }
+
+      if (msgName == null) {
+        logger.error("SMART_FILE_CONSUMER ("+partitionId+") Message name must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MESSAGE_NAME)
+      }
+
+      if (kafkaBroker == null) {
+        logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Broker details must be specified")
+        shutdown
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER)
+      }
+
+      FileProcessor.setProperties(props, path)
+      FileProcessor.startGlobalFileMonitor
+
+      logger.info("SMART_FILE_CONSUMER ("+partitionId+") Initializing Kafka loading process")
+      // Initialize threads
+      try {
+        kml = new KafkaMessageLoader(partitionId, props)
+      } catch {
+        case e: Exception => {
+          logger.error("SMART_FILE_CONSUMER: ERROR", e)
+          shutdown
+          throw e
+        }
+        case e: Throwable => {
+          logger.error("SMART_FILE_CONSUMER: ERROR", e)
+          shutdown
+          throw e
+        }
+      }
     } catch {
       case e: Exception => {
+        logger.error("SMART_FILE_CONSUMER: ERROR", e)
+        shutdown
+        throw e
+      }
+      case e: Throwable => {
+        logger.error("SMART_FILE_CONSUMER: ERROR", e)
         shutdown
         throw e
       }
@@ -1132,7 +1206,16 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       for (i <- 1 to NUMBER_OF_BEES) {
         workerBees.execute(new Runnable() {
           override def run() = {
-            processBuffers(i)
+            try {
+              processBuffers(i)
+            } catch {
+              case e: Exception => {
+                logger.error("Failure", e)
+              }
+              case e: Throwable => {
+                logger.error("Failure", e)
+              }
+            }
           }
         })
       }
@@ -1162,6 +1245,11 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         FileProcessor.setFileState(fileName,FileProcessor.MISSING)
         return
       }
+      case e: Throwable => {
+        logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
+        FileProcessor.setFileState(fileName,FileProcessor.MISSING)
+        return
+      }
     }
 
     // Intitialize the leftover area for this file reading.
@@ -1173,7 +1261,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     do {
       waitedCntr = 0
       val st = System.currentTimeMillis
-      while ((BufferCounters.inMemoryBuffersCntr.get * 2 + partitionSelectionNumber + 2) * maxlen > maxBufAllowed) { // One counter for bufferQ and one for msgQ and also taken concurrentKafkaJobsRunning and 2 extra in memory
+      while ((BufferCounters.inMemoryBuffersCntr.get * 2 + partitionSelectionNumber + 2) * maxlen * 2 > maxBufAllowed) { // One counter for bufferQ and one for msgQ and also taken concurrentKafkaJobsRunning and 2 extra in memory
         if (waitedCntr == 0) {
           logger.warn("SMART FILE ADDAPTER (" + partitionId + ") : exceed the allowed memory size (%d) with %d buffers. Halting for free slot".format(maxBufAllowed,
             BufferCounters.inMemoryBuffersCntr.get * 2))
@@ -1190,7 +1278,21 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       BufferCounters.inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
       var isLastChunk = false
       try {
-        readlen = bis.read(buffer, 0, maxlen - 1)
+        readlen = 0
+        var curReadLen = bis.read(buffer, readlen, maxlen - readlen - 1)
+        if (curReadLen > 0)
+          readlen += curReadLen
+        else // First time reading into buffer triggered end of file (< 0)
+          readlen = curReadLen
+        val minBuf = maxlen / 3; // We are expecting at least 1/3 of the buffer need to fill before
+
+        while (readlen < minBuf && curReadLen > 0) {
+          // Re-reading some more data
+          curReadLen = bis.read(buffer, readlen, maxlen - readlen - 1)
+          if (curReadLen > 0)
+            readlen += curReadLen
+        }
+        // readlen = bis.read(buffer, 0, maxlen - 1)
         // if (readlen < (maxlen - 1)) isLastChunk = true
       } catch {
         case ze: ZipException => {
@@ -1206,6 +1308,12 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           return
         }
         case e: Exception => {
+          logger.error("Failed to read file, file corrupted " + fileName, e)
+          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
+          enQBuffer(BufferToChunk)
+          return
+        }
+        case e: Throwable => {
           logger.error("Failed to read file, file corrupted " + fileName, e)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
@@ -1259,6 +1367,10 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         logger.warn("SMART FILE CONSUMER: partition " + partitionId + " Unable to detect file as being processed " + fileName)
         logger.warn("SMART FILE CONSUMER: Check to make sure the input directory does not still contain this file " + ioe)
       }
+      case e: Throwable => {
+        logger.warn("SMART FILE CONSUMER: partition " + partitionId + " Unable to detect file as being processed " + fileName)
+        logger.warn("SMART FILE CONSUMER: Check to make sure the input directory does not still contain this file " + e)
+      }
     }
 
   }
@@ -1285,7 +1397,10 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           readBytesChunksFromFile(fileToProcess)
         } catch {
           case fnfe: Exception => {
-            logger.warn("Exception Encountered, check the logs.",fnfe)
+            logger.error("Exception Encountered, check the logs.", fnfe)
+          }
+          case e: Throwable => {
+            logger.error("Exception Encountered, check the logs.", e)
           }
         }
         curTimeEnd = System.currentTimeMillis
@@ -1316,13 +1431,31 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       // Initialize and launch the File Processor thread(s), and kafka producers
       fileConsumers.execute(new Runnable() {
         override def run() = {
-          doSomeConsuming
+          try {
+            doSomeConsuming
+          } catch {
+            case e: Exception => {
+              logger.error("Failure", e)
+            }
+            case e: Throwable => {
+              logger.error("Failure", e)
+            }
+          }
         }
       })
 
       fileConsumers.execute(new Runnable() {
         override def run() = {
-          doSomePushing
+          try {
+            doSomePushing
+          } catch {
+            case e: Exception => {
+              logger.error("Failure", e)
+            }
+            case e: Throwable => {
+              logger.error("Failure", e)
+            }
+          }
         }
       })
   }
@@ -1340,9 +1473,14 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       case fnfe: FileNotFoundException => {
         throw fnfe
       }
-      case e: Exception =>
-        val stackTrace = StackTrace.ThrowableTraceString(e)
+      case e: Exception => {
+        logger.debug("isCompressed failed", e)
         return false
+      }
+      case e: Throwable => {
+        logger.debug("isCompressed failed", e)
+        return false
+      }
     }
 
     val maxlen = 2
