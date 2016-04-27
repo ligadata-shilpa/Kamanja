@@ -111,7 +111,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
     var attributeTypes = new Array[AttributeTypeInfo](4);
     attributeTypes(0) = new AttributeTypeInfo("id", 0, AttributeTypeInfo.TypeCategory.INT, -1, -1, 0)
     attributeTypes(1) = new AttributeTypeInfo("code", 1, AttributeTypeInfo.TypeCategory.INT, -1, -1, 0)
-    attributeTypes(2) = new AttributeTypeInfo("description", 2, AttributeTypeInfo.TypeCategory.CHAR, -1, -1, 0)
+    attributeTypes(2) = new AttributeTypeInfo("description", 2, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
     attributeTypes(3) = new AttributeTypeInfo("codes", 3, AttributeTypeInfo.TypeCategory.MAP, 0, 1, 0)
 
     return attributeTypes
@@ -167,7 +167,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
 
   var id: Int = _;
   var code: Int = _;
-  var description: Char = _;
+  var description: String = _;
   var codes: scala.collection.immutable.Map[String, Int] = _;
 
   override def getAttributeTypes(): Array[AttributeTypeInfo] = {
@@ -175,7 +175,9 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
     return attributeTypes
   }
 
-  private def getWithReflection(key: String): AnyRef = {
+  private def getWithReflection(keyName: String): AnyRef = {
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(this)
@@ -198,12 +200,17 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
     }
   }
 
-  private def getByName(key: String): AnyRef = {
+  private def getByName(keyName: String): AnyRef = {
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
+
     if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container IdCodeDimFixedTest");
     return get(keyTypes(key).getIndex)
   }
 
-  override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
+  override def getOrElse(keyName: String, defaultVal: Any): AnyRef = { // Return (value, type)
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
     try {
       val value = get(key.toLowerCase())
       if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
@@ -288,7 +295,9 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
 
   }
 
-  override def set(key: String, value: Any) = {
+  override def set(keyName: String, value: Any) = {
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
     try {
 
       if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message IdCodeDimFixedTest")
@@ -308,9 +317,10 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
     try {
       index match {
         case 0 => {
-          if (value.isInstanceOf[Int])
+          if (value.isInstanceOf[Int]) {
             this.id = value.asInstanceOf[Int];
-          else throw new Exception(s"Value is the not the correct type for field id in message IdCodeDimFixedTest")
+            setTimePartitionData;
+          } else throw new Exception(s"Value is the not the correct type for field id in message IdCodeDimFixedTest")
         }
         case 1 => {
           if (value.isInstanceOf[Int])
@@ -318,8 +328,8 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
           else throw new Exception(s"Value is the not the correct type for field code in message IdCodeDimFixedTest")
         }
         case 2 => {
-          if (value.isInstanceOf[Char])
-            this.description = value.asInstanceOf[Char];
+          if (value.isInstanceOf[String])
+            this.description = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field description in message IdCodeDimFixedTest")
         }
         case 3 => {
@@ -346,7 +356,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
   private def fromFunc(other: IdCodeDimFixedTest): IdCodeDimFixedTest = {
     this.id = com.ligadata.BaseTypes.IntImpl.Clone(other.id);
     this.code = com.ligadata.BaseTypes.IntImpl.Clone(other.code);
-    this.description = com.ligadata.BaseTypes.CharImpl.Clone(other.description);
+    this.description = com.ligadata.BaseTypes.StringImpl.Clone(other.description);
     if (other.codes != null) {
       this.codes = other.codes.map { a => (com.ligadata.BaseTypes.StringImpl.Clone(a._1), com.ligadata.BaseTypes.IntImpl.Clone(a._2)) }.toMap
     } else this.codes = null;
@@ -363,7 +373,7 @@ class IdCodeDimFixedTest(factory: ContainerFactoryInterface, other: IdCodeDimFix
     this.code = value
     return this
   }
-  def withdescription(value: Char): IdCodeDimFixedTest = {
+  def withdescription(value: String): IdCodeDimFixedTest = {
     this.description = value
     return this
   }

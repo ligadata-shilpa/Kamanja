@@ -117,8 +117,12 @@ class MessageGenerator {
       getSetFixed = getSetFixed.append(getAllAttributeValuesFixed(message));
       getSetFixed = getSetFixed.append(getAttributeNameAndValueIterator);
       getSetFixed = getSetFixed.append(setByKeyFunc(message));
-      if (message.Elements != null)
-        getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name, mdMgr));
+      if (message.Elements != null && message.timePartition != null) {
+        getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name, mdMgr, message.timePartition.Key));
+      } else if (message.Elements != null) {
+        getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name, mdMgr, null));
+
+      }
       getSetFixed = getSetFixed.append(setValueAndValueTypeByKeyFunc);
     } catch {
       case e: Exception => {
@@ -374,7 +378,7 @@ class MessageGenerator {
   /*
    * Set By Ordinal Function generation  -- setByOffset(fields, msgName) 
    */
-  private def setFuncByOffset(fields: List[Element], msgName: String, mdMgr: MdMgr): String = {
+  private def setFuncByOffset(fields: List[Element], msgName: String, mdMgr: MdMgr, timePartKey: String): String = {
     var getFuncByOffset: String = ""
     getFuncByOffset = """
       
@@ -382,7 +386,7 @@ class MessageGenerator {
       if (value == null) throw new Exception(s"Value is null for index $index in message """ + msgName + """ ")
       try{
         index match {
- """ + getSetByIndexStr(fields, msgName, mdMgr) + """
+ """ + getSetByIndexStr(fields, msgName, mdMgr, timePartKey) + """
         case _ => throw new Exception(s"$index is a bad index for message """ + msgName + """");
         }
     	}""" + msgConstants.catchStmt + """
@@ -395,7 +399,7 @@ class MessageGenerator {
    * Set method by index for fixed Messages
    */
 
-  private def getSetByIndexStr(fields: List[Element], msgName: String, mdMgr: MdMgr): String = {
+  private def getSetByIndexStr(fields: List[Element], msgName: String, mdMgr: MdMgr, timePartKey: String): String = {
     var getSetByIndexStr = new StringBuilder(8 * 1024)
     try {
       fields.foreach(field => {
@@ -404,7 +408,7 @@ class MessageGenerator {
         val fieldTypeType = fieldBaseType.tTypeType.toString().toLowerCase()
         fieldTypeType match {
           case "tscalar" => {
-            getSetByIndexStr = getSetByIndexStr.append(setByIndexScalar(field, msgName))
+            getSetByIndexStr = getSetByIndexStr.append(setByIndexScalar(field, msgName, timePartKey))
           }
           case "tcontainer" => {
             fieldType match {
@@ -449,15 +453,24 @@ class MessageGenerator {
   /*
    * Set By Ordinal Function generation
    */
-  private def setByIndexScalar(field: Element, msgName: String): String = {
+  private def setByIndexScalar(field: Element, msgName: String, timePartKey: String): String = {
     var setByOffset = new StringBuilder(8 * 1024)
     try {
       if (field != null) {
-        setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
-        setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
-        setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
-        setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
-        setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
+        if (timePartKey != null && timePartKey.trim().size != 0 && field.Name.equalsIgnoreCase(timePartKey)) {
+          setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
+          setByOffset.append("%sif(value.isInstanceOf[%s]){ %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%s  setTimePartitionData; %s".format(msgConstants.pad4, msgConstants.newline))
+          setByOffset.append("%s} else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
+          setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
+        } else {
+          setByOffset.append("%scase %s => { %s".format(msgConstants.pad4, field.FieldOrdinal, msgConstants.newline))
+          setByOffset.append("%sif(value.isInstanceOf[%s]) %s".format(msgConstants.pad4, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%s  this.%s = value.asInstanceOf[%s]; %s".format(msgConstants.pad4, field.Name, field.FieldTypePhysicalName, msgConstants.newline))
+          setByOffset.append("%s else throw new Exception(s\"Value is the not the correct type for field %s in message %s\") %s".format(msgConstants.pad4, field.Name, msgName, msgConstants.newline))
+          setByOffset.append("%s} %s".format(msgConstants.pad4, msgConstants.newline))
+        }
       }
     } catch {
       case e: Exception => {
@@ -559,7 +572,7 @@ class MessageGenerator {
       var typetyprStr: String = maptypeDef.valDef.tType.toString().toLowerCase()
       typeInfo match {
         case "tscalar" => {
-          setByOffset = setByOffset.append(setByIndexScalar(field, msgName))
+          setByOffset = setByOffset.append(setByIndexScalar(field, msgName, null))
         }
         case "tcontainer" => {
           typetyprStr match {
@@ -678,7 +691,9 @@ class MessageGenerator {
    */
   private def getOrElseFunc(): String = {
     """
-    override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
+    override def getOrElse(keyName: String, defaultVal: Any): AnyRef = { // Return (value, type)
+      if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+      val key = keyName.toLowerCase;
       try {
         val value = get(key.toLowerCase())
         if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
@@ -884,7 +899,10 @@ class MessageGenerator {
    */
   private def getByName(message: Message): String = {
     """
-    private def getByName(key: String): AnyRef = {
+    private def getByName(keyName: String): AnyRef = {
+     if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+      val key = keyName.toLowerCase;
+   
       if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container """ + message.Name + """");
       return get(keyTypes(key).getIndex)
   }
@@ -896,7 +914,9 @@ class MessageGenerator {
    */
   private def getWithReflection(msg: Message): String = {
     """
-    private def getWithReflection(key: String): AnyRef = {
+    private def getWithReflection(keyName: String): AnyRef = {
+      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+      val key = keyName.toLowerCase;
       val ru = scala.reflect.runtime.universe
       val m = ru.runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(this)
@@ -927,8 +947,10 @@ class MessageGenerator {
   private def setByKeyFunc(message: Message): String = {
 
     """
-    override def set(key: String, value: Any) = {
-    try {
+    override def set(keyName: String, value: Any) = {
+      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+      val key = keyName.toLowerCase;
+      try {
    
   """ + setByKeyFuncStr(message) + """
       }""" + msgConstants.catchStmt + """

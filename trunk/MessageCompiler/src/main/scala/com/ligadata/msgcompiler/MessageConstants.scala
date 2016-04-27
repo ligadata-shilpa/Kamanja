@@ -120,7 +120,9 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
 
   private def getByNameFuncForMapped = {
     """
-    override def get(key: String): AnyRef = { // Return (value, type)
+    override def get(keyName: String): AnyRef = { // Return (value, type)
+      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " +keyName);
+      val key = keyName.toLowerCase;
       try {
         val value = valuesMap(key).getValue
         if (value == null) return null; else return value.asInstanceOf[AnyRef];  
@@ -139,8 +141,10 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
    */
   private def getOrElseFuncForMapped = {
     """
-    override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
+    override def getOrElse(keyName: String, defaultVal: Any): AnyRef = { // Return (value, type)
       var attributeValue: AttributeValue = new AttributeValue();
+      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+      val key = keyName.toLowerCase;
       try {
         val value = valuesMap(key).getValue
         if (value == null) return defaultVal.asInstanceOf[AnyRef];
@@ -221,13 +225,17 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
 
   private def setByNameFuncForMappedMsgs() = {
     """
-    override def set(key: String, value: Any) = {
+    override def set(keyName: String, value: Any) = {
+      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+      val key = keyName.toLowerCase;
       try {
-       val keyName: String = key.toLowerCase();
-        if (keyTypes.contains(key)) {
-          valuesMap(key) = new AttributeValue(value, keyTypes(keyName))
+       if (keyTypes.contains(key)) {
+          valuesMap(key) = new AttributeValue(value, keyTypes(key))
         } else {
           valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0))
+        }
+        if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+          setTimePartitionData;
         }
       } catch {
         case e: Exception => {
@@ -244,16 +252,20 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
    */
   private def setValueAndValTypByKeyMapped = {
     """
-    override def set(key: String, value: Any, valTyp: String) = {
+    override def set(keyName: String, value: Any, valTyp: String) = {
+       if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+       val key = keyName.toLowerCase;      
        try{
-         val keyName: String = key.toLowerCase();
-         if (keyTypes.contains(key)) {
-           valuesMap(key) = new AttributeValue(value, keyTypes(keyName))
+          if (keyTypes.contains(key)) {
+           valuesMap(key) = new AttributeValue(value, keyTypes(key))
          } else {
            val typeCategory = AttributeTypeInfo.TypeCategory.valueOf(valTyp.toUpperCase())
            val keytypeId = typeCategory.getValue.toShort
            val valtypeId = typeCategory.getValue.toShort
            valuesMap(key) = new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0))
+          }
+          if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+            setTimePartitionData;
           }
         } catch {
           case e: Exception => {
