@@ -1246,7 +1246,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         return
       }
       case e: Throwable => {
-        logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
+        logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",e)
         FileProcessor.setFileState(fileName,FileProcessor.MISSING)
         return
       }
