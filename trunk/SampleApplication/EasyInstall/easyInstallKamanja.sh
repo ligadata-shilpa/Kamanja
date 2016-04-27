@@ -182,6 +182,7 @@ echo "copy the fat jars to $installPath ..."
 
 cd $srcPath
 cp Utils/KVInit/target/scala-2.10/kvinit* $systemlib
+cp Utils/ContainersUtility/target/scala-2.10/containersutility* $systemlib
 cp MetadataAPI/target/scala-2.10/metadataapi* $systemlib
 cp KamanjaManager/target/scala-2.10/kamanjamanager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.10/methodextractor* $bin
@@ -473,6 +474,7 @@ echo "copy the fat jars to $installPath ..."
 
 cd $srcPath
 cp Utils/KVInit/target/scala-2.11/kvinit* $systemlib
+cp Utils/ContainersUtility/target/scala-2.11/containersutility* $systemlib
 cp MetadataAPI/target/scala-2.11/metadataapi* $systemlib
 cp KamanjaManager/target/scala-2.11/kamanjamanager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.11/methodextractor* $bin
