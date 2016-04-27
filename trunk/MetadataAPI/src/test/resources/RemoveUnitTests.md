@@ -222,3 +222,16 @@ $KAMANJA_HOME/bin/kamanja $apiConfigProperties get type system.float.1000000
 _function_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties get function pmml.AnyBetween.1
+
+_pmml_
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties get all messages
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove message system.irismsg.000000000001000001 TENANTID tenant1
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/IrisMsg.json TENANTID tenant1
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/IrisMsg1.json TENANTID tenant1
+
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add model pmml  MODELNAME com.botanical.jpmml.IrisDecisionTree MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg OUTMESSAGE System.IrisMsg1 TENANTID tenant1 $MetadataDir/model/KNIME/DecisionTreeEnsembleIris.pmml 
+

@@ -89,6 +89,7 @@ object StartMetadataAPI {
   var expectAdapterFilter = false
   var expectMessageFilter = false
   var expectSerializerFilter = false
+  var expectOutputMsg = false
   var varmap: scala.collection.mutable.Map[String,String] = scala.collection.mutable.Map[String,String]()
   var expectTid: Boolean = false
   var expectMDep: Boolean = false
@@ -138,6 +139,8 @@ object StartMetadataAPI {
                       expectModelVer = true
                   } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
                       expectMessageName = true
+                  } else if (arg.equalsIgnoreCase(OUTPUTMSG)) {
+                      expectOutputMsg = true
                   } else if (arg.equalsIgnoreCase(KEY)) {
                       expectRemoveBindingKey = true
                   } else if (arg.equalsIgnoreCase(FROMFILE)) {
@@ -175,6 +178,11 @@ object StartMetadataAPI {
                       if (expectMessageName) {
                           extraCmdArgs(MESSAGENAME) = arg
                           expectMessageName = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectOutputMsg) {
+                          extraCmdArgs(OUTPUTMSG) = arg
+                          expectOutputMsg = false
                           argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectRemoveBindingKey) {
