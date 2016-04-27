@@ -946,12 +946,6 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
     }
   }
 
-  private def ExtractDataFromTupleData(containerType: String, key: Key, value: Value, bos: ByteArrayOutputStream, dos: DataOutputStream): Array[DataFormat] = {
-    val serType = value.serializerType
-    val arr = value.serializedInfo
-    Array(new DataFormat(containerType, key.timePartition, key.bucketKey, key.transactionId, key.rowId, serType, arr))
-  }
-
   def GetKeys(containerName: String, store: DataStore): scala.collection.mutable.Set[Key] = {
     var objs = scala.collection.mutable.Set[Key]()
     val getObjFn = (k: Key) => {
@@ -992,6 +986,20 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
     }
   }
 
+  def GetAllTableData(containerName: String, store: DataStore, callbackFunction: (Key, Value) => Unit): Unit = {
+    try {
+      store.get(containerName, callbackFunction)
+    } catch {
+      case e: ObjectNotFoundException => {
+        logger.debug("ObjectNotFound Exception", e)
+        throw e
+      }
+      case e: Exception => {
+        logger.debug("General Exception", e)
+        throw ObjectNotFoundException(e.getMessage(), e)
+      }
+    }
+  }
 
   // metadataElemsJson are used for dependency load
   // Callback function calls with container name, timepartition value, bucketkey, transactionid, rowid, serializername & data in Gson (JSON) format.
@@ -1041,57 +1049,40 @@ class MigrateFrom_V_1_2 extends MigratableFrom {
 
     logger.debug("All Messages and Containers:%s".format(MdResolve._messagesAndContainers.map(kv => kv._1).mkString(",")))
 
-    val bos = new ByteArrayOutputStream(1024 * 1024)
-    val dos = new DataOutputStream(bos)
-
     try {
       // Load all data objects
       breakable {
         msgsAndContainers.toArray.foreach(msg => {
           val msgName = msg.asInstanceOf[String]
-          var keys = scala.collection.mutable.Set[Key]()
-          keys = GetKeys(msgName + backupTblSufix, _dataStore)
-          if (keys.size == 0) {
-            val szMsg = "No objects available in " + msgName
-            logger.warn(szMsg)
-            break
-          }
-          keys.foreach(key => {
-            val v = GetValue(msgName + backupTblSufix, key, _dataStore)
-            val retData = ExtractDataFromTupleData(msgName, key, v, bos, dos)
-            if (retData.size > 0 && callbackFunction != null) {
-              if (callbackFunction.call(retData) == false)
+          val getObjFn = (k: Key, v: Value) => {
+            if (callbackFunction != null) {
+              val serType = v.serializerType
+              val arr = v.serializedInfo
+              if (callbackFunction.call(Array(new DataFormat(msgName, k.timePartition, k.bucketKey, k.transactionId, k.rowId, serType, arr))) == false)
                 throw new Exception("Data failed to consume")
             }
-          })
+          }
+          GetAllTableData(msgName + backupTblSufix, _dataStore, getObjFn)
         })
 
+        // Collecting all data from catalog tables at once
         catalogTables.toArray.foreach(msg => {
           val tblName = msg.asInstanceOf[String]
-          var keys = scala.collection.mutable.Set[Key]()
-          keys = GetKeys(tblName + backupTblSufix, _dataStore)
-          if (keys.size == 0) {
-            val szMsg = "No objects available in " + tblName
-            logger.warn(szMsg)
-            break
-          }
-          keys.foreach(key => {
-            val v = GetValue(tblName + backupTblSufix, key, _dataStore)
-            val retData = ExtractDataFromTupleData(tblName, key, v, bos, dos)
-            if (retData.size > 0 && callbackFunction != null) {
-              if (callbackFunction.call(retData) == false)
+          val getObjFn = (k: Key, v: Value) => {
+            if (callbackFunction != null) {
+              val serType = v.serializerType
+              val arr = v.serializedInfo
+              if (callbackFunction.call(Array(new DataFormat(tblName, k.timePartition, k.bucketKey, k.transactionId, k.rowId, serType, arr))) == false)
                 throw new Exception("Data failed to consume")
             }
-          })
+          }
+          GetAllTableData(tblName + backupTblSufix, _dataStore, getObjFn)
         })
       }
     } catch {
       case e: Exception => {
         throw new Exception("Failed to get data", e)
       }
-    } finally {
-      dos.close()
-      bos.close()
     }
   }
 
