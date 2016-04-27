@@ -94,13 +94,18 @@ class HdfsFileHandler extends SmartFileHandler{
 
   @throws(classOf[KamanjaException])
   def read(buf : Array[Byte], length : Int) : Int = {
+    read(buf, 0, length)
+  }
+
+  @throws(classOf[KamanjaException])
+  def read(buf : Array[Byte], offset : Int, length : Int) : Int = {
 
     try {
       logger.debug("Reading from hdfs file " + fileFullPath)
 
       if (in == null)
         return -1
-      val readLength = in.read(buf, 0, length)
+      val readLength = in.read(buf, offset, length)
       logger.debug("readLength= " + readLength)
       readLength
     }

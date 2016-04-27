@@ -121,13 +121,18 @@ class SftpFileHandler extends SmartFileHandler{
 
   @throws(classOf[KamanjaException])
   def read(buf : Array[Byte], length : Int) : Int = {
+    read(buf, 0, length)
+  }
+
+  @throws(classOf[KamanjaException])
+  def read(buf : Array[Byte], offset : Int, length : Int) : Int = {
     try {
       if (in == null) {
         logger.warn(s"Trying to read from SFTP file ($getFullPath) but input stream is null")
         return -1
       }
       logger.debug(s"Reading from SFTP file ($getFullPath)")
-      in.read(buf, 0, length)
+      in.read(buf, offset, length)
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)

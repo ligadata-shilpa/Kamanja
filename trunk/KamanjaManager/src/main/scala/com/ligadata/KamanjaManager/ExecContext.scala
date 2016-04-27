@@ -579,6 +579,7 @@ object PostMessageExecutionQueue {
   private val msgQLock = new Object()
   private var processMsgs: ExecutorService = null
   private var execCtxt: ExecContext = null
+  private var isShutdown = false
 
   // Passing empty values
   private val emptyData = Array[Byte]()
@@ -653,22 +654,12 @@ object PostMessageExecutionQueue {
     execCtxt = ExecContextFactoryImpl.CreateExecContext(input, curPartitionKey, nodeCtxt)
     nodeContext = nodeCtxt
     processMsgs = scala.actors.threadpool.Executors.newFixedThreadPool(1)
-
-//
-//
-//    val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs)  = nodeContext.getEnvCtxt().getZookeeperInfo
-//    val (txnIdsRangeForPartition, txnIdsRangeForNode)  = nodeContext.getEnvCtxt().getTransactionRanges
-//
-//    NodeLevelTransService.init(zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs, zkNodeBasePath, txnIdsRangeForNode,
-//      nodeContext.getEnvCtxt().getSystemCatalogDatastore(), nodeContext.getEnvCtxt().getJarPaths())
-//    val tmpTransService = new SimpleTransService
-//    tmpTransService.init(txnIdsRangeForPartition)
-//    transService  = tmpTransService
+    isShutdown = false
 
     processMsgs.execute(new Runnable() {
       val emptyStrBytes = "".getBytes()
       override def run() = {
-        while (processMsgs.isShutdown == false) {
+        while (!isShutdown && processMsgs != null && processMsgs.isShutdown == false) {
           val msg = deQMsg
           if (msg != null) {
             execCtxt.execute(msg, emptyStrBytes, null, null, System.currentTimeMillis)
@@ -676,7 +667,8 @@ object PostMessageExecutionQueue {
           else {
             // If no messages found in the queue, simply sleep for sometime
             try {
-              Thread.sleep(100) // Sleeping for 100ms
+              if (!isShutdown)
+                Thread.sleep(100) // Sleeping for 100ms
             } catch {
               case e: Throwable => {
                 // Not yet handled this
@@ -701,9 +693,10 @@ object PostMessageExecutionQueue {
   }
 
   def shutdown(): Unit = {
+    isShutdown = true
     if (processMsgs != null)
       processMsgs.shutdownNow()
-    processMsgs = null
+    // processMsgs = null, for now not setting to null. Anyway it will reset new executor when it reinitialized in case if it does
     //BUGBUG:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
     //FIXME:: Instead of stutdown now we can call shutdown and wait for termination to shutdown the thread(s)
   }
