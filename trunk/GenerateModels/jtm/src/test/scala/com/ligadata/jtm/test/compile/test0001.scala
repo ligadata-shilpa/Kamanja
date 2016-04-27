@@ -76,7 +76,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
 
     if(isDebugEnabled)
     {
-      results.foreach(m => Debug( s"Output %s -> %s".format(m.getFullTypeName, m.toString())))
+      results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))
     }
 
     results.asInstanceOf[Array[ContainerOrConcept]]
