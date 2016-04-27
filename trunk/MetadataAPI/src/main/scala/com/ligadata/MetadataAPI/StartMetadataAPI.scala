@@ -155,57 +155,57 @@ object StartMetadataAPI {
                       if (expectTid) {
                           extraCmdArgs(TENANTID) = arg
                           expectTid = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectDep) {
                           extraCmdArgs(WITHDEP) = arg
                           expectDep = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectModelName) {
                           extraCmdArgs(MODELNAME) = arg
                           expectModelName = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectModelVer) {
                           extraCmdArgs(MODELVERSION) = arg
                           expectModelVer = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectMessageName) {
                           extraCmdArgs(MESSAGENAME) = arg
                           expectMessageName = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectRemoveBindingKey) {
                           expectRemoveBindingKey = false
                           extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectBindingFromString) {
                           extraCmdArgs(FROMSTRING) = arg
                           expectBindingFromString = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectBindingFromFile) {
                           extraCmdArgs(FROMFILE) = arg
                           expectBindingFromFile = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectAdapterFilter) {
                           extraCmdArgs(ADAPTERFILTER) = arg
                           expectAdapterFilter = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectMessageFilter) {
                           extraCmdArgs(MESSAGEFILTER) = arg
                           expectMessageFilter = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
                       if (expectSerializerFilter) {
                           extraCmdArgs(SERIALIZERFILTER) = arg
                           expectSerializerFilter = false
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
 
                       /**
@@ -216,35 +216,30 @@ object StartMetadataAPI {
                         * have a name like "key" as is used with the REMOVEADAPTERMESSAGEBINDING. The name/value pairs can
                         * then be expressed in any order to the liking of the user.
                         */
-                      if (action.equalsIgnoreCase("removemodel")) {
+                      if (action.equalsIgnoreCase("getmodel") || action.equalsIgnoreCase("removemodel")) {
                           /** only take the first one */
                           if (! extraCmdArgs.contains(MODELNAME)) extraCmdArgs(MODELNAME) = arg
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
-                      if (action.equalsIgnoreCase("getmessage")) {
+                      if (action.equalsIgnoreCase("getmessage") || action.equalsIgnoreCase("removemessage")) {
                           /** only take the first one */
                           if (! extraCmdArgs.contains(MESSAGENAME)) extraCmdArgs(MESSAGENAME) = arg
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
-                      if (action.equalsIgnoreCase("removemessage")) {
-                          /** only take the first one */
-                          if (! extraCmdArgs.contains(MESSAGENAME)) extraCmdArgs(MESSAGENAME) = arg
-                          argVar = "" // Make sure we dont add to the routing command
-                      }
-                      if (action.equalsIgnoreCase("removecontainer")) {
+                      if (action.equalsIgnoreCase("removecontainer") || action.equalsIgnoreCase("getcontainer")) {
                           /** only take the first one */
                           if (! extraCmdArgs.contains(CONTAINERNAME)) extraCmdArgs(CONTAINERNAME) = arg
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
-                      if (action.equalsIgnoreCase("removetype")) {
+                      if (action.equalsIgnoreCase("removetype") || action.equalsIgnoreCase("gettype")) {
                           /** only take the first one */
                           if (! extraCmdArgs.contains(TYPENAME)) extraCmdArgs(TYPENAME) = arg
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
-                      if (action.equalsIgnoreCase("removefunction")) {
+                      if (action.equalsIgnoreCase("removefunction") || action.equalsIgnoreCase("getfunction")) {
                           /** only take the first one */
                           if (! extraCmdArgs.contains(FUNCTIONNAME)) extraCmdArgs(FUNCTIONNAME) = arg
-                          argVar = "" // Make sure we dont add to the routing command
+                          argVar = "" // Make sure we don't add to the routing command
                       }
 
                       action += argVar
@@ -333,7 +328,7 @@ object StartMetadataAPI {
         case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, tid)
         case Action.REMOVEMESSAGE => {
           val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
-          if (msgName.length == 0)
+          if (msgName.isEmpty)
             response = MessageService.removeMessage()
           else
             response = MessageService.removeMessage(msgName)
@@ -342,7 +337,7 @@ object StartMetadataAPI {
         case Action.GETALLMESSAGES => response = MessageService.getAllMessages
         case Action.GETMESSAGE => {
           val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
-          if (msgName.length == 0)
+          if (msgName.isEmpty)
             response = MessageService.getMessage()
           else
             response = MessageService.getMessage(msgName)
@@ -384,7 +379,7 @@ object StartMetadataAPI {
 
         case Action.REMOVEMODEL => {
           val modelName : String = extraCmdArgs.getOrElse(MODELNAME, "")
-          if (modelName.length == 0)
+          if (modelName.isEmpty)
             response = ModelService.removeModel("", userId)
           else
             response = ModelService.removeModel(modelName)
@@ -430,10 +425,11 @@ object StartMetadataAPI {
 
         case Action.GETALLMODELS => response = ModelService.getAllModels(userId)
         case Action.GETMODEL => response = {
-          if (param.length == 0)
+            val modelName : String = extraCmdArgs.getOrElse(MODELNAME,"")
+            if (modelName.isEmpty)
             ModelService.getModel("", userId)
           else
-            ModelService.getModel(param, userId)
+            ModelService.getModel(modelName, userId)
         }
 
 
@@ -441,16 +437,17 @@ object StartMetadataAPI {
         case Action.ADDCONTAINER => response = ContainerService.addContainer(input, tid)
         case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input, tid)
         case Action.GETCONTAINER => response = {
-          if (param.length == 0)
+          val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
+          if (containerName.isEmpty)
             ContainerService.getContainer()
           else
-            ContainerService.getContainer(param)
+            ContainerService.getContainer(containerName)
         }
 
         case Action.GETALLCONTAINERS => response = ContainerService.getAllContainers
         case Action.REMOVECONTAINER => {
           val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
-          if (containerName.length == 0)
+          if (containerName.isEmpty)
             response = ContainerService.removeContainer()
           else
             response = ContainerService.removeContainer(containerName)
@@ -459,16 +456,17 @@ object StartMetadataAPI {
         //Type management
         case Action.ADDTYPE => response = TypeService.addType(input)
         case Action.GETTYPE => response = {
-          if (param.length == 0)
+          val typeName : String = extraCmdArgs.getOrElse(TYPENAME,"")
+          if (typeName.isEmpty)
             TypeService.getType()
           else
-            TypeService.getType(param)
+            TypeService.getType(typeName)
         }
 
         case Action.GETALLTYPES => response = TypeService.getAllTypes
         case Action.REMOVETYPE => response = {
           val typeName : String = extraCmdArgs.getOrElse(TYPENAME,"")
-          if (typeName.length == 0)
+          if (typeName.isEmpty)
             TypeService.removeType()
           else
             TypeService.removeType(typeName)
@@ -480,15 +478,16 @@ object StartMetadataAPI {
         //function management
         case Action.ADDFUNCTION => response = FunctionService.addFunction(input)
         case Action.GETFUNCTION => response = {
-          if (param.length == 0)
+          val fcnName : String = extraCmdArgs.getOrElse(FUNCTIONNAME,"")
+          if (fcnName.isEmpty)
             FunctionService.getFunction()
           else
-            FunctionService.getFunction(param)
+            FunctionService.getFunction(fcnName)
 
         }
         case Action.REMOVEFUNCTION => response = {
           val fcnName : String = extraCmdArgs.getOrElse(FUNCTIONNAME,"")
-          if (param.length == 0)
+          if (fcnName.isEmpty)
             FunctionService.removeFunction()
           else
             FunctionService.removeFunction(fcnName)
