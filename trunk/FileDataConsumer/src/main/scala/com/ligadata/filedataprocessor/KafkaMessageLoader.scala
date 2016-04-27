@@ -578,6 +578,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   private def configureMessageDef(): com.ligadata.KamanjaBase.BaseMsgObj = {
     val loaderInfo = new KamanjaLoaderInfo()
     var msgDef: MessageDef = null
+    var baseMsgObj: com.ligadata.KamanjaBase.BaseMsgObj = null
     try {
       val (typNameSpace, typName) = com.ligadata.kamanja.metadata.Utils.parseNameTokenNoVersion(inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
     //  msgDef =  FileProcessor.getMsgDef(typNameSpace,typName) //
@@ -643,7 +644,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           val module = loaderInfo.mirror.staticModule(clsName)
           val obj = loaderInfo.mirror.reflectModule(module)
           objInst = obj.instance
-          return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
+          baseMsgObj = objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
         } catch {
           case e: java.lang.NoClassDefFoundError => {
             logger.error("SMART FILE CONSUMER:  ERROR", e)
@@ -652,7 +653,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           case e: Exception => {
             try {
               objInst = tempCurClass.newInstance
-              return objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
+              baseMsgObj = objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
             } catch {
               case e: Throwable => {
                 logger.error("SMART FILE CONSUMER:  ERROR", e)
@@ -667,7 +668,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         }
       }
     })
-    return null
+    return baseMsgObj
   }
 
   private def getPartition(key: Any, numPartitions: Int): Int = {
