@@ -233,5 +233,8 @@ $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/IrisMsg1.json TENANTID tenant1
 
 
-$KAMANJA_HOME/bin/kamanja $apiConfigProperties add model pmml  MODELNAME com.botanical.jpmml.IrisDecisionTree MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg OUTMESSAGE System.IrisMsg1 TENANTID tenant1 $MetadataDir/model/KNIME/DecisionTreeEnsembleIris.pmml 
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add model pmml  MODELNAME com.botanical.jpmml.IrisDecisionTree MODELVERSION 000000.000001.000001 MESSAGENAME System.IrisMsg OUTMESSAGE System.IrisMsg1 TENANTID tenant1 $MetadataDir/model/Rattle/DecisionTreeIris.pmml 
+
+
+
 
