@@ -73,12 +73,17 @@ class PosixFileHandler extends SmartFileHandler{
 
   @throws(classOf[KamanjaException])
   def read(buf : Array[Byte], length : Int) : Int = {
+    read(buf, 0, length)
+  }
+
+  @throws(classOf[KamanjaException])
+  def read(buf : Array[Byte], offset : Int, length : Int) : Int = {
 
     try {
       if (in == null)
         return -1
 
-      in.read(buf, 0, length)
+      in.read(buf, offset, length)
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
