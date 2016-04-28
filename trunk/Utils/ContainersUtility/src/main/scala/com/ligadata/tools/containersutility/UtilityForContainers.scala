@@ -332,7 +332,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
         var timerange = new TimeRange(item.begintime.toLong, item.endtime.toLong)
         logger.info("delete from %s container for timerange: %d-%d".format(typename, timerange.beginTime, timerange.endTime))
         kvstore.del(typename, timerange)
-      } else if (item.begintime.equals(null) || item.endtime.equals(null)) {
+      } else if (item.begintime.equals(Long.MinValue.toString) || item.endtime.equals(Long.MaxValue.toString)) {
         var keyList = scala.collection.immutable.List.empty[Key]
         val deleteKey = (k: Key) => {
           keyList = keyList :+ k
@@ -386,9 +386,9 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
     var data : Map[String,String] = Map()
     val retriveData = (k: Key, v: Any, serializerTyp: String, typeName: String, ver: Int)=>{
       val value = v.asInstanceOf[ContainerInterface]
-      val primarykey = value.getPrimaryKey
-      val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
-      val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
+    //  val primarykey = value.getPrimaryKey
+    //  val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
+    //  val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
       if(!value.equals(null)) {
           try {
             val serData = serDeser.serialize(value)
@@ -406,7 +406,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
       if (item.keys.size == 0) {
         var timerange = new TimeRange(item.begintime.toLong, item.endtime.toLong)
         kvstore.get(typename, Array(timerange), retriveData)
-      } else if (item.begintime.equals(null) || item.endtime.equals(null)){
+      } else  if (item.begintime.equals(Long.MinValue.toString) || item.endtime.equals(Long.MaxValue.toString)) {
         kvstore.get(typename, item.keys, retriveData)
       } else {
         var timerange = new TimeRange(item.begintime.toLong, item.endtime.toLong)

@@ -109,22 +109,22 @@ Sample uses:
 
     var cfgfile = if (options.contains('config)) options.apply('config) else null // datatore name and connection string
     var containerName = if (options.contains('containername)) options.apply('containername) else null // container name
-    var operation = if (options.contains('operation)) options.apply('operation) else null // operation select/truncate/delete
+    var operation = if (options.contains('operation)) options.apply('operation) else "" // operation select/truncate/delete
     val tmpkeyfieldnames = if (options.contains('keyfields)) options.apply('keyfields) else null //key field name
     val output = if (options.contains('outputpath)) options.apply('outputpath) else null //output path for select operation
-    val filter = if (options.contains('filter)) options.apply('filter) else null // include keyid and timeranges
-    val serializerName = if (options.contains('serializer)) options.apply('serializer) else null // include serializer name
+    val filter = if (options.contains('filter)) options.apply('filter) else "" // include keyid and timeranges
+    val serializerName = if (options.contains('serializer)) options.apply('serializer) else "" // include serializer name
     val serializerOptionsJson = if (options.contains('serializeroptionsjson)) options.apply('serializeroptionsjson) else null
     val compressionString = if (options.contains('compressionstring)) options.apply('compressionstring) else null
     var containerObj: List[container] = null
 
-    if(operation.equals(null)|| !operation.equalsIgnoreCase("truncate") || !operation.equalsIgnoreCase("select") || !operation.equalsIgnoreCase("delete")){//check if a correct operation passed or not
+    if(operation.equals("")|| (!operation.equalsIgnoreCase("truncate") && !operation.equalsIgnoreCase("select") && !operation.equalsIgnoreCase("delete"))){//check if a correct operation passed or not
       logger.error("you should pass truncate or delete or select in operation option")
       sys.exit(1)
     }
     if (!operation.equalsIgnoreCase("truncate")) { // check if operation does not match truncate because in truncate we do not need to parse filter file
 
-      if(filter.equals(null)){ // if user does not pass a file that includes keys and/or timeranges
+      if(filter.equals("")){ // if user does not pass a file that includes keys and/or timeranges
         logger.error("you should pass a filter file which includes keys and/or timeranges in filter option")
         sys.exit(1)
       } else if(new java.io.File(filter).exists.equals(false)){ // check if path exits or not for filter file
@@ -152,7 +152,7 @@ Sample uses:
       }
 
       if(operation.equalsIgnoreCase("select")) {
-        if (serializerName.equalsIgnoreCase(null)) { // check if user pass serializer option for select operation
+        if (serializerName.equals("")) { // check if user pass serializer option for select operation
           logger.error("you should pass a serializer option for select operation")
           sys.exit(1)
         }
@@ -196,11 +196,10 @@ Sample uses:
           if (dstore != null) {
             try {
               dstore.setObjectResolver(utilmaker)
-              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
-              if(!dstore.isTableExists(containerName)){
-                logger.error("there is no %s container in datastore".format(containerName))
-              }
-              if (operation != null) {
+//              if(!dstore.isTableExists(containerName)){
+//                logger.error("there is no %s container in datastore".format(containerName))
+//              }
+              if (!operation.equals("")) {
                 if (operation.equalsIgnoreCase("truncate")) {
                   utilmaker.TruncateContainer(containerName, dstore)
                 } else if (operation.equalsIgnoreCase("delete")) {
@@ -209,16 +208,20 @@ Sample uses:
                   else
                     utilmaker.DeleteFromContainer(containerName, containerObj, dstore)
                 } else if (operation.equalsIgnoreCase("select")) {
+                  dstore.setDefaultSerializerDeserializer(serializerName, scala.collection.immutable.Map[String, Any]())
                   if (containerObj.size == 0)
                     logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
                   else {
 //                    val serializerName: String = "com.ligadata.kamanja.serializer.jsonserdeser" // BUGBUG:: FIXME: Get this from input option
 //                    val serializerOptionsjson: String = "" // BUGBUG:: FIXME: Get this from input option
 //                    val compressionString: String = "" // BUGBUG:: FIXME: Get this from input option
-
+                    if(new java.io.File(output).exists.equals(false)){ // check if path exits or not for filter file
+                      logger.error("this path does not exist: %s".format(output))
+                      sys.exit(1)
+                    }
                     val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
                     val contInFl = containerName.trim.replace(".", "_").replace("\\", "_").replace("/", "_")
-                    val filename = output + "/" + contInFl + "result_" + dateFormat.format(new java.util.Date()) + ".dat"
+                    val filename = output + "/" + contInFl + "_result_" + dateFormat.format(new java.util.Date()) + ".dat"
 
                     var os: OutputStream = null
 
