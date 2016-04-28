@@ -208,7 +208,7 @@ Sample uses:
                   else
                     utilmaker.DeleteFromContainer(containerName, containerObj, dstore)
                 } else if (operation.equalsIgnoreCase("select")) {
-                  dstore.setDefaultSerializerDeserializer(serializerName, scala.collection.immutable.Map[String, Any]())
+                  dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
                   if (containerObj.size == 0)
                     logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
                   else {
