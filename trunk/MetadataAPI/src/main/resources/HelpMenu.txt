@@ -44,6 +44,7 @@ kamanja upload cluster config input(optional)
 kamanja upload compile config input(optional)
 kamanja dump all cfg objects
 kamanja remove engine config
+kamanja add adaptermessagebinding FROMFILE input
 VII. Output message operations
 kamanja add output message input(optional)
 kamanja get all output messages
