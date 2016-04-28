@@ -473,7 +473,6 @@ object TypeUtils {
       }
     } catch {
       case e: Exception => {
-        
         logger.warn("Unable to load the object " + key + " into cache ", e)
       }
     }
