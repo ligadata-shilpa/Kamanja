@@ -89,9 +89,14 @@ class SftpFileHandler extends SmartFileHandler{
         channelSftp.get(remoteFullPath)
       }
       catch {
-        case e: Exception =>
-          logger.error("Error gettting input stream for file " + getFullPath, e)
+        case e: Exception => {
+          logger.error("Error getting input stream for file " + getFullPath, e)
           null
+        }
+        case e: Throwable => {
+          logger.error("Error getting input stream for file " + getFullPath, e)
+          null
+        }
       }
       finally {
 
@@ -116,6 +121,7 @@ class SftpFileHandler extends SmartFileHandler{
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
+      case e : Throwable => throw new KamanjaException (e.getMessage, e)
     }
   }
 
@@ -136,6 +142,7 @@ class SftpFileHandler extends SmartFileHandler{
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
+      case e : Throwable => throw new KamanjaException (e.getMessage, e)
     }
   }
 
@@ -176,7 +183,12 @@ class SftpFileHandler extends SmartFileHandler{
     }
     catch {
       case ex: Exception => {
-        logger.error("Hdfs File Handler - Error while trying to moving sftp file " +
+        logger.error("Sftp File Handler - Error while trying to moving sftp file " +
+          getFullPath + " to " + remoteNewFilePath, ex)
+        return false
+      }
+      case ex: Throwable => {
+        logger.error("Sftp File Handler - Error while trying to moving sftp file " +
           getFullPath + " to " + remoteNewFilePath, ex)
         return false
       }
@@ -208,7 +220,11 @@ class SftpFileHandler extends SmartFileHandler{
     }
     catch {
       case ex: Exception => {
-        logger.error("Hdfs File Handler - Error while trying to delete sftp file " + getFullPath, ex)
+        logger.error("Sftp File Handler - Error while trying to delete sftp file " + getFullPath, ex)
+        return false
+      }
+      case ex: Throwable => {
+        logger.error("Sftp File Handler - Error while trying to delete sftp file " + getFullPath, ex)
         return false
       }
     }
@@ -225,6 +241,7 @@ class SftpFileHandler extends SmartFileHandler{
       }
       catch{
         case ex : Exception => logger.warn("Error while closing sftp file " + getFullPath, ex)
+        case ex : Throwable => logger.warn("Error while closing sftp file " + getFullPath, ex)
       }
       in = null
     }
@@ -252,6 +269,10 @@ class SftpFileHandler extends SmartFileHandler{
       }
       catch{//source file does not exist, nothing to do
         case ee  : Exception => {
+          //no need to log, file does not exist, calling threads will report
+          return false
+        }
+        case ee  : Throwable => {
           return false
         }
       }
@@ -276,6 +297,10 @@ class SftpFileHandler extends SmartFileHandler{
     }
     catch {
       case ex : Exception => {
+        logger.error("Error while getting file attrs for file " + getFullPath, ex)
+        null
+      }
+      case ex : Throwable => {
         logger.error("Error while getting file attrs for file " + getFullPath, ex)
         null
       }
@@ -381,6 +406,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
               }
               catch {
                 case ex: Exception => logger.error("Smart File Consumer (sftp Monitor) - Error while checking folder " + targetRemoteFolder, ex)
+                case ex: Throwable => logger.error("Smart File Consumer (sftp Monitor) - Error while checking folder " + targetRemoteFolder, ex)
               }
 
               firstCheck = false
@@ -394,6 +420,9 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
           }
           catch {
             case ex: Exception => {
+              logger.error("Error while monitoring folder " + targetRemoteFolder, ex)
+            }
+            case ex: Throwable => {
               logger.error("Error while monitoring folder " + targetRemoteFolder, ex)
             }
           }

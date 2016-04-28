@@ -232,7 +232,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
       try {
         Thread.sleep(refreshRate)
       }
-      catch{case e : Exception => }
+      catch{case e : Throwable => }
     }
   }
 

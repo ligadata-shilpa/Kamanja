@@ -76,6 +76,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
           catch {
             case ie: InterruptedException => {}
             case e: Exception => logger.error("", e)
+            case e: Throwable => logger.error("", e)
           }
         }
       }
@@ -114,7 +115,12 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         logger.error("", ex)
         finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
         shutdownThreads
-
+        return
+      }
+      case ex : Throwable => {
+        logger.error("", ex)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
+        shutdownThreads
         return
       }
     }
@@ -203,6 +209,12 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
         shutdownThreads
         return
       }
+      case et: Throwable => {
+        logger.error("SMART FILE CONSUMER: Throwable while accessing the file for processing " + fileName, et)
+        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
+        shutdownThreads
+        return
+      }
     }
 
     // Done with this file... mark is as closed
@@ -212,6 +224,9 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     } catch {
       case ioe: IOException => {
         logger.error("SMART FILE CONSUMER: Exception while closing file " + fileName, ioe)
+      }
+      case et: Throwable => {
+        logger.error("SMART FILE CONSUMER: Throwable while closing file " + fileName, et)
       }
     }
     finally{

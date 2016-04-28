@@ -212,7 +212,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
              try {
                Thread.sleep(statusUpdateInterval)
              }
-             catch{case e : Exception => }
+             catch{case e : Throwable => }
            }
           }
         }
@@ -825,6 +825,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     }
     catch{
       case e : Exception => LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+      case e : Throwable => LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
     }
   }
   //******************************************************************************************************
@@ -843,6 +844,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         LOG.error("Failed to deserialize Key:%s.".format(k), e)
         throw e
       }
+      case e: Throwable => {
+        LOG.error("Failed to deserialize Key:%s.".format(k), e)
+        throw e
+      }
     }
     key
   }
@@ -855,6 +860,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
+          LOG.error("Failed to deserialize Value:%s.".format(v), e)
+          throw e
+        }
+        case e: Throwable => {
           LOG.error("Failed to deserialize Value:%s.".format(v), e)
           throw e
         }
