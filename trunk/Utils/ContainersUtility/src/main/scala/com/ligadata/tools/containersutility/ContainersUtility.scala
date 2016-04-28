@@ -113,7 +113,7 @@ Sample uses:
     val tmpkeyfieldnames = if (options.contains('keyfields)) options.apply('keyfields) else null //key field name
     val output = if (options.contains('outputpath)) options.apply('outputpath) else null //output path for select operation
     val filter = if (options.contains('filter)) options.apply('filter) else "" // include keyid and timeranges
-    val serializerName = if (options.contains('serializer)) options.apply('serializer) else "" // include serializer name
+    val serializerName = (if (options.contains('serializer)) options.apply('serializer) else "").trim.replaceAll("\"", "").toLowerCase() // include serializer name
     val serializerOptionsJson = if (options.contains('serializeroptionsjson)) options.apply('serializeroptionsjson) else null
     val compressionString = if (options.contains('compressionstring)) options.apply('compressionstring) else null
     var containerObj: List[container] = null
@@ -212,9 +212,6 @@ Sample uses:
                   if (containerObj.size == 0)
                     logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
                   else {
-//                    val serializerName: String = "com.ligadata.kamanja.serializer.jsonserdeser" // BUGBUG:: FIXME: Get this from input option
-//                    val serializerOptionsjson: String = "" // BUGBUG:: FIXME: Get this from input option
-//                    val compressionString: String = "" // BUGBUG:: FIXME: Get this from input option
                     if(new java.io.File(output).exists.equals(false)){ // check if path exits or not for filter file
                       logger.error("this path does not exist: %s".format(output))
                       sys.exit(1)
