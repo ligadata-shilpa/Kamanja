@@ -20,6 +20,9 @@ import java.nio.file.Path
 import org.apache.commons.io.FileUtils
 import org.rogach.scallop.ScallopConf
 import scala.io.Source
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import java.nio.file.Files.copy
+import java.nio.file.Paths.get
 
 object UpdateExpects extends App with LogTrait {
 
@@ -31,100 +34,98 @@ object UpdateExpects extends App with LogTrait {
 
   override def main(args: Array[String]) {
 
-//    try {
-      val cmdconf = new ConfUpdateExpects(args)
+    //    try {
+    val cmdconf = new ConfUpdateExpects(args)
 
-      def getRecursiveListOfFiles(dir: File): Array[File] = {
-        val these = dir.listFiles.filter(_.isFile)
-        val those = dir.listFiles.filter(_.isDirectory)
-        these ++ those.flatMap(getRecursiveListOfFiles)
+    def getRecursiveListOfFiles(dir: File): Array[File] = {
+      val these = dir.listFiles.filter(_.isFile)
+      val those = dir.listFiles.filter(_.isDirectory)
+      these ++ those.flatMap(getRecursiveListOfFiles)
+    }
+
+    def PathToComponents(p1: Path): Array[Path] = {
+      def split(p1: Path): Array[Path] = {
+        if (p1.getParent == null)
+          return Array.empty[Path]
+        Array(p1) ++ split(p1.getParent)
       }
+      split(p1).reverse
+    }
 
-      def PathToComponents(p1: Path): Array[Path] = {
-        def split(p1: Path): Array[Path] = {
-          if (p1.getParent == null)
-            return Array.empty[Path]
-          Array(p1) ++ split(p1.getParent)
+    def CommonPath(p1: Path, p2: Path): Path = {
+
+      val c1 = PathToComponents(p1)
+      val c2 = PathToComponents(p2)
+      val c = math.min(c1.length, c2.length)
+
+      //logger.error("C1 {}", c.toString)
+
+      for (i <- 0 to c - 1) {
+        //logger.error("C1 {}", c1(i).toString)
+        //logger.error("C2 {}", c2(i).toString)
+
+        if (c1(i) != c2(i)) {
+          if (i > 0)
+            return c1(i - 1)
+          else
+            new File("/").toPath
         }
-        split(p1).reverse
       }
 
-      def CommonPath(p1: Path, p2: Path): Path = {
+      c2(c - 1)
+    }
 
-        val c1 = PathToComponents(p1)
-        val c2 = PathToComponents(p2)
-        val c = math.min(c1.length, c2.length)
+    def RelPath(common: Path, full: Path): Path = {
+      val c1 = common.toString
+      val c2 = full.toString
+      new File(c2.substring(c1.length)).toPath
+    }
 
-        //logger.error("C1 {}", c.toString)
+    // Created expects
+    //
+    val basepath: String = cmdconf.src.get.get
+    val base: File = new File(basepath)
 
-        for(i <- 0 to c - 1) {
-          //logger.error("C1 {}", c1(i).toString)
-          //logger.error("C2 {}", c2(i).toString)
+    // Original expects
+    //
+    val targetpath: String = cmdconf.target.get.get
+    val target: File = new File(targetpath)
 
-            if(c1(i) != c2(i)) {
-              if(i>0)
-                return c1(i-1)
-              else
-                new File("/").toPath
-            }
-        }
+    logger.info(basepath)
+    logger.info(targetpath)
 
-        c2(c-1)
+    // is path?
+    if (!base.isDirectory)
+      throw new Exception(s"Path $basepath is not a directory ")
+
+    // Get all the files we have
+    val files = getRecursiveListOfFiles(base)
+
+    // Load all json files for the metadata directory
+    val toUpdate = files.foldLeft(Map.empty[String, String])((r, file) => {
+
+      val cf = file.getCanonicalFile
+      val p2 = cf.toPath
+      val cp = CommonPath(p2, base.toPath)
+      val rel = RelPath(cp, p2)
+      val name = cf.getName
+      val index = name.indexOf('.')
+      val ext = if (index > 0) name.substring(index) else ""
+
+      //logger.error("File Ext {}", ext)
+
+      if (ext == ".scala.actual") {
+        r ++ Map(cf.toString -> new File(target.toString, rel.toString).toString.replaceAll(".scala.actual", ".scala.expected")  )
+      } else {
+        r
       }
+    })
 
-      def RelPath(common: Path, full: Path): Path = {
-        val c1 = common.toString
-        val c2 = full.toString
-        new File(c2.substring(c1.length)).toPath
-      }
+    implicit def toPath(filename: String) = get(filename)
 
-      // Created expects
-      //
-      val basepath: String = cmdconf.src.get.get
-      val base: File = new File(basepath)
-
-      // Original expects
-      //
-      val targetpath: String = cmdconf.target.get.get
-      val target: File = new File(targetpath)
-
-      logger.info(basepath)
-      logger.info(targetpath)
-
-      // is path?
-      if(!base.isDirectory)
-        throw new Exception(s"Path $basepath is not a directory ")
-
-      // Get all the files we have
-      val files = getRecursiveListOfFiles(base)
-
-      // Load all json files for the metadata directory
-      val toUpdate = files.foldLeft (Map.empty[String, String])( (r, file) => {
-
-        val cf = file.getCanonicalFile
-        val p2 = cf.toPath
-        val cp = CommonPath(p2, base.toPath )
-        val rel = RelPath(cp, p2)
-        val name = cf.getName
-        val index = name.indexOf('.')
-        val ext = if(index>0) name.substring(index) else ""
-
-        //logger.error("File Ext {}", ext)
-
-        if(ext==".scala.result" || ext==".scala.expected") {
-          r ++ Map(cf.toString -> new File(target.toString, rel.toString).toString)
-        } else {
-          r
-        }
-      })
-
-      toUpdate.foreach( m => logger.info("cp {} {}", m._1, m._2))
-//    }
-//    catch {
-//      case e: Exception => {
-//        logger.error("Exception {}", e.getMessage)
-//        System.exit(1)
-//      }
-//    }
+    toUpdate.foreach(m => {
+      logger.info("cp {} {}", m._1, m._2)
+      copy(m._1, m._2, REPLACE_EXISTING)
+    })
   }
 }

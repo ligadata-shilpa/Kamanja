@@ -31,7 +31,7 @@ class TransactionIngestTest  extends FunSuite with BeforeAndAfter {
   test("test") {
 
     val fileInput = getClass.getResource("/samples/finance/transactioningest.jtm").getPath
-    val fileOutput = getClass.getResource("/samples/finance/transactioningest.scala.result").getPath
+    val fileOutput = getClass.getResource("/samples/finance/").getPath + "/transactioningest.scala.actual"
     val fileExpected = getClass.getResource("/samples/finance/transactioningest.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -50,12 +50,13 @@ class TransactionIngestTest  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 
   test("test1") {
 
     val fileInput = getClass.getResource("/samples/finance/transactioningest1.jtm").getPath
-    val fileOutput = getClass.getResource("/samples/finance/transactioningest1.scala.result").getPath
+    val fileOutput = getClass.getResource("/samples/finance/").getPath + "/transactioningest1.scala.actual"
     val fileExpected = getClass.getResource("/samples/finance/transactioningest1.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -74,12 +75,13 @@ class TransactionIngestTest  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 
   test("test2") {
 
     val fileInput = getClass.getResource("/samples/finance/transactioningest2.jtm").getPath
-    val fileOutput = getClass.getResource("/samples/finance/transactioningest2.scala.result").getPath
+    val fileOutput = getClass.getResource("/samples/finance/").getPath + "/transactioningest2.scala.actual"
     val fileExpected = getClass.getResource("/samples/finance/transactioningest2.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -98,5 +100,6 @@ class TransactionIngestTest  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 }

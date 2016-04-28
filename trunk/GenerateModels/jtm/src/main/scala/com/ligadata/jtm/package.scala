@@ -72,5 +72,11 @@ package object jtm {
     mgr
   }
 
+  def DeleteFile(path: String) = {
+    val fileTemp = new File(path)
+    if (fileTemp.exists) {
+      fileTemp.delete()
+    }
+  }
 
 }

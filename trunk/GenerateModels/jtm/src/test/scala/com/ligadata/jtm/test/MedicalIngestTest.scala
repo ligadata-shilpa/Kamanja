@@ -31,7 +31,7 @@ class MedicalIngestTest  extends FunSuite with BeforeAndAfter {
   test("test") {
 
     val fileInput = getClass.getResource("/samples/medical/medicalingest.jtm").getPath
-    val fileOutput = getClass.getResource("/samples/medical/medicalingest.scala.result").getPath
+    val fileOutput = getClass.getResource("/samples/medical").getPath + "/medicalingest.scala.actual"
     val fileExpected = getClass.getResource("/samples/medical/medicalingest.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -50,12 +50,13 @@ class MedicalIngestTest  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 
   test("test1") {
 
     val fileInput = getClass.getResource("/samples/medical/medicalingest1.jtm").getPath
-    val fileOutput = getClass.getResource("/samples/medical/medicalingest1.scala.result").getPath
+    val fileOutput = getClass.getResource("/samples/medical/").getPath + "/medicalingest1.scala.actual"
     val fileExpected = getClass.getResource("/samples/medical/medicalingest1.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -74,5 +75,6 @@ class MedicalIngestTest  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 }

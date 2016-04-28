@@ -31,6 +31,11 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   val log = new com.ligadata.runtime.Log(this.getClass.getName)
   import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+    Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%d".format(txnCtxt.transId, triggerdSetIndex, outputDefault))
+    if(isDebugEnabled)
+    {
+      execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
+    }
     //
     //
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg1): Array[MessageInterface] = {
@@ -58,6 +63,10 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       exeGenerated_test1_1(msg1)
     } else {
       Array.empty[MessageInterface]
+    }
+    if(isDebugEnabled)
+    {
+      results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))
     }
     results.asInstanceOf[Array[ContainerOrConcept]]
   }

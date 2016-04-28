@@ -34,7 +34,7 @@ class GrokTest extends FunSuite with BeforeAndAfter {
   test("test1") {
 
     val fileInput = getClass.getResource("/grok/grok001.jtm").getPath
-    val fileOutput = getClass.getResource("/grok/grok001.scala.result").getPath
+    val fileOutput = getClass.getResource("/grok").getPath + "/grok001.scala.actual"
     val fileExpected = getClass.getResource("/grok/grok001.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -53,6 +53,8 @@ class GrokTest extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+
+    DeleteFile(fileOutput);
   }
 
 }
