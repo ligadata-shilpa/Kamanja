@@ -350,14 +350,16 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
   //this method used to get data from container for a specific key in a specific time ranges
   def GetFromContainer(typename: String, containerObj: List[container], kvstore: DataStore): Map[String,String] ={
 
-    var data : Map[String,String] = null
+    var data : Map[String,String] = Map()
     val retriveData = (k: Key, v: Any, serializerTyp: String, typeName: String, ver: Int)=>{
       val value = v.asInstanceOf[ContainerInterface]
       val primarykey = value.getPrimaryKey
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
       val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-      data = data + (bucketId.toString -> value.toString) // this includes key and value
+      if(!value.equals(null))
+        data = data + (k.bucketKey.toString -> value.toString) // this includes key and value
     }
+
     //logger.info("select data from %s container for %s key and timerange: %d-%d".format(typename,timerange.beginTime,timerange.endTime))
     containerObj.foreach(item => {
       if (item.keys.size == 0) {

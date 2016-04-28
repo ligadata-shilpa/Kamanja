@@ -205,7 +205,7 @@ case class SmartFileRecData(Version: Int, FileName : String, Offset: Option[Long
 class SmartFilePartitionUniqueRecordValue extends PartitionUniqueRecordValue {
   val Version: Int = 1
   var FileName : String = _
-  var Offset: Long = -1 // Offset in the file
+  var Offset: Long = -1 // Offset of next message in the file
 
   override def Serialize: String = {
     // Making String from Value

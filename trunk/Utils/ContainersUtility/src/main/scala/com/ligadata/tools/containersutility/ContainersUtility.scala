@@ -45,17 +45,23 @@ Sample uses:
     if (outputPath.equalsIgnoreCase(null)) {
       logger.error("outputpath should not be null for select operation")
     } else {
-      val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
-      val filename = outputPath + "/result_" + dateFormat.format(new java.util.Date())+".json"
-      val json = ("container name" -> containerName) ~
-        ("data" ->
-          data.keys.map {
-            key =>
-              (
-                ("key" -> key) ~
-                  ("value" -> data(key)))
-          })
-      new PrintWriter(filename) { write(pretty(render(json))); close }
+      if (!data.isEmpty) {
+        val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
+        val filename = outputPath + "/result_" + dateFormat.format(new java.util.Date()) + ".json"
+        val json = ("container name" -> containerName) ~
+          ("data" ->
+            data.keys.map {
+              key =>
+                (
+                  ("key" -> key) ~
+                    ("value" -> data(key)))
+            })
+        new PrintWriter(filename) {
+          write(pretty(render(json))); close
+        }
+      } else {
+        logger.error("no data retrieved")
+      }
     }
   }
 

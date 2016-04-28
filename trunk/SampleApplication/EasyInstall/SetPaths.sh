@@ -56,6 +56,7 @@ install_dir_repl=$(echo $install_dir | sed 's/\//\\\//g')
 
 # changing path in script files
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/script/StartEngine_Template.sh > $install_dir/bin/StartEngine.sh
+sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/script/ContainersUtility_Template.sh > $install_dir/bin/ContainersUtility.sh
 
 #new one
 #HelloWorld
@@ -90,6 +91,8 @@ sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/config/log4
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/config/ClusterConfig_Template.json > $install_dir/config/ClusterConfig.json
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/config/EngineConfig_Template.properties > $install_dir/config/Engine1Config.properties
 sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_home_repl/g;s/{JavaInstallDirectory}/$java_home_repl/g" $install_dir/template/config/MetadataAPIConfig_Template.properties > $install_dir/config/MetadataAPIConfig.properties
+
+
 # HelloWorld
 
 # Expecting 1st Parameter as Kafka Install directory

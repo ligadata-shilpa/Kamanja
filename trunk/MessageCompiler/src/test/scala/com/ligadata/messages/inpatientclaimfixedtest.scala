@@ -34,7 +34,13 @@ object InpatientClaimFixedTest extends RDDObject[InpatientClaimFixedTest] with C
 
   override def getPrimaryKeyNames: Array[String] = Array("desynpuf_id", "clm_id");
 
-  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+  override def getTimePartitionInfo: TimePartitionInfo = {
+    var timePartitionInfo: TimePartitionInfo = new TimePartitionInfo();
+    timePartitionInfo.setFieldName("desynpuf_id");
+    timePartitionInfo.setFormat("epochtime");
+    timePartitionInfo.setTimePartitionType(TimePartitionInfo.TimePartitionType.DAILY);
+    return timePartitionInfo
+  }
 
   override def hasPrimaryKey(): Boolean = {
     val pKeys = getPrimaryKeyNames();
@@ -110,7 +116,7 @@ class InpatientClaimFixedTest(factory: ContainerFactoryInterface, other: Inpatie
     attributeTypes(4) = new AttributeTypeInfo("icd9_check", 4, AttributeTypeInfo.TypeCategory.BOOLEAN, -1, -1, 0)
     attributeTypes(5) = new AttributeTypeInfo("hcpcs_cds", 5, AttributeTypeInfo.TypeCategory.MAP, 3, 1, 0)
     attributeTypes(6) = new AttributeTypeInfo("idcodedimmap", 6, AttributeTypeInfo.TypeCategory.MAP, 1001, 1, 0)
-    attributeTypes(7) = new AttributeTypeInfo("idcodedim", 7, AttributeTypeInfo.TypeCategory.MESSAGE, -1, -1, 0)
+    attributeTypes(7) = new AttributeTypeInfo("idcodedim", 7, AttributeTypeInfo.TypeCategory.CONTAINER, -1, -1, 0)
     attributeTypes(8) = new AttributeTypeInfo("idcodedims", 8, AttributeTypeInfo.TypeCategory.ARRAY, 1001, -1, 0)
 
     return attributeTypes
@@ -180,7 +186,9 @@ class InpatientClaimFixedTest(factory: ContainerFactoryInterface, other: Inpatie
     return attributeTypes
   }
 
-  private def getWithReflection(key: String): AnyRef = {
+  private def getWithReflection(keyName: String): AnyRef = {
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
     val im = m.reflect(this)
@@ -203,12 +211,17 @@ class InpatientClaimFixedTest(factory: ContainerFactoryInterface, other: Inpatie
     }
   }
 
-  private def getByName(key: String): AnyRef = {
+  private def getByName(keyName: String): AnyRef = {
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
+
     if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container InpatientClaimFixedTest");
     return get(keyTypes(key).getIndex)
   }
 
-  override def getOrElse(key: String, defaultVal: Any): AnyRef = { // Return (value, type)
+  override def getOrElse(keyName: String, defaultVal: Any): AnyRef = { // Return (value, type)
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
     try {
       val value = get(key.toLowerCase())
       if (value == null) return defaultVal.asInstanceOf[AnyRef]; else return value;
@@ -303,7 +316,9 @@ class InpatientClaimFixedTest(factory: ContainerFactoryInterface, other: Inpatie
 
   }
 
-  override def set(key: String, value: Any) = {
+  override def set(keyName: String, value: Any) = {
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
+    val key = keyName.toLowerCase;
     try {
 
       if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message InpatientClaimFixedTest")
@@ -323,9 +338,10 @@ class InpatientClaimFixedTest(factory: ContainerFactoryInterface, other: Inpatie
     try {
       index match {
         case 0 => {
-          if (value.isInstanceOf[String])
+          if (value.isInstanceOf[String]) {
             this.desynpuf_id = value.asInstanceOf[String];
-          else throw new Exception(s"Value is the not the correct type for field desynpuf_id in message InpatientClaimFixedTest")
+            setTimePartitionData;
+          } else throw new Exception(s"Value is the not the correct type for field desynpuf_id in message InpatientClaimFixedTest")
         }
         case 1 => {
           if (value.isInstanceOf[Long])

@@ -203,7 +203,7 @@ if [ "$cleanBuild" == "yes" ]; then
    sbt clean
 fi
 
-sbt '++ 2.10.4 package' '++ 2.10.4 ExtDependencyLibs/assembly' '++ 2.10.4 ExtDependencyLibs2/assembly' '++ 2.10.4 KamanjaInternalDeps/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 InstallDriver/assembly' '++2.10.4 GenerateAdapterBindings/assembly'
+sbt '++ 2.10.4 package' '++ 2.10.4 ExtDependencyLibs/assembly' '++ 2.10.4 ExtDependencyLibs2/assembly' '++ 2.10.4 KamanjaInternalDeps/assembly' '++ 2.10.4 ClusterInstallerDriver/assembly' '++ 2.10.4 GetComponent/assembly' '++ 2.10.4 InstallDriver/assembly'
 #   '++ 2.10.4 NodeInfoExtract/assembly' '++ 2.10.4 MigrateManager/assembly'
 
 #sbt clean '++ 2.10.4 package' '++ 2.10.4 KamanjaManager/assembly' '++ 2.10.4 MetadataAPI/assembly' '++ 2.10.4 KVInit/assembly' '++ 2.10.4 SimpleKafkaProducer/assembly'
@@ -221,6 +221,7 @@ echo "copy the fat jars to $installPath ..."
 
 cd $srcPath
 cp Utils/KVInit/target/scala-2.10/kvinit* $systemlib
+cp Utils/ContainersUtility/target/scala-2.10/containersutility* $systemlib
 cp MetadataAPI/target/scala-2.10/metadataapi* $systemlib
 cp KamanjaManager/target/scala-2.10/kamanjamanager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.10/methodextractor* $bin
@@ -244,7 +245,6 @@ cp $srcPath/Utils/NodeInfoExtract/target/scala-2.10/nodeinfoextract* $systemlib
 #cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0.jar $kamanjainstallsystemlib
 #cp ExtDependencyLibs2/target/scala-2.10/ExtDependencyLibs2_2.10-1.4.0.jar $kamanjainstallsystemlib
 #cp KamanjaInternalDeps/target/scala-2.10/KamanjaInternalDeps_2.10-1.4.0.jar $kamanjainstallsystemlib
-cp $srcPath/Utils/Migrate/GenerateAdapterBindings/target/scala-2.10/generateadapterbindings_2.10-1.4.0.jar $systemlib
 
 # copy jars used to reduce package size
 cp ExtDependencyLibs/target/scala-2.10/ExtDependencyLibs_2.10-1.4.0.jar $systemlib
@@ -505,7 +505,7 @@ fi
 
 #Now do full build of 2.11
 
-sbt '++ 2.11.7 package' '++ 2.11.7 ExtDependencyLibs/assembly' '++ 2.11.7 ExtDependencyLibs2/assembly' '++ 2.11.7 KamanjaInternalDeps/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 InstallDriver/assembly' '++2.11.7 GenerateAdapterBindings/assembly'
+sbt '++ 2.11.7 package' '++ 2.11.7 ExtDependencyLibs/assembly' '++ 2.11.7 ExtDependencyLibs2/assembly' '++ 2.11.7 KamanjaInternalDeps/assembly' '++ 2.11.7 ClusterInstallerDriver/assembly' '++ 2.11.7 GetComponent/assembly' '++ 2.11.7 InstallDriver/assembly'
 #'++ 2.11.7 NodeInfoExtract/assembly' '++ 2.11.7 MigrateManager/assembly'
 
 #sbt clean '++ 2.11.7 package' '++ 2.11.7 KamanjaManager/assembly' '++ 2.11.7 MetadataAPI/assembly' '++ 2.11.7 KVInit/assembly' '++ 2.11.7 SimpleKafkaProducer/assembly'
@@ -523,6 +523,7 @@ echo "copy the fat jars to $installPath ..."
 
 cd $srcPath
 cp Utils/KVInit/target/scala-2.11/kvinit* $systemlib
+cp Utils/ContainersUtility/target/scala-2.11/containersutility* $systemlib
 cp MetadataAPI/target/scala-2.11/metadataapi* $systemlib
 cp KamanjaManager/target/scala-2.11/kamanjamanager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.11/methodextractor* $bin
