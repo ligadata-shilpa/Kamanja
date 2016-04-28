@@ -54,6 +54,6 @@ class MapperTest extends FunSuite with BeforeAndAfter {
 
     assert(actual == expected)
 
-    DeleteFile(actual)
+    DeleteFile(fileOutput)
   }
 }
