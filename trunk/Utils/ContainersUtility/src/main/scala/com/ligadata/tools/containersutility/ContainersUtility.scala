@@ -4,11 +4,12 @@ package com.ligadata.tools.containersutility
   * Created by Yousef on 3/9/2016.
   */
 
-import java.io.PrintWriter
+import java.io.{FileOutputStream, OutputStream, PrintWriter}
+import java.util.zip.GZIPOutputStream
 import com.ligadata.KvBase.TimeRange
 
 import scala.collection.mutable._
-import org.apache.logging.log4j. LogManager
+import org.apache.logging.log4j.LogManager
 import com.ligadata.Utils.Utils
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.Exceptions._
@@ -24,10 +25,13 @@ trait LogTrait {
 }
 
 case class containeropt(begintime: Option[String], endtime: Option[String], keys: Option[Array[Array[String]]])
+
 case class container(begintime: String, endtime: String, keys: Array[Array[String]])
 
 object ContainersUtility extends App with LogTrait {
+
   case class data(key: String, value: String)
+
   def usage: String = {
     """
 Usage: scala com.ligadata.containersutility.ContainersUtility
@@ -57,7 +61,8 @@ Sample uses:
                     ("value" -> data(key)))
             })
         new PrintWriter(filename) {
-          write(pretty(render(json))); close
+          write(pretty(render(json)));
+          close
         }
       } else {
         logger.error("no data retrieved")
@@ -87,7 +92,7 @@ Sample uses:
         case "--outputpath" :: value :: tail =>
           nextOption(map ++ Map('outputpath -> value), tail)
         case "--filter" :: value :: tail =>
-          nextOption(map ++ Map('filter  -> value), tail)
+          nextOption(map ++ Map('filter -> value), tail)
         case option :: tail =>
           logger.error("Unknown option " + option)
           sys.exit(1)
@@ -101,10 +106,10 @@ Sample uses:
     var operation = if (options.contains('operation)) options.apply('operation) else null // operation select/truncate/delete
     val tmpkeyfieldnames = if (options.contains('keyfields)) options.apply('keyfields) else null //key field name
     val output = if (options.contains('outputpath)) options.apply('outputpath) else null //output path for select operation
-    val filter = if(options.contains('filter)) options.apply('filter) else null // include keyid and timeranges
+    val filter = if (options.contains('filter)) options.apply('filter) else null // include keyid and timeranges
     val filterFile = scala.io.Source.fromFile(filter).mkString // read filter file config (JSON file)
     val parsedKey = parse(filterFile)
-    var containerObj:List[container]= null
+    var containerObj: List[container] = null
     if (parsedKey != null) {
       val optContainerObj = parsedKey.extract[List[containeropt]]
       containerObj = optContainerObj.map(c => {
@@ -117,7 +122,7 @@ Sample uses:
         val keys = if (c.keys != None) c.keys.get else Array[Array[String]]()
         container(bt, et, keys)
       })
-    } else if(!operation.equalsIgnoreCase("truncate")){
+    } else if (!operation.equalsIgnoreCase("truncate")) {
       logger.error("you should pass a filter file for select and delete operation")
     }
 
@@ -154,15 +159,53 @@ Sample uses:
                 if (operation.equalsIgnoreCase("truncate")) {
                   utilmaker.TruncateContainer(containerName, dstore)
                 } else if (operation.equalsIgnoreCase("delete")) {
-                  if(containerObj.size == 0)
+                  if (containerObj.size == 0)
                     logger.error("Failed to delete data from %s container, at least one item (keyid, timerange) should not be null for delete operation".format(containerName))
                   else
-                    utilmaker.DeleteFromContainer(containerName,containerObj, dstore)
+                    utilmaker.DeleteFromContainer(containerName, containerObj, dstore)
                 } else if (operation.equalsIgnoreCase("select")) {
-                  if(containerObj.size == 0)
+                  if (containerObj.size == 0)
                     logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
-                  else
-                    writeToFile(utilmaker.GetFromContainer(containerName, containerObj, dstore),output, containerName)
+                  else {
+                    val serializerName: String = "com.ligadata.kamanja.serializer.jsonserdeser" // BUGBUG:: FIXME: Get this from input option
+                    val serializerOptionsjson: String = "" // BUGBUG:: FIXME: Get this from input option
+                    val compressionString: String = "" // BUGBUG:: FIXME: Get this from input option
+
+                    val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
+                    val contInFl = containerName.trim.replace(".", "_").replace("\\", "_").replace("/", "_")
+                    val filename = output + "/" + contInFl + "result_" + dateFormat.format(new java.util.Date()) + ".dat"
+
+                    var os: OutputStream = null
+
+                    try {
+                      if (compressionString == null || compressionString.trim.size == 0) {
+                        os = new FileOutputStream(filename);
+                      } else if (compressionString.trim.compareToIgnoreCase("gz") == 0) {
+                        os = new GZIPOutputStream(new FileOutputStream(filename))
+                      } else {
+                        throw new Exception("Compression %s is not yet handled. We support only uncompressed file & GZ files".format(compressionString))
+                      }
+
+                      val ln = "\n".getBytes("UTF8")
+
+                      val getData = (data: Array[Byte]) => {
+                        if (data != null) {
+                          os.write(data)
+                          os.write(ln)
+                        }
+                      }
+                      utilmaker.GetFromContainer(containerName, containerObj, dstore, serializerName, serializerOptionsjson, getData)
+                    } catch {
+                      case e: Exception => {
+                        logger.error("Failed to select data", e)
+                        throw e
+                      }
+                    } finally {
+                      if (os != null)
+                        os.close
+                      os = null
+                    }
+                  }
                 }
               } else {
                 logger.error("Unknown operation you should use one of these options: select, delete, truncate")

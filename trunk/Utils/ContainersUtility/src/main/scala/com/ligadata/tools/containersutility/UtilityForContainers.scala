@@ -348,7 +348,40 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
   }
 
   //this method used to get data from container for a specific key in a specific time ranges
-  def GetFromContainer(typename: String, containerObj: List[container], kvstore: DataStore): Map[String,String] ={
+  def GetFromContainer(typename: String, containerObj: List[container], kvstore: DataStore, serName: String, optionsjson: String, callbackFunction: (Array[Byte]) => Unit): Map[String,String] ={
+    var serDeser: SerializeDeserialize = null
+    val serInfo = getMdMgr.GetSerializer(serName)
+    if (serInfo == null) {
+      throw new KamanjaException(s"Not found Serializer/Deserializer for ${serName}", null)
+    }
+
+    val phyName = serInfo.PhysicalName
+    if (phyName == null) {
+      throw new KamanjaException(s"Not found Physical name for Serializer/Deserializer for ${serName}", null)
+    }
+
+    try {
+      val aclass = Class.forName(phyName).newInstance
+      val ser = aclass.asInstanceOf[SerializeDeserialize]
+      val map = new java.util.HashMap[String, String] //BUGBUG:: we should not convert the 2nd param to String. But still need to see how can we convert scala map to java map
+      if (optionsjson != null && optionsjson.trim.size > 0) {
+        implicit val jsonFormats: Formats = DefaultFormats
+        val validJson = parse(optionsjson)
+        val options = validJson.values.asInstanceOf[collection.immutable.Map[String, Any]]
+        if (options != null) {
+          options.foreach(o => {
+            map.put(o._1, o._2.toString)
+          })
+        }
+      }
+      ser.configure(this, map)
+      ser.setObjectResolver(this)
+      serDeser = ser
+    } catch {
+      case e: Throwable => {
+        throw new KamanjaException(s"Failed to resolve Physical name ${phyName} in Serializer/Deserializer for ${serName}", e)
+      }
+    }
 
     var data : Map[String,String] = Map()
     val retriveData = (k: Key, v: Any, serializerTyp: String, typeName: String, ver: Int)=>{
@@ -356,8 +389,16 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
       val primarykey = value.getPrimaryKey
       val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
       val bucketId = KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey)
-      if(!value.equals(null))
-        data = data + (k.bucketKey.toString -> value.toString) // this includes key and value
+      if(!value.equals(null)) {
+          try {
+            val serData = serDeser.serialize(value)
+            callbackFunction(serData)
+          } catch {
+            case e: Throwable => {
+              throw e
+            }
+          }
+      }
     }
 
     //logger.info("select data from %s container for %s key and timerange: %d-%d".format(typename,timerange.beginTime,timerange.endTime))
