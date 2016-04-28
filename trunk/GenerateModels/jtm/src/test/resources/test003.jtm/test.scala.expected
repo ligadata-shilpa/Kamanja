@@ -40,13 +40,18 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     //
     // msg2 is part of com.ligadata.jtm.test.filter
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg1, msg2: com.ligadata.kamanja.test.V1000000.msg3, msg3: com.ligadata.kamanja.test.V1000000.msg5): Array[MessageInterface] = {
+      Debug("exeGenerated_test1_1")
       // in scala, type could be optional
       val zipcode: Int = iplookup(msg2.in1).zipcode
       val zipcode1: Int = iplookup(msg1.in1).zipcode
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
       def process_omsg2(): Array[MessageInterface] = {
-        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) return Array.empty[MessageInterface]
+        Debug("exeGenerated_test1_1::process_omsg2")
+        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) {
+          Debug("Filtered: test1@omsg2")
+          return Array.empty[MessageInterface]
+        }
         val tmp8: String = somefunc2(msg2.in3)
         val result = com.ligadata.kamanja.test.V1000000.msg2.createInstance
         result.out4 = ipinfo.zipCode
@@ -59,13 +64,18 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     }
     // msg2 is part of com.ligadata.jtm.test.filter
     def exeGenerated_test1_2(msg2: com.ligadata.kamanja.test.V1000000.msg3, msg3: com.ligadata.kamanja.test.V1000000.msg5, msg4: com.ligadata.kamanja.test.V1000000.msg6): Array[MessageInterface] = {
+      Debug("exeGenerated_test1_2")
       // in scala, type could be optional
       val zipcode: Int = iplookup(msg2.in1).zipcode
       val zipcode1: Int = iplookup(msg2.in1.zipcode
       // type could be some class available from imports
       val ipinfo: IpInfo = iplookup(msg2.in1)
       def process_omsg2(): Array[MessageInterface] = {
-        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) return Array.empty[MessageInterface]
+        Debug("exeGenerated_test1_2::process_omsg2")
+        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) {
+          Debug("Filtered: test1@omsg2")
+          return Array.empty[MessageInterface]
+        }
         val tmp8: String = somefunc2(msg2.in3)
         val result = com.ligadata.kamanja.test.V1000000.msg2.createInstance
         result.out4 = ipinfo.zipCode
@@ -77,7 +87,9 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       process_omsg2()
     }
     def exeGenerated_test2_3(msg2: com.ligadata.kamanja.test.V1000000.msg3): Array[MessageInterface] = {
+      Debug("exeGenerated_test2_3")
       def process_omsg3(): Array[MessageInterface] = {
+        Debug("exeGenerated_test2_3::process_omsg3")
         val result = com.ligadata.kamanja.test.V1000000.msg4.createInstance
         result.out4 = msg2.in1
         result.out3 = msg2.in1
@@ -96,23 +108,22 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    if(msg1!=null && msg2!=null && msg3!=null) {
+    (if(msg1!=null && msg2!=null && msg3!=null) {
       exeGenerated_test1_1(msg1, msg2, msg3)
     } else {
       Array.empty[MessageInterface]
-    }
-    ++
-    if(msg2!=null && msg3!=null && msg4!=null) {
+    }) ++
+    (if(msg2!=null && msg3!=null && msg4!=null) {
       exeGenerated_test1_2(msg2, msg3, msg4)
     } else {
       Array.empty[MessageInterface]
-    }
-    ++
-    if(msg2!=null) {
+    }) ++
+    (if(msg2!=null) {
       exeGenerated_test2_3(msg2)
     } else {
       Array.empty[MessageInterface]
-    }
+    }) ++
+    Array.empty[MessageInterface]
     if(isDebugEnabled)
     {
       results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))

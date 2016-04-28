@@ -38,12 +38,17 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     //
     //
     def exeGenerated_transactionmsg_1(msg1: com.ligadata.kamanja.samples.messages.V1000000.TransactionMsgIn): Array[MessageInterface] = {
+      Debug("exeGenerated_transactionmsg_1")
       // Split the incoming data
       val arraydata: Array[String] = msg1.data.split(",")
       // extract the type
       val typeName: String = arraydata(0)
       def process_o1(): Array[MessageInterface] = {
-        if (!("com.ligadata.kamanja.samples.messages.Beneficiary" == typeName)) return Array.empty[MessageInterface]
+        Debug("exeGenerated_transactionmsg_1::process_o1")
+        if (!("com.ligadata.kamanja.samples.messages.Beneficiary" == typeName)) {
+          Debug("Filtered: transactionmsg@o1")
+          return Array.empty[MessageInterface]
+        }
         val result = com.ligadata.kamanja.samples.messages.V1000000.Beneficiary.createInstance
         result.sp_copd = conversion.ToInteger(arraydata(17))
         result.benres_ip = conversion.ToDouble(arraydata(25))
@@ -80,7 +85,11 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         Array(result)
       }
       def process_o2(): Array[MessageInterface] = {
-        if (!("com.ligadata.kamanja.samples.messages.HL7" == typeName)) return Array.empty[MessageInterface]
+        Debug("exeGenerated_transactionmsg_1::process_o2")
+        if (!("com.ligadata.kamanja.samples.messages.HL7" == typeName)) {
+          Debug("Filtered: transactionmsg@o2")
+          return Array.empty[MessageInterface]
+        }
         val result = com.ligadata.kamanja.samples.messages.V1000000.HL7.createInstance
         result.sp_copd = conversion.ToInteger(arraydata(20))
         result.aatdeficiency = conversion.ToInteger(arraydata(84))
@@ -171,7 +180,11 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         Array(result)
       }
       def process_o3(): Array[MessageInterface] = {
-        if (!("com.ligadata.kamanja.samples.messages.inpatientclaim" == typeName)) return Array.empty[MessageInterface]
+        Debug("exeGenerated_transactionmsg_1::process_o3")
+        if (!("com.ligadata.kamanja.samples.messages.inpatientclaim" == typeName)) {
+          Debug("Filtered: transactionmsg@o3")
+          return Array.empty[MessageInterface]
+        }
         val result = com.ligadata.kamanja.samples.messages.V1000000.InpatientClaim.createInstance
         result.clm_pass_thru_per_diem_amt = conversion.ToDouble(arraydata(14))
         result.nch_bene_blood_ddctbl_lblty_am = conversion.ToDouble(arraydata(17))
@@ -199,7 +212,11 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         Array(result)
       }
       def process_o4(): Array[MessageInterface] = {
-        if (!("com.ligadata.kamanja.samples.messages.OutpatientClaim" == typeName)) return Array.empty[MessageInterface]
+        Debug("exeGenerated_transactionmsg_1::process_o4")
+        if (!("com.ligadata.kamanja.samples.messages.OutpatientClaim" == typeName)) {
+          Debug("Filtered: transactionmsg@o4")
+          return Array.empty[MessageInterface]
+        }
         val result = com.ligadata.kamanja.samples.messages.V1000000.OutpatientClaim.createInstance
         result.nch_bene_blood_ddctbl_lblty_am = conversion.ToDouble(arraydata(12))
         result.nch_prmry_pyr_clm_pd_amt = conversion.ToDouble(arraydata(8))
@@ -232,11 +249,12 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    if(msg1!=null) {
+    (if(msg1!=null) {
       exeGenerated_transactionmsg_1(msg1)
     } else {
       Array.empty[MessageInterface]
-    }
+    }) ++
+    Array.empty[MessageInterface]
     if(isDebugEnabled)
     {
       results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))

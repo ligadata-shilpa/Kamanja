@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.ligadata.jtm.test.filter1.V1
+package com.ligadata.jtm.test.filter3.V1
 import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
@@ -22,7 +22,7 @@ import com.ligadata.Utils._
 import com.ligadata.runtime.Conversion
 class ModelFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def createModelInstance(): ModelInstance = return new Model(this)
-  override def getModelName: String = "com.ligadata.jtm.test.filter1.Model"
+  override def getModelName: String = "com.ligadata.jtm.test.filter3.Model"
   override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
@@ -39,6 +39,7 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     //
     //
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg1): Array[MessageInterface] = {
+      Debug("exeGenerated_test1_1")
       // conversion to string
       val instr: String = conversion.ToString(msg1.in1)
       // conversion to int
@@ -46,7 +47,11 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       // in scala, type could be optional
       val out3: Int = inint + 1000
       def process_o1(): Array[MessageInterface] = {
-        if (!(!(msg1.in2 != -1 && msg1.in2 < 100))) return Array.empty[MessageInterface]
+        Debug("exeGenerated_test1_1::process_o1")
+        if (!(!(msg1.in2 != -1 && msg1.in2 < 100))) {
+          Debug("Filtered: test1@o1")
+          return Array.empty[MessageInterface]
+        }
         val t1: String = "s:" + msg1.in2.toString()
         val result = com.ligadata.kamanja.test.V1000000.msg2.createInstance
         result.out4 = msg1.in3
@@ -63,11 +68,12 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    if(msg1!=null) {
+    (if(msg1!=null) {
       exeGenerated_test1_1(msg1)
     } else {
       Array.empty[MessageInterface]
-    }
+    }) ++
+    Array.empty[MessageInterface]
     if(isDebugEnabled)
     {
       results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))

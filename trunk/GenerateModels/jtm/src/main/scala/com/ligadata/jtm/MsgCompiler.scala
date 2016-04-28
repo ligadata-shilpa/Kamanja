@@ -26,8 +26,9 @@ import scala.io.Source
 import com.ligadata.msgcompiler._
 
 /*
-run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg1.json   --out ~/msg1.scala
-run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg2.json   --out ~/msg2.scala
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg1.json   --out /home/joerg/msg1.scala
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg2.json   --out /home/joerg/msg2.scala
+run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/msg3.json   --out /home/joerg/msg3.scala
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsg.json   --out ~/MsgOut.scala
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/TransactionMsgIn.json   --out ~/MsgIn.scala
 run --in /home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata/messages/hl7_Medical.json --out /tmp/hl7.scala

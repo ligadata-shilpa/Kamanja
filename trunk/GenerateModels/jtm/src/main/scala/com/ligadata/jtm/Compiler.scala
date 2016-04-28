@@ -781,7 +781,10 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           val newExpression = Expressions.FixupColumnNames(f, innerMapping, aliaseMessages)
           logger.trace("Matched where expression {}", newExpression)
           // Output the actual filter
-          collect ++= Array("if (!(%s)) return Array.empty[MessageInterface]\n".format(newExpression))
+          collect :+= "if (!(%s)) {".format(newExpression)
+          collect :+= "  Debug(\"Filtered: %s\")".format(currentPath)
+          collect :+= "  return Array.empty[MessageInterface]"
+          collect :+= "}"
           false
         } else {
           true
@@ -1041,14 +1044,15 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
         val names = e._1.map( m => { "msg%d".format(incomingToMsgId.get(m).get)}).mkString(", ")
         val depId = e._2._1
         val calls = e._2._2.map( f => "exeGenerated_%s_%d(%s)".format(f, depId, names) ).mkString(" ++ \n")
-      """|if(%s) {
+      """|(if(%s) {
          |%s
          |} else {
          |  Array.empty[MessageInterface]
-         |}
+         |}) ++
          |""".stripMargin('|').format(check, calls)
     })
-    exechandler :+=  handler.mkString( "++\n")
+    exechandler :+=  handler.mkString("\n")
+    exechandler :+=  "Array.empty[MessageInterface]"
 
     // Actual function to be called
     //
@@ -1064,6 +1068,7 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
         methods :+= transformation.Comment
         methods :+= "def exeGenerated_%s_%d(%s): Array[MessageInterface] = {".format(t, depId, names)
+        methods :+= "Debug(\"exeGenerated_%s_%d\")".format(t, depId)
 
         // Collect form metadata
         val inputs: Array[Element] = ColumnNames(md, deps).map( e => {
@@ -1153,7 +1158,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
           }
 
           var collect = Array.empty[String]
-          collect ++= Array("\ndef process_%s(): Array[MessageInterface] = {\n".format(o._1))
+          collect :+= "\ndef process_%s(): Array[MessageInterface] = {\n".format(o._1)
+          collect :+= "Debug(\"exeGenerated_%s_%d::process_%s\")".format(t, depId, o._1)
           collect ++= collectInner
 
           {
