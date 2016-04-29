@@ -151,7 +151,6 @@ public class SubscriberUsageAlert extends ModelInstance {
         } finally {
             fw.close();
         }
-
     }
 
     public static class SubscriberUsageAlertFactory extends ModelInstanceFactory {
@@ -159,30 +158,16 @@ public class SubscriberUsageAlert extends ModelInstance {
             super(modelDef, nodeContext);
         }
 
-/*
-        public boolean isValidMessage(MessageContainerBase msg) {
-            return (msg instanceof SubscriberUsage);
-        }
-*/
-
         public ModelInstance createModelInstance() {
             return new SubscriberUsageAlert(this);
         }
 
         public String getModelName() {
-            return "SubscriberUsageAlert";
+            return "com.ligadata.models.samples.models.SubscriberUsageAlert";
         }
 
         public String getVersion() {
             return "0.0.1";
         }
-
-/*
-        public ModelResultBase createResultObject() {
-            return new MappedModelResults();
-        }
-*/
     }
-
-
 }
