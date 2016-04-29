@@ -4,11 +4,12 @@ package com.ligadata.tools.containersutility
   * Created by Yousef on 3/9/2016.
   */
 
-import java.io.PrintWriter
+import java.io.{FileOutputStream, OutputStream, PrintWriter}
+import java.util.zip.GZIPOutputStream
 import com.ligadata.KvBase.TimeRange
 
 import scala.collection.mutable._
-import org.apache.logging.log4j. LogManager
+import org.apache.logging.log4j.LogManager
 import com.ligadata.Utils.Utils
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.Exceptions._
@@ -24,10 +25,13 @@ trait LogTrait {
 }
 
 case class containeropt(begintime: Option[String], endtime: Option[String], keys: Option[Array[Array[String]]])
+
 case class container(begintime: String, endtime: String, keys: Array[Array[String]])
 
 object ContainersUtility extends App with LogTrait {
+
   case class data(key: String, value: String)
+
   def usage: String = {
     """
 Usage: scala com.ligadata.containersutility.ContainersUtility
@@ -57,7 +61,8 @@ Sample uses:
                     ("value" -> data(key)))
             })
         new PrintWriter(filename) {
-          write(pretty(render(json))); close
+          write(pretty(render(json)));
+          close
         }
       } else {
         logger.error("no data retrieved")
@@ -87,7 +92,13 @@ Sample uses:
         case "--outputpath" :: value :: tail =>
           nextOption(map ++ Map('outputpath -> value), tail)
         case "--filter" :: value :: tail =>
-          nextOption(map ++ Map('filter  -> value), tail)
+          nextOption(map ++ Map('filter -> value), tail)
+        case "--serializer" :: value :: tail =>
+          nextOption(map ++ Map('serializer -> value), tail)
+        case "--serializeroptionsjson" :: value :: tail =>
+          nextOption(map ++ Map('serializeroptionsjson -> value), tail)
+        case "--compressionstring" :: value :: tail =>
+          nextOption(map ++ Map('compressionstring -> value), tail)
         case option :: tail =>
           logger.error("Unknown option " + option)
           sys.exit(1)
@@ -98,27 +109,63 @@ Sample uses:
 
     var cfgfile = if (options.contains('config)) options.apply('config) else null // datatore name and connection string
     var containerName = if (options.contains('containername)) options.apply('containername) else null // container name
-    var operation = if (options.contains('operation)) options.apply('operation) else null // operation select/truncate/delete
+    var operation = if (options.contains('operation)) options.apply('operation) else "" // operation select/truncate/delete
     val tmpkeyfieldnames = if (options.contains('keyfields)) options.apply('keyfields) else null //key field name
     val output = if (options.contains('outputpath)) options.apply('outputpath) else null //output path for select operation
-    val filter = if(options.contains('filter)) options.apply('filter) else null // include keyid and timeranges
-    val filterFile = scala.io.Source.fromFile(filter).mkString // read filter file config (JSON file)
-    val parsedKey = parse(filterFile)
-    var containerObj:List[container]= null
-    if (parsedKey != null) {
-      val optContainerObj = parsedKey.extract[List[containeropt]]
-      containerObj = optContainerObj.map(c => {
-        if (c.begintime == None && c.endtime == None && c.keys == None) {
-          logger.error("you should pass time range or key(s) or both")
+    val filter = if (options.contains('filter)) options.apply('filter) else "" // include keyid and timeranges
+    val serializerName = (if (options.contains('serializer)) options.apply('serializer) else "").trim.replaceAll("\"", "").toLowerCase() // include serializer name
+    val serializerOptionsJson = if (options.contains('serializeroptionsjson)) options.apply('serializeroptionsjson) else null
+    val compressionString = if (options.contains('compressionstring)) options.apply('compressionstring) else null
+    var containerObj: List[container] = null
+
+    if(operation.equals("")|| (!operation.equalsIgnoreCase("truncate") && !operation.equalsIgnoreCase("select") && !operation.equalsIgnoreCase("delete"))){//check if a correct operation passed or not
+      logger.error("you should pass truncate or delete or select in operation option")
+      sys.exit(1)
+    }
+    if (!operation.equalsIgnoreCase("truncate")) { // check if operation does not match truncate because in truncate we do not need to parse filter file
+
+      if(filter.equals("")){ // if user does not pass a file that includes keys and/or timeranges
+        logger.error("you should pass a filter file which includes keys and/or timeranges in filter option")
+        sys.exit(1)
+      } else if(new java.io.File(filter).exists.equals(false)){ // check if path exits or not for filter file
+        logger.error("this path does not exist: %s".format(filter))
+        sys.exit(1)
+      }
+
+      val filterFile = scala.io.Source.fromFile(filter).mkString // read filter file config (JSON file)
+      val parsedKey = parse(filterFile)
+      if (parsedKey != null) { // check if there is data inside filter file or not
+        val optContainerObj = parsedKey.extract[List[containeropt]]
+        containerObj = optContainerObj.map(c => {
+          if (c.begintime == None && c.endtime == None && c.keys == None) { //use to check if user add data in filter file
+            logger.error("you should pass time range or key(s) or both")
+            sys.exit(1)
+          }
+          val bt = if (c.begintime != None) c.begintime.get else Long.MinValue.toString
+          val et = if (c.endtime != None) c.endtime.get else Long.MaxValue.toString
+          val keys = if (c.keys != None) c.keys.get else Array[Array[String]]()
+          container(bt, et, keys)
+        })
+      } else {
+        logger.error("you should pass a filter file includes keys and/or timesrange for select and delete operation")
+        sys.exit(1)
+      }
+
+      if(operation.equalsIgnoreCase("select")) {
+        if (serializerName.equals("")) { // check if user pass serializer option for select operation
+          logger.error("you should pass a serializer option for select operation")
           sys.exit(1)
         }
-        val bt = if (c.begintime != None) c.begintime.get else Long.MinValue.toString
-        val et = if (c.endtime != None) c.endtime.get else Long.MaxValue.toString
-        val keys = if (c.keys != None) c.keys.get else Array[Array[String]]()
-        container(bt, et, keys)
-      })
-    } else if(!operation.equalsIgnoreCase("truncate")){
-      logger.error("you should pass a filter file for select and delete operation")
+
+//        if (serializerOptionsJson.equals(null)) { // check if user pass serializerOptionsJson for select operation
+//          logger.error("you should pass a serializeroptionsjson option for select operation")
+//          sys.exit(1)
+//        }
+
+//        if (compressionString.equals(null)) {// check if user pass compressionString for select operation
+//          logger.error("you should pass a compressionString option for select operation")
+//        }
+      }
     }
 
     var valid: Boolean = (cfgfile != null && containerName != null)
@@ -149,20 +196,61 @@ Sample uses:
           if (dstore != null) {
             try {
               dstore.setObjectResolver(utilmaker)
-              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
-              if (operation != null) {
+//              if(!dstore.isTableExists(containerName)){
+//                logger.error("there is no %s container in datastore".format(containerName))
+//              }
+              if (!operation.equals("")) {
                 if (operation.equalsIgnoreCase("truncate")) {
                   utilmaker.TruncateContainer(containerName, dstore)
                 } else if (operation.equalsIgnoreCase("delete")) {
-                  if(containerObj.size == 0)
+                  if (containerObj.size == 0)
                     logger.error("Failed to delete data from %s container, at least one item (keyid, timerange) should not be null for delete operation".format(containerName))
                   else
-                    utilmaker.DeleteFromContainer(containerName,containerObj, dstore)
+                    utilmaker.DeleteFromContainer(containerName, containerObj, dstore)
                 } else if (operation.equalsIgnoreCase("select")) {
-                  if(containerObj.size == 0)
+                  dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+                  if (containerObj.size == 0)
                     logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
-                  else
-                    writeToFile(utilmaker.GetFromContainer(containerName, containerObj, dstore),output, containerName)
+                  else {
+                    if(new java.io.File(output).exists.equals(false)){ // check if path exits or not for filter file
+                      logger.error("this path does not exist: %s".format(output))
+                      sys.exit(1)
+                    }
+                    val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
+                    val contInFl = containerName.trim.replace(".", "_").replace("\\", "_").replace("/", "_")
+                    val filename = output + "/" + contInFl + "_result_" + dateFormat.format(new java.util.Date()) + ".dat"
+
+                    var os: OutputStream = null
+
+                    try {
+                      if (compressionString == null || compressionString.trim.size == 0) {
+                        os = new FileOutputStream(filename);
+                      } else if (compressionString.trim.compareToIgnoreCase("gz") == 0) {
+                        os = new GZIPOutputStream(new FileOutputStream(filename))
+                      } else {
+                        throw new Exception("Compression %s is not yet handled. We support only uncompressed file & GZ files".format(compressionString))
+                      }
+
+                      val ln = "\n".getBytes("UTF8")
+
+                      val getData = (data: Array[Byte]) => {
+                        if (data != null) {
+                          os.write(data)
+                          os.write(ln)
+                        }
+                      }
+                      utilmaker.GetFromContainer(containerName, containerObj, dstore, serializerName, serializerOptionsJson, getData)
+                    } catch {
+                      case e: Exception => {
+                        logger.error("Failed to select data", e)
+                        throw e
+                      }
+                    } finally {
+                      if (os != null)
+                        os.close
+                      os = null
+                    }
+                  }
                 }
               } else {
                 logger.error("Unknown operation you should use one of these options: select, delete, truncate")

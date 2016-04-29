@@ -848,7 +848,7 @@ class MdMgr {
     schemaIdToElemntIdMap.getOrElse(schemaId, 0)
   }
 
-  def ContainerForElementId(elemId:Long): Option[BaseElem] = {
+  def ElementForElementId(elemId:Long): Option[BaseElem] = {
     val elem = elementIdMap.getOrElse(elemId, null)
     if (elem != null) Some(elem) else None
   }

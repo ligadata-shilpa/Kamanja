@@ -52,6 +52,9 @@ class PosixFileHandler extends SmartFileHandler{
         case e: Exception =>
           logger.error("", e)
           null
+        case e: Throwable =>
+          logger.error("", e)
+          null
       }
     inputStream
   }
@@ -68,6 +71,7 @@ class PosixFileHandler extends SmartFileHandler{
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
+      case e : Throwable => throw new KamanjaException (e.getMessage, e)
     }
   }
 
@@ -87,6 +91,7 @@ class PosixFileHandler extends SmartFileHandler{
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
+      case e : Throwable => throw new KamanjaException (e.getMessage, e)
     }
   }
 
@@ -112,9 +117,14 @@ class PosixFileHandler extends SmartFileHandler{
       }
     }
     catch {
-      case ex : Exception =>
+      case ex : Exception => {
         logger.error("", ex)
         return false
+      }
+      case ex : Throwable => {
+        logger.error("", ex)
+        return false
+      }
     }
   }
 
@@ -128,6 +138,10 @@ class PosixFileHandler extends SmartFileHandler{
     }
     catch {
       case ex : Exception => {
+        logger.error("", ex)
+        return false
+      }
+      case ex : Throwable => {
         logger.error("", ex)
         return false
       }
@@ -148,6 +162,7 @@ class PosixFileHandler extends SmartFileHandler{
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
+      case e : Throwable => throw new KamanjaException (e.getMessage, e)
     }
   }
 
@@ -238,6 +253,10 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
                     logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
                     errorWaitTime = scala.math.min((errorWaitTime * 2), MAX_WAIT_TIME)
                   }
+                  case e: Throwable => {
+                    logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
+                    errorWaitTime = scala.math.min((errorWaitTime * 2), MAX_WAIT_TIME)
+                  }
                 }
                 Thread.sleep(monitoringConf.waitingTimeMS)
 
@@ -247,6 +266,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
             case ie: InterruptedException => logger.error("InterruptedException: ", ie)
             case ioe: IOException         => logger.error("Unable to find the directory to watch, Shutting down File Consumer", ioe)
             case e: Exception             => logger.error("Exception: ", e)
+            case e: Throwable             => logger.error("Throwable: ", e)
           }
         }
       }

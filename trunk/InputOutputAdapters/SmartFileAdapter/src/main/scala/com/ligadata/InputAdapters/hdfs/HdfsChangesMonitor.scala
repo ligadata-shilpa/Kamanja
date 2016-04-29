@@ -70,9 +70,14 @@ class HdfsFileHandler extends SmartFileHandler{
         hdFileSystem.open(inFile)
       }
       catch {
-        case e: Exception =>
+        case e: Exception => {
           logger.error(e)
           null
+        }
+        case e: Throwable => {
+          logger.error(e)
+          null
+        }
       }
 
     inputStream
@@ -89,6 +94,7 @@ class HdfsFileHandler extends SmartFileHandler{
     }
     catch{
       case e : Exception => throw new KamanjaException (e.getMessage, e)
+      case e : Throwable => throw new KamanjaException (e.getMessage, e)
     }
   }
 
@@ -111,6 +117,10 @@ class HdfsFileHandler extends SmartFileHandler{
     }
     catch{
       case e : Exception => {
+        logger.warn("Error while reading from hdfs file [" + fileFullPath + "]",e)
+        throw e
+      }
+      case e : Throwable => {
         logger.warn("Error while reading from hdfs file [" + fileFullPath + "]",e)
         throw e
       }
@@ -147,8 +157,15 @@ class HdfsFileHandler extends SmartFileHandler{
         }
      } 
      catch {
-       case ex : Exception => logger.error("", ex)
-        return false
+       case ex : Exception => {
+         logger.error("", ex)
+         return false
+       }
+       case ex : Throwable => {
+         logger.error("", ex)
+         return false
+       }
+
      } finally {
 
      }
@@ -167,6 +184,10 @@ class HdfsFileHandler extends SmartFileHandler{
        case ex : Exception => {
         logger.error("Hdfs File Handler - Error while trying to delete file " + getFullPath, ex)
         return false 
+       }
+       case ex : Throwable => {
+         logger.error("Hdfs File Handler - Error while trying to delete file " + getFullPath, ex)
+         return false
        }
         
      } finally {
@@ -206,6 +227,9 @@ class HdfsFileHandler extends SmartFileHandler{
     }
     catch {
       case ex : Exception => {
+        throw new KamanjaException("", ex)
+      }
+      case ex : Throwable => {
         throw new KamanjaException("", ex)
       }
 
@@ -271,6 +295,10 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
         logger.error(ex)
         new Array[FileStatus](0)
       }
+      case ex : Throwable => {
+        logger.error(ex)
+        new Array[FileStatus](0)
+      }
     }
   }
 
@@ -327,6 +355,9 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
             }
             catch {
               case ex: Exception => {
+                logger.error("Smart File Consumer (Hdfs Monitor) - Error while checking the folder", ex)
+              }
+              case ex: Throwable => {
                 logger.error("Smart File Consumer (Hdfs Monitor) - Error while checking the folder", ex)
               }
             }
@@ -414,6 +445,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     }
     catch{
       case ex : Exception => false
+      case ex : Throwable => false
     }
   }
 

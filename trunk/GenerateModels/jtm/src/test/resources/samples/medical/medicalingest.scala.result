@@ -30,6 +30,11 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
   val log = new com.ligadata.runtime.Log(this.getClass.getName)
   import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+    Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%d".format(txnCtxt.transId, triggerdSetIndex, outputDefault))
+    if(isDebugEnabled)
+    {
+      execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
+    }
     //
     //
     def exeGenerated_transactionmsg_1(msg1: com.ligadata.kamanja.samples.messages.V1000000.TransactionMsgIn): Array[MessageInterface] = {
@@ -232,7 +237,10 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     } else {
       Array.empty[MessageInterface]
     }
+    if(isDebugEnabled)
+    {
+      results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))
+    }
     results.asInstanceOf[Array[ContainerOrConcept]]
   }
 }
-

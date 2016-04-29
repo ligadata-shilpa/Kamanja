@@ -33,7 +33,7 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
   test("test1") {
 
     val fileInput = getClass.getResource("/test001.jtm/test.jtm").getPath
-    val fileOutput = getClass.getResource("/test001.jtm/test.scala.result").getPath
+    val fileOutput = getClass.getResource("/test001.jtm/").getPath + "/test.scala.actual"
     val fileExpected = getClass.getResource("/test001.jtm/test.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -52,13 +52,14 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 
   // Multiple input messages with vals in compute
   test("test2") {
 
     val fileInput = getClass.getResource("/test001.jtm/test2.jtm").getPath
-    val fileOutput = getClass.getResource("/test001.jtm/test2.scala.result").getPath
+    val fileOutput = getClass.getResource("/test001.jtm/").getPath + "/test2.scala.actual"
     val fileExpected = getClass.getResource("/test001.jtm/test2.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -77,13 +78,14 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 
   // Test conversion pickup
   test("test3") {
 
     val fileInput = getClass.getResource("/test001.jtm/test3.jtm").getPath
-    val fileOutput = getClass.getResource("/test001.jtm/test3.scala.result").getPath
+    val fileOutput = getClass.getResource("/test001.jtm/").getPath + "/test3.scala.actual"
     val fileExpected = getClass.getResource("/test001.jtm/test3.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -102,6 +104,7 @@ class Test001Test  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 
 }

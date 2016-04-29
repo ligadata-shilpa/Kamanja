@@ -32,7 +32,7 @@ class Test002Test  extends FunSuite with BeforeAndAfter {
   test("test") {
 
     val fileInput = getClass.getResource("/test002.jtm/test.jtm").getPath
-    val fileOutput = getClass.getResource("/test002.jtm/test.scala.result").getPath
+    val fileOutput = getClass.getResource("/test002.jtm/").getPath + "/test.scala.actual"
     val fileExpected = getClass.getResource("/test002.jtm/test.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -51,6 +51,7 @@ class Test002Test  extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
+    DeleteFile(fileOutput);
   }
 
 }

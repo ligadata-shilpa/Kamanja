@@ -32,6 +32,11 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   val log = new com.ligadata.runtime.Log(this.getClass.getName)
   import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+    Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%d".format(txnCtxt.transId, triggerdSetIndex, outputDefault))
+    if(isDebugEnabled)
+    {
+      execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
+    }
     //
     lazy val grok_instance_1: GrokDictionary = {
       val dict = new GrokDictionary
@@ -43,8 +48,10 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     lazy val grok_instance_1_0 = grok_instance_1.compileExpression("%{EMAIL:email} %{DOMAIN:domain} %{USER:user}")
     //
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg5): Array[MessageInterface] = {
+      Debug("exeGenerated_test1_1")
       lazy val grok_instance_1_0_in1 = grok_instance_1_0.extractNamedGroups(in1)
       def process_o1(): Array[MessageInterface] = {
+        Debug("exeGenerated_test1_1::process_o1")
         val result = com.ligadata.kamanja.test.V1000000.msg2.createInstance
         result.out4 = if(grok_instance_1_0_in1.containsKey("user")) grok_instance_1_0_in1.get("user") else "")
         result.out3 = if(grok_instance_1_0_in1.containsKey("domain")) grok_instance_1_0_in1.get("domain") else "")
@@ -60,10 +67,15 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    if(msg1!=null) {
+    (if(msg1!=null) {
       exeGenerated_test1_1(msg1)
     } else {
       Array.empty[MessageInterface]
+    }) ++
+    Array.empty[MessageInterface]
+    if(isDebugEnabled)
+    {
+      results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))
     }
     results.asInstanceOf[Array[ContainerOrConcept]]
   }
