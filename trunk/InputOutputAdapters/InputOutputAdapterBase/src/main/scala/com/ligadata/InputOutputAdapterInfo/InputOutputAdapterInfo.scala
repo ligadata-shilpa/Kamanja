@@ -27,7 +27,7 @@ import com.ligadata.transactions.{NodeLevelTransService, SimpleTransService}
 //import org.json4s.jackson.JsonMethods._
 import org.apache.logging.log4j.{Logger, LogManager}
 
-import scala.collection.mutable.ArrayBuffer
+//import scala.collection.mutable.ArrayBuffer
 
 object AdapterConfiguration {
   // Strings to be used for the Metrics descriptions
@@ -142,6 +142,17 @@ trait ExecContext {
     throw new KamanjaException("Not found NodeContext or EnvContext", null)
   }
 
+  val excludedMsgs = scala.collection.mutable.Set[String]()
+
+  final def LoadExcludedMessages: Unit = {
+    // For now ignoring all standard messages
+    excludedMsgs += "com.ligadata.kamanjabase.kamanjastatusevent"
+    excludedMsgs += "com.ligadata.kamanjabase.kamanjastatisticsevent"
+    excludedMsgs += "com.ligadata.kamanjabase.kamanjaexceptionevent"
+    excludedMsgs += "com.ligadata.kamanjabase.kamanjaexecutionfailureevent"
+    excludedMsgs += "com.ligadata.kamanjabase.kamanjamessageevent"
+  }
+
   val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs) = nodeContext.getEnvCtxt().getZookeeperInfo
   val (txnIdsRangeForPartition, txnIdsRangeForNode) = nodeContext.getEnvCtxt().getTransactionRanges
 
@@ -223,13 +234,23 @@ trait ExecContext {
     var txnCtxt: TransactionContext = null
     try {
       val transId = transService.getNextTransId
-      val msgEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent").asInstanceOf[KamanjaMessageEvent]
-      if (msgEvent == null) {
-        LOG.warn("Not able to get com.ligadata.KamanjaBase.KamanjaMessageEvent")
+      val msgEvent: KamanjaMessageEvent =
+        if (excludedMsgs.contains(msg.getFullTypeName.toLowerCase())){
+          val tmpMsgEvent: KamanjaMessageEvent = null
+          tmpMsgEvent
+        } else {
+          val tmpMsgEvent: KamanjaMessageEvent = nodeContext.getEnvCtxt().getContainerInstance("com.ligadata.KamanjaBase.KamanjaMessageEvent").asInstanceOf[KamanjaMessageEvent]
+          if (tmpMsgEvent == null) {
+            LOG.warn("Not able to get com.ligadata.KamanjaBase.KamanjaMessageEvent")
+          }
+          tmpMsgEvent
+        }
+
+      if (msgEvent != null) {
+        msgEvent.messagekey = uk
+        msgEvent.messagevalue = uv
+        msgEvent.error = ""
       }
-      msgEvent.messagekey = uk
-      msgEvent.messagevalue = uv
-      msgEvent.error = ""
       txnCtxt = new TransactionContext(transId, nodeContext, data, EventOriginInfo(uk, uv), readTmMilliSecs, msgEvent)
       txnCtxt.setInitialMessage("", msg)
       ThreadLocalStorage.txnContextInfo.set(txnCtxt)
