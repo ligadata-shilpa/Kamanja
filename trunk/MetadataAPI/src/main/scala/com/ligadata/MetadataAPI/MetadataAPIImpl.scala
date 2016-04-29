@@ -2041,7 +2041,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
   override def UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
-    UpdateMessage(messageText, format, userid)
+    UpdateMessage(messageText, format, userid, tid)
   }
 
     /**
