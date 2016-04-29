@@ -153,6 +153,8 @@ trait ExecContext {
     excludedMsgs += "com.ligadata.kamanjabase.kamanjamessageevent"
   }
 
+  LoadExcludedMessages
+
   val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs) = nodeContext.getEnvCtxt().getZookeeperInfo
   val (txnIdsRangeForPartition, txnIdsRangeForNode) = nodeContext.getEnvCtxt().getTransactionRanges
 
@@ -304,7 +306,8 @@ trait ExecContext {
           }
           LOG.debug("Not able to deserialize data:%s at UK:%s, UV:%s".format((if (data != null) new String(data) else ""), uk, uv))
         }
-        SendFailedEvent(data, tDeserializerName, failedMsg, uniqueKey, uniqueVal, null, tempMsgInterface)
+        val ex = new Exception("Unable to deserialize messageName:%s from data:%s".format(messageName, (if (data != null) new String(data) else "")))
+        SendFailedEvent(data, tDeserializerName, failedMsg, uniqueKey, uniqueVal, ex, tempMsgInterface)
       }
     } catch {
       case e: Throwable => {
