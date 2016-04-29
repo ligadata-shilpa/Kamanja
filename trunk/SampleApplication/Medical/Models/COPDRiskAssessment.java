@@ -35,26 +35,17 @@ public class COPDRiskAssessment extends ModelInstance {
 			super(modelDef, nodeContext);
 		}
 
-        public boolean isValidMessage(MessageContainerBase msg) {
-            return (msg instanceof Beneficiary);
-        }
-
         public ModelInstance createModelInstance() {
             return new COPDRiskAssessment(this);
         }
 
         public String getModelName() {
-            return "COPDRiskAssessment";
+            return "com.ligadata.models.samples.models.COPDRiskAssessment";
         }
 
         public String getVersion() {
             return "0.0.1";
         }
-
-        public ModelResultBase createResultObject() {
-            return new MappedModelResults();
-        }
-
     }
 
     private class FilterClaims<T extends BaseMsg> implements Function1<T, Boolean> {

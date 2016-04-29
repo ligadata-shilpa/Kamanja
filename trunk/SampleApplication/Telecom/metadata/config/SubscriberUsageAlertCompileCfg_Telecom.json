@@ -9,7 +9,9 @@
             "com.ligadata.kamanja.samples.containers.subscriberplans",
             "com.ligadata.kamanja.samples.containers.accountinfo",
             "com.ligadata.kamanja.samples.containers.accountaggregatedusage",
-            "com.ligadata.kamanja.samples.messages.subscriberusage"
+            "com.ligadata.kamanja.samples.messages.subscriberusage",
+            "com.ligadata.kamanja.samples.messages.AccountUsageAlertMessage",
+            "com.ligadata.kamanja.samples.messages.SubscriberUsageAlertMessage"
         ]
     }
 }

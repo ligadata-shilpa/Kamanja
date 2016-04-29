@@ -23,7 +23,6 @@ class HelloWorldModelFactory(modelDef: ModelDef, nodeContext: NodeContext) exten
   override def createModelInstance(): ModelInstance = return new HelloWorldModel(this)
   override def getModelName: String = "com.ligadata.kamanja.samples.models.HelloWorldModel" 
   override def getVersion: String = "0.0.1"
-  override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
 
 class HelloWorldModel(factory: ModelInstanceFactory) extends ModelInstance(factory) {
