@@ -34,7 +34,7 @@ class MapperTest extends FunSuite with BeforeAndAfter {
   test("test1") {
 
     val fileInput = getClass.getResource("/mappermsg/mapper001.jtm").getPath
-    val fileOutput = getClass.getResource("/mappermsg/mapper001.scala.result").getPath
+    val fileOutput = getClass.getResource("/mappermsg").getPath + "/mapper001.scala.actual"
     val fileExpected = getClass.getResource("/mappermsg/mapper001.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
@@ -53,6 +53,7 @@ class MapperTest extends FunSuite with BeforeAndAfter {
     logger.info("expected path={}", fileExpected)
 
     assert(actual == expected)
-  }
 
+    DeleteFile(fileOutput)
+  }
 }
