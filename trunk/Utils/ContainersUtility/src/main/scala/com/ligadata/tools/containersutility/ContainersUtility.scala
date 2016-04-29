@@ -196,21 +196,27 @@ Sample uses:
           if (dstore != null) {
             try {
               dstore.setObjectResolver(utilmaker)
-//              if(!dstore.isTableExists(containerName)){
-//                logger.error("there is no %s container in datastore".format(containerName))
-//              }
+              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+              if(!dstore.isContainerExists(containerName)){
+                logger.error("there is no %s container in datastore".format(containerName))
+              }
               if (!operation.equals("")) {
                 if (operation.equalsIgnoreCase("truncate")) {
                   utilmaker.TruncateContainer(containerName, dstore)
                 } else if (operation.equalsIgnoreCase("delete")) {
-                  if (containerObj.size == 0)
-                    logger.error("Failed to delete data from %s container, at least one item (keyid, timerange) should not be null for delete operation".format(containerName))
-                  else
+                  if (containerObj.size == 0) {
+                    logger.error("Failed to delete data from %s container, at least one item (keys, timerange) should not be null for delete operation".format(containerName))
+                    sys.exit(1)
+                  }
+                  else {
                     utilmaker.DeleteFromContainer(containerName, containerObj, dstore)
+                    logger.info("The data was deleted successfully")
+                  }
                 } else if (operation.equalsIgnoreCase("select")) {
-                  dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
-                  if (containerObj.size == 0)
-                    logger.error("Failed to select data from %s container,at least one item (keyid, timerange) should not be null for select operation".format(containerName))
+                  if (containerObj.size == 0) {
+                    logger.error("Failed to select data from %s container,at least one item (keys, timerange) should not be null for select operation".format(containerName))
+                    sys.exit(1)
+                  }
                   else {
                     if(new java.io.File(output).exists.equals(false)){ // check if path exits or not for filter file
                       logger.error("this path does not exist: %s".format(output))
@@ -240,6 +246,8 @@ Sample uses:
                         }
                       }
                       utilmaker.GetFromContainer(containerName, containerObj, dstore, serializerName, serializerOptionsJson, getData)
+                      logger.info("The data was fetched successfully")
+                      logger.info("You can find data in this file: %s".format(output))
                     } catch {
                       case e: Exception => {
                         logger.error("Failed to select data", e)
