@@ -234,7 +234,7 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
         } else {
           valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0))
         }
-        if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+        if (getTimePartitionInfo != null && getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
           setTimePartitionData;
         }
       } catch {
@@ -264,7 +264,7 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
            val valtypeId = typeCategory.getValue.toShort
            valuesMap(key) = new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0))
           }
-          if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+          if (getTimePartitionInfo != null && getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
             setTimePartitionData;
           }
         } catch {

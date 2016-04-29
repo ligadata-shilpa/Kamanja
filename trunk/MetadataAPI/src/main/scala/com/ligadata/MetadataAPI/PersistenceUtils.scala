@@ -426,7 +426,7 @@ object PersistenceUtils {
     PutTranId(max)
   }
 
-  def GetMetadataId(key: String, incrementInDb: Boolean, defaultId: Long = 1): Long = {
+  def GetMetadataId(key: String, incrementInDb: Boolean, defaultId: Long = 1): Long = lock.synchronized {
     var id: Long = defaultId
     try {
       val (serTyp, obj) = GetObject(key.toLowerCase(), "metadatacounters")
@@ -467,7 +467,7 @@ object PersistenceUtils {
     *
     * @return <description please>
     */
-  def GetNewTranId: Long = {
+  def GetNewTranId: Long = lock.synchronized {
     try {
       val (serTyp, obj) = GetObject("transaction_id", "transaction_id")
       val idStr = new String(obj.asInstanceOf[Array[Byte]])
@@ -488,7 +488,7 @@ object PersistenceUtils {
     *
     * @return <description please>
     */
-  def GetTranId: Long = {
+  def GetTranId: Long = lock.synchronized {
     try {
       val (serTyp, obj) = GetObject("transaction_id", "transaction_id")
       val idStr = new String(obj.asInstanceOf[Array[Byte]])
