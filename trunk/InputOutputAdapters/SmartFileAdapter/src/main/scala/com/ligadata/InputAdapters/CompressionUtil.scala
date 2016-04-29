@@ -188,6 +188,9 @@ object CompressionUtil {
         case e : Exception => {
           logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - "+e.getMessage)
         }
+        case e : Throwable => {
+          logger.warn("SmartFileConsumer - MimeMagic processing Throwable - "+e.getMessage)
+        }
       }
     }
     contentType
@@ -235,6 +238,10 @@ object CompressionUtil {
     }
     catch{
       case e : Exception => {
+        logger.error(e)
+        originalInStream
+      }
+      case e : Throwable => {
         logger.error(e)
         originalInStream
       }

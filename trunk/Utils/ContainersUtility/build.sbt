@@ -8,7 +8,12 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-assemblyJarName in assembly := { s"${name.value}-${version.value}" }
+val kamanjaVersion = "1.4"
+
+//assemblyJarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := {
+    s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}.jar"
+}
 
 assemblyMergeStrategy in assembly := {
     // case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
@@ -56,7 +61,7 @@ unmanagedJars in Compile <<= baseDirectory map { base => (base ** "*.jar").class
 
 name := "ContainersUtility"
 
-version := "1.0"
+version := "1.4"
 
 //resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 //

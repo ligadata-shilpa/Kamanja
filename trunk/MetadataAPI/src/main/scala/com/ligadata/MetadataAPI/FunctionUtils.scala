@@ -358,7 +358,7 @@ object FunctionUtils {
   def GetFunctionDef(nameSpace: String, objectName: String, formatType: String, userid: Option[String]): String = {
     try {
       if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETOBJECT, AuditConstants.FUNCTION, AuditConstants.SUCCESS, "", nameSpace + "." + objectName + "LATEST")
-      val funcDefs = MdMgr.GetMdMgr.FunctionsAvailable(nameSpace, objectName)
+      val funcDefs = MdMgr.GetMdMgr.FunctionsWithName(nameSpace, objectName)
       if (funcDefs == null) {
         logger.debug("No Functions found ")
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetFunctionDef", null, ErrorCodeConstants.Get_Function_Failed + ":" + nameSpace + "." + objectName)

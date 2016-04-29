@@ -750,24 +750,43 @@ class MdMgr {
   /* namespace & name for key and namespace & name for each arg */
   def Function(nameSpace: String, name: String, args: List[(String, String)], ver: Long, onlyActive: Boolean): Option[FunctionDef] = Function(MdMgr.MkFullName(nameSpace, name), args.map(a => MdMgr.MkFullName(a._1, a._2)), ver, onlyActive)
 
-  /**
-    * Principally used by the Pmml Compiler, answer the FunctionDef with the supplied type signature.
-    * Type signatures are in the following form:
-    *
-    * namespace.functionName(arg.typeString,arg.typeString,...)
-    *
-    * NOTE: Typestrings are the native scala type representation, not the Ligadata namespace.typename.  For example,
-    *
-    * Udfs.ContainerMap(Array[SomeMessageType],String,Int,Int,Boolean)
-    *
-    * @param key : a typestring key
-    * @return a FunctionDef matching the type signature key or null if there is no match
-    */
-  def FunctionByTypeSig(key: String): FunctionDef = {
-    compilerFuncDefs.get(key.toLowerCase()).getOrElse(null)
-  }
+    /**
+      * Answer an array of FunctionDefs that have the supplied namespace and name.
+      *
+      * @param namespace : the function namespace
+      * @param name name of the function in the supplied namespace that is of interest
+      * @return a FunctionDef matching the type signature key or null if there is no match
+      */
+    def FunctionsWithName(namespace: String, name: String): Array[FunctionDef] = {
+        val key : String = s"$namespace.$name".toLowerCase
+        val fcnKeys : Array[String] = compilerFuncDefs.keys.filter(_.startsWith(key)).toArray
+        val fcns : Array[FunctionDef] = if (fcnKeys.nonEmpty) {
+            fcnKeys.map(k => compilerFuncDefs.apply(k))
+        } else {
+            Array[FunctionDef]()
+        }
 
-  /**
+        fcns
+    }
+
+    /**
+      * Principally used by the Pmml Compiler, answer the FunctionDef with the supplied type signature.
+      * Type signatures are in the following form:
+      *
+      * namespace.functionName(arg.typeString,arg.typeString,...)
+      *
+      * NOTE: Typestrings are the native scala type representation, not the Ligadata namespace.typename.  For example,
+      *
+      * Udfs.ContainerMap(Array[SomeMessageType],String,Int,Int,Boolean)
+      *
+      * @param key : a typestring key
+      * @return a FunctionDef matching the type signature key or null if there is no match
+      */
+    def FunctionByTypeSig(key: String): FunctionDef = {
+        compilerFuncDefs.get(key.toLowerCase()).getOrElse(null)
+    }
+
+    /**
     * Principally used by the Pmml Compiler, answer the macro that matches the supplied type signature.  A
     * MacroDef is returned.  The MacroDef is similar in most respects to the FunctionDef (in fact a
     * MacroDef isA FunctionDef).  The difference is how they are used by the Pmml compiler.
@@ -829,7 +848,7 @@ class MdMgr {
     schemaIdToElemntIdMap.getOrElse(schemaId, 0)
   }
 
-  def ContainerForElementId(elemId:Long): Option[BaseElem] = {
+  def ElementForElementId(elemId:Long): Option[BaseElem] = {
     val elem = elementIdMap.getOrElse(elemId, null)
     if (elem != null) Some(elem) else None
   }

@@ -7,7 +7,7 @@ Usage()
 {
     echo 
     echo "Usage:"
-    echo "      GenerateAdapterBindings.sh --MetadataAPIConfig  <metadataAPICfgPath>"
+    echo "      GenerateAdapterBindings.sh --KamanjaHome  <kamanjaHome>"
     echo "      --ClusterConfig <ClusterCfgPath> --OutputFile <OutFilePath>"
     echo                      
     echo "  NOTES: Generate Message Adapter Bindings Json using cluster configuration to locate"
@@ -26,7 +26,7 @@ else
     exit 1
 fi
 
-if [[ "$name1" != "--MetadataAPIConfig" && "$name1" != "--ClusterId" && "$name1" != "--OutputFile" ]]; then
+if [[ "$name1" != "--KamanjaHome" && "$name1" != "--ClusterConfig" && "$name1" != "--OutputFile" ]]; then
 	echo "Problem: Bad arguments"
 	echo 
 	Usage
@@ -34,15 +34,15 @@ if [[ "$name1" != "--MetadataAPIConfig" && "$name1" != "--ClusterId" && "$name1"
 fi
 
 # Collect the named parameters 
-metadataAPIConfig=""
+kamanjaHome=""
 clusterConfig=""
 outputFile="/tmp/AdapterMessageBindings.json"
 
 while [ "$1" != "" ]; do
     echo "parameter is $1"
     case $1 in
-        --MetadataAPIConfig )   shift
-                                metadataAPIConfig=$1
+        --KamanjaHome )   shift
+                                kamanjaHome=$1
                                 ;;
         --ClusterConfig )       shift
                                 clusterConfig=$1
@@ -58,7 +58,5 @@ while [ "$1" != "" ]; do
     esac
     shift
 done
-installDir=`cat $metadataAPIConfig | grep '[Rr][Oo][Oo][Tt]_[Dd][Ii][Rr]' | sed 's/.*=\(.*\)$/\1/g'`
-
-java -Dlog4j.configurationFile=file:$installDir/config/log4j2.xml -cp $installDir/lib/system/ExtDependencyLibs2_2.10-1.4.0.jar:$installDir/lib/system/ExtDependencyLibs_2.10-1.4.0.jar:$installDir/lib/system/KamanjaInternalDeps_2.10-1.4.0.jar:$installDir/lib/system/generateadapterbindings_2.10-1.4.0.jar com.ligadata.Migrate.GenerateAdapterBindings --config $clusterConfig --outfile $outputFile
+java -Dlog4j.configurationFile=file:$kamanjaHome/config/log4j2.xml -cp $kamanjaHome/lib/system/ExtDependencyLibs2_2.10-1.4.0.jar:$kamanjaHome/lib/system/ExtDependencyLibs_2.10-1.4.0.jar:$kamanjaHome/lib/system/KamanjaInternalDeps_2.10-1.4.0.jar:$kamanjaHome/lib/system/generateadapterbindings_2.10-1.4.0.jar com.ligadata.Migrate.GenerateAdapterBindings --config $clusterConfig --outfile $outputFile
 echo result = $?

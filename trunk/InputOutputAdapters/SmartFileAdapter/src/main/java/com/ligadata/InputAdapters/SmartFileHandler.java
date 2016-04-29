@@ -14,6 +14,7 @@ public interface SmartFileHandler {
     //prepares input stream based on the fs type and also file type itself (plain, gzip, bz2, lzo), so data can be read directly
     InputStream openForRead() throws KamanjaException;
     int read(byte[] buf, int length) throws KamanjaException;
+    int read(byte[] buf, int offset, int length) throws KamanjaException;
     void close();
     boolean moveTo(String newPath) throws KamanjaException;
     boolean delete() throws KamanjaException;

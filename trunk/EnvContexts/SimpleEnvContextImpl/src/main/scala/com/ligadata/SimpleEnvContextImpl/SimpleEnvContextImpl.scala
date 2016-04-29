@@ -1264,7 +1264,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 TxnContextCommonFunctions.ReadLockContainer(cacheContainer)
                 try {
                   logger.debug("Going to cached contaienr (%s) to get the data for tr".format(containerName))
-                  val fndValuesAndKeys = TxnContextCommonFunctions.getRddData(cacheContainer, bk.toList, tr, null, f)
+                  val fndValuesAndKeys = TxnContextCommonFunctions.getRddData(cacheContainer, null, tr, null, f)
                   if (fndValuesAndKeys != null && fndValuesAndKeys.size > 0)
                     loadedData ++= fndValuesAndKeys.map(kv => (kv._1, Clone(kv._2)))
                 } catch {
@@ -1293,7 +1293,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
                 TxnContextCommonFunctions.ReadLockContainer(cacheContainer)
                 try {
                   logger.debug("Going to cached contaienr (%s) to get the data".format(containerName))
-                  val fndValuesAndKeys = TxnContextCommonFunctions.getRddData(cacheContainer, bk.toList, tr, null, f)
+                  val fndValuesAndKeys = TxnContextCommonFunctions.getRddData(cacheContainer, null, tr, null, f)
                   if (fndValuesAndKeys != null && fndValuesAndKeys.size > 0)
                     loadedData ++= fndValuesAndKeys.map(kv => (kv._1, Clone(kv._2)))
                 } catch {

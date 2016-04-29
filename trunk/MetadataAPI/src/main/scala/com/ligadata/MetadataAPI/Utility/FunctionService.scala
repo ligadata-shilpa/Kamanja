@@ -86,7 +86,7 @@ object FunctionService {
       if (param.length > 0) {
         val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
         try {
-          return MetadataAPIImpl.GetFunctionDef(ns, name,"JSON", userid)
+          return MetadataAPIImpl.GetFunctionDef(ns, name, ver.toString ,"JSON", userid)
         } catch {
           case e: Exception => logger.error("", e)
         }
