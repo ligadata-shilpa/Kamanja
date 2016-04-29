@@ -72,9 +72,6 @@ public class HelloWorldModel extends ModelInstance {
      * @param inTxnContext
      */
 
-
-
-
     public static class HelloWorldModelFactory extends ModelInstanceFactory {
 		public HelloWorldModelFactory(ModelDef modelDef, NodeContext nodeContext) {
 			super(modelDef, nodeContext);
@@ -85,15 +82,11 @@ public class HelloWorldModel extends ModelInstance {
 		}
 
 		public String getModelName() {
-			return "HelloWorldModel";
+			return "com.ligadata.models.samples.models.HelloWorldModel";
 		}
 
 		public String getVersion() {
 			return "0.0.1";
-		}
-
-		public ModelResultBase createResultObject() {
-			return new MappedModelResults();
 		}
 	}
 
