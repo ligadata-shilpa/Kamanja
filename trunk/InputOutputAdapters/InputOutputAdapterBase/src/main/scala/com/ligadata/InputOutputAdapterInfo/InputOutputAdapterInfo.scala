@@ -236,6 +236,9 @@ trait ExecContext {
     var txnCtxt: TransactionContext = null
     try {
       val transId = transService.getNextTransId
+      if (LOG.isTraceEnabled) {
+        LOG.trace("CurrentMsg:%s, KamanjaMessageEvent excluded Messages:%s".format(msg.getFullTypeName.toLowerCase(), excludedMsgs.mkString(",")))
+      }
       val msgEvent: KamanjaMessageEvent =
         if (excludedMsgs.contains(msg.getFullTypeName.toLowerCase())){
           val tmpMsgEvent: KamanjaMessageEvent = null
