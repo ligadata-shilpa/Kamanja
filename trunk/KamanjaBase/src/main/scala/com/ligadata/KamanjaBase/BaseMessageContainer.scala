@@ -533,7 +533,7 @@ trait AdaptersSerializeDeserializers {
           usedSerializersNames += ser.serName
         } catch {
           case e: Throwable => {
-            throw e
+            throw new KamanjaException("Failed to Serialize " + c.getFullTypeName, e)
           }
         }
       } else {
@@ -587,7 +587,7 @@ trait AdaptersSerializeDeserializers {
         return (container, ser.serName, msgName)
       } catch {
         case e: Throwable => {
-          throw e
+          throw new KamanjaException("Failed to Deserialize " + msgName, e)
         }
       }
     } else {
