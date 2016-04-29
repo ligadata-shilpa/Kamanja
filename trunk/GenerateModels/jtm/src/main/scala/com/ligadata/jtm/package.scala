@@ -30,6 +30,29 @@ import org.json4s.jackson.JsonMethods._
   */
 package object jtm {
 
+  /** Get a lit of all files in the subtree
+    *
+    * @param dir
+    * @return
+    */
+  def getRecursiveListOfFiles(dir: File): Array[File] = {
+    val these = dir.listFiles.filter(_.isFile)
+    val those = dir.listFiles.filter(_.isDirectory)
+    these ++ those.flatMap(getRecursiveListOfFiles)
+  }
+
+  /** Delete file if it exists
+    *
+    * @param path
+    * @return
+    */
+  def DeleteFile(path: String) = {
+    val fileTemp = new File(path)
+    if (fileTemp.exists) {
+      fileTemp.delete()
+    }
+  }
+
   /** Creates a metadata instance with defaults and json objects located on the file system
     *
     * @return Metadata manager
@@ -47,12 +70,6 @@ package object jtm {
     try {
       val mdLoader = new MetadataLoad(mgr, typesPath, fcnPath, attrPath, msgCtnPath)
       mdLoader.initialize
-
-      def getRecursiveListOfFiles(dir: File): Array[File] = {
-        val these = dir.listFiles.filter(_.isFile)
-        val those = dir.listFiles.filter(_.isDirectory)
-        these ++ those.flatMap(getRecursiveListOfFiles)
-      }
 
       val files = getRecursiveListOfFiles(new File(metadataLocation))
 
@@ -72,11 +89,6 @@ package object jtm {
     mgr
   }
 
-  def DeleteFile(path: String) = {
-    val fileTemp = new File(path)
-    if (fileTemp.exists) {
-      fileTemp.delete()
-    }
-  }
+
 
 }

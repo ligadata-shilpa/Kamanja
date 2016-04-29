@@ -13,17 +13,17 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
 
     
  
-object msg2 extends RDDObject[msg2] with MessageFactoryInterface { 
+object msg4 extends RDDObject[msg4] with MessageFactoryInterface { 
  
   val log = LogManager.getLogger(getClass)
-	type T = msg2 ;
-	override def getFullTypeName: String = "com.ligadata.kamanja.test.msg2"; 
+	type T = msg4 ;
+	override def getFullTypeName: String = "com.ligadata.kamanja.test.msg4"; 
 	override def getTypeNameSpace: String = "com.ligadata.kamanja.test"; 
-	override def getTypeName: String = "msg2"; 
+	override def getTypeName: String = "msg4"; 
 	override def getTypeVersion: String = "000000.000001.000000"; 
 	override def getSchemaId: Int = 0; 
 	override def getTenantId: String = ""; 
-	override def createInstance: msg2 = new msg2(msg2); 
+	override def createInstance: msg4 = new msg4(msg4); 
 	override def isFixed: Boolean = true; 
 	override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
 	override def getFullName = getFullTypeName; 
@@ -55,7 +55,7 @@ object msg2 extends RDDObject[msg2] with MessageFactoryInterface {
       return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
     }
   
-    override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanja.test" , "name" : "msg2" , "fields":[{ "name" : "out1" , "type" : "int"},{ "name" : "out2" , "type" : "string"},{ "name" : "out3" , "type" : "int"},{ "name" : "out4" , "type" : "int"}]}""";  
+    override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanja.test" , "name" : "msg4" , "fields":[{ "name" : "out1" , "type" : "int"},{ "name" : "out2" , "type" : "string"},{ "name" : "out3" , "type" : "int"},{ "name" : "out4" , "type" : "int"}]}""";  
 
     final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
       
@@ -64,7 +64,7 @@ object msg2 extends RDDObject[msg2] with MessageFactoryInterface {
         if (oldVerobj == null) return null;
         oldVerobj match {
           
-      case oldVerobj: com.ligadata.kamanja.test.V1000000.msg2 => { return  convertToVer1000000(oldVerobj); } 
+      case oldVerobj: com.ligadata.kamanja.test.V1000000.msg4 => { return  convertToVer1000000(oldVerobj); } 
           case _ => {
             throw new Exception("Unhandled Version Found");
           }
@@ -77,7 +77,7 @@ object msg2 extends RDDObject[msg2] with MessageFactoryInterface {
       return null;
     }
   
-    private def convertToVer1000000(oldVerobj: com.ligadata.kamanja.test.V1000000.msg2): com.ligadata.kamanja.test.V1000000.msg2= {
+    private def convertToVer1000000(oldVerobj: com.ligadata.kamanja.test.V1000000.msg4): com.ligadata.kamanja.test.V1000000.msg4= {
       return oldVerobj
     }
   
@@ -94,15 +94,15 @@ object msg2 extends RDDObject[msg2] with MessageFactoryInterface {
   override def CanPersist: Boolean = false
   override def isMessage: Boolean = true
   override def isContainer: Boolean = false
-  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj msg2") };
-  override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj msg2");
-  override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj msg2");
+  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj msg4") };
+  override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj msg4");
+  override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj msg4");
  override def NeedToTransformData: Boolean = false
     }
 
-class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterface(factory) { 
+class msg4(factory: MessageFactoryInterface, other: msg4) extends MessageInterface(factory) { 
  
-  val log = msg2.log
+  val log = msg4.log
 
       var attributeTypes = generateAttributeTypes;
       
@@ -124,9 +124,9 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
       fromFunc(other)
     }
     
-    override def save: Unit = { /* msg2.saveOne(this) */}
+    override def save: Unit = { /* msg4.saveOne(this) */}
   
-    def Clone(): ContainerOrConcept = { msg2.build(this) }
+    def Clone(): ContainerOrConcept = { msg4.build(this) }
 
 		override def getPartitionKey: Array[String] = Array[String]() 
 
@@ -158,7 +158,7 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
       val ru = scala.reflect.runtime.universe
       val m = ru.runtimeMirror(getClass.getClassLoader)
       val im = m.reflect(this)
-      val fieldX = ru.typeOf[msg2].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
+      val fieldX = ru.typeOf[msg4].declaration(ru.newTermName(key)).asTerm.accessed.asTerm
       val fmX = im.reflectField(fieldX)
       return fmX.get.asInstanceOf[AnyRef];      
     } 
@@ -181,7 +181,7 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
       val key = keyName.toLowerCase;
    
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container msg2");
+      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container msg4");
       return get(keyTypes(key).getIndex)
   }
   
@@ -209,7 +209,7 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
 		case 2 => return this.out3.asInstanceOf[AnyRef]; 
 		case 3 => return this.out4.asInstanceOf[AnyRef]; 
 
-      	 case _ => throw new Exception(s"$index is a bad index for message msg2");
+      	 case _ => throw new Exception(s"$index is a bad index for message msg4");
     	  }       
      }catch {
           case e: Exception => {
@@ -278,7 +278,7 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
       val key = keyName.toLowerCase;
       try {
    
-  			 if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message msg2")
+  			 if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message msg4")
 			 set(keyTypes(key).getIndex, value); 
 
       }catch {
@@ -292,31 +292,31 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
   
       
     def set(index : Int, value :Any): Unit = {
-      if (value == null) throw new Exception(s"Value is null for index $index in message msg2 ")
+      if (value == null) throw new Exception(s"Value is null for index $index in message msg4 ")
       try{
         index match {
  				case 0 => { 
 				if(value.isInstanceOf[Int]) 
 				  this.out1 = value.asInstanceOf[Int]; 
-				 else throw new Exception(s"Value is the not the correct type for field out1 in message msg2") 
+				 else throw new Exception(s"Value is the not the correct type for field out1 in message msg4") 
 				} 
 				case 1 => { 
 				if(value.isInstanceOf[String]) 
 				  this.out2 = value.asInstanceOf[String]; 
-				 else throw new Exception(s"Value is the not the correct type for field out2 in message msg2") 
+				 else throw new Exception(s"Value is the not the correct type for field out2 in message msg4") 
 				} 
 				case 2 => { 
 				if(value.isInstanceOf[Int]) 
 				  this.out3 = value.asInstanceOf[Int]; 
-				 else throw new Exception(s"Value is the not the correct type for field out3 in message msg2") 
+				 else throw new Exception(s"Value is the not the correct type for field out3 in message msg4") 
 				} 
 				case 3 => { 
 				if(value.isInstanceOf[Int]) 
 				  this.out4 = value.asInstanceOf[Int]; 
-				 else throw new Exception(s"Value is the not the correct type for field out4 in message msg2") 
+				 else throw new Exception(s"Value is the not the correct type for field out4 in message msg4") 
 				} 
 
-        case _ => throw new Exception(s"$index is a bad index for message msg2");
+        case _ => throw new Exception(s"$index is a bad index for message msg4");
         }
     	}catch {
           case e: Exception => {
@@ -331,7 +331,7 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
       throw new Exception ("Set Func for Value and ValueType By Key is not supported for Fixed Messages" )
     }
   
-    private def fromFunc(other: msg2): msg2 = {  
+    private def fromFunc(other: msg4): msg4 = {  
    			this.out1 = com.ligadata.BaseTypes.IntImpl.Clone(other.out1);
 			this.out2 = com.ligadata.BaseTypes.StringImpl.Clone(other.out2);
 			this.out3 = com.ligadata.BaseTypes.IntImpl.Clone(other.out3);
@@ -341,19 +341,19 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
       return this;
     }
     
-	 def without1(value: Int) : msg2 = {
+	 def without1(value: Int) : msg4 = {
 		 this.out1 = value 
 		 return this 
  	 } 
-	 def without2(value: String) : msg2 = {
+	 def without2(value: String) : msg4 = {
 		 this.out2 = value 
 		 return this 
  	 } 
-	 def without3(value: Int) : msg2 = {
+	 def without3(value: Int) : msg4 = {
 		 this.out3 = value 
 		 return this 
  	 } 
-	 def without4(value: Int) : msg2 = {
+	 def without4(value: Int) : msg4 = {
 		 this.out4 = value 
 		 return this 
  	 } 
@@ -362,7 +362,7 @@ class msg2(factory: MessageFactoryInterface, other: msg2) extends MessageInterfa
       this(factory, null)
      }
     
-    def this(other: msg2) = {
+    def this(other: msg4) = {
       this(other.getFactory.asInstanceOf[MessageFactoryInterface], other)
     }
 

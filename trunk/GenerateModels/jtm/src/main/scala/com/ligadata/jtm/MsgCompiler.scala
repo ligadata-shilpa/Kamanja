@@ -37,8 +37,9 @@ object MsgCompiler extends App with LogTrait {
 
   class ConfMsgCompiler (arguments: Seq[String] ) extends ScallopConf (arguments)  with LogTrait {
 
-    val in = opt[String] (required = true, descr = "Json to compile", default = None )
-    val out = opt[String] (required = true, descr = "Scalaouput", default = None )
+    val in = opt[String] (required = true, descr = "Directory/File with json to compiler", default = Option("/home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/resources/metadata"))
+    val out = opt[String] (required = true, descr = "Direcory/File where to place the output", default = Option("/home/joerg/Kamanja/trunk/GenerateModels/jtm/src/test/scala/com/ligadata/jtm/test/compile"))
+    val all = opt[Boolean] (required = false, descr = "true: traversedirectory false: single file", default = Option(true))
   }
 
   override def main (args: Array[String] ) {
@@ -57,14 +58,35 @@ object MsgCompiler extends App with LogTrait {
         case _ : Throwable => ;
       }
 
-      val json = FileUtils.readFileToString(new File(cmdconf.in.get.get))
-      val map = parse(json).values.asInstanceOf[Map[String, Any]]
-      val msg = new MessageCompiler
-      val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(json, "JSON", mgr, 0, null, false)
-      val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
-      mgr.AddMsg(msg1)
-      FileUtils.writeStringToFile(new File(cmdconf.out.get.get), classStrVer)
+      if(cmdconf.all.get.get) {
 
+        val files = getRecursiveListOfFiles(new File(cmdconf.in.get.get))
+
+        // Load all json files for the metadata directory
+        files.map ( jsonFile => {
+          val fn = jsonFile.getName.replaceAll(".json", ".scala")
+          val json = FileUtils.readFileToString(jsonFile, null:String)
+          val map = parse(json).values.asInstanceOf[Map[String, Any]]
+          val msg = new MessageCompiler()
+          val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(json, "JSON", mgr, 0, null, false)
+          val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
+          mgr.AddMsg(msg1)
+          val fo = new File(cmdconf.out.get.get, fn)
+          logger.info("Output to {}", fo.getPath)
+          FileUtils.writeStringToFile(fo, classStrVer)
+        })
+
+      } else {
+
+        val json = FileUtils.readFileToString(new File(cmdconf.in.get.get))
+        val map = parse(json).values.asInstanceOf[Map[String, Any]]
+        val msg = new MessageCompiler
+        val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(json, "JSON", mgr, 0, null, false)
+        val msg1 = msgDef.asInstanceOf[com.ligadata.kamanja.metadata.MessageDef]
+        mgr.AddMsg(msg1)
+        FileUtils.writeStringToFile(new File(cmdconf.out.get.get), classStrVer)
+
+      }
     }
     catch {
       case e: Exception => {
