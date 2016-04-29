@@ -102,7 +102,7 @@ object MessageAndContainerUtils {
       MetadataAPIImpl.AddObjectToCache(contDef, MdMgr.GetMdMgr)
       MetadataAPIImpl.UploadJarsToDB(contDef)
       var objectsAdded = AddMessageTypes(contDef, MdMgr.GetMdMgr, recompile)
-      objectsAdded = objectsAdded :+ contDef
+      objectsAdded = contDef +: objectsAdded
       PersistenceUtils.SaveSchemaInformation(contDef.cType.SchemaId, contDef.NameSpace, contDef.Name, contDef.Version, contDef.PhysicalName, contDef.cType.AvroSchema, "Container")
       PersistenceUtils.SaveElementInformation(contDef.MdElementId, "Container", contDef.NameSpace, contDef.Name)
       MetadataAPIImpl.SaveObjectList(objectsAdded, "containers")
@@ -132,7 +132,7 @@ object MessageAndContainerUtils {
       MetadataAPIImpl.AddObjectToCache(msgDef, MdMgr.GetMdMgr)
       MetadataAPIImpl.UploadJarsToDB(msgDef)
       var objectsAdded = AddMessageTypes(msgDef, MdMgr.GetMdMgr, recompile)
-      objectsAdded = objectsAdded :+ msgDef
+      objectsAdded = msgDef +: objectsAdded
       PersistenceUtils.SaveSchemaInformation(msgDef.cType.SchemaId, msgDef.NameSpace, msgDef.Name, msgDef.Version, msgDef.PhysicalName, msgDef.cType.AvroSchema, "Message")
       PersistenceUtils.SaveElementInformation(msgDef.MdElementId, "Message", msgDef.NameSpace, msgDef.Name)
       MetadataAPIImpl.SaveObjectList(objectsAdded, "messages")
