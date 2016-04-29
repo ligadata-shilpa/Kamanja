@@ -69,7 +69,7 @@ object MetadataLoad {
       (MdMgr.sysNS, "MessageInterface", "com.ligadata.KamanjaBase.MessageInterface", List(), 2, "", 2), // Assigned SchemaId as 2. Never change this for this container
       (MdMgr.sysNS, "ContainerInterface", "com.ligadata.KamanjaBase.ContainerInterface", List(), 3, "", 3), // Assigned SchemaId as 3. Never change this for this container
       (MdMgr.sysNS, "Context", "com.ligadata.pmml.runtime.Context", List(), 4, "", 4), // Assigned SchemaId as 4. Never change this for this container
-      ("com.ligadata.KamanjaBase", "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent$",
+      ("com.ligadata.KamanjaBase", "KamanjaModelEvent", "com.ligadata.KamanjaBase.KamanjaModelEvent",
         List(("system", "modelid", "system", "Long", false, null),
           ("system", "elapsedtimeinms", "system", "Float", false, null),
           ("system", "eventepochtime", "system", "Long", false, null),
@@ -83,24 +83,25 @@ object MetadataLoad {
 
   def BaseMessagesInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String, Long)] = {
     return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String, Long)](
-      ("com.ligadata.KamanjaBase", "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent$",
-        List(("system", "nodeid", "system", "string", false, null),
-             ("system", "eventtime", "system", "long", false, null),
+      ("com.ligadata.KamanjaBase", "KamanjaStatusEvent", "com.ligadata.KamanjaBase.KamanjaStatusEvent",
+        List(("system", "statustype", "system", "string", false, null),
+             ("system", "nodeid", "system", "string", false, null),
+             ("system", "eventtime", "system", "string", false, null),
              ("system", "statusstring", "system", "string", false, null)),
         1000001, "", 1000001), // Assigned SchemaId as 1000001. Never change this for this message
 
-      ("com.ligadata.KamanjaBase", "KamanjaStatisticsEvent", "com.ligadata.KamanjaBase.KamanjaStatisticsEvent$",
+      ("com.ligadata.KamanjaBase", "KamanjaStatisticsEvent", "com.ligadata.KamanjaBase.KamanjaStatisticsEvent",
         List(("system", "statistics", "system", "string", false, null)),
         1000002, "", 1000002), // Assigned SchemaId as 1000005. Never change this for this message
 
-      ("com.ligadata.KamanjaBase", "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent$",
+      ("com.ligadata.KamanjaBase", "KamanjaExceptionEvent", "com.ligadata.KamanjaBase.KamanjaExceptionEvent",
         List(("system", "componentname" , "system", "string", false, null),
               ("system", "timeoferrorepochms" , "system", "long", false, null),
               ("system", "errortype" , "system", "string", false, null),
               ("system", "errorstring" , "system", "string", false, null)),
         1000003, "", 1000003), // Assigned SchemaId as 1000004. Never change this for this message
 
-      ("com.ligadata.KamanjaBase", "KamanjaExecutionFailureEvent", "com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent$",
+      ("com.ligadata.KamanjaBase", "KamanjaExecutionFailureEvent", "com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent",
         List(("system", "msgid" , "system", "long", false, null),
           ("system", "timeoferrorepochms" , "system", "long", false, null),
           ("system", "msgcontent" , "system", "string", false, null),
@@ -117,7 +118,7 @@ object MetadataLoad {
 
   def ExtMessagesInfo: Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String, Long)] = {
     return Array[(String, String, String, List[(String, String, String, String, Boolean, String)], Int, String, Long)](
-      ("com.ligadata.KamanjaBase", "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent$",
+      ("com.ligadata.KamanjaBase", "KamanjaMessageEvent", "com.ligadata.KamanjaBase.KamanjaMessageEvent",
         List(("system", "messageid", "system", "long", false, null),
           ("system", "modelinfo", "com.ligadata.KamanjaBase", "ArrayOfKamanjaModelEvent", false, null),
           ("system", "elapsedtimeinms", "system", "float", false, null),
