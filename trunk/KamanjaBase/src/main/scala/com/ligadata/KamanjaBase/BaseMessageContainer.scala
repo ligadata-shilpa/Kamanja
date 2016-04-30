@@ -442,6 +442,9 @@ trait AdaptersSerializeDeserializers {
   final def addMessageBinding(bindings: Map[String, (String, Map[String, Any])]): Unit = {
     if (bindings == null || bindings.size == 0) return
 
+    if (logger.isDebugEnabled && bindings.size > 0) {
+      logger.debug("Adding new adapter bindings: " + bindings.map(b => (b._1, b._2._1)).mkString("~"))
+    }
     val resolvedBindings = resolveBindings(bindings)
 
     WriteLock(reent_lock)
@@ -497,6 +500,10 @@ trait AdaptersSerializeDeserializers {
   // This tuple has Message Name, Serializer Name.
   final def removeMessageBinding(msgNames: Array[String]): Unit = {
     if (msgNames == null) return
+
+    if (logger.isDebugEnabled) {
+      logger.debug("Removing adapter bindings: " + msgNames)
+    }
 
     WriteLock(reent_lock)
     try {
