@@ -610,7 +610,7 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
       } finally {
         txnCtxt.setInitialMessage(origin, orgInputMsg, false)
       }
-      returnValues
+      return returnValues
     }
     val mdlNm = if (getModelName() == null) "" else getModelName()
     val msgsStr = if (execMsgsSet != null) execMsgsSet.map(msg => if (msg != null) msg.getFullTypeName else "").mkString(",") else ""
