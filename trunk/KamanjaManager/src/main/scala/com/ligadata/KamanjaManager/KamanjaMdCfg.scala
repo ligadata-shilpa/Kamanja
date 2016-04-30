@@ -328,7 +328,7 @@ object KamanjaMdCfg {
     * @param storageAdapters
     * @return
     */
-  def upadateAdapter(inAdapter: AdapterInfo, isNew: Boolean, inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[DataStore]): Boolean = {
+  def updateAdapter(inAdapter: AdapterInfo, isNew: Boolean, inputAdapters: ArrayBuffer[InputAdapter], outputAdapters: ArrayBuffer[OutputAdapter], storageAdapters: ArrayBuffer[DataStore]): Boolean = {
 
       val conf = new AdapterConfiguration  //BOOOYA
       conf.Name = inAdapter.Name.toLowerCase
@@ -339,6 +339,7 @@ object KamanjaMdCfg {
       conf.tenantId = inAdapter.TenantId
 
       try {
+        LOG.debug("Updating ADAPTER " + inAdapter.Name + ": isNew = " + isNew)
         if (inAdapter.typeString.equalsIgnoreCase("input")) {
           val adapter = CreateInputAdapterFromConfig(conf, ExecContextFactoryImpl, KamanjaMetadata.gNodeContext).asInstanceOf[InputAdapter]
           if (adapter == null) return false
@@ -396,7 +397,7 @@ object KamanjaMdCfg {
 
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get input adapter")
+          LOG.error("Failed to update an adapter")
           return false
         }
       }

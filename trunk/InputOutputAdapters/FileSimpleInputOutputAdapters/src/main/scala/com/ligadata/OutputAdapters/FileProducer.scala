@@ -101,8 +101,8 @@ class FileProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeC
 
     val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
 
-    if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
-      LOG.error("File input adapter " + fc.Name + ": Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size))
+    if (outContainers.size != serializedContainerData.size || outContainers.size != serializerNames.size) {
+      LOG.error("File input adapter " + fc.Name + ": Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outContainers.size, serializedContainerData.size, serializerNames.size))
       //TODO Need to record an error here... is this a job for the ERROR Q?
       return
     }

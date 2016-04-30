@@ -1268,7 +1268,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
       var allJars = GetDependantJars(obj)
       logger.debug("Found " + allJars.length + " dependent jars. Jars:" + allJars.mkString(","))
-      logger.info("Found " + allJars.length + " dependent jars. It make take several minutes first time to download all of these jars:" + allJars.mkString(","))
+      logger.info("Found " + allJars.length + " dependent jars. It may take several minutes first time to download all of these jars:" + allJars.mkString(","))
       if (allJars.length > 0) {
         val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
         val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
@@ -2041,7 +2041,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
   override def UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
-    UpdateMessage(messageText, format, userid)
+    UpdateMessage(messageText, format, userid, tid)
   }
 
     /**
@@ -3037,13 +3037,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
       case "AdapterMessageBinding"=> {
           /** Restate the key to use the binding key (see AdapterMessageBinding class decl in Metadata project) for form. */
-          val bindingKey : String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
           zkMessage.Operation match {
               case "Add" => {
+                  val bindingKey : String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
                   ConfigUtils.LoadAdapterMessageBindingIntoCache(bindingKey)
               }
               case "Remove" => {
-                  ConfigUtils.RemoveAdapterMessageBindingFromCache(bindingKey)
+                  ConfigUtils.RemoveAdapterMessageBindingFromCache(zkMessage.Name)
               }
               case _ => { logger.error("Unknown Operation " + zkMessage.Operation + " in zookeeper notification, notification is not processed ..") }
           }

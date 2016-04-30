@@ -93,11 +93,11 @@ elif [ "$INPUT" = "start" ]; then
  nohup $KAMANJA_HOME/bin/StartEngine.sh >> $HOME/kamanjastart.log &
  echo "Kamanja engine started in background. Please check the engine log at $HOME/kamanjastart.log"
 elif [ "$INPUT" = "stop" ]; then
-    ID=`ps -ef | grep -i java | grep "com.ligadata.KamanjaManager.KamanjaManager" | tr -s " " | cut -d" " -f2`
+    ID=`ps -ef | grep -i java | grep "com.ligadata.KamanjaManager.KamanjaManager" | tr -s " " | xargs | cut -d" " -f2`
     echo "Stopping Kamanja with process id: $ID"
     kill $ID
     sleep 2
-    ID=`ps -ef | grep -i java | grep "com.ligadata.KamanjaManager.KamanjaManager" | tr -s " " | cut -d" " -f2`
+    ID=`ps -ef | grep -i java | grep "com.ligadata.KamanjaManager.KamanjaManager" | tr -s " " | xargs | cut -d" " -f2`
     if [ "$ID" != "" ]; then
         echo "Failed to stop Kamanja. Found process $ID"
     else

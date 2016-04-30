@@ -1242,6 +1242,7 @@ object KamanjaMetadata extends ObjectResolver {
           case "upDef" => {}
 
           case "AdapterMessageBinding" => {
+            logger.debug("Got adapter change")
             /** Restate the key to use the binding key (see AdapterMessageBinding class decl in Metadata project) for form. */
             val bindingKey: String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
             val (adapterName, adapter, binding): (String, AdapterInfo, AdapterMessageBinding) = if (zkMessage != null) {
@@ -1261,9 +1262,9 @@ object KamanjaMetadata extends ObjectResolver {
 
               val (optInputAdap, optOutputAdap, optStoreAdap): (Option[InputAdapter], Option[OutputAdapter], Option[DataStore]) =
                 if (adapterName != null) {
-                  (inputAdapters.find(adap => adap.getAdapterName == adapterName)
-                    , outputAdapters.find(adap => adap.getAdapterName == adapterName)
-                    , storageAdapters.find(adap => adap.getAdapterName == adapterName))
+                  (inputAdapters.find(adap => adap.getAdapterName.equalsIgnoreCase(adapterName))
+                    , outputAdapters.find(adap => adap.getAdapterName.equalsIgnoreCase(adapterName))
+                    , storageAdapters.find(adap => adap.getAdapterName.equalsIgnoreCase(adapterName)))
                 } else {
                   (None, None, None)
                 }
@@ -1273,6 +1274,9 @@ object KamanjaMetadata extends ObjectResolver {
 
               zkMessage.Operation match {
                 case "Add" => {
+                  if (logger.isDebugEnabled) {
+                    logger.debug("About to add binding to adapter %s with message:%s".format(adapterName, binding.messageName))
+                  }
                   if (inputAdap != null) inputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
                   else if (outputAdap != null) outputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
                   else if (storeAdap != null) storeAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
@@ -1282,6 +1286,9 @@ object KamanjaMetadata extends ObjectResolver {
                   }
                 }
                 case "Remove" => {
+                  if (logger.isDebugEnabled) {
+                    logger.debug("About to remove binding to adapter %s with message:%s".format(adapterName, binding.messageName))
+                  }
                   if (inputAdap != null) inputAdap.removeMessageBinding(binding.messageName)
                   else if (outputAdap != null) outputAdap.removeMessageBinding(binding.messageName)
                   else if (storeAdap != null) storeAdap.removeMessageBinding(binding.messageName)

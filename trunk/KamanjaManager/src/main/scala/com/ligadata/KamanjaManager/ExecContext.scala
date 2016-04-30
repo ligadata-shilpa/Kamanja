@@ -124,6 +124,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
     try {
       val adapterChngCntr = KamanjaManager.instance.getAdapterChangedCntr
       if (adapterChngCntr != adapterChangedCntr) {
+        LOG.warn("AdapterChangedCntr. New adapterChngCntr:%d, Old adapterChangedCntr:%d".format(adapterChngCntr, adapterChangedCntr))
         val (ins, outs, storages, cntr) = KamanjaManager.instance.getAllAdaptersInfo
         adapterChangedCntr = cntr
 
@@ -134,13 +135,17 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 //        })
 
         val newOuts = outs.map(out => {
-          (out, mdMgr.BindingsForAdapter(out.inputConfig.Name).map(bind => bind._2).toArray)
-        })
+          val ret = (out, mdMgr.BindingsForAdapter(out.inputConfig.Name).map(bind => bind._2).toArray)
+          LOG.info("Out Adapter:%s, Bound Msgs:%s".format(out.inputConfig.Name, ret._2.map(b => b.messageName).mkString(",")))
+          ret
+        }).filter(adap => adap._2.size > 0)
 
         val newStorages = storages.map(storage => {
           val name = if (storage != null && storage.adapterInfo!= null) storage.adapterInfo.Name else ""
-          (storage, mdMgr.BindingsForAdapter(name).map(bind => bind._2).toArray)
-        })
+          val ret = (storage, mdMgr.BindingsForAdapter(name).map(bind => bind._2).toArray)
+          LOG.info("Storage Adapter:%s, Bound Msgs:%s".format(name, ret._2.map(b => b.messageName).mkString(",")))
+          ret
+        }).filter(adap => adap._2.size > 0)
 
 //        inputAdapters = newIns
         outputAdapters = newOuts

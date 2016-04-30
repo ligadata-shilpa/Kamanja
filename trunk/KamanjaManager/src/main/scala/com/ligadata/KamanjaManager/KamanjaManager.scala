@@ -869,7 +869,6 @@ class KamanjaManager extends Observer {
       })
     }
     if (isChangeApplicable) {
-      println("FORCING REBALANCE")
       // force Kamanja Mananger to take the changes
       KamanjaLeader.forceAdapterRebalance
       isChangeApplicable = false
@@ -944,7 +943,7 @@ class KamanjaManager extends Observer {
 
       // If this is an add - just call updateAdapter, he will figure out if its input or output
       if (action.equalsIgnoreCase("add")) {
-        KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
+        KamanjaMdCfg.updateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
         return true
       }
 
@@ -958,15 +957,15 @@ class KamanjaManager extends Observer {
 
         if (cia != null) {
           cia.Shutdown
-          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         if (coa != null) {
           coa.Shutdown
-          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         if (csa != null) {
           csa.Shutdown
-          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         return true
       }
