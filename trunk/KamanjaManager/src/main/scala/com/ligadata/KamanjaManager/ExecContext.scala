@@ -138,14 +138,14 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
           val ret = (out, mdMgr.BindingsForAdapter(out.inputConfig.Name).map(bind => bind._2).toArray)
           LOG.info("Out Adapter:%s, Bound Msgs:%s".format(out.inputConfig.Name, ret._2.map(b => b.messageName).mkString(",")))
           ret
-        })
+        }).filter(adap => adap._2.size > 0)
 
         val newStorages = storages.map(storage => {
           val name = if (storage != null && storage.adapterInfo!= null) storage.adapterInfo.Name else ""
           val ret = (storage, mdMgr.BindingsForAdapter(name).map(bind => bind._2).toArray)
-          LOG.info("Out Adapter:%s, Bound Msgs:%s".format(name, ret._2.map(b => b.messageName).mkString(",")))
+          LOG.info("Storage Adapter:%s, Bound Msgs:%s".format(name, ret._2.map(b => b.messageName).mkString(",")))
           ret
-        })
+        }).filter(adap => adap._2.size > 0)
 
 //        inputAdapters = newIns
         outputAdapters = newOuts
