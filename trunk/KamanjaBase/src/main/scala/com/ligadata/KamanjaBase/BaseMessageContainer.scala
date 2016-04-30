@@ -443,7 +443,7 @@ trait AdaptersSerializeDeserializers {
     if (bindings == null || bindings.size == 0) return
 
     if (logger.isDebugEnabled && bindings.size > 0) {
-      logger.debug("Adding new adapter bindings: " + bindings.map(b => (b._1, b._2._1)).mkString("~"))
+      logger.debug("For adapter %s adding new adapter bindings:%s".format(getAdapterName, bindings.map(b => (b._1, b._2._1)).mkString("~")))
     }
     val resolvedBindings = resolveBindings(bindings)
 
@@ -502,7 +502,7 @@ trait AdaptersSerializeDeserializers {
     if (msgNames == null) return
 
     if (logger.isDebugEnabled) {
-      logger.debug("Removing adapter bindings: " + msgNames)
+      logger.debug("For adapter %s removing adapter binding:%s".format(getAdapterName, msgNames.mkString(",")))
     }
 
     WriteLock(reent_lock)
