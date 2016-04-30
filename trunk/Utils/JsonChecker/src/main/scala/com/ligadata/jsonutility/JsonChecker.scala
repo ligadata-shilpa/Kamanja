@@ -32,10 +32,16 @@ trait LogTrait {
 }
 
 
-object JsonChecker {
+object JsonChecker extends App with LogTrait{
 
-  lazy val loggerName = this.getClass.getName
-  lazy val logger = LogManager.getLogger(loggerName)
+  def usage: String = {
+    """
+Usage:  bash $KAMANJA_HOME/bin/JsonChecker.sh --inputfile testjson.json
+    """
+  }
+
+//  lazy val loggerName = this.getClass.getName
+//  lazy val logger = LogManager.getLogger(loggerName)
 
   private type OptionMap = Map[Symbol, Any]
 
@@ -52,52 +58,54 @@ object JsonChecker {
     }
   }
 
-   def main(args: Array[String]) {
+   override def main(args: Array[String]) {
 
     logger.debug("JsonChecker.main begins")
 
     if (args.length == 0) {
-      logger.error("Please pass the input file as parameter")
+      logger.error("Please pass the input file after --inputfile option")
+      logger.warn(usage)
       sys.exit(1)
     }
     val options = nextOption(Map(), args.toList)
 
     val inputfile = options.getOrElse('inputfile, null).toString.trim
-    if (inputfile == null && inputfile.toString().trim() == "") {
-      logger.error("Please pass the input file as parameter")
+    if (inputfile == null || inputfile.toString().trim() == "") {
+      logger.error("Please pass the input file after --inputfile option")
+      logger.warn(usage)
       sys.exit(1)
     }
 
     var jsonBen: JsonChecker = new JsonChecker()
     val jsonFileFlag = jsonBen.FindFileExtension(inputfile)
-    if(jsonFileFlag == false){
-      logger.error("The file extension is not .json. We only accept json files.")
-      sys.exit(1)
-    }else {
-      val fileExistFlag = jsonBen.FileExist(inputfile)
+//    if(jsonFileFlag == false){ //used to check the extension of file
+//      logger.error("The file extension is not .json. We only accept json files.")
+//      sys.exit(1)
+//    }else {
+      val fileExistFlag = jsonBen.FileExist(inputfile) // check if file exists
       if (fileExistFlag == true) {
-        val fileContent = jsonBen.ReadFile(inputfile)
-        if (fileContent.equalsIgnoreCase(null) || fileContent.size == 0) {
+        val fileContent = jsonBen.ReadFile(inputfile) // read file
+        if (fileContent == null  || fileContent.size == 0) {
           logger.error("The file does not include data. Check your file please.")
           sys.exit(1)
         } else {
           jsonBen.ParseFile(fileContent)
         }
       }else {
-        logger.error("The file does not exist. Check the name of the file.")
+        logger.error("The file %s does not exist. Check the name of the file.".format(inputfile))
         sys.exit(1)
     }
-    }
+ //   }
 
     logger.info("Json file parsed successfully");
   }
 
 }
 
-class JsonChecker {
+class JsonChecker extends LogTrait{
 
-  lazy val loggerName = this.getClass.getName
-  lazy val logger = LogManager.getLogger(loggerName)
+//  lazy val loggerName = this.getClass.getName
+//  lazy val logger = LogManager.getLogger(loggerName)
 
   def FindFileExtension (filePath: String) : Boolean = {
     val ext = FilenameUtils.getExtension(filePath);
@@ -113,6 +121,7 @@ class JsonChecker {
       val parsedFile = parse(filePath)
     } catch{
       case e: Exception => logger.error("there is an error in the format of file \n ErrorMsg : ", e)
+        logger.info("Failed to parse Json file")
         sys.exit(1)
     }
   }

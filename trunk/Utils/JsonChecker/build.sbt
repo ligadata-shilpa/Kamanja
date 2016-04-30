@@ -8,7 +8,13 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
 
-assemblyJarName in assembly := { s"${name.value}-${version.value}" }
+//assemblyJarName in assembly := { s"${name.value}-${version.value}" }
+val kamanjaVersion = "1.4.0"
+
+//assemblyJarName in assembly := { s"${name.value}-${version.value}" }
+assemblyJarName in assembly := {
+    s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}.jar"
+}
 
 // for some reason the merge strategy for non ligadata classes are not working and thus added those conflicting jars in exclusions
 // this may result some run time errors
@@ -54,7 +60,7 @@ excludedJars in assembly <<= (fullClasspath in assembly) map { cp =>
 
 name := "JsonChecker"
 
-version := "0.1.0"
+version := "1.4.0"
 
 //resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 //
