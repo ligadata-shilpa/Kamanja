@@ -47,20 +47,19 @@ _Add bindings for system messages_
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMFILE $KAMANJA_HOME/config/SystemMsgs_Adapter_Binding.json
 
 
-_Add the input adapter (CSV)_
+_Add the input adapter (CSV) binding_
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "HelloWorldInput", "MessageName": "com.ligadata.kamanja.samples.messages.msg1", "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"alwaysQuoteFields": false, "fieldDelimiter": ","} }'
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding key 'helloworldinput,com.ligadata.kamanja.samples.messages.msg1,com.ligadata.kamanja.serializer.csvserdeser'
 
-_Add the output adapter (CSV)_
+_Add the output adapter (CSV) binding_
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "TestOut_1", "MessageNames": ["com.ligadata.kamanja.samples.messages.outmsg1"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"alwaysQuoteFields": false, "fieldDelimiter": ","} }'
 
-_Add the output adapter (JSON)_
+_Add the output adapter (JSON) binding_
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "TestOut_1", "MessageNames": ["com.ligadata.kamanja.samples.messages.outmsg1"], "Serializer": " com.ligadata.kamanja.serializer.JsonSerDeser"}'
-
 
 _Push data_
 
