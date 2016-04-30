@@ -110,6 +110,10 @@ else
 		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchInputQueue_Template.sh > $install_dir/bin/WatchInputQueue.sh
 		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchFailedEventQueue_Template.sh > $install_dir/bin/WatchFailedEventQueue.sh
 		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchMessageEventQueue_Template.sh > $install_dir/bin/WatchMessageEventQueue.sh
+		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchFinanceQueue_Template.sh > $install_dir/bin/WatchFinanceQueue.sh
+		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchHelloWorldQueue_Template.sh > $install_dir/bin/WatchHelloWorldQueue.sh
+		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchMedicalQueue_Template.sh > $install_dir/bin/WatchMedicalQueue.sh
+		sed "s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/WatchTelecomQueue_Template.sh > $install_dir/bin/WatchTelecomQueue.sh
 		sed "s/{InstallDirectory}/$install_dir_repl/g;s/{KafkaInstallDir}/$KafkaRootDir_repl/g" $install_dir/template/script/PushSampleDataToKafka_Template.sh > $install_dir/bin/PushSampleDataToKafka.sh
 	fi
 fi
