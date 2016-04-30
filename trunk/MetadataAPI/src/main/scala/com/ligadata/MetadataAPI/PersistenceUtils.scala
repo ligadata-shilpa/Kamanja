@@ -700,7 +700,7 @@ object PersistenceUtils {
       }
       var allJars = MetadataAPIImpl.GetDependantJars(obj)
       logger.debug("Found " + allJars.length + " dependent jars. Jars:" + allJars.mkString(","))
-      logger.info("Found " + allJars.length + " dependent jars. It make take several minutes first time to download all of these jars:" + allJars.mkString(","))
+      logger.info("Found " + allJars.length + " dependent jars. It may take several minutes first time to download all of these jars:" + allJars.mkString(","))
       if (allJars.length > 0) {
         val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
         val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
