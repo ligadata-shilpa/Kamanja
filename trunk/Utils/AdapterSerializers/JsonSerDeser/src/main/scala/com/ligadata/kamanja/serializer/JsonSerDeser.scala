@@ -132,6 +132,7 @@ class JSONSerDes extends SerializeDeserialize {
     */
   @throws(classOf[com.ligadata.Exceptions.UnsupportedObjectException])
   def containerAsJson(sb: StringBuilder, indentLevel: Int, v: ContainerInterface): Unit = {
+    if (v == null) return
     val fields = v.getAllAttributeValues
     val fieldCnt: Int = fields.length
 
@@ -186,12 +187,14 @@ class JSONSerDes extends SerializeDeserialize {
   }
 
   private def valueAsJson(sb: StringBuilder, indentLevel: Int, value: Any, quoteValue: Boolean) = {
-    // FYI, if an object being serialized has a null it it , we are toast
-
     if (quoteValue) {
-      sb.append('\"' + StringEscapeUtils.escapeJson(value.toString) + '\"')
+      val strVal = if (value != null) StringEscapeUtils.escapeJson(value.toString) else ""
+      sb.append('\"' + strVal + '\"')
     } else {
-      sb.append(value)
+      if (value != null)
+        sb.append(value)
+      else
+        sb.append("")
     }
   }
 
@@ -243,22 +246,24 @@ class JSONSerDes extends SerializeDeserialize {
     val mapJsonTail = " }"
     sb.append(mapJsonHead)
     var idx = 0
-    map.foreach(pair => {
-      val k = pair._1
-      val v = pair._2
-      if (idx > 0) sb.append(", ")
-      idx += 1
-      sb.append(mapJsonHead)
-      keyAsJson(sb, 0, k.toString)
-      valType match {
-        case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, v, quoteValue);
-        case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[_, _]])
-        case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[_]])
-        case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, v.asInstanceOf[ContainerInterface])
-        case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
-      }
-      sb.append(mapJsonTail)
-    })
+    if (map != null) {
+      map.foreach(pair => {
+        val k = pair._1
+        val v = pair._2
+        if (idx > 0) sb.append(", ")
+        idx += 1
+        sb.append(mapJsonHead)
+        keyAsJson(sb, 0, k.toString)
+        valType match {
+          case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, v, quoteValue);
+          case MAP => mapGenericAsJson(sb, indentLevel, v.asInstanceOf[scala.collection.mutable.Map[_, _]])
+          case ARRAY => arrayGenericAsJson(sb, indentLevel, v.asInstanceOf[Array[_]])
+          case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, v.asInstanceOf[ContainerInterface])
+          case _ => throw new UnsupportedObjectException("Not yet handled valType:" + valType, null)
+        }
+        sb.append(mapJsonTail)
+      })
+    }
     sb.append(mapJsonTail)
   }
 
@@ -306,23 +311,25 @@ class JSONSerDes extends SerializeDeserialize {
     * @return a Json string representation
     */
   private def arrayAsJson(sb: StringBuilder, indentLevel: Int, attribType: AttributeTypeInfo, array: Array[_]) = {
-    val itemType = attribType.getValTypeCategory
-    val quoteValue = useQuotesOnValue(itemType)
     val mapJsonHead = "[ "
     val mapJsonTail = " ]"
     sb.append(mapJsonHead)
     var idx = 0
-    array.foreach(itm => {
-      if (idx > 0) sb.append(", ")
-      idx += 1
-      itemType match {
-        case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, itm, quoteValue);
-        case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[_, _]])
-        case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[_]])
-        case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, itm.asInstanceOf[ContainerInterface])
-        case _ => throw new UnsupportedObjectException("Not yet handled itemType:" + itemType, null)
-      }
-    })
+    if (array != null && array.size > 0) {
+      val itemType = attribType.getValTypeCategory
+      val quoteValue = useQuotesOnValue(itemType)
+      array.foreach(itm => {
+        if (idx > 0) sb.append(", ")
+        idx += 1
+        itemType match {
+          case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | STRING | CHAR) => valueAsJson(sb, 0, itm, quoteValue);
+          case MAP => mapGenericAsJson(sb, indentLevel, itm.asInstanceOf[scala.collection.mutable.Map[_, _]])
+          case ARRAY => arrayGenericAsJson(sb, indentLevel, itm.asInstanceOf[Array[_]])
+          case (CONTAINER | MESSAGE) => containerAsJson(sb, 0, itm.asInstanceOf[ContainerInterface])
+          case _ => throw new UnsupportedObjectException("Not yet handled itemType:" + itemType, null)
+        }
+      })
+    }
     sb.append(mapJsonTail)
   }
 

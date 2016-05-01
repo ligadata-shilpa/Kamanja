@@ -538,7 +538,9 @@ trait ModelBaseObj {
   def Version(): String
 
   // ResultClass associated the model. Mainly used for Returning results as well as Deserialization
-  def CreateResultObject(): ModelResultBase
+  def CreateResultObject(): ModelResultBase = {
+    return new MappedModelResults();
+  }
 }
 
 // ModelInstance will be created from ModelInstanceFactory by demand.
@@ -608,7 +610,7 @@ abstract class ModelInstance(val factory: ModelInstanceFactory) {
       } finally {
         txnCtxt.setInitialMessage(origin, orgInputMsg, false)
       }
-      returnValues
+      return returnValues
     }
     val mdlNm = if (getModelName() == null) "" else getModelName()
     val msgsStr = if (execMsgsSet != null) execMsgsSet.map(msg => if (msg != null) msg.getFullTypeName else "").mkString(",") else ""
@@ -652,7 +654,9 @@ abstract class ModelInstanceFactory(val modelDef: ModelDef, val nodeContext: Nod
   def createModelInstance(): ModelInstance
 
   // Creating ModelResultBase associated this model/modelfactory.
-  def createResultObject(): ModelResultBase
+  def createResultObject(): ModelResultBase = {
+    return new MappedModelResults();
+  }
 
   // Is the ModelInstance created by this ModelInstanceFactory is reusable?
   def isModelInstanceReusable(): Boolean = false

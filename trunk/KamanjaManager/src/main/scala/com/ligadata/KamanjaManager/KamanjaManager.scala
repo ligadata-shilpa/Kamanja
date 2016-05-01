@@ -6,7 +6,8 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextFactory, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
 import com.ligadata.StorageBase.{DataStore}
 import com.ligadata.ZooKeeper.CreateClient
-import com.ligadata.kamanja.metadata.AdapterInfo
+import com.ligadata.kamanja.metadata.MdMgr._
+import com.ligadata.kamanja.metadata.{ContainerDef, MessageDef, AdapterMessageBinding, AdapterInfo}
 import org.json4s.jackson.JsonMethods._
 
 import scala.reflect.runtime.{ universe => ru }
@@ -242,14 +243,89 @@ class KamanjaManager extends Observer {
   private var isTimerStarted = false
   private type OptionMap = Map[Symbol, Any]
 
+  private var outputAdaptersBindings = Array[(OutputAdapter, Array[AdapterMessageBinding])]()
+  private var storageAdaptersBindings = Array[(DataStore, Array[AdapterMessageBinding])]()
+  private var adapterChangedResolvedCntr: Long = -1
+  private val adapterChangedResolveLock = new Object
+  private var msgChangedCntr: Long = 0
+  private var msg2TenantId = scala.collection.immutable.Map[String, String]()
+  private var msg2TentIdResolvedCntr: Long = -1
+
   def incrAdapterChangedCntr(): Unit = {
     adapterChangedCntr += 1
   }
 
+  def incrMsgChangedCntr(): Unit = {
+    msgChangedCntr += 1
+  }
+
   def getAdapterChangedCntr: Long = adapterChangedCntr
 
+  def getMsgChangedCntr: Long = msgChangedCntr
+
   def getAllAdaptersInfo: (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = {
-    (inputAdapters.toArray, outputAdapters.toArray, storageAdapters.toArray, adapterChangedCntr)
+    (inputAdapters.toArray, outputAdapters.toArray, storageAdapters.toArray, getAdapterChangedCntr)
+  }
+
+  def resolveAdapterBindins: (Array[(OutputAdapter, Array[AdapterMessageBinding])], Array[(DataStore, Array[AdapterMessageBinding])], Long) = {
+    if (adapterChangedResolvedCntr == getAdapterChangedCntr)
+      return (outputAdaptersBindings, storageAdaptersBindings, adapterChangedResolvedCntr)
+
+    adapterChangedResolveLock.synchronized {
+      if (adapterChangedResolvedCntr != getAdapterChangedCntr) {
+        val (ins, outs, storages, cntr) = KamanjaManager.instance.getAllAdaptersInfo
+        LOG.warn("AdapterChangedCntr. New adapterChngCntr:%d, Old adapterChangedCntr:%d".format(cntr, adapterChangedResolvedCntr))
+        val mdMgr = GetMdMgr
+
+        val newOuts = outs.map(out => {
+          val ret = (out, mdMgr.BindingsForAdapter(out.inputConfig.Name).map(bind => bind._2).toArray)
+          LOG.info("Out Adapter:%s, Bound Msgs:%s".format(out.inputConfig.Name, ret._2.map(b => b.messageName).mkString(",")))
+          ret
+        }).filter(adap => adap._2.size > 0)
+
+        val newStorages = storages.map(storage => {
+          val name = if (storage != null && storage.adapterInfo != null) storage.adapterInfo.Name else ""
+          val ret = (storage, mdMgr.BindingsForAdapter(name).map(bind => bind._2).toArray)
+          LOG.info("Storage Adapter:%s, Bound Msgs:%s".format(name, ret._2.map(b => b.messageName).mkString(",")))
+          ret
+        }).filter(adap => adap._2.size > 0)
+
+        outputAdaptersBindings = newOuts
+        storageAdaptersBindings = newStorages
+        adapterChangedResolvedCntr = cntr
+      }
+    }
+
+    (outputAdaptersBindings, storageAdaptersBindings, adapterChangedResolvedCntr)
+  }
+
+  def resolveMsg2TenantId: (scala.collection.immutable.Map[String, String], Long) = {
+    if (msg2TentIdResolvedCntr == getMsgChangedCntr)
+      return (msg2TenantId, msg2TentIdResolvedCntr)
+
+    adapterChangedResolveLock.synchronized {
+      if (msg2TentIdResolvedCntr != getMsgChangedCntr) {
+        val tmpMsg2TenantId = scala.collection.mutable.Map[String, String]()
+        val cntr = getMsgChangedCntr
+        val msgDefs: Option[scala.collection.immutable.Set[MessageDef]] = mdMgr.Messages(true, true)
+        if (msgDefs != None) {
+          msgDefs.get.foreach(m => {
+            tmpMsg2TenantId(m.FullName.toLowerCase()) = m.TenantId.toLowerCase()
+          })
+        }
+
+        val containerDefs: Option[scala.collection.immutable.Set[ContainerDef]] = mdMgr.Containers(true, true)
+        if (containerDefs != None) {
+          containerDefs.get.foreach(c => {
+            tmpMsg2TenantId(c.FullName.toLowerCase()) = c.TenantId.toLowerCase()
+          })
+        }
+        msg2TenantId = tmpMsg2TenantId.toMap
+        msg2TentIdResolvedCntr = cntr
+      }
+    }
+
+    (msg2TenantId, msg2TentIdResolvedCntr)
   }
 
   private def PrintUsage(): Unit = {
@@ -869,7 +945,6 @@ class KamanjaManager extends Observer {
       })
     }
     if (isChangeApplicable) {
-      println("FORCING REBALANCE")
       // force Kamanja Mananger to take the changes
       KamanjaLeader.forceAdapterRebalance
       isChangeApplicable = false
@@ -944,7 +1019,7 @@ class KamanjaManager extends Observer {
 
       // If this is an add - just call updateAdapter, he will figure out if its input or output
       if (action.equalsIgnoreCase("add")) {
-        KamanjaMdCfg.upadateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
+        KamanjaMdCfg.updateAdapter(adapter.asInstanceOf[AdapterInfo], true, inputAdapters, outputAdapters, storageAdapters)
         return true
       }
 
@@ -958,15 +1033,15 @@ class KamanjaManager extends Observer {
 
         if (cia != null) {
           cia.Shutdown
-          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         if (coa != null) {
           coa.Shutdown
-          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         if (csa != null) {
           csa.Shutdown
-          KamanjaMdCfg.upadateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         return true
       }

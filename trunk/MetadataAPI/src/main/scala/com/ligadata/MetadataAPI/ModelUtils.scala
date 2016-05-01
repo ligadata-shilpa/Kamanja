@@ -327,6 +327,15 @@ object ModelUtils {
     try {
       PersistenceUtils.SaveElementInformation(model.MdElementId, "Model", model.NameSpace, model.Name)
       MetadataAPIImpl.SaveObject(model, MdMgr.GetMdMgr)
+      var inputMsgCnt = 0
+      if (model.inputMsgSets != null) {
+        model.inputMsgSets.foreach(s => {
+          inputMsgCnt += s.size
+        })
+      }
+      if (inputMsgCnt == 0) {
+        logger.error("Model %s with version %d does not have any input messages. Model will not trigger without any input messages".format(model.FullName, model.Version))
+      }
       val apiResult = new ApiResult(ErrorCodeConstants.Success, "AddModel", null, ErrorCodeConstants.Add_Model_Successful + ":" + dispkey)
       apiResult.toString()
     } catch {
@@ -345,13 +354,13 @@ object ModelUtils {
     }
     else {
       // no need to create a default output message if modelconfig defines an output message as well
-      if( modDef.outputMsgs.length == 0 ){
+      if (modDef.outputMsgs.length == 0) {
         val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
         modDef.outputMsgs = modDef.outputMsgs :+ defaultMessage
       }
     }
   }
-    
+
 
   /**
     * AddModelFromSource - compiles and catalogs a custom Scala or Java model from source.
@@ -370,7 +379,7 @@ object ModelUtils {
       val modDef = compProxy.compileModelFromSource(sourceCode, modelName, sourceLang, userid, tenantId)
 
       // save the outMessage
-      AddOutMsgToModelDef(modDef,ModelType.fromString(sourceLang),optMsgProduced,userid)
+      AddOutMsgToModelDef(modDef, ModelType.fromString(sourceLang), optMsgProduced, userid)
 
       logger.info("Begin uploading dependent Jars, please wait.")
       PersistenceUtils.UploadJarsToDB(modDef)
@@ -450,18 +459,18 @@ object ModelUtils {
     if (optMsgProduced != None) {
       logger.info("Validating the output message type " + optMsgProduced.get.toLowerCase);
       val msg = MessageAndContainerUtils.IsMessageExists(optMsgProduced.get.toLowerCase)
-      if ( msg == null ) {
-	logger.info("Unknown outputmsg " + optMsgProduced.get.toLowerCase);
+      if (msg == null) {
+        logger.info("Unknown outputmsg " + optMsgProduced.get.toLowerCase);
         val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Unknown Outmessage ${optMsgProduced.get.toLowerCase} error = ${ErrorCodeConstants.Add_Model_Failed}")
         return apiResult.toString
       }
       else {
-	if ( modelType == ModelType.KPMML  && ! MessageAndContainerUtils.IsMappedMessage(msg)) {
-	  logger.info("outputmsg " + optMsgProduced.get.toLowerCase + " not a mapped message ");
+        if (modelType == ModelType.KPMML && !MessageAndContainerUtils.IsMappedMessage(msg)) {
+          logger.info("outputmsg " + optMsgProduced.get.toLowerCase + " not a mapped message ");
 
           val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddModel", null, s"Outmessage ${optMsgProduced.get.toLowerCase} must be a mapped message for KPPML Models, error = ${ErrorCodeConstants.Add_Model_Failed}")
           return apiResult.toString
-	}
+        }
       }
       logger.info("A valid message type " + optMsgProduced.get.toLowerCase + " is already found in metadata");
     }
@@ -476,7 +485,8 @@ object ModelUtils {
       case ModelType.JTM => {
         AddJTMModel(input, optUserid, tenantId.get, optModelName)
       }
-      case ModelType.JAVA | ModelType.SCALA => {  //ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
+      case ModelType.JAVA | ModelType.SCALA => {
+        //ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
           AddModelFromSource(input, modelType.toString, name, optUserid, tenantId.get, optMsgProduced)
         })
@@ -571,7 +581,7 @@ object ModelUtils {
         , msgVersion
         , pmmlText
         , ownerId
-        ,tenantId)
+        , tenantId)
       val recompile: Boolean = false
       var modDef: ModelDef = jpmmlSupport.CreateModel(recompile)
 
@@ -585,8 +595,8 @@ object ModelUtils {
         modDef.mdElementId = if (existingModel == None) MetadataAPIImpl.GetMdElementId else existingModel.get.MdElementId
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
 
-	// save the outMessage
-	AddOutMsgToModelDef(modDef,ModelType.PMML,optMsgProduced,userid)
+        // save the outMessage
+        AddOutMsgToModelDef(modDef, ModelType.PMML, optMsgProduced, userid)
 
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -665,8 +675,8 @@ object ModelUtils {
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
 
-	// save the outMessage
-	AddOutMsgToModelDef(modDef,ModelType.KPMML,optMsgProduced,userid)
+        // save the outMessage
+        AddOutMsgToModelDef(modDef, ModelType.KPMML, optMsgProduced, userid)
 
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
@@ -712,32 +722,32 @@ object ModelUtils {
     if (depsList != null)
       jarsList ++= depsList;
 
-/*
-    val typesLst = MetadataAPIImpl.getModelMessagesContainers(modelName, userid)
+    /*
+        val typesLst = MetadataAPIImpl.getModelMessagesContainers(modelName, userid)
 
-      if (typesLst != null) {
-        typesLst.foreach(typ => {
-          val cont = MdMgr.GetMdMgr.Container(typ, -1, true)
-          var typInfo: BaseElem = null
+          if (typesLst != null) {
+            typesLst.foreach(typ => {
+              val cont = MdMgr.GetMdMgr.Container(typ, -1, true)
+              var typInfo: BaseElem = null
 
-          if (cont != None) {
-              typInfo = cont.get.asInstanceOf[BaseElem]
-          } else {
-            val msg = MdMgr.GetMdMgr.Message(typ, -1, true)
-            if (msg != None)
-              typInfo = msg.get.asInstanceOf[BaseElem]
+              if (cont != None) {
+                  typInfo = cont.get.asInstanceOf[BaseElem]
+              } else {
+                val msg = MdMgr.GetMdMgr.Message(typ, -1, true)
+                if (msg != None)
+                  typInfo = msg.get.asInstanceOf[BaseElem]
+              }
+
+              if (typInfo != null) {
+                val tInfo = typInfo
+                if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
+                  jarsList += tInfo.JarName.trim
+                if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
+                  jarsList ++= tInfo.DependencyJarNames
+              }
+            })
           }
-
-          if (typInfo != null) {
-            val tInfo = typInfo
-            if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
-              jarsList += tInfo.JarName.trim
-            if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
-              jarsList ++= tInfo.DependencyJarNames
-          }
-        })
-      }
-*/
+    */
 
     jarsList.toList
   }
@@ -756,7 +766,7 @@ object ModelUtils {
 
       val usr = if (userid == None) "Kamanja" else userid.get
 
-      var compileConfig:String = ""
+      var compileConfig: String = ""
       // Getting external dependency jars
       val extDepJars =
         if (optModelName != None) {
@@ -771,7 +781,7 @@ object ModelUtils {
           List[String]()
         }
 
-       //compProxy.setLoggerLevel(Level.TRACE)
+      //compProxy.setLoggerLevel(Level.TRACE)
       var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId, extDepJars, usr, compileConfig)
 
       // ModelDef may be null if there were pmml compiler errors... act accordingly.  If modelDef present,
@@ -867,45 +877,45 @@ object ModelUtils {
                     if (typDeps.isInstanceOf[Array[_]])
                       deps ++= typDeps.asInstanceOf[Array[String]]
                   }
-/*
-                  val typesLst = {
-                    val typDeps = modelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
-                    if (typDeps != null) {
-                      if (typDeps.isInstanceOf[List[_]])
-                        typDeps.asInstanceOf[List[String]]
-                      else if (typDeps.isInstanceOf[Array[_]])
-                        typDeps.asInstanceOf[Array[String]].toList
-                      else
-                        List[String]()
-                    }
-                    else
-                      List[String]()
-                  }
+                  /*
+                                    val typesLst = {
+                                      val typDeps = modelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+                                      if (typDeps != null) {
+                                        if (typDeps.isInstanceOf[List[_]])
+                                          typDeps.asInstanceOf[List[String]]
+                                        else if (typDeps.isInstanceOf[Array[_]])
+                                          typDeps.asInstanceOf[Array[String]].toList
+                                        else
+                                          List[String]()
+                                      }
+                                      else
+                                        List[String]()
+                                    }
 
-                  if (typesLst != null) {
-                    typesLst.foreach(typ => {
+                                    if (typesLst != null) {
+                                      typesLst.foreach(typ => {
 
-                      val cont = MdMgr.GetMdMgr.Container(typ, -1, true)
-                      var typInfo: BaseElem = null
+                                        val cont = MdMgr.GetMdMgr.Container(typ, -1, true)
+                                        var typInfo: BaseElem = null
 
-                      if (cont != None) {
-                        typInfo = cont.get.asInstanceOf[BaseElem]
-                      } else {
-                        val msg = MdMgr.GetMdMgr.Message(typ, -1, true)
-                        if (msg != None)
-                          typInfo = msg.get.asInstanceOf[BaseElem]
-                      }
+                                        if (cont != None) {
+                                          typInfo = cont.get.asInstanceOf[BaseElem]
+                                        } else {
+                                          val msg = MdMgr.GetMdMgr.Message(typ, -1, true)
+                                          if (msg != None)
+                                            typInfo = msg.get.asInstanceOf[BaseElem]
+                                        }
 
-                      if (typInfo != null) {
-                        val tInfo = typInfo
-                        if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
-                          deps += tInfo.JarName.trim
-                        if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
-                          deps ++= tInfo.DependencyJarNames
-                      }
-                    })
-                  }
-*/
+                                        if (typInfo != null) {
+                                          val tInfo = typInfo
+                                          if (tInfo.JarName != null && tInfo.JarName.trim.size > 0)
+                                            deps += tInfo.JarName.trim
+                                          if (tInfo.DependencyJarNames != null && tInfo.DependencyJarNames.size > 0)
+                                            deps ++= tInfo.DependencyJarNames
+                                        }
+                                      })
+                                    }
+                  */
                 }
                 catch {
                   case e: Throwable => {
@@ -1137,7 +1147,8 @@ object ModelUtils {
         val result: String = UpdateCustomModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion)
         result
       }
-      case ModelType.PMML => { //1.1.3
+      case ModelType.PMML => {
+        //1.1.3
         val result: String = UpdatePMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
         result
       }
@@ -1257,8 +1268,8 @@ object ModelUtils {
         val isValid: Boolean = if (optVersionUpdated.isDefined) MetadataAPIImpl.IsValidVersion(versionUpdated, modDef) else true
 
         if (isValid && modDef != null) {
-	  // save the outMessage
-	  AddOutMsgToModelDef(modDef,ModelType.PMML,optMsgProduced,optUserid)
+          // save the outMessage
+          AddOutMsgToModelDef(modDef, ModelType.PMML, optMsgProduced, optUserid)
 
           val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
           modDef.uniqueId = MetadataAPIImpl.GetUniqueId
@@ -1993,7 +2004,7 @@ object ModelUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = PersistenceUtils.GetObject(key.toLowerCase, "models")
       logger.debug("Deserialize the object " + key)
-      val model = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]]))//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
+      val model = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])) //serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]])
       logger.debug("Get the jar from database ")
       val modDef = model.asInstanceOf[ModelDef]
       MetadataAPIImpl.DownloadJarFromDB(modDef)

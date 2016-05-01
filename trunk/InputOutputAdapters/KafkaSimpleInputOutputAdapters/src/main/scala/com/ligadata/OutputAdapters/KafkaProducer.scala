@@ -364,8 +364,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
 
     val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
 
-    if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
-      val szMsg = qc.Name + " KAFKA PRODUCER: Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size)
+    if (outContainers.size != serializedContainerData.size || outContainers.size != serializerNames.size) {
+      val szMsg = qc.Name + " KAFKA PRODUCER: Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outContainers.size, serializedContainerData.size, serializerNames.size)
       LOG.error(szMsg)
       throw new Exception(szMsg)
     }
@@ -385,13 +385,13 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
       var partitionsMsgMap = scala.collection.mutable.Map[Int, ArrayBuffer[MsgDataRecievedCnt]]();
 
       for (i <- 0 until serializedContainerData.size) {
-        val partId = getPartition(outputContainers(i).getPartitionKey.mkString(",").getBytes(), topicPartitionsCount)
+        val partId = getPartition(outContainers(i).getPartitionKey.mkString(",").getBytes(), topicPartitionsCount)
         var ab = partitionsMsgMap.getOrElse(partId, null)
         if (ab == null) {
           ab = new ArrayBuffer[MsgDataRecievedCnt](256)
           partitionsMsgMap(partId) = ab
         }
-        val pr = new ProducerRecord(qc.topic, partId, outputContainers(i).getPartitionKey.mkString(",").getBytes(), serializedContainerData(i))
+        val pr = new ProducerRecord(qc.topic, partId, outContainers(i).getPartitionKey.mkString(",").getBytes(), serializedContainerData(i))
         ab += MsgDataRecievedCnt(msgInOrder.getAndIncrement, pr)
       }
 

@@ -315,7 +315,7 @@ trait AdaptersSerializeDeserializers {
     this.objectResolver = objectResolver
     val allBinds = getAllMessageBindings
     if (allBinds.size > 0) {
-      val bindings = resolveBindings(allBinds.map(b => (b._1, (b._2.serName, b._2.options))))
+      val bindings = resolveBindings(allBinds.map(b => (b._1.toLowerCase(), (b._2.serName, b._2.options))))
       WriteLock(reent_lock)
       try {
         msgBindings ++= bindings // If we support multiple, we must need to have proper comparison function.
@@ -402,7 +402,7 @@ trait AdaptersSerializeDeserializers {
     var retVal: MsgBindingInfo = null
     ReadLock(reent_lock)
     try {
-      retVal = msgBindings.getOrElse(msgName, null)
+      retVal = msgBindings.getOrElse(msgName.toLowerCase(), null)
     } catch {
       case e: Throwable => {
         throw e
@@ -444,16 +444,21 @@ trait AdaptersSerializeDeserializers {
 
     val resolvedBindings = resolveBindings(bindings)
 
-    WriteLock(reent_lock)
-    try {
-      msgBindings ++= resolvedBindings
-    } catch {
-      case e: Throwable => {
-        throw e
+    if (resolvedBindings.size > 0) {
+      WriteLock(reent_lock)
+      try {
+        msgBindings ++= resolvedBindings
+      } catch {
+        case e: Throwable => {
+          throw e
+        }
       }
-    }
-    finally {
-      WriteUnlock(reent_lock)
+      finally {
+        WriteUnlock(reent_lock)
+      }
+      if (logger.isInfoEnabled && bindings.size > 0) {
+        logger.info("For adapter %s adding new adapter bindings:%s. Total bindings:%s".format(getAdapterName, bindings.map(b => (b._1, b._2._1)).mkString("~"), msgBindings.map(b => (b._1, b._2.serName)).mkString("~")))
+      }
     }
   }
 
@@ -498,16 +503,22 @@ trait AdaptersSerializeDeserializers {
   final def removeMessageBinding(msgNames: Array[String]): Unit = {
     if (msgNames == null) return
 
-    WriteLock(reent_lock)
-    try {
-      msgBindings --= msgNames
-    } catch {
-      case e: Throwable => {
-        throw e
+    if (msgNames.size > 0) {
+      val lcMsgNames = msgNames.map(m => m.toLowerCase())
+      WriteLock(reent_lock)
+      try {
+        msgBindings --= lcMsgNames
+      } catch {
+        case e: Throwable => {
+          throw e
+        }
       }
-    }
-    finally {
-      WriteUnlock(reent_lock)
+      finally {
+        WriteUnlock(reent_lock)
+      }
+      if (logger.isInfoEnabled) {
+        logger.info("For adapter %s removing adapter bindings:%s. Remaining bindings:%s".format(getAdapterName, msgNames.mkString(","), msgBindings.map(b => (b._1, b._2.serName)).mkString("~")))
+      }
     }
   }
 
@@ -533,12 +544,12 @@ trait AdaptersSerializeDeserializers {
           usedSerializersNames += ser.serName
         } catch {
           case e: Throwable => {
-            throw e
+            throw new KamanjaException("Failed to Serialize " + c.getFullTypeName, e)
           }
         }
       } else {
         val adapName = getAdapterName
-        logger.error(s"Did not find/load Serializer for container/message:${c.getFullTypeName}. Not sending/saving data into Adapter:${adapName}")
+        logger.error(s"Did not find/load Serializer for container/message:${c.getFullTypeName} @Adapter:${adapName}")
       }
     })
 
@@ -568,8 +579,9 @@ trait AdaptersSerializeDeserializers {
     // We are going thru getAllMessageBindings and get from it ourself?. So one read lock for every serialize fintion
     val allMsgBindings = getAllMessageBindings
     if (allMsgBindings.size == 0 && getDefaultSerializerDeserializer == null) {
-      logger.debug("Not found any bindings to deserialize (including default serializer)")
-      return (null, null, null)
+      val msg = "Not found any bindings to deserialize (including default serializer)"
+      logger.debug(msg)
+      throw new KamanjaException(msg, null)
     }
 
     if (allMsgBindings.size != 1) {
@@ -587,13 +599,14 @@ trait AdaptersSerializeDeserializers {
         return (container, ser.serName, msgName)
       } catch {
         case e: Throwable => {
-          throw e
+          throw new KamanjaException("Failed to Deserialize " + msgName, e)
         }
       }
     } else {
       val adapName = getAdapterName
-      logger.error(s"Did not find/load Serializer for container/message:${msgName}. Not returning container from Adapter:${adapName}")
-      return (null, null, null)
+      val msg = s"Did not find/load Serializer for container/message:${msgName} @Adapter:${adapName}"
+      logger.error(msg)
+      throw new KamanjaException(msg, null)
     }
   }
 
@@ -608,8 +621,9 @@ trait AdaptersSerializeDeserializers {
   def deserialize(data: Array[Byte], deserializerName: String, schemaId: Int): (ContainerInterface, String) = {
     val msgName = getTypeForSchemaId(schemaId)
     if (msgName == null) {
-      logger.error(s"Did not find container/message for schemaid:${schemaId}")
-      return (null, null)
+      val msg = s"Did not find container/message for schemaid:${schemaId}"
+      logger.error(msg)
+      throw new KamanjaException(msg, null)
     }
 
     val tmpSer = getMessageBinding(msgName)
@@ -625,8 +639,9 @@ trait AdaptersSerializeDeserializers {
       }
     } else {
       val adapName = getAdapterName
-      logger.error(s"Did not find/load Serializer for container/message:${msgName} of schemaid:${schemaId} (including default serializer). Not returning container from Adapter:${adapName}")
-      return (null, null)
+      val msg = s"Did not find/load Serializer for container/message:${msgName} of schemaid:${schemaId} (including default serializer) @Adapter:${adapName}"
+      logger.error(msg)
+      throw new KamanjaException(msg, null)
     }
   }
 }

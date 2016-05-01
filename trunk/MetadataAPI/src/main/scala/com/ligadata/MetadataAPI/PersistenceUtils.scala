@@ -426,7 +426,7 @@ object PersistenceUtils {
     PutTranId(max)
   }
 
-  def GetMetadataId(key: String, incrementInDb: Boolean, defaultId: Long = 1): Long = {
+  def GetMetadataId(key: String, incrementInDb: Boolean, defaultId: Long = 1): Long = lock.synchronized {
     var id: Long = defaultId
     try {
       val (serTyp, obj) = GetObject(key.toLowerCase(), "metadatacounters")
@@ -467,7 +467,7 @@ object PersistenceUtils {
     *
     * @return <description please>
     */
-  def GetNewTranId: Long = {
+  def GetNewTranId: Long = lock.synchronized {
     try {
       val (serTyp, obj) = GetObject("transaction_id", "transaction_id")
       val idStr = new String(obj.asInstanceOf[Array[Byte]])
@@ -488,7 +488,7 @@ object PersistenceUtils {
     *
     * @return <description please>
     */
-  def GetTranId: Long = {
+  def GetTranId: Long = lock.synchronized {
     try {
       val (serTyp, obj) = GetObject("transaction_id", "transaction_id")
       val idStr = new String(obj.asInstanceOf[Array[Byte]])
@@ -700,7 +700,7 @@ object PersistenceUtils {
       }
       var allJars = MetadataAPIImpl.GetDependantJars(obj)
       logger.debug("Found " + allJars.length + " dependent jars. Jars:" + allJars.mkString(","))
-      logger.info("Found " + allJars.length + " dependent jars. It make take several minutes first time to download all of these jars:" + allJars.mkString(","))
+      logger.info("Found " + allJars.length + " dependent jars. It may take several minutes first time to download all of these jars:" + allJars.mkString(","))
       if (allJars.length > 0) {
         val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
         val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()

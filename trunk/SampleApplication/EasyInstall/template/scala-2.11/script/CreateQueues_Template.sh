@@ -22,3 +22,4 @@ $KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replicatio
 $KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions "$partitions" --topic financeinput
 $KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions "$partitions" --topic telecominput
 $KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions "$partitions" --topic testfailedevents_1
+$KAFKA_HOME/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions "$partitions" --topic testmessageevents_1

@@ -30,13 +30,23 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
   val log = new com.ligadata.runtime.Log(this.getClass.getName)
   import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+    Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%d".format(txnCtxt.transId, triggerdSetIndex, outputDefault))
+    if(isDebugEnabled)
+    {
+      execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
+    }
     //
     //
     def exeGenerated_test1_1(msg1: com.ligadata.kamanja.test.V1000000.msg1): Array[MessageInterface] = {
+      Debug("exeGenerated_test1_1")
       // in scala, type could be optional
       val out3: Int = msg1.in1 + 1000
       def process_o1(): Array[MessageInterface] = {
-        if (!(!(msg1.in2 != -1 && msg1.in2 < 100))) return Array.empty[MessageInterface]
+        Debug("exeGenerated_test1_1::process_o1")
+        if (!(!(msg1.in2 != -1 && msg1.in2 < 100))) {
+          Debug("Filtered: test1@o1")
+          return Array.empty[MessageInterface]
+        }
         val t1: String = "s:" + msg1.in2.toString()
         val result = com.ligadata.kamanja.test.V1000000.msg2.createInstance
         result.out4 = msg1.in3
@@ -46,7 +56,11 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
         Array(result)
       }
       def process_o2(): Array[MessageInterface] = {
-        if (!(!(msg1.in2 != -1 && msg1.in2 < 100))) return Array.empty[MessageInterface]
+        Debug("exeGenerated_test1_1::process_o2")
+        if (!(!(msg1.in2 != -1 && msg1.in2 < 100))) {
+          Debug("Filtered: test1@o2")
+          return Array.empty[MessageInterface]
+        }
         val t1: String = "s:" + msg1.in2.toString()
         val result = com.ligadata.kamanja.test.V1000000.msg4.createInstance
         result.out4 = msg1.in3
@@ -59,10 +73,15 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
       process_o2()
     }
     def exeGenerated_test2_2(msg2: com.ligadata.kamanja.test.V1000000.msg3): Array[MessageInterface] = {
+      Debug("exeGenerated_test2_2")
       // in scala, type could be optional
       val out3: Int = msg2.in1 + 1000
       def process_o1(): Array[MessageInterface] = {
-        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) return Array.empty[MessageInterface]
+        Debug("exeGenerated_test2_2::process_o1")
+        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) {
+          Debug("Filtered: test2@o1")
+          return Array.empty[MessageInterface]
+        }
         val t1: String = "s:" + msg2.in2.toString()
         val result = com.ligadata.kamanja.test.V1000000.msg2.createInstance
         result.out4 = msg2.in3
@@ -72,7 +91,11 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
         Array(result)
       }
       def process_o2(): Array[MessageInterface] = {
-        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) return Array.empty[MessageInterface]
+        Debug("exeGenerated_test2_2::process_o2")
+        if (!(!(msg2.in2 != -1 && msg2.in2 < 100))) {
+          Debug("Filtered: test2@o2")
+          return Array.empty[MessageInterface]
+        }
         val t1: String = "s:" + msg2.in2.toString()
         val result = com.ligadata.kamanja.test.V1000000.msg4.createInstance
         result.out4 = msg2.in3
@@ -91,16 +114,20 @@ class Model(factory: ModelInstanceFactory) extends ModelInstance(factory) {
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    if(msg1!=null) {
+    (if(msg1!=null) {
       exeGenerated_test1_1(msg1)
     } else {
       Array.empty[MessageInterface]
-    }
-    ++
-    if(msg2!=null) {
+    }) ++
+    (if(msg2!=null) {
       exeGenerated_test2_2(msg2)
     } else {
       Array.empty[MessageInterface]
+    }) ++
+    Array.empty[MessageInterface]
+    if(isDebugEnabled)
+    {
+      results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))
     }
     results.asInstanceOf[Array[ContainerOrConcept]]
   }

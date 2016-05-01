@@ -108,7 +108,7 @@ class KamanjaStatusEvent(factory: MessageFactoryInterface, other: KamanjaStatusE
     var attributeTypes = new Array[AttributeTypeInfo](4);
     attributeTypes(0) = new AttributeTypeInfo("statustype", 0, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
     attributeTypes(1) = new AttributeTypeInfo("nodeid", 1, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
-    attributeTypes(2) = new AttributeTypeInfo("eventtime", 2, AttributeTypeInfo.TypeCategory.LONG, -1, -1, 0)
+    attributeTypes(2) = new AttributeTypeInfo("eventtime", 2, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
     attributeTypes(3) = new AttributeTypeInfo("statusstring", 3, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
 
 

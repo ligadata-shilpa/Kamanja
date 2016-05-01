@@ -98,7 +98,8 @@ class LearningEngine {
         val msg = "LearningEngine:InputMessageFrom:%s with ElementId:%d produced:%s from DAG".format(msgTyp, msgElemId, producedNodeIds)
         LOG.debug(msg)
       }
-      thisMsgEvent.messageid = elemId
+      if (thisMsgEvent != null)
+        thisMsgEvent.messageid = elemId
 
       val exeQueue = ArrayBuffer[ReadyNode]()
       var execPos = 0
@@ -130,17 +131,28 @@ class LearningEngine {
             }
 
           if (curMd != null) {
-            var modelEvent = txnCtxt.getNodeCtxt.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaModelEvent").asInstanceOf[KamanjaModelEvent]
-            modelEvent.isresultproduced = false
-            modelEvent.error = ""
-            modelEvent.producedmessages = Array[Long]()
+            var modelEvent: KamanjaModelEvent = if (thisMsgEvent != null) {
+              val tmpMdlEvent: KamanjaModelEvent = txnCtxt.getNodeCtxt.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaModelEvent").asInstanceOf[KamanjaModelEvent]
+              if (tmpMdlEvent == null) {
+                LOG.warn("Not able to get com.ligadata.KamanjaBase.KamanjaModelEvent")
+              }
+              tmpMdlEvent
+            } else {
+              val tmpMdlEvent: KamanjaModelEvent = null
+              tmpMdlEvent
+            }
+            if (modelEvent != null) {
+              modelEvent.isresultproduced = false
+              modelEvent.error = ""
+              modelEvent.producedmessages = Array[Long]()
+            }
             val modelStartTime = System.nanoTime
 
             try {
               val execMsgsSet: Array[ContainerOrConcept] = execMdl._1.inputs(execNode.iesPos).map(eid => {
                 if (LOG.isDebugEnabled)
                   LOG.debug("MsgInfo: nodeId:" + eid.nodeId + ", edgeTypeId:" + eid.edgeTypeId)
-                val tmpElem = KamanjaMetadata.getMdMgr.ContainerForElementId(eid.edgeTypeId)
+                val tmpElem = KamanjaMetadata.getMdMgr.ElementForElementId(eid.edgeTypeId)
 
                 val finalEntry =
                   if (tmpElem != None) {
@@ -180,10 +192,14 @@ class LearningEngine {
               })
 
               val res = curMd.execute(txnCtxt, execMsgsSet, execNode.iesPos, outputDefault)
+              if (modelEvent != null)
+                modelEvent.consumedmessages = execMsgsSet.map(msg => KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId) )
               if (res != null && res.size > 0) {
-                modelEvent.isresultproduced = true
+                if (modelEvent != null) {
+                  modelEvent.isresultproduced = true
+                  modelEvent.producedmessages = res.map(msg => KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId))
+                }
                 txnCtxt.addContainerOrConcepts(execMdl._1.mdl.getModelName(), res)
-                modelEvent.producedmessages = res.map(msg => KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId) )
                 val newEges = res.map(msg => EdgeId(execMdl._1.nodeId, KamanjaMetadata.getMdMgr.ElementIdForSchemaId(msg.asInstanceOf[ContainerInterface].getSchemaId)))
                 val readyNodes = dagRuntime.FireEdges(newEges)
                 exeQueue ++= readyNodes
@@ -205,26 +221,30 @@ class LearningEngine {
               }
             } catch {
               case e: Throwable => {
-                modelEvent.error = StackTrace.ThrowableTraceString(e)
+                if (modelEvent != null) {
+                  modelEvent.error = StackTrace.ThrowableTraceString(e)
+                }
                 LOG.error("Failed to execute model:" + execMdl._1.mdl.getModelName(), e)
               }
             }
 
-            // Model finished executing, add the stats to the modeleventmsg
-            //var mdlDefs = KamanjaMetadata.getMdMgr.Models(md.mdl.getModelDef().FullName,true, false).getOrElse(null)
-            modelEvent.modelid = execNode.nodeId
-            modelEvent.elapsedtimeinms = ((System.nanoTime - modelStartTime) / 1000000.0).toFloat
-            modelsForMessage.append(modelEvent)
+            if (modelEvent != null) {
+              // Model finished executing, add the stats to the modeleventmsg
+              //var mdlDefs = KamanjaMetadata.getMdMgr.Models(md.mdl.getModelDef().FullName,true, false).getOrElse(null)
+              modelEvent.modelid = execNode.nodeId
+              modelEvent.eventepochtime = System.currentTimeMillis()
+              modelEvent.elapsedtimeinms = ((System.nanoTime - modelStartTime) / 1000000.0).toFloat
+              modelsForMessage.append(modelEvent)
+            }
           } else {
             val errorTxt = "Failed to create model " + execMdl._1.mdl.getModelName()
             LOG.error(errorTxt)
-            thisMsgEvent.error = "Failed to create model " + execMdl._1.mdl.getModelName()
-            thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
-            thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
-            // Generate an exception event
-            val exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, errorTxt, txnCtxt)
-            txnCtxt.getNodeCtxt.getEnvCtxt.postMessages(Array(exeptionEvent))
-            // Do we need to throw an error ???????????????????????????????????????? throw new KamanjaException(errorTxt, null)
+            if (thisMsgEvent != null) {
+              thisMsgEvent.eventepochtime = System.currentTimeMillis()
+              thisMsgEvent.error = "Failed to create model " + execMdl._1.mdl.getModelName()
+              thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
+              thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
+            }
           }
         }
       }
@@ -233,16 +253,22 @@ class LearningEngine {
         // Generate an exception event
         LOG.error("Failed to execute message", e)
         val st = StackTrace.ThrowableTraceString(e)
-        thisMsgEvent.error = st
-        thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
-        thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
-        val exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st, txnCtxt)
-        txnCtxt.getNodeCtxt.getEnvCtxt.postMessages(Array(exeptionEvent))
+        if (thisMsgEvent != null) {
+          thisMsgEvent.eventepochtime = System.currentTimeMillis()
+          thisMsgEvent.error = st
+          thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
+          thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
+        }
+        // val exeptionEvent = createExceptionEvent(LeanringEngine.modelExecutionException, LeanringEngine.engineComponent, st, txnCtxt)
+        // txnCtxt.getNodeCtxt.getEnvCtxt.postMessages(Array(exeptionEvent))
         // throw e
       }
     }
-    thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
-    thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
+    if (thisMsgEvent != null) {
+      thisMsgEvent.eventepochtime = System.currentTimeMillis()
+      thisMsgEvent.elapsedtimeinms = ((System.nanoTime - msgProcessingStartTime) / 1000000.0).toFloat
+      thisMsgEvent.modelinfo = modelsForMessage.toArray[KamanjaModelEvent]
+    }
   }
 
   private def createExceptionEvent(errorType: String, compName: String, errorString: String, txnCtxt: TransactionContext): KamanjaExceptionEvent = {

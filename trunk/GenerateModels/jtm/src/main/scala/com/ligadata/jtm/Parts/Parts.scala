@@ -58,6 +58,12 @@ object Parts {
        |  val log = new com.ligadata.runtime.Log(this.getClass.getName)
        |  import log._
        |  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+       |    if (isTraceEnabled)
+       |      Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%s".format(txnCtxt.transId, triggerdSetIndex, outputDefault.toString))
+       |    if(isDebugEnabled)
+       |    {
+       |      execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
+       |    }
        |    //
        |    {model.grok}
        |    //
@@ -66,7 +72,13 @@ object Parts {
        |    {model.message}
        |    // Main dependency -> execution check
        |    //
+       |    val results: Array[MessageInterface] =
        |    {model.code}
+       |    if(isDebugEnabled)
+       |    {
+       |      results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))
+       |    }
+       |    results.asInstanceOf[Array[ContainerOrConcept]]
        |  }
        |}""".stripMargin
 }

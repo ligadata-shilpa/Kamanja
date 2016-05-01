@@ -989,7 +989,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1040,7 +1040,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1091,7 +1091,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1140,7 +1140,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1188,7 +1188,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1238,7 +1238,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1287,7 +1287,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1340,7 +1340,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1394,7 +1394,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1443,7 +1443,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1492,7 +1492,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
@@ -1542,7 +1542,7 @@ object MetadataAPISerialization {
         throw Json4sParsingException(e.getMessage(), e)
       }
       case e: Exception => {
-        logger.debug("", e)
+        // logger.debug("", e)
         throw TypeParsingException(e.getMessage(), e)
       }
     }
