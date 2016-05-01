@@ -6,7 +6,7 @@ import org.json4s.DefaultFormats;
 import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._;
-import com.ligadata.Exceptions.StackTrace;
+import com.ligadata.Exceptions._;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date;
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
@@ -204,7 +204,7 @@ class TransactionMsg(factory: MessageFactoryInterface, other: TransactionMsg) ex
      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
       val key = keyName.toLowerCase;
    
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container TransactionMsg");
+      if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message/container TransactionMsg", null);
       return get(keyTypes(key).getIndex)
   }
   
@@ -300,18 +300,12 @@ class TransactionMsg(factory: MessageFactoryInterface, other: TransactionMsg) ex
       return attributeVals;
     }      
     
-    override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-      //getAllAttributeValues.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-    return null; // Fix - need to test to make sure the above iterator works properly
-  
-    }
-    
     override def set(keyName: String, value: Any) = {
       if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
       val key = keyName.toLowerCase;
       try {
    
-  			 if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message TransactionMsg")
+  			 if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message TransactionMsg", null)
 			 set(keyTypes(key).getIndex, value); 
 
       }catch {

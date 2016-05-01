@@ -6,7 +6,7 @@ import org.json4s.DefaultFormats;
 import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._;
-import com.ligadata.Exceptions.StackTrace;
+import com.ligadata.Exceptions._;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date;
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
@@ -204,11 +204,6 @@ class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInt
       return valuesMap.map(f => f._2).toArray;
     }  
     
-    override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-      //valuesMap.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-      return null;
-    }  
-   
     override def set(keyName: String, value: Any) = {
       if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
       val key = keyName.toLowerCase;
@@ -218,7 +213,7 @@ class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInt
         } else {
           valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0))
         }
-        if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+        if (getTimePartitionInfo != null && getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
           setTimePartitionData;
         }
       } catch {
@@ -241,7 +236,7 @@ class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInt
            val valtypeId = typeCategory.getValue.toShort
            valuesMap(key) = new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0))
           }
-          if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+          if (getTimePartitionInfo != null && getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
             setTimePartitionData;
           }
         } catch {
