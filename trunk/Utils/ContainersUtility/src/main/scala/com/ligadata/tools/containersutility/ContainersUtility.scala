@@ -209,7 +209,7 @@ Sample uses:
           if (dstore != null) {
             try {
               dstore.setObjectResolver(utilmaker)
-              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.kbinaryserdeser", scala.collection.immutable.Map[String, Any]())
 //              if(!dstore.isContainerExists(containerName)){
 //                logger.error("there is no %s container in datastore".format(containerName))
 //                sys.exit(1)

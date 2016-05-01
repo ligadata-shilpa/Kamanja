@@ -1816,7 +1816,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
       mdObjectRes.ResolveMessageAndContainers()
       _mdObjectRes = mdObjectRes
       _tenantDsDb.setObjectResolver(_mdObjectRes)
-      _tenantDsDb.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+      _tenantDsDb.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.kbinaryserdeser", scala.collection.immutable.Map[String, Any]())
     }
   }
 
