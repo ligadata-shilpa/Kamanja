@@ -1295,7 +1295,7 @@ object KamanjaMetadata extends ObjectResolver {
                   // This is already removed from cache. So, we need to go with the binding name to get message name
                   val strArr = zkMessage.Name.split(",", -1)
                   // BUGBUG for now we are going by offset. Make sure we have a common function to extract adaptername, messagename & ser name from binding
-                  val msgName = strArr(1)
+                  val msgName = if (strArr.size > 1 && strArr(1) != null) strArr(1) else ""
                   if (logger.isDebugEnabled) {
                     logger.debug("About to remove binding to adapter %s with message:%s".format(adapterName, msgName))
                   }
