@@ -37,7 +37,7 @@ object JsonChecker extends App with LogTrait{
 
   def usage: String = {
     """
-Usage:  bash $KAMANJA_HOME/bin/JsonChecker.sh --inputfile testjson.json
+Usage:  bash $KAMANJA_HOME/bin/JsonChecker.sh --inputfile $KAMANJA_HOME/config/ClusterConfig.json
     """
   }
 
@@ -89,10 +89,10 @@ Usage:  bash $KAMANJA_HOME/bin/JsonChecker.sh --inputfile testjson.json
           sys.exit(1)
         } else {
           jsonBen.ParseFile(fileContent)
-          logger.info("Json file parsed successfully");
+          logger.warn("Json file parsed successfully");
         }
       }else {
-        logger.error("The file %s does not exist. Check path please.".format(inputfile))
+        logger.error("The file %s does not exist.".format(inputfile))
         sys.exit(1)
     }
  //   }

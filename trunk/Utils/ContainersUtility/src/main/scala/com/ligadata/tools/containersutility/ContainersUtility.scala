@@ -42,7 +42,7 @@ Usage: $KAMANJA_HOME/binContainerUtility
     --outputpath <a path where you want put a selected rows *mandatory for select and not necessary for truncate and delete*>
     --serializer <how you need to see selected data *mandatory for select and not necessary for truncate and delete*>
     --serializeroptionsjson <*mandatory for select and not necessary for truncate and delete*>
-    --compressionstring <the format of file .gz or .dat *mandatory for select and not necessary for truncate and delete*>
+    --compressionstring <the extension of file gz or dat *mandatory for select and not necessary for truncate and delete*>
 
 Sample uses:
       java -jar /tmp/KamanjaInstall/ContainersUtility-1.0 --containername System.TestContainer --config /tmp/KamanjaInstall/EngineConfig.cfg --keyfieldname Id --oepration truncate
@@ -105,6 +105,7 @@ Sample uses:
           nextOption(map ++ Map('compressionstring -> value), tail)
         case option :: tail =>
           logger.error("Unknown option " + option)
+          logger.warn(usage)
           sys.exit(1)
       }
     }
@@ -124,18 +125,18 @@ Sample uses:
 
     if(operation.equals("")|| (!operation.equalsIgnoreCase("truncate") && !operation.equalsIgnoreCase("select") && !operation.equalsIgnoreCase("delete"))){//check if a correct operation passed or not
       logger.error("you should pass truncate or delete or select in operation option")
-      logger.info(usage)
+      logger.warn(usage)
       sys.exit(1)
     }
     if (!operation.equalsIgnoreCase("truncate")) { // check if operation does not match truncate because in truncate we do not need to parse filter file
 
       if(filter.equals("")){ // if user does not pass a file that includes keys and/or timeranges
         logger.error("you should pass a filter file which includes keys and/or timeranges in filter option")
-        logger.info(usage)
+        logger.warn(usage)
         sys.exit(1)
       } else if(new java.io.File(filter).exists.equals(false)){ // check if path exits or not for filter file
         logger.error("this path does not exist: %s".format(filter))
-        logger.info(usage)
+        logger.warn(usage)
         sys.exit(1)
       }
 
@@ -155,14 +156,14 @@ Sample uses:
         })
       } else {
         logger.error("you should pass a filter file includes keys and/or timesrange for select and delete operation")
-        logger.info(usage)
+        logger.warn(usage)
         sys.exit(1)
       }
 
       if(operation.equalsIgnoreCase("select")) {
         if (serializerName.equals("")) { // check if user pass serializer option for select operation
           logger.error("you should pass a serializer option for select operation")
-          logger.info(usage)
+          logger.warn(usage)
           sys.exit(1)
         }
 
@@ -209,13 +210,14 @@ Sample uses:
             try {
               dstore.setObjectResolver(utilmaker)
               dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
-              if(!dstore.isContainerExists(containerName)){
-                logger.error("there is no %s container in datastore".format(containerName))
-                sys.exit(1)
-              }
+//              if(!dstore.isContainerExists(containerName)){
+//                logger.error("there is no %s container in datastore".format(containerName))
+//                sys.exit(1)
+//              }
               if (!operation.equals("")) {
                 if (operation.equalsIgnoreCase("truncate")) {
                   utilmaker.TruncateContainer(containerName, dstore)
+                  logger.warn("Truncate %s container successfully".format(containerName))
                 } else if (operation.equalsIgnoreCase("delete")) {
                   if (containerObj.size == 0) {
                     logger.error("Failed to delete data from %s container, at least one item (keys, timerange) should not be null for delete operation".format(containerName))
@@ -223,7 +225,7 @@ Sample uses:
                   }
                   else {
                     utilmaker.DeleteFromContainer(containerName, containerObj, dstore)
-                    logger.info("The data was deleted successfully")
+                    logger.warn("The data deleted successfully")
                   }
                 } else if (operation.equalsIgnoreCase("select")) {
                   if (containerObj.size == 0) {
@@ -259,8 +261,8 @@ Sample uses:
                         }
                       }
                       val countOfRow = utilmaker.GetFromContainer(containerName, containerObj, dstore, serializerName, serializerOptionsJson, getData)
-                      logger.info("The data was fetched successfully")
-                      logger.info("You can find data in this file: %s".format(output))
+                      logger.warn("%d rows fetched successfully".format(countOfRow))
+                      logger.warn("You can find data in this file: %s".format(filename))
                     } catch {
                       case e: Exception => {
                         logger.error("Failed to select data", e)

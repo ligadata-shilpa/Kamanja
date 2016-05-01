@@ -321,7 +321,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
   }
   // this method used to purge (truncate) container
   def TruncateContainer(typename: String, kvstore: DataStore): Unit ={
-    logger.info("Truncate %s container".format(typename))
+    logger.warn("Truncate %s container".format(typename))
     kvstore.TruncateContainer(Array(typename))
   }
   // this method used to dalete data from container for a specific keys in a specific time ranges
@@ -330,7 +330,7 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
     containerObj.foreach(item => {
       if (item.keys.size == 0) {
         var timerange = new TimeRange(item.begintime.toLong, item.endtime.toLong)
-        logger.info("delete from %s container for timerange: %d-%d".format(typename, timerange.beginTime, timerange.endTime))
+        //logger.info("delete from %s container for timerange: %d-%d".format(typename, timerange.beginTime, timerange.endTime))
         kvstore.del(typename, timerange)
       } else if (item.begintime.equals(Long.MinValue.toString) || item.endtime.equals(Long.MaxValue.toString)) {
         var keyList = scala.collection.immutable.List.empty[Key]
