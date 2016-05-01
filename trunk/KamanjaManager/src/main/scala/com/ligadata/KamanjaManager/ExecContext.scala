@@ -40,13 +40,13 @@ import scala.actors.threadpool.{ ExecutorService }
 // There are no locks at this moment. Make sure we don't call this with multiple threads for same object
 class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUniqueRecordKey, val nodeContext: NodeContext) extends ExecContext {
   private val LOG = LogManager.getLogger(getClass);
-  private var adapterChangedCntr: Long = -1
-
-  // Mapping Adapter to Msgs
-//  private var inputAdapters = Array[(InputAdapter, Array[AdapterMessageBinding])]()
-  private var outputAdapters = Array[(OutputAdapter, Array[AdapterMessageBinding])]()
-  private var storageAdapters = Array[(DataStore, Array[AdapterMessageBinding])]()
-  private val msg2TenantId = scala.collection.mutable.Map[String, String]()
+//  private var adapterChangedCntr: Long = -1
+//
+//  // Mapping Adapter to Msgs
+////  private var inputAdapters = Array[(InputAdapter, Array[AdapterMessageBinding])]()
+//  private var outputAdapters = Array[(OutputAdapter, Array[AdapterMessageBinding])]()
+//  private var storageAdapters = Array[(DataStore, Array[AdapterMessageBinding])]()
+//  private val msg2TenantId = scala.collection.mutable.Map[String, String]()
 
 //  NodeLevelTransService.init(KamanjaConfiguration.zkConnectString, KamanjaConfiguration.zkSessionTimeoutMs, KamanjaConfiguration.zkConnectionTimeoutMs, KamanjaConfiguration.zkNodeBasePath, KamanjaConfiguration.txnIdsRangeForNode, KamanjaConfiguration.dataDataStoreInfo, KamanjaConfiguration.jarPaths)
 //
@@ -122,45 +122,17 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
   protected override def commitData(txnCtxt: TransactionContext): Unit = {
     try {
-      val adapterChngCntr = KamanjaManager.instance.getAdapterChangedCntr
-      if (adapterChngCntr != adapterChangedCntr) {
-        val (ins, outs, storages, cntr) = KamanjaManager.instance.getAllAdaptersInfo
-        adapterChangedCntr = cntr
+//      val adapterChngCntr = KamanjaManager.instance.getAdapterChangedCntr
+//      if (adapterChngCntr != adapterChangedCntr) {
+//        LOG.warn("AdapterChangedCntr. New adapterChngCntr:%d, Old adapterChangedCntr:%d".format(adapterChngCntr, adapterChangedCntr))
+//        val (outAdaps, storageAdpas, cntr) = KamanjaManager.instance.resolveAdapterBindins
+//        adapterChangedCntr = cntr
+//          outputAdapters = outAdaps
+//        storageAdapters = storageAdpas
+//        msg2TenantId.clear()
+//      } else {}
 
-        val mdMgr = GetMdMgr
-
-//        val newIns = ins.map(in => {
-//          (in, mdMgr.BindingsForAdapter(in.inputConfig.Name).map(bind => bind._2).toArray)
-//        })
-
-        val newOuts = outs.map(out => {
-          (out, mdMgr.BindingsForAdapter(out.inputConfig.Name).map(bind => bind._2).toArray)
-        })
-
-        val newStorages = storages.map(storage => {
-          val name = if (storage != null && storage.adapterInfo!= null) storage.adapterInfo.Name else ""
-          (storage, mdMgr.BindingsForAdapter(name).map(bind => bind._2).toArray)
-        })
-
-//        inputAdapters = newIns
-        outputAdapters = newOuts
-        storageAdapters = newStorages
-        msg2TenantId.clear()
-
-        val msgDefs: Option[scala.collection.immutable.Set[MessageDef]] = mdMgr.Messages(true, true)
-        if (msgDefs != None) {
-          msgDefs.get.foreach(m => {
-            msg2TenantId(m.FullName.toLowerCase()) = m.TenantId.toLowerCase()
-          })
-        }
-
-        val containerDefs: Option[scala.collection.immutable.Set[ContainerDef]] = mdMgr.Containers(true, true)
-        if (containerDefs != None) {
-          containerDefs.get.foreach(c => {
-            msg2TenantId(c.FullName.toLowerCase()) = c.TenantId.toLowerCase()
-          })
-        }
-      }
+      val (outputAdapters, storageAdapters, cntr) = KamanjaManager.instance.resolveAdapterBindins
 
       //FIXME:- Fix this
       //BUGBUG:: Fix this
@@ -193,6 +165,8 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       })
 
       val allData = txnCtxt.getAllContainersOrConcepts()
+
+      val (msg2TenantId, cntr1) = KamanjaManager.instance.resolveMsg2TenantId
 
       if (allData != null && nodeContext != null && nodeContext.getEnvCtxt() != null) {
         // All containers data for Tenant

@@ -38,9 +38,9 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  private var initialFiles :  Array[(String, Int, String, Int)] = null
+  private var initialFiles :  List[(String, Int, String, Int)] = null
 
-  def init(files :  Array[(String, Int, String, Int)]): Unit ={
+  def init(files :  List[(String, Int, String, Int)]): Unit ={
     initialFiles = files
   }
 
@@ -75,11 +75,14 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   }
 
   def stopMonitoring(): Unit ={
+
+    logger.debug("MonitorController - shutting down")
+
     if(smartFileMonitor != null)
       smartFileMonitor.shutdown()
 
     keepMontoringBufferingFiles = false
-    globalFileMonitorService.shutdown()
+    MonitorUtils.shutdownAndAwaitTermination(globalFileMonitorService, "MonitorController globalFileMonitorService")
   }
 
   /**
@@ -135,8 +138,20 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
 
             logger.debug("SMART FILE CONSUMER (MonitorController):  monitorBufferingFiles - file " + fileHandler.getFullPath)
 
-            if (initialFiles != null && initialFiles.exists(tuple => tuple._3.equals(fileHandler.getFullPath))) {
+            val matchingFileInfo : List[(String, Int, String, Int)] =
+              if (initialFiles ==null) null
+              else initialFiles.filter(tuple => tuple._3.equals(fileHandler.getFullPath))
+
+            if (matchingFileInfo != null && matchingFileInfo.size > 0) {
               //this is an initial file, the leader will take care of it, ignore
+              /*initialFiles.filter(tuple => tuple._3.equals(fileHandler.getFullPath)) match{
+                case None =>
+                case Some(initialFileInfo) => initialFiles = initialFiles diff List(initialFileInfo)
+              }*/
+              logger.debug("SMART FILE CONSUMER (MonitorController): file {} is already in initial files", fileHandler.getFullPath)
+              initialFiles = initialFiles diff matchingFileInfo
+
+              logger.debug("SMART FILE CONSUMER (MonitorController): now initialFiles = {}",initialFiles)
             }
             else {
               // If the filesystem is accessible

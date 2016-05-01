@@ -759,9 +759,9 @@ object KamanjaMetadata extends ObjectResolver {
     if (contObjects != null && contObjects.size > 0) {
       messageContainerObjects ++= contObjects
       if (envCtxt != null) {
-      //        val containerNames = contObjects.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
-      //        val containerInfos = containerNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
-      //        envCtxt.RegisterMessageOrContainers(containerInfos) // Containers
+        //        val containerNames = contObjects.map(container => container._1.toLowerCase).toList.sorted.toArray // Sort topics by names
+        //        val containerInfos = containerNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
+        //        envCtxt.RegisterMessageOrContainers(containerInfos) // Containers
         envCtxt.cacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
       }
     }
@@ -770,9 +770,9 @@ object KamanjaMetadata extends ObjectResolver {
     if (msgObjects != null && msgObjects.size > 0) {
       messageContainerObjects ++= msgObjects
       if (envCtxt != null) {
-      //        val topMessageNames = msgObjects.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
-      //        val messagesInfos = topMessageNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
-      //        envCtxt.RegisterMessageOrContainers(messagesInfos) // Messages
+        //        val topMessageNames = msgObjects.filter(msg => msg._2.parents.size == 0).map(msg => msg._1.toLowerCase).toList.sorted.toArray // Sort topics by names
+        //        val messagesInfos = topMessageNames.map(c => { ContainerNameAndDatastoreInfo(c, null) })
+        //        envCtxt.RegisterMessageOrContainers(messagesInfos) // Messages
         envCtxt.cacheContainers(KamanjaConfiguration.clusterId) // Load data for Caching
       }
     }
@@ -911,7 +911,7 @@ object KamanjaMetadata extends ObjectResolver {
         val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
         if (bindsInfo != null) {
           // Message Name, Serializer Name & options.
-          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName ->(bind.serializer, bind.options))).toMap)
         }
       })
 
@@ -920,7 +920,7 @@ object KamanjaMetadata extends ObjectResolver {
         val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
         if (bindsInfo != null) {
           // Message Name, Serializer Name & options.
-          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName ->(bind.serializer, bind.options))).toMap)
         }
       })
 
@@ -929,7 +929,7 @@ object KamanjaMetadata extends ObjectResolver {
         val bindsInfo = adapterLevelBinding.getOrElse(adap.getAdapterName.toLowerCase, null)
         if (bindsInfo != null) {
           // Message Name, Serializer Name & options.
-          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName -> (bind.serializer, bind.options))).toMap)
+          adap.addMessageBinding(bindsInfo.map(bind => (bind.messageName ->(bind.serializer, bind.options))).toMap)
         }
       })
     } catch {
@@ -1136,6 +1136,7 @@ object KamanjaMetadata extends ObjectResolver {
       }
 
       //// Check for Jars -- End
+      var msgBindingChanges = false
 
       zkTransaction.Notifications.foreach(zkMessage => {
         if (updMetadataExecutor.isShutdown)
@@ -1240,71 +1241,94 @@ object KamanjaMetadata extends ObjectResolver {
           case "clusterDef" => {}
           case "upDef" => {}
 
-          case "AdapterMessageBinding"=> {
-              /** Restate the key to use the binding key (see AdapterMessageBinding class decl in Metadata project) for form. */
-              val bindingKey : String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
-              val (adapterName, adapter, binding) : (String, AdapterInfo, AdapterMessageBinding) = if (zkMessage != null) {
-                  val adapNm : String = zkMessage.Name.split(',').head.toLowerCase
-                  val bndg : AdapterMessageBinding = mdMgr.AllAdapterMessageBindings.getOrElse(zkMessage.Name,null)
-                  val adap : AdapterInfo = mdMgr.GetAdapter(adapNm)
-                  (adapNm, adap, bndg)
-              } else {
-                  (null,null,null)
-              }
-              /** An AdapterInfo and AdapterMessageBinding must be present in the metadata to proceed */
-              if (adapter != null && binding != null) {
-                  val kmgr: KamanjaManager = KamanjaManager.instance
-                  val (inputAdapters, outputAdapters, storageAdapters, adapterChangedCntr)
-                    : (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = kmgr.getAllAdaptersInfo
+          case "AdapterMessageBinding" => {
+            logger.debug("Got adapter change")
+            /** Restate the key to use the binding key (see AdapterMessageBinding class decl in Metadata project) for form. */
+            val bindingKey: String = s"${zkMessage.ObjectType}.${zkMessage.Name}"
+            val (adapterName, adapter, binding): (String, AdapterInfo, AdapterMessageBinding) = if (zkMessage != null) {
+              val adapNm: String = zkMessage.Name.split(',').head.toLowerCase
+              val bndg: AdapterMessageBinding = mdMgr.AllAdapterMessageBindings.getOrElse(zkMessage.Name, null)
+              val adap: AdapterInfo = mdMgr.GetAdapter(adapNm)
+              (adapNm, adap, bndg)
+            } else {
+              (null, null, null)
+            }
 
-                  val (optInputAdap, optOutputAdap, optStoreAdap) : (Option[InputAdapter], Option[OutputAdapter], Option[DataStore]) =
-                      if (adapterName != null) {
-                          (inputAdapters.find(adap => adap.getAdapterName == adapterName)
-                          ,outputAdapters.find(adap => adap.getAdapterName == adapterName)
-                          ,storageAdapters.find(adap => adap.getAdapterName == adapterName))
-                      } else {
-                          (None,None,None)
-                      }
+            /** An AdapterInfo and AdapterMessageBinding must be present in the metadata to proceed */
+            if (adapter != null) {
+              val kmgr: KamanjaManager = KamanjaManager.instance
+              val (inputAdapters, outputAdapters, storageAdapters, adapterChangedCntr)
+              : (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = kmgr.getAllAdaptersInfo
 
-                  /** Note that the only one the adapters will have Some(value) ... */
-                  val (inputAdap, outputAdap, storeAdap) : (InputAdapter, OutputAdapter, DataStore)
-                        = (optInputAdap.orNull, optOutputAdap.orNull, optStoreAdap.orNull)
+              val (optInputAdap, optOutputAdap, optStoreAdap): (Option[InputAdapter], Option[OutputAdapter], Option[DataStore]) =
+                if (adapterName != null) {
+                  (inputAdapters.find(adap => adap.getAdapterName.equalsIgnoreCase(adapterName))
+                    , outputAdapters.find(adap => adap.getAdapterName.equalsIgnoreCase(adapterName))
+                    , storageAdapters.find(adap => adap.getAdapterName.equalsIgnoreCase(adapterName)))
+                } else {
+                  (None, None, None)
+                }
 
-                  zkMessage.Operation match {
-                      case "Add" => {
-                          if (inputAdap != null) inputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                          else if (outputAdap != null) outputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                          else if (storeAdap != null) storeAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                          else {
-                              /** It should be impossible to reach this code, hence it was put here */
-                              LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist in the metadata cache!!!!")
-                          }
-                      }
-                      case "Remove" => {
-                          if (inputAdap != null) inputAdap.removeMessageBinding(binding.messageName)
-                          else if (outputAdap != null) outputAdap.removeMessageBinding(binding.messageName)
-                          else if (storeAdap != null) storeAdap.removeMessageBinding(binding.messageName)
-                          else {
-                              /** It should be impossible to reach this code, hence it was put here */
-                              LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist!!!!")
-                          }
-                      }
-                      case _ => {
-                          LOG.error(s"Unknown Operation ${zkMessage.Operation} in zookeeper notification type ${zkMessage.ObjectType}.  The notification is not processed ..")
-                      }
+              /** Note that the only one the adapters will have Some(value) ... */
+              val (inputAdap, outputAdap, storeAdap): (InputAdapter, OutputAdapter, DataStore) = (optInputAdap.orNull, optOutputAdap.orNull, optStoreAdap.orNull)
+
+              zkMessage.Operation match {
+                case "Add" => {
+                  if (binding != null) {
+                    if (logger.isDebugEnabled) {
+                      logger.debug("About to add binding to adapter %s with message:%s".format(adapterName, binding.messageName))
+                    }
+                    if (inputAdap != null) inputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else if (outputAdap != null) outputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else if (storeAdap != null) storeAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else {
+                      /** It should be impossible to reach this code, hence it was put here */
+                      LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist in the metadata cache!!!!")
+                    }
+                    msgBindingChanges = true
+                  } else {
+                    val bindName: String = if (binding != null) binding.FullBindingName else "NO BINDING IN CACHE for " + zkMessage.Name
+                    LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named $bindName (or both) could not be found.  Notification was bad news!!!")
                   }
-              } else {
-                  val bindName : String = if (binding != null) binding.FullBindingName else "NO BINDING IN CACHE"
-                  LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named $bindName (or both) could not be found.  Notification was bad news!!!")
+                }
+                case "Remove" => {
+                  // This is already removed from cache. So, we need to go with the binding name to get message name
+                  val strArr = zkMessage.Name.split(",", -1)
+                  // BUGBUG for now we are going by offset. Make sure we have a common function to extract adaptername, messagename & ser name from binding
+                  val msgName = if (strArr.size > 1 && strArr(1) != null) strArr(1) else ""
+                  if (logger.isDebugEnabled) {
+                    logger.debug("About to remove binding to adapter %s with message:%s".format(adapterName, msgName))
+                  }
+                  if (inputAdap != null) inputAdap.removeMessageBinding(msgName)
+                  else if (outputAdap != null) outputAdap.removeMessageBinding(msgName)
+                  else if (storeAdap != null) storeAdap.removeMessageBinding(msgName)
+                  else {
+                    /** It should be impossible to reach this code, hence it was put here */
+                    LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist!!!!")
+                  }
+                  msgBindingChanges = true
+                }
+                case _ => {
+                  LOG.error(s"Unknown Operation ${zkMessage.Operation} in zookeeper notification type ${zkMessage.ObjectType}.  The notification is not processed ..")
+                }
               }
+            } else {
+              val bindName: String = if (binding != null) binding.FullBindingName else "NO BINDING IN CACHE for " + zkMessage.Name
+              LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named $bindName (or both) could not be found.  Notification was bad news!!!")
+            }
           }
-
-
           case _ => {
             LOG.warn("Unknown objectType " + zkMessage.ObjectType + " in zookeeper notification, notification is not processed ..")
           }
         }
       })
+
+      // Notifying Engine for Adapters change
+      if (msgBindingChanges)
+        KamanjaManager.instance.incrAdapterChangedCntr()
+
+      if (obj.messageObjects.size > 0 || obj.containerObjects.size > 0 || removedMessages.size > 0 || removedContainers.size > 0)
+        KamanjaManager.instance.incrMsgChangedCntr()
 
       // Lock the global object here and update the global objects
       if (updMetadataExecutor.isShutdown == false)

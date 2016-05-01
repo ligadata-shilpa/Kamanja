@@ -96,17 +96,21 @@ trait DataStoreOperations extends AdaptersSerializeDeserializers {
           val cont = row._3.asInstanceOf[ContainerInterface]
           val (containers, serData, serializers) = serialize(tnxCtxt, Array(cont))
           if (containers == null || containers.size == 0) {
-            throw new KamanjaException("Failed to serialize container/message:" + cont.getFullTypeName, null)
+            // throw new KamanjaException("Failed to serialize container/message:" + cont.getFullTypeName, null)
+            // Ignoring these rows later
+            (null, Value(0, null, null))
+          } else {
+            (row._1, Value(cont.getSchemaId, serializers(0), serData(0)))
           }
-          (row._1, Value(cont.getSchemaId, serializers(0), serData(0)))
         } else {
           (row._1, Value(0, row._2, row._3.asInstanceOf[Array[Byte]]))
         }
-      })
+      }).filter(row => row._1 != null || row._2.serializedInfo != null || row._2.serializerType != null || row._2.schemaId != 0)
       (oneContainerData._1, containerData)
-    })
+    }).filter(oneContainerData => oneContainerData._2.size > 0)
 
-    put(putData)
+    if (putData.size > 0)
+      put(putData)
   }
 
   // update operations, add & update semantics are different for relational databases
