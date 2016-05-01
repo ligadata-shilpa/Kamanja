@@ -689,6 +689,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   //what a participant should do when receiving file to process (from leader)
   def fileAssignmentFromLeaderCallback (eventType: String, eventPath: String, eventPathData: String) : Unit = {
+
     //data has format <file name>|offset
     val dataTokens = eventPathData.split("\\|")
     val fileToProcessName = dataTokens(0)
@@ -697,6 +698,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     val keyTokens = eventPath.split("/")
     val processingThreadId = keyTokens(keyTokens.length - 1).toInt
     val processingNodeId = keyTokens(keyTokens.length - 2)
+
+    if(isShutdown){
+      LOG.debug("Smart File Consumer - Node Id = {}, Thread Id = {} had been assigned a new file ({}), but shutdown already called. so ignore the assignment",
+        processingNodeId, processingThreadId.toString, fileToProcessName)
+      return
+    }
 
     LOG.info("Smart File Consumer - Node Id = {}, Thread Id = {}, File ({}) was assigned",
       processingNodeId, processingThreadId.toString, fileToProcessName)
@@ -919,6 +926,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
 
   override def StartProcessing(partitionIds: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = {
+    isShutdown = false
+
     _ignoreFirstMsg = ignoreFirstMsg
     var lastHb: Long = 0
     startHeartBeat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
@@ -1036,6 +1045,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   }
 
   override def StopProcessing: Unit = {
+    LOG.debug("Smart File Consumer - shutting down the adapter")
+
     initialized = false
     isShutdown = true
 
@@ -1057,7 +1068,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     //TODO:- make sure to Clear listeners & queues all stuff related to leader or non-leader. So, Next SartProcessing should start the whole stuff again.
     if(clusterStatus != null) {
       if (clusterStatus.isLeader) {
-        LOG.debug("Smart File Consumer - Cccleaning queues and cache stuff by leader")
+        LOG.debug("Smart File Consumer - Cleaning queues and cache stuff by leader")
         saveFileProcessingQueue(List())
         saveFileRequestsQueue(List())
       }
@@ -1079,7 +1090,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       MonitorUtils.shutdownAndAwaitTermination(participantExecutor, "Participant Executor")
 
     LOG.debug("Smart File Adapter - Shutdown Complete")
-    participantExecutor = null
+    //participantExecutor = null
     startTime = 0
   }
 

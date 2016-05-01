@@ -75,11 +75,14 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   }
 
   def stopMonitoring(): Unit ={
+
+    logger.debug("MonitorController - shutting down")
+
     if(smartFileMonitor != null)
       smartFileMonitor.shutdown()
 
     keepMontoringBufferingFiles = false
-    globalFileMonitorService.shutdown()
+    MonitorUtils.shutdownAndAwaitTermination(globalFileMonitorService, "MonitorController globalFileMonitorService")
   }
 
   /**
