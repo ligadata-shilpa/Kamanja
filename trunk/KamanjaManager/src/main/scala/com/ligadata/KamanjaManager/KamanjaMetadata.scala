@@ -1307,8 +1307,6 @@ object KamanjaMetadata extends ObjectResolver {
               LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named $bindName (or both) could not be found.  Notification was bad news!!!")
             }
           }
-
-
           case _ => {
             LOG.warn("Unknown objectType " + zkMessage.ObjectType + " in zookeeper notification, notification is not processed ..")
           }
@@ -1318,6 +1316,10 @@ object KamanjaMetadata extends ObjectResolver {
       // Notifying Engine for Adapters change
       if (msgBindingChanges)
         KamanjaManager.instance.incrAdapterChangedCntr()
+
+      if (obj.messageObjects.size > 0 || obj.containerObjects.size > 0 || removedMessages.size > 0 || removedContainers.size > 0)
+        KamanjaManager.instance.incrMsgChangedCntr()
+
       // Lock the global object here and update the global objects
       if (updMetadataExecutor.isShutdown == false)
         UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, removedModels, removedMessages, removedContainers)
