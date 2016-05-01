@@ -27,7 +27,7 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 class MedicalIngestTest  extends FunSuite with BeforeAndAfter {
 
   val logger = LogManager.getLogger(this.getClass.getName)
-
+  
   test("test") {
 
     val fileInput = getClass.getResource("/samples/medical/medicalingest.jtm").getPath
@@ -83,6 +83,31 @@ class MedicalIngestTest  extends FunSuite with BeforeAndAfter {
     val fileInput = getClass.getResource("/samples/medical/medicalingest2.jtm").getPath
     val fileOutput = getClass.getResource("/samples/medical/").getPath + "/medicalingest2.scala.actual"
     val fileExpected = getClass.getResource("/samples/medical/medicalingest2.scala.expected").getPath
+    val metadataLocation = getClass.getResource("/metadata").getPath
+
+    val compiler = CompilerBuilder.create().
+      setSuppressTimestamps().
+      setInputFile(fileInput).
+      setOutputFile(fileOutput).
+      setMetadataLocation(metadataLocation).
+      build()
+
+    compiler.Execute()
+
+    val expected = FileUtils.readFileToString(new File(fileExpected))
+    val actual = FileUtils.readFileToString(new File(fileOutput))
+    logger.info("actual path={}", fileOutput)
+    logger.info("expected path={}", fileExpected)
+
+    assert(actual == expected)
+    DeleteFile(fileOutput)
+  }
+
+  test("test3") {
+
+    val fileInput = getClass.getResource("/samples/medical/medicalingest3.jtm").getPath
+    val fileOutput = getClass.getResource("/samples/medical/").getPath + "/medicalingest3.scala.actual"
+    val fileExpected = getClass.getResource("/samples/medical/medicalingest3.scala.expected").getPath
     val metadataLocation = getClass.getResource("/metadata").getPath
 
     val compiler = CompilerBuilder.create().

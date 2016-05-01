@@ -1187,16 +1187,32 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
             // If output is a dictionary, collect all mappings
             //
             val outputElements1 = if(IsMappedMessage(md, outputType1)) {
-              o._2.mapping.filter(f => !outputSet.contains(f._1)).toArray.map(e => {
+
+              // Unsatisfied mappings
+              val m1 = o._2.mapping.filter(f => !outputSet.contains(f._1)).toArray.map(e => {
                 val m = innerMapping.get(e._1)
                 if (m.isEmpty) {
                   throw new Exception("Output %s not found".format(e))
                 }
                 "result.set(\"%s\", %s)".format(e._1, m.get.getExpression())
               })
+
+              // Unsatisfied mappings by positions
+              val m2 = o._2.mapbyposition.foldLeft(Array.empty[String]) ((m, s) => {
+                m ++ s._2.filter( f=> (f!="-") && !outputSet.contains(f) ).toArray.map( e=> {
+                  val m = innerMapping.get(e)
+                  if (m.isEmpty) {
+                    throw new Exception("Output %s not found".format(e))
+                  }
+                  "result.set(\"%s\", %s)".format(e, m.get.getExpression())
+                })
+              })
+
+              m1 ++ m2
             } else {
               Array.empty[String]
             }
+
 
             // To Construct the final output
             val outputResult = "val result = %s.createInstance\n%s\n%s\nArray(result)".format(
