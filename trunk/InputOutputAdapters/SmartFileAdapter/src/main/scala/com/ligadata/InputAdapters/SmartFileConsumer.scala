@@ -278,7 +278,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       initialFilesHandled = true//nothing to handle
 
     //now run the monitor
-    monitorController.init(initialFilesToProcess.toArray)
+    monitorController.init(initialFilesToProcess.toList)
     monitorController.startMonitoring()
 
   }
@@ -386,7 +386,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
           List()
         }
         else {
-          LOG.debug("Smart File Consumer - file request queue from cache is ", cacheDataStr)
+          LOG.debug("Smart File Consumer - file request queue from cache is {}", cacheDataStr)
           val tokens = cacheDataStr.split("\\|")
           tokens.toList
         }
