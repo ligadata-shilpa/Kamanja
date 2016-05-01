@@ -1274,15 +1274,21 @@ object KamanjaMetadata extends ObjectResolver {
 
               zkMessage.Operation match {
                 case "Add" => {
-                  if (logger.isDebugEnabled) {
-                    logger.debug("About to add binding to adapter %s with message:%s".format(adapterName, binding.messageName))
-                  }
-                  if (inputAdap != null) inputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                  else if (outputAdap != null) outputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                  else if (storeAdap != null) storeAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                  else {
-                    /** It should be impossible to reach this code, hence it was put here */
-                    LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist in the metadata cache!!!!")
+                  if (binding != null) {
+                    if (logger.isDebugEnabled) {
+                      logger.debug("About to add binding to adapter %s with message:%s".format(adapterName, binding.messageName))
+                    }
+                    if (inputAdap != null) inputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else if (outputAdap != null) outputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else if (storeAdap != null) storeAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else {
+                      /** It should be impossible to reach this code, hence it was put here */
+                      LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist in the metadata cache!!!!")
+                    }
+                    msgBindingChanges = true
+                  } else {
+                    val bindName: String = if (binding != null) binding.FullBindingName else "NO BINDING IN CACHE for " + zkMessage.Name
+                    LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named $bindName (or both) could not be found.  Notification was bad news!!!")
                   }
                 }
                 case "Remove" => {
@@ -1305,12 +1311,12 @@ object KamanjaMetadata extends ObjectResolver {
                     /** It should be impossible to reach this code, hence it was put here */
                     LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist!!!!")
                   }
+                  msgBindingChanges = true
                 }
                 case _ => {
                   LOG.error(s"Unknown Operation ${zkMessage.Operation} in zookeeper notification type ${zkMessage.ObjectType}.  The notification is not processed ..")
                 }
               }
-              msgBindingChanges = true
             } else {
               LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named ${zkMessage.Name} (or both) could not be found.  Adapter=$adapter.. Binding=$binding... in any event, notification was bad news!!!")
             }
@@ -1325,9 +1331,15 @@ object KamanjaMetadata extends ObjectResolver {
       // Notifying Engine for Adapters change
       if (msgBindingChanges)
         KamanjaManager.instance.incrAdapterChangedCntr()
+
+      if (obj.messageObjects.size > 0 || obj.containerObjects.size > 0 || removedMessages.size > 0 || removedContainers.size > 0) {
+          KamanjaManager.instance.incrAdapterChangedCntr()
+      }
+
       // Lock the global object here and update the global objects
-      if (updMetadataExecutor.isShutdown == false)
-        UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, removedModels, removedMessages, removedContainers)
+      if (updMetadataExecutor.isShutdown == false) {
+          UpdateKamanjaMdObjects(obj.messageObjects, obj.containerObjects, obj.modelObjsMap, removedModels, removedMessages, removedContainers)
+      }
     }
   }
 
