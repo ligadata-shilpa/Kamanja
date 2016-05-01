@@ -19,6 +19,7 @@ package com.ligadata.jsonutility
 import org.apache.commons.io.FilenameUtils
 import org.json4s._
 import org.json4s.JsonDSL._
+import com.ligadata.Exceptions._
 import org.json4s.native.JsonMethods._
 import scala.collection.mutable.HashMap
 import java.io.File
@@ -40,9 +41,6 @@ Usage:  bash $KAMANJA_HOME/bin/JsonChecker.sh --inputfile testjson.json
     """
   }
 
-//  lazy val loggerName = this.getClass.getName
-//  lazy val logger = LogManager.getLogger(loggerName)
-
   private type OptionMap = Map[Symbol, Any]
 
   private def nextOption(map: OptionMap, list: List[String]): OptionMap = {
@@ -53,6 +51,7 @@ Usage:  bash $KAMANJA_HOME/bin/JsonChecker.sh --inputfile testjson.json
         nextOption(map ++ Map('inputfile -> value), tail)
       case option :: tail => {
         logger.error("Unknown option " + option)
+        logger.warn(usage)
         sys.exit(1)
       }
     }
@@ -90,22 +89,18 @@ Usage:  bash $KAMANJA_HOME/bin/JsonChecker.sh --inputfile testjson.json
           sys.exit(1)
         } else {
           jsonBen.ParseFile(fileContent)
+          logger.info("Json file parsed successfully");
         }
       }else {
-        logger.error("The file %s does not exist. Check the name of the file.".format(inputfile))
+        logger.error("The file %s does not exist. Check path please.".format(inputfile))
         sys.exit(1)
     }
  //   }
-
-    logger.info("Json file parsed successfully");
   }
 
 }
 
 class JsonChecker extends LogTrait{
-
-//  lazy val loggerName = this.getClass.getName
-//  lazy val logger = LogManager.getLogger(loggerName)
 
   def FindFileExtension (filePath: String) : Boolean = {
     val ext = FilenameUtils.getExtension(filePath);
@@ -120,9 +115,7 @@ class JsonChecker extends LogTrait{
     try{
       val parsedFile = parse(filePath)
     } catch{
-      case e: Exception => logger.error("there is an error in the format of file \n ErrorMsg : ", e)
-        logger.info("Failed to parse Json file")
-        sys.exit(1)
+      case e: Exception => throw new KamanjaException(s"There is an error in the format of file \n ErrorMsg : ", e)
     }
   }
 
