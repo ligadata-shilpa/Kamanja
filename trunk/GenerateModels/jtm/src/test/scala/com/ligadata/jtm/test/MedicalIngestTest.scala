@@ -27,7 +27,7 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 class MedicalIngestTest  extends FunSuite with BeforeAndAfter {
 
   val logger = LogManager.getLogger(this.getClass.getName)
-  
+
   test("test") {
 
     val fileInput = getClass.getResource("/samples/medical/medicalingest.jtm").getPath
