@@ -1255,7 +1255,7 @@ object KamanjaMetadata extends ObjectResolver {
             }
 
             /** An AdapterInfo and AdapterMessageBinding must be present in the metadata to proceed */
-            if (adapter != null && binding != null) {
+            if (adapter != null) {
               val kmgr: KamanjaManager = KamanjaManager.instance
               val (inputAdapters, outputAdapters, storageAdapters, adapterChangedCntr)
               : (Array[InputAdapter], Array[OutputAdapter], Array[DataStore], Long) = kmgr.getAllAdaptersInfo
@@ -1274,36 +1274,46 @@ object KamanjaMetadata extends ObjectResolver {
 
               zkMessage.Operation match {
                 case "Add" => {
-                  if (logger.isDebugEnabled) {
-                    logger.debug("About to add binding to adapter %s with message:%s".format(adapterName, binding.messageName))
-                  }
-                  if (inputAdap != null) inputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                  else if (outputAdap != null) outputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                  else if (storeAdap != null) storeAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
-                  else {
-                    /** It should be impossible to reach this code, hence it was put here */
-                    LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist in the metadata cache!!!!")
+                  if (binding != null) {
+                    if (logger.isDebugEnabled) {
+                      logger.debug("About to add binding to adapter %s with message:%s".format(adapterName, binding.messageName))
+                    }
+                    if (inputAdap != null) inputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else if (outputAdap != null) outputAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else if (storeAdap != null) storeAdap.addMessageBinding(binding.messageName, binding.serializer, binding.options)
+                    else {
+                      /** It should be impossible to reach this code, hence it was put here */
+                      LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist in the metadata cache!!!!")
+                    }
+                    msgBindingChanges = true
+                  } else {
+                    val bindName: String = if (binding != null) binding.FullBindingName else "NO BINDING IN CACHE for " + zkMessage.Name
+                    LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named $bindName (or both) could not be found.  Notification was bad news!!!")
                   }
                 }
                 case "Remove" => {
+                  // This is already removed from cache. So, we need to go with the binding name to get message name
+                  val strArr = zkMessage.Name.split(",", -1)
+                  // BUGBUG for now we are going by offset. Make sure we have a common function to extract adaptername, messagename & ser name from binding
+                  val msgName = strArr(1)
                   if (logger.isDebugEnabled) {
-                    logger.debug("About to remove binding to adapter %s with message:%s".format(adapterName, binding.messageName))
+                    logger.debug("About to remove binding to adapter %s with message:%s".format(adapterName, msgName))
                   }
-                  if (inputAdap != null) inputAdap.removeMessageBinding(binding.messageName)
-                  else if (outputAdap != null) outputAdap.removeMessageBinding(binding.messageName)
-                  else if (storeAdap != null) storeAdap.removeMessageBinding(binding.messageName)
+                  if (inputAdap != null) inputAdap.removeMessageBinding(msgName)
+                  else if (outputAdap != null) outputAdap.removeMessageBinding(msgName)
+                  else if (storeAdap != null) storeAdap.removeMessageBinding(msgName)
                   else {
                     /** It should be impossible to reach this code, hence it was put here */
                     LOG.error(s"The adapter referred to by the zookeeper notification (key=$bindingKey) does not exist!!!!")
                   }
+                  msgBindingChanges = true
                 }
                 case _ => {
                   LOG.error(s"Unknown Operation ${zkMessage.Operation} in zookeeper notification type ${zkMessage.ObjectType}.  The notification is not processed ..")
                 }
               }
-              msgBindingChanges = true
             } else {
-              val bindName: String = if (binding != null) binding.FullBindingName else "NO BINDING IN CACHE"
+              val bindName: String = if (binding != null) binding.FullBindingName else "NO BINDING IN CACHE for " + zkMessage.Name
               LOG.error(s"For zookeeper notification type ${zkMessage.ObjectType} with operation ${zkMessage.Operation}, either an adapter named $adapterName or a cataloged binding named $bindName (or both) could not be found.  Notification was bad news!!!")
             }
           }
