@@ -293,12 +293,14 @@ class JSONSerDes extends SerializeDeserialize {
     val mapJsonHead = "[ "
     val mapJsonTail = " ]"
     sb.append(mapJsonHead)
-    var idx = 0
-    array.foreach(elem => {
-      if (idx > 0) sb.append(", ")
-      idx += 1
-      valueAsJson(sb, 0, elem, elem.isInstanceOf[String])
-    })
+    if (array != null && array.size > 0) {
+      var idx = 0
+      array.foreach(elem => {
+        if (idx > 0) sb.append(", ")
+        idx += 1
+        valueAsJson(sb, 0, elem, elem.isInstanceOf[String])
+      })
+    }
     sb.append(mapJsonTail)
   }
 

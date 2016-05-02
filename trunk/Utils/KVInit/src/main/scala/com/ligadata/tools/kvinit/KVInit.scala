@@ -846,7 +846,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     }
 
     kvstore.setObjectResolver(this)
-    kvstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+    kvstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.kbinaryserdeser", scala.collection.immutable.Map[String, Any]())
     // kvstore.addMessageBinding(typename, deserMsgBindingInfo.serName, deserMsgBindingInfo.options)
 
     dataFiles.foreach(fl => {

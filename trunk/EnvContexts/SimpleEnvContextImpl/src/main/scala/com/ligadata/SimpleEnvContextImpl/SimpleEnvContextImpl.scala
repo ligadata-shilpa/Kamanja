@@ -1549,7 +1549,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
           val tenantPrimaryDatastore = GetDataStoreHandle(_jarPaths, tenantInfo.primaryDataStore)
           if (tenantPrimaryDatastore != null) {
             tenantPrimaryDatastore.setObjectResolver(_objectResolver)
-            tenantPrimaryDatastore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", Map[String, Any]())
+            tenantPrimaryDatastore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.kbinaryserdeser", Map[String, Any]())
           }
           _tenantIdMap(tenantInfo.tenantId.toLowerCase()) = TenantEnvCtxtInfo(tenantInfo, tenantPrimaryDatastore, scala.collection.mutable.Map[String, MsgContainerInfo](), scala.collection.mutable.Set[String]())
         } catch {
@@ -3314,7 +3314,7 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     _sysCatalogDatastore = GetDataStoreHandle(_jarPaths, _sysCatalogDsString)
     if (_sysCatalogDatastore != null) {
       _sysCatalogDatastore.setObjectResolver(_objectResolver)
-      _sysCatalogDatastore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", Map[String, Any]())
+      _sysCatalogDatastore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.kbinaryserdeser", Map[String, Any]())
     }
   }
 
