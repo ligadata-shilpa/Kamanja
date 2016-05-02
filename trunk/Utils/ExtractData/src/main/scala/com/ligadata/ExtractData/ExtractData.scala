@@ -16,12 +16,10 @@
 
 package com.ligadata.ExtractData
 
-import com.ligadata.Exceptions.KamanjaException
-
 import scala.reflect.runtime.universe
 import scala.collection.mutable.ArrayBuffer
 import java.util.Properties
-import org.apache.logging.log4j.{ Logger, LogManager }
+import org.apache.log4j.Logger
 import java.io.{ OutputStream, FileOutputStream, File, BufferedWriter, Writer, PrintWriter }
 import java.util.zip.GZIPOutputStream
 import java.nio.file.{ Paths, Files }
@@ -29,6 +27,9 @@ import scala.reflect.runtime.{ universe => ru }
 import scala.collection.mutable.TreeSet
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
+import java.lang.reflect.Modifier
 import com.ligadata.Serialize._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.kamanja.metadata.MdMgr._
@@ -38,17 +39,29 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.Utils.{ Utils, KamanjaClassLoader, KamanjaLoaderInfo }
 import com.ligadata.Serialize.{ JDataStore }
-import com.ligadata.KvBase.{ Key, TimeRange }
+import com.ligadata.KvBase.{ Key, Value, TimeRange }
 import com.ligadata.StorageBase.{ DataStore, Transaction }
+import com.ligadata.Exceptions.StackTrace
 import java.util.Date
 import java.text.SimpleDateFormat
-import com.ligadata.KamanjaVersion.KamanjaVersion
 
-object ExtractData extends ObjectResolver {
-  private val LOG = LogManager.getLogger(getClass);
+class ExcludeLogger extends ExclusionStrategy {
+  override def shouldSkipField(f: FieldAttributes): Boolean = {
+    //val exclude = f.getName().endsWith("LOG")
+    val exclude = f.getDeclaredClass().getName().equals("org.apache.log4j.Logger")
+    //println("name is " + f.getName() + "type is " + f.getDeclaredClass().getName() + " exclude " + exclude)
+    return exclude
+  }
+  override def shouldSkipClass(c: Class[_]): Boolean = {
+    return false
+  }
+}
+
+object ExtractData extends MdBaseResolveInfo {
+  private val LOG = Logger.getLogger(getClass);
   private val clsLoaderInfo = new KamanjaLoaderInfo
-  private var _currentMessageObj: MessageFactoryInterface = null
-  private var _currentContainerObj: ContainerFactoryInterface = null
+  private var _currentMessageObj: BaseMsgObj = null
+  private var _currentContainerObj: BaseContainerObj = null
   private var _currentTypName: String = ""
   private var jarPaths: Set[String] = null
   private var _dataStore: DataStore = null
@@ -58,33 +71,17 @@ object ExtractData extends ObjectResolver {
   private def PrintUsage(): Unit = {
     LOG.warn("Available options:")
     LOG.warn("    --config <configfilename>")
-    LOG.warn("    --version")
   }
 
-  override def getInstance(MsgContainerType: String): ContainerInterface = {
+  override def getMessgeOrContainerInstance(MsgContainerType: String): MessageContainerBase = {
     if (MsgContainerType.compareToIgnoreCase(_currentTypName) == 0) {
       if (_currentMessageObj != null)
-        return _currentMessageObj.createInstance.asInstanceOf[ContainerInterface]
+        return _currentMessageObj.CreateNewMessage
       if (_currentContainerObj != null)
-        return _currentContainerObj.createInstance.asInstanceOf[ContainerInterface]
+        return _currentContainerObj.CreateNewContainer
     }
     return null
   }
-
-  override def getInstance(schemaId: Long): ContainerInterface = {
-    //BUGBUG:: For now we are getting latest class. But we need to get the old one too.
-    if (mdMgr == null)
-      throw new KamanjaException("Metadata Not found", null)
-
-    val contOpt = mdMgr.ContainerForSchemaId(schemaId.toInt)
-
-    if (contOpt == None)
-      throw new KamanjaException("Container Not found for schemaid:" + schemaId, null)
-
-    getInstance(contOpt.get.FullName)
-  }
-
-  override def getMdMgr: MdMgr = mdMgr
 
   private def LoadJars(elem: BaseElem): Boolean = {
     var retVal: Boolean = true
@@ -120,9 +117,9 @@ object ExtractData extends ObjectResolver {
           }
         } catch {
           case e: Exception => {
-            val errMsg = "Jar " + jarNm + " failed added to class path."
-            logger.error("Error:" + errMsg, e)
-            throw new Exception(errMsg, e)
+            val errMsg = "Jar " + jarNm + " failed added to class path. Reason:%s Message:%s".format(e.getCause, e.getMessage)
+            logger.error("Error:" + errMsg)
+            throw new Exception(errMsg)
           }
         }
       } else {
@@ -150,8 +147,6 @@ object ExtractData extends ObjectResolver {
       case Nil => map
       case "--config" :: value :: tail =>
         nextOption(map ++ Map('config -> value), tail)
-      case "--version" :: tail =>
-        nextOption(map ++ Map('version -> "true"), tail)
       case option :: tail => {
         LOG.error("%s:Unknown option:%s".format(GetCurDtTmStr, option))
         sys.exit(1)
@@ -189,7 +184,7 @@ object ExtractData extends ObjectResolver {
           Class.forName(clsName, true, clsLoaderInfo.loader)
         } catch {
           case e: Exception => {
-            logger.error("Failed to load Message class %s".format(clsName), e)
+            logger.error("Failed to load Message class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
             sys.exit(1)
           }
         }
@@ -198,13 +193,13 @@ object ExtractData extends ObjectResolver {
         var curClz = Class.forName(clsName, true, clsLoaderInfo.loader)
 
         while (curClz != null && isContainer == false) {
-          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.ContainerFactoryInterface")
+          isContainer = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseContainerObj")
           if (isContainer == false)
             curClz = curClz.getSuperclass()
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get classname:%s as message".format(clsName), e)
+          LOG.error("Failed to get classname:%s as message".format(clsName))
           sys.exit(1)
         }
       }
@@ -217,7 +212,7 @@ object ExtractData extends ObjectResolver {
           Class.forName(clsName, true, clsLoaderInfo.loader)
         } catch {
           case e: Exception => {
-            logger.error("Failed to load Container class %s".format(clsName), e)
+            logger.error("Failed to load Container class %s with Reason:%s Message:%s".format(clsName, e.getCause, e.getMessage))
             sys.exit(1)
           }
         }
@@ -226,13 +221,13 @@ object ExtractData extends ObjectResolver {
         var curClz = Class.forName(clsName, true, clsLoaderInfo.loader)
 
         while (curClz != null && isMsg == false) {
-          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
+          isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
           if (isMsg == false)
             curClz = curClz.getSuperclass()
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to get classname:%s as container".format(clsName), e)
+          LOG.error("Failed to get classname:%s as container".format(clsName))
           sys.exit(1)
         }
       }
@@ -244,12 +239,12 @@ object ExtractData extends ObjectResolver {
         val module = mirror.staticModule(clsName)
         val obj = mirror.reflectModule(module)
         val objinst = obj.instance
-        if (objinst.isInstanceOf[MessageFactoryInterface]) {
-          _currentMessageObj = objinst.asInstanceOf[MessageFactoryInterface]
+        if (objinst.isInstanceOf[BaseMsgObj]) {
+          _currentMessageObj = objinst.asInstanceOf[BaseMsgObj]
           _currentTypName = typName
           LOG.debug("Created Message Object")
-        } else if (objinst.isInstanceOf[ContainerFactoryInterface]) {
-          _currentContainerObj = objinst.asInstanceOf[ContainerFactoryInterface]
+        } else if (objinst.isInstanceOf[BaseContainerObj]) {
+          _currentContainerObj = objinst.asInstanceOf[BaseContainerObj]
           _currentTypName = typName
           LOG.debug("Created Container Object")
         } else {
@@ -258,7 +253,7 @@ object ExtractData extends ObjectResolver {
         }
       } catch {
         case e: Exception => {
-          LOG.error("Failed to instantiate message or conatiner object:" + clsName, e)
+          LOG.error("Failed to instantiate message or conatiner object:" + clsName + ". Reason:" + e.getCause + ". Message:" + e.getMessage())
           sys.exit(1)
         }
       }
@@ -271,11 +266,23 @@ object ExtractData extends ObjectResolver {
   private def GetDataStoreHandle(jarPaths: collection.immutable.Set[String], dataStoreInfo: String): DataStore = {
     try {
       logger.debug("Getting DB Connection for dataStoreInfo:%s".format(dataStoreInfo))
-      return KeyValueManager.Get(jarPaths, dataStoreInfo, null, null)
+      return KeyValueManager.Get(jarPaths, dataStoreInfo)
     } catch {
       case e: Exception => {
-        logger.debug("", e)
-        throw e
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        logger.debug("StackTrace:" + stackTrace)
+        throw new Exception(e.getMessage())
+      }
+    }
+  }
+
+  private def deSerializeData(v: Value): MessageContainerBase = {
+    v.serializerType.toLowerCase match {
+      case "manual" => {
+        return SerializeDeserialize.Deserialize(v.serializedInfo, this, clsLoaderInfo.loader, true, "")
+      }
+      case _ => {
+        throw new Exception("Found un-handled Serializer Info: " + v.serializerType)
       }
     }
   }
@@ -284,7 +291,8 @@ object ExtractData extends ObjectResolver {
     val hasValidPrimaryKey = (partKey != null && primaryKey != null && partKey.size > 0 && primaryKey.size > 0)
 
     var os: OutputStream = null
-    val gson = new Gson();
+    //val gson = new Gson();
+    val gson = new GsonBuilder().setExclusionStrategies(new ExcludeLogger()).create()
 
     try {
       val compString = if (compressionString == null) null else compressionString.trim
@@ -299,12 +307,17 @@ object ExtractData extends ObjectResolver {
 
       val ln = "\n".getBytes("UTF8")
 
-      val getObjFn = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
-        val dta = v.asInstanceOf[ContainerInterface]
+      val getObjFn = (k: Key, v: Value) => {
+
+        val dta = deSerializeData(v)
         if (dta != null) {
+          //val aa = dta.getNativeKeyValues
+          //aa.keys.foreach{ i => print(aa(i))}
+          //println("")
+
           if (hasValidPrimaryKey) {
             // Search for primary key match
-            if (primaryKey.sameElements(dta.getPrimaryKey)) {
+            if (primaryKey.sameElements(dta.PrimaryKeyData)) {
               LOG.debug("Primarykey found")
               os.write(gson.toJson(dta).getBytes("UTF8"));
               os.write(ln);
@@ -333,8 +346,9 @@ object ExtractData extends ObjectResolver {
         if (os != null)
           os.close
         os = null
-        logger.debug("", e)
-        throw e
+        val stackTrace = StackTrace.ThrowableTraceString(e)
+        logger.debug("StackTrace:" + stackTrace)
+        throw new Exception("%s:Exception. Message:%s, Reason:%s".format(GetCurDtTmStr, e.getMessage, e.getCause))
       }
     }
 
@@ -351,11 +365,6 @@ object ExtractData extends ObjectResolver {
     try {
       LOG.debug("%s:Parsing options".format(GetCurDtTmStr))
       val options = nextOption(Map(), args.toList)
-      val version = options.getOrElse('version, "false").toString
-      if (version.equalsIgnoreCase("true")) {
-        KamanjaVersion.print
-        return
-      }
       val cfgfile = options.getOrElse('config, "").toString.trim
       if (cfgfile.size == 0) {
         LOG.error("%s:Configuration file missing".format(GetCurDtTmStr))
@@ -407,7 +416,7 @@ object ExtractData extends ObjectResolver {
         sys.exit(1)
       }
 
-      val dataStore = cluster.cfgMap.getOrElse("SystemCatalog", null)
+      val dataStore = cluster.cfgMap.getOrElse("DataStore", null)
       if (dataStore == null) {
         LOG.error("DataStore not found for Node %d  & ClusterId : %s".format(nodeId, nodeInfo.ClusterId))
         sys.exit(1)
@@ -445,7 +454,7 @@ object ExtractData extends ObjectResolver {
       exitCode = 0
     } catch {
       case e: Exception => {
-        LOG.error("%s:Failed to extract data with exception.".format(GetCurDtTmStr), e)
+        LOG.error("%s:Failed to extract data with exception. Reason:%s, Message:%s".format(GetCurDtTmStr, e.getCause, e.getMessage))
         exitCode = 1
       }
     } finally {
@@ -457,4 +466,3 @@ object ExtractData extends ObjectResolver {
     sys.exit(exitCode)
   }
 }
-
