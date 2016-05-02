@@ -6,7 +6,7 @@ import org.json4s.DefaultFormats;
 import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._;
-import com.ligadata.Exceptions.StackTrace;
+import com.ligadata.Exceptions._;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date;
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
@@ -202,7 +202,7 @@ class HL7Fixed(factory: MessageFactoryInterface, other: HL7Fixed) extends Messag
   }
 
   private def getByName(key: String): AnyRef = {
-    if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container hl7Fixed ");
+    if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message/container hl7Fixed ", null);
     return get(keyTypes(key).getIndex)
   }
 
@@ -291,16 +291,10 @@ class HL7Fixed(factory: MessageFactoryInterface, other: HL7Fixed) extends Messag
     return attributeVals;
   }
 
-  override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-    //getAllAttributeValues.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-    return null; // Fix - need to test to make sure the above iterator works properly
-
-  }
-
   override def set(key: String, value: Any) = {
     try {
 
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message HL7Fixed")
+      if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message HL7Fixed", null)
       set(keyTypes(key).getIndex, value);
 
     } catch {

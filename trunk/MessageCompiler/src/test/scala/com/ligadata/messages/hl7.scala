@@ -6,7 +6,7 @@ import org.json4s.DefaultFormats;
 import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._;
-import com.ligadata.Exceptions.StackTrace;
+import com.ligadata.Exceptions._;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date;
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
@@ -218,11 +218,7 @@ class HL7(factory: MessageFactoryInterface, other: HL7) extends MessageInterface
     return valuesMap.map(f => f._2).toArray;
   }
 
-  override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-    //valuesMap.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-    return null;
-  }
-
+  
   override def set(key: String, value: Any) = {
     try {
       val keyName: String = key.toLowerCase();

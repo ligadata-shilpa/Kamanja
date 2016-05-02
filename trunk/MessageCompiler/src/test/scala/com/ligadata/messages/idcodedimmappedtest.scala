@@ -34,7 +34,9 @@ object IdCodeDimMappedTest extends RDDObject[IdCodeDimMappedTest] with Container
 
   override def getPrimaryKeyNames: Array[String] = Array("id");
 
-  override def getTimePartitionInfo: TimePartitionInfo = {
+  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+
+   override def getTimePartitionInfo: TimePartitionInfo = {
     var timePartitionInfo: TimePartitionInfo = new TimePartitionInfo();
     timePartitionInfo.setFieldName("id");
     timePartitionInfo.setFormat("epochtime");
@@ -229,11 +231,6 @@ class IdCodeDimMappedTest(factory: ContainerFactoryInterface, other: IdCodeDimMa
     return valuesMap.map(f => f._2).toArray;
   }
 
-  override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-    //valuesMap.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-    return null;
-  }
-
   override def set(keyName: String, value: Any) = {
     if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
     val key = keyName.toLowerCase;
@@ -243,7 +240,7 @@ class IdCodeDimMappedTest(factory: ContainerFactoryInterface, other: IdCodeDimMa
       } else {
         valuesMap(key) = new AttributeValue(ValueToString(value), new AttributeTypeInfo(key, -1, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0))
       }
-      if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+      if (getTimePartitionInfo != null && getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
         setTimePartitionData;
       }
     } catch {
@@ -266,7 +263,7 @@ class IdCodeDimMappedTest(factory: ContainerFactoryInterface, other: IdCodeDimMa
         val valtypeId = typeCategory.getValue.toShort
         valuesMap(key) = new AttributeValue(value, new AttributeTypeInfo(key, -1, typeCategory, valtypeId, keytypeId, 0))
       }
-      if (getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
+      if (getTimePartitionInfo != null && getTimePartitionInfo.getFieldName != null && getTimePartitionInfo.getFieldName.trim().size > 0 && getTimePartitionInfo.getFieldName.equalsIgnoreCase(key)) {
         setTimePartitionData;
       }
     } catch {
