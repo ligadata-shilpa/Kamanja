@@ -939,37 +939,37 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       if (kafkaTopic == null) {
         logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Topic to populate must be specified")
         shutdown
-        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_TOPIC)
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_TOPIC, null)
       }
 
       if (dirToWatch == null) {
         logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
         shutdown
-        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_WATCH)
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_WATCH, null)
       }
 
       if (dirToMoveTo == null) {
         logger.error("SMART_FILE_CONSUMER ("+partitionId+") Destination directory must be specified")
         shutdown
-        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO)
+        throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO, null)
       }
 
       if (mdConfig == null) {
         logger.error("SMART_FILE_CONSUMER ("+partitionId+") Directory to watch must be specified")
         shutdown
-        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.METADATA_CONFIG_FILE)
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.METADATA_CONFIG_FILE, null)
       }
 
       if (msgName == null) {
         logger.error("SMART_FILE_CONSUMER ("+partitionId+") Message name must be specified")
         shutdown
-        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MESSAGE_NAME)
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MESSAGE_NAME, null)
       }
 
       if (kafkaBroker == null) {
         logger.error("SMART_FILE_CONSUMER ("+partitionId+") Kafka Broker details must be specified")
         shutdown
-        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER)
+        throw new MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.KAFKA_BROKER, null)
       }
 
       FileProcessor.setProperties(props, path)

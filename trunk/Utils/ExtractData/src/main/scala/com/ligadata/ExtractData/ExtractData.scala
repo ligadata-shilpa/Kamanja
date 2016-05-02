@@ -59,8 +59,8 @@ class ExcludeLogger extends ExclusionStrategy {
   }
 }
 
-object ExtractData extends MdBaseResolveInfo {
-  private val LOG = Logger.getLogger(getClass);
+object ExtractData extends ObjectResolver {
+  private val LOG = LogManager.getLogger(getClass);
   private val clsLoaderInfo = new KamanjaLoaderInfo
   private var _currentMessageObj: MessageFactoryInterface = null
   private var _currentContainerObj: ContainerFactoryInterface = null
