@@ -4,17 +4,15 @@ import org.json4s.DefaultFormats;
 import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._;
-import com.ligadata.Exceptions.StackTrace;
+import com.ligadata.Exceptions._;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date;
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
 
-
-
 object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEvent] with MessageFactoryInterface {
 
   val log = LogManager.getLogger(getClass)
-  type T = KamanjaExecutionFailureEvent ;
+  type T = KamanjaExecutionFailureEvent;
   override def getFullTypeName: String = "com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent";
   override def getTypeNameSpace: String = "com.ligadata.KamanjaBase";
   override def getTypeName: String = "KamanjaExecutionFailureEvent";
@@ -34,9 +32,7 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
 
   override def getPrimaryKeyNames: Array[String] = Array[String]();
 
-
-  override def getTimePartitionInfo: TimePartitionInfo = { return null;}  // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
-
+  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
 
   override def hasPrimaryKey(): Boolean = {
     val pKeys = getPrimaryKeyNames();
@@ -62,7 +58,7 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
       if (oldVerobj == null) return null;
       oldVerobj match {
 
-        case oldVerobj: com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent => { return  convertToVer1000000000000(oldVerobj); }
+        case oldVerobj: com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent => { return convertToVer1000000000000(oldVerobj); }
         case _ => {
           throw new Exception("Unhandled Version Found");
         }
@@ -75,18 +71,17 @@ object KamanjaExecutionFailureEvent extends RDDObject[KamanjaExecutionFailureEve
     return null;
   }
 
-  private def convertToVer1000000000000(oldVerobj: com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent): com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent= {
+  private def convertToVer1000000000000(oldVerobj: com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent): com.ligadata.KamanjaBase.KamanjaExecutionFailureEvent = {
     return oldVerobj
   }
-
 
   /****   DEPRECATED METHODS ***/
   override def FullName: String = getFullTypeName
   override def NameSpace: String = getTypeNameSpace
   override def Name: String = getTypeName
   override def Version: String = getTypeVersion
-  override def CreateNewMessage: BaseMsg= createInstance.asInstanceOf[BaseMsg];
-  override def CreateNewContainer: BaseContainer= null;
+  override def CreateNewMessage: BaseMsg = createInstance.asInstanceOf[BaseMsg];
+  override def CreateNewContainer: BaseContainer = null;
   override def IsFixed: Boolean = true
   override def IsKv: Boolean = false
   override def CanPersist: Boolean = false
@@ -115,7 +110,6 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     attributeTypes(6) = new AttributeTypeInfo("deserializer", 6, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
     attributeTypes(7) = new AttributeTypeInfo("errordetail", 7, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
 
-
     return attributeTypes
   }
 
@@ -126,7 +120,7 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     fromFunc(other)
   }
 
-  override def save: Unit = { /* KamanjaExecutionFailureEvent.saveOne(this) */}
+  override def save: Unit = { /* KamanjaExecutionFailureEvent.saveOne(this) */ }
 
   def Clone(): ContainerOrConcept = { KamanjaExecutionFailureEvent.build(this) }
 
@@ -137,12 +131,11 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   override def getAttributeType(name: String): AttributeTypeInfo = {
     if (name == null || name.trim() == "") return null;
     attributeTypes.foreach(attributeType => {
-      if(attributeType.getName == name.toLowerCase())
+      if (attributeType.getName == name.toLowerCase())
         return attributeType
     })
     return null;
   }
-
 
   var msgid: Long = _;
   var timeoferrorepochms: Long = _;
@@ -182,7 +175,7 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   }
 
   private def getByName(key: String): AnyRef = {
-    if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container KamanjaExecutionFailureEvent");
+    if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message/container KamanjaExecutionFailureEvent", null);
     return get(keyTypes(key).getIndex)
   }
 
@@ -253,8 +246,8 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   }
 
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has ( value, attributetypeinfo))
-  var attributeVals = new Array[AttributeValue](8);
-    try{
+    var attributeVals = new Array[AttributeValue](8);
+    try {
       attributeVals(0) = new AttributeValue(this.msgid, keyTypes("msgid"))
       attributeVals(1) = new AttributeValue(this.timeoferrorepochms, keyTypes("timeoferrorepochms"))
       attributeVals(2) = new AttributeValue(this.msgcontent, keyTypes("msgcontent"))
@@ -264,7 +257,7 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
       attributeVals(6) = new AttributeValue(this.deserializer, keyTypes("deserializer"))
       attributeVals(7) = new AttributeValue(this.errordetail, keyTypes("errordetail"))
 
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -274,19 +267,13 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     return attributeVals;
   }
 
-  override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-    //getAllAttributeValues.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-    return null; // Fix - need to test to make sure the above iterator works properly
-
-  }
-
   override def set(key: String, value: Any) = {
     try {
 
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message KamanjaExecutionFailureEvent")
+      if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message KamanjaExecutionFailureEvent", null)
       set(keyTypes(key).getIndex, value);
 
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -295,55 +282,54 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
 
   }
 
-
-  def set(index : Int, value :Any): Unit = {
+  def set(index: Int, value: Any): Unit = {
     if (value == null) throw new Exception(s"Value is null for index $index in message KamanjaExecutionFailureEvent ")
-    try{
+    try {
       index match {
         case 0 => {
-          if(value.isInstanceOf[Long])
+          if (value.isInstanceOf[Long])
             this.msgid = value.asInstanceOf[Long];
           else throw new Exception(s"Value is the not the correct type for field msgid in message KamanjaExecutionFailureEvent")
         }
         case 1 => {
-          if(value.isInstanceOf[Long])
+          if (value.isInstanceOf[Long])
             this.timeoferrorepochms = value.asInstanceOf[Long];
           else throw new Exception(s"Value is the not the correct type for field timeoferrorepochms in message KamanjaExecutionFailureEvent")
         }
         case 2 => {
-          if(value.isInstanceOf[String])
+          if (value.isInstanceOf[String])
             this.msgcontent = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field msgcontent in message KamanjaExecutionFailureEvent")
         }
         case 3 => {
-          if(value.isInstanceOf[String])
+          if (value.isInstanceOf[String])
             this.msgadapterkey = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field msgadapterkey in message KamanjaExecutionFailureEvent")
         }
         case 4 => {
-          if(value.isInstanceOf[String])
+          if (value.isInstanceOf[String])
             this.msgadaptervalue = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field msgadaptervalue in message KamanjaExecutionFailureEvent")
         }
         case 5 => {
-          if(value.isInstanceOf[String])
+          if (value.isInstanceOf[String])
             this.sourceadapter = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field sourceadapter in message KamanjaExecutionFailureEvent")
         }
         case 6 => {
-          if(value.isInstanceOf[String])
+          if (value.isInstanceOf[String])
             this.deserializer = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field deserializer in message KamanjaExecutionFailureEvent")
         }
         case 7 => {
-          if(value.isInstanceOf[String])
+          if (value.isInstanceOf[String])
             this.errordetail = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field errordetail in message KamanjaExecutionFailureEvent")
         }
 
         case _ => throw new Exception(s"$index is a bad index for message KamanjaExecutionFailureEvent");
       }
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -353,7 +339,7 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
   }
 
   override def set(key: String, value: Any, valTyp: String) = {
-    throw new Exception ("Set Func for Value and ValueType By Key is not supported for Fixed Messages" )
+    throw new Exception("Set Func for Value and ValueType By Key is not supported for Fixed Messages")
   }
 
   private def fromFunc(other: KamanjaExecutionFailureEvent): KamanjaExecutionFailureEvent = {
@@ -370,40 +356,40 @@ class KamanjaExecutionFailureEvent(factory: MessageFactoryInterface, other: Kama
     return this;
   }
 
-  def withmsgid(value: Long) : KamanjaExecutionFailureEvent = {
+  def withmsgid(value: Long): KamanjaExecutionFailureEvent = {
     this.msgid = value
     return this
   }
-  def withtimeoferrorepochms(value: Long) : KamanjaExecutionFailureEvent = {
+  def withtimeoferrorepochms(value: Long): KamanjaExecutionFailureEvent = {
     this.timeoferrorepochms = value
     return this
   }
-  def withmsgcontent(value: String) : KamanjaExecutionFailureEvent = {
+  def withmsgcontent(value: String): KamanjaExecutionFailureEvent = {
     this.msgcontent = value
     return this
   }
-  def withmsgadapterkey(value: String) : KamanjaExecutionFailureEvent = {
+  def withmsgadapterkey(value: String): KamanjaExecutionFailureEvent = {
     this.msgadapterkey = value
     return this
   }
-  def withmsgadaptervalue(value: String) : KamanjaExecutionFailureEvent = {
+  def withmsgadaptervalue(value: String): KamanjaExecutionFailureEvent = {
     this.msgadaptervalue = value
     return this
   }
-  def withsourceadapter(value: String) : KamanjaExecutionFailureEvent = {
+  def withsourceadapter(value: String): KamanjaExecutionFailureEvent = {
     this.sourceadapter = value
     return this
   }
-  def withdeserializer(value: String) : KamanjaExecutionFailureEvent = {
+  def withdeserializer(value: String): KamanjaExecutionFailureEvent = {
     this.deserializer = value
     return this
   }
-  def witherrordetail(value: String) : KamanjaExecutionFailureEvent = {
+  def witherrordetail(value: String): KamanjaExecutionFailureEvent = {
     this.errordetail = value
     return this
   }
 
-  def this(factory:MessageFactoryInterface) = {
+  def this(factory: MessageFactoryInterface) = {
     this(factory, null)
   }
 

@@ -115,7 +115,7 @@ public abstract class MessageContainerBase extends ContainerOrConcept {
 
 	public abstract void set(String key, Object value, String valTyp);
 
-	public abstract java.util.Iterator<AttributeValue> getAttributeNameAndValueIterator();
+	//public abstract java.util.Iterator<AttributeValue> getAttributeNameAndValueIterator();
 
 	public void TransactionId(long transId) {
 		this.transactionId = transId;

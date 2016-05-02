@@ -11,6 +11,7 @@ import com.ligadata.kamanja.metadata.MessageDef
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.messages.V1000000._;
 import com.ligadata.messages.V1000000000000._;
+import com.ligadata.messages.V10000001000000._;
 import scala.collection.mutable._
 import java.io.File
 import java.io.PrintWriter
@@ -18,8 +19,8 @@ import org.apache.logging.log4j.{ Logger, LogManager }
 import com.ligadata.KamanjaBase._;
 
 class MessageCompilerTestSuite extends FunSuite {
- val log = LogManager.getLogger(getClass)
-  
+  val log = LogManager.getLogger(getClass)
+
   test("Process Message Compiler") {
     val mdLoader: MetadataLoad = new MetadataLoad(MdMgr.GetMdMgr, "", "", "", "")
     mdLoader.initialize
@@ -42,7 +43,7 @@ class MessageCompilerTestSuite extends FunSuite {
     assert(hl7Fixed.getTimePartitionData === 126230400000L)
   }
 
-  test("Test Message - InpatientClaimFixedTest") {
+  test("Test Fixed Message - InpatientClaimFixedTest") {
     var inpatientClaimFixedTest: InpatientClaimFixedTest = new InpatientClaimFixedTest(InpatientClaimFixedTest);
     var idCodeDimFixedTest = new IdCodeDimFixedTest(IdCodeDimFixedTest);
 
@@ -52,7 +53,7 @@ class MessageCompilerTestSuite extends FunSuite {
     idCodeDimFixedTest.set(2, "Test")
     idCodeDimFixedTest.set(3, scala.collection.immutable.Map("test" -> 1))
     idCodeDimFixedTestArray(0) = idCodeDimFixedTest
-    
+
     inpatientClaimFixedTest.set(0, "100")
     inpatientClaimFixedTest.set(1, 1000L)
     inpatientClaimFixedTest.set(2, Array("icddgs"))
@@ -62,19 +63,28 @@ class MessageCompilerTestSuite extends FunSuite {
     inpatientClaimFixedTest.set(6, scala.collection.immutable.Map("icd" -> idCodeDimFixedTest))
     inpatientClaimFixedTest.set(7, idCodeDimFixedTest)
     inpatientClaimFixedTest.set(8, idCodeDimFixedTestArray)
-    
-    log.info("inpatientClaimFixedTest  "+inpatientClaimFixedTest.get(5))
-    
-     assert(inpatientClaimFixedTest.get(0) === "100")
-     assert(inpatientClaimFixedTest.get(1) === 1000)
-     assert(inpatientClaimFixedTest.get(2) === Array("icddgs"))
-     assert(inpatientClaimFixedTest.get(4) === true)
-     val idCodeDim = inpatientClaimFixedTest.get(7)
-     if(idCodeDim.isInstanceOf[IdCodeDimFixedTest]){
-       assert(idCodeDim.asInstanceOf[ContainerInterface].get(0) === 1)
-       assert(idCodeDim.asInstanceOf[IdCodeDimFixedTest].code === 2)
-       log.info("inpatientClaimFixedTest  "+idCodeDim.asInstanceOf[ContainerInterface].get(0))
-     }
+
+    log.info("inpatientClaimFixedTest  " + inpatientClaimFixedTest.get(5))
+
+    assert(inpatientClaimFixedTest.get(0) === "100")
+    assert(inpatientClaimFixedTest.get(1) === 1000)
+    assert(inpatientClaimFixedTest.get(2) === Array("icddgs"))
+    assert(inpatientClaimFixedTest.get(4) === true)
+    val idCodeDim = inpatientClaimFixedTest.get(7)
+    if (idCodeDim.isInstanceOf[IdCodeDimFixedTest]) {
+      assert(idCodeDim.asInstanceOf[ContainerInterface].get(0) === 1)
+      assert(idCodeDim.asInstanceOf[IdCodeDimFixedTest].code === 2)
+      log.info("inpatientClaimFixedTest  " + idCodeDim.asInstanceOf[ContainerInterface].get(0))
+    }
+  }
+
+  test("Test Mapped Message - InpatientClaimMappedTest") {
+    var idCodeDimMappedTest = new IdCodeDimMappedTest(IdCodeDimMappedTest);
+    idCodeDimMappedTest.set("id", 1)
+    idCodeDimMappedTest.set("code", 2)
+    idCodeDimMappedTest.set("description", "Test")
+    idCodeDimMappedTest.set("codes", scala.collection.immutable.Map("test" -> 1))
+    assert(idCodeDimMappedTest.get("id") === 1)
   }
 
   private def createScalaFile(scalaClass: String, version: String, className: String, clstype: String): Unit = {

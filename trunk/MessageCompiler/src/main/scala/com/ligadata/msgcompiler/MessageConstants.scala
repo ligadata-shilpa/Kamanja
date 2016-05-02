@@ -99,7 +99,7 @@ import org.json4s.DefaultFormats;
 import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._;
-import com.ligadata.Exceptions.StackTrace;
+import com.ligadata.Exceptions._;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date;
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
@@ -328,7 +328,7 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
       getSetMapped.append(getAttibuteNamesMapped)
       getSetMapped.append(getByIndexMapped)
       getSetMapped.append(getAllAttributes)
-      getSetMapped.append(getAttributeNameAndValueIteratorMapped)
+    //  getSetMapped.append(getAttributeNameAndValueIteratorMapped)
       getSetMapped.append(setByNameFuncForMappedMsgs)
       getSetMapped.append(setValueAndValTypByKeyMapped)
       getSetMapped.append(setByIndex)
