@@ -44,4 +44,6 @@ object SmartFileAdapterConstants {
   //Applicable content types, sniff them via Apache TIKA
   val VALID_CONTENT_TYPES="allow.content"
 
+  val DESERIALIZERNAME = "deserializerName"
+  val DESERIALIZEROPTIONSJSON = "deserializerOptionsJson"
 }

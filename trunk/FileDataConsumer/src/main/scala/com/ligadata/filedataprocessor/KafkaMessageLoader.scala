@@ -23,6 +23,8 @@ import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.apache.kafka.common.serialization.ByteArraySerializer
 import org.apache.kafka.clients.producer.ProducerConfig
+import org.json4s.jackson.JsonMethods._
+import org.json4s.{DefaultFormats, Formats}
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Promise
 import java.util.regex.Pattern
@@ -31,7 +33,7 @@ import java.util.regex.Pattern
 /**
  * Created by danielkozin on 9/24/15.
  */
-class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable.Map[String, String]) {
+class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable.Map[String, String]) extends ObjectResolver {
   var fileBeingProcessed: String = ""
   var numberOfMessagesProcessedInFile: Int = 0
   var currentOffset: Int = 0
@@ -73,16 +75,28 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   val producer = new KafkaProducer[Array[Byte], Array[Byte]](props)
   var numPartitionsForMainTopic = producer.partitionsFor(inConfiguration(SmartFileAdapterConstants.KAFKA_TOPIC))
 
-  var delimiters = new DataDelimiters
-  var msgFormatType = inConfiguration.getOrElse(SmartFileAdapterConstants.MSG_FORMAT,null)
-  if (msgFormatType == null) {
-    shutdown
-    throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MSG_FORMAT, null)
-  }
+//  var delimiters = new DataDelimiters
+//  var msgFormatType = inConfiguration.getOrElse(SmartFileAdapterConstants.MSG_FORMAT,null)
+//  if (msgFormatType == null) {
+//    shutdown
+//    throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MSG_FORMAT, null)
+//  }
+//
+//  delimiters.keyAndValueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.KV_SEPARATOR, ":")
+//  delimiters.fieldDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.FIELD_SEPARATOR, ":")
+//  delimiters.valueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.VALUE_SEPARATOR, "~")
 
-  delimiters.keyAndValueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.KV_SEPARATOR, ":")
-  delimiters.fieldDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.FIELD_SEPARATOR, ":")
-  delimiters.valueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.VALUE_SEPARATOR, "~")
+  val keyAndValueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.KV_SEPARATOR, ":")
+  val fieldDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.FIELD_SEPARATOR, ":")
+  val valueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.VALUE_SEPARATOR, "~")
+
+  val deserializerName = inConfiguration.getOrElse(SmartFileAdapterConstants.DESERIALIZERNAME, "").trim.toLowerCase()
+  val deserializerOptionsJson = inConfiguration.getOrElse(SmartFileAdapterConstants.DESERIALIZEROPTIONSJSON, "")
+
+  if (deserializerName == null || deserializerName.size == 0) {
+    shutdown
+    throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.DESERIALIZERNAME, null)
+  }
 
   var debug_IgnoreKafka = inConfiguration.getOrElse("READ_TEST_ONLY", "FALSE")
   var status_frequency: Int = inConfiguration.getOrElse(SmartFileAdapterConstants.STATUS_FREQUENCY, "100000").toInt
@@ -92,10 +106,78 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
 
   val zkcConnectString = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
   logger.debug(partIdx + " SMART FILE CONSUMER Using zookeeper " + zkcConnectString)
-  var objInst: Any = configureMessageDef
+  var (objInst, objFullName) = configureMessageDef
   if (objInst == null) {
     shutdown
     throw UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME), null)
+  }
+
+  val deserMsgBindingInfo = ResolveDeserializer(deserializerName, deserializerOptionsJson)
+
+  if (deserMsgBindingInfo == null || deserMsgBindingInfo.serInstance == null) {
+    throw new KamanjaException("Unable to resolve deserializer:" + deserializerName, null)
+  }
+
+  override def getInstance(MsgContainerType: String): ContainerInterface = {
+    if (MsgContainerType.compareToIgnoreCase(objFullName) != 0)
+      return null
+    // Simply creating new object and returning. Not checking for MsgContainerType. This is issue if the child level messages ask for the type
+    return objInst.createInstance
+  }
+
+  override def getInstance(schemaId: Long): ContainerInterface = {
+    //BUGBUG:: For now we are getting latest class. But we need to get the old one too.
+    if (mdMgr == null)
+      throw new KamanjaException("Metadata Not found", null)
+
+    val contOpt = mdMgr.ContainerForSchemaId(schemaId.toInt)
+
+    if (contOpt == None)
+      throw new KamanjaException("Container Not found for schemaid:" + schemaId, null)
+
+    getInstance(contOpt.get.FullName)
+  }
+
+  override def getMdMgr = mdMgr
+
+  private def ResolveDeserializer(deserializer: String, optionsjson: String): MsgBindingInfo = {
+    val serInfo = mdMgr.GetSerializer(deserializer)
+    if (serInfo == null) {
+      throw new KamanjaException(s"Not found Serializer/Deserializer for ${deserializer}", null)
+    }
+
+    val phyName = serInfo.PhysicalName
+    if (phyName == null) {
+      throw new KamanjaException(s"Not found Physical name for Serializer/Deserializer for ${deserializer}", null)
+    }
+
+    try {
+      val aclass = Class.forName(phyName).newInstance
+      val ser = aclass.asInstanceOf[SerializeDeserialize]
+
+      val map = new java.util.HashMap[String, String] //BUGBUG:: we should not convert the 2nd param to String. But still need to see how can we convert scala map to java map
+      var options: collection.immutable.Map[String, Any] = null
+      if (optionsjson != null) {
+        implicit val jsonFormats: Formats = DefaultFormats
+        val validJson = parse(optionsjson)
+
+        options = validJson.values.asInstanceOf[collection.immutable.Map[String, Any]]
+        if (options != null) {
+          options.foreach(o => {
+            map.put(o._1, o._2.toString)
+          })
+        }
+      }
+      ser.configure(this, map)
+      ser.setObjectResolver(this)
+      return MsgBindingInfo(deserializer, options, optionsjson, ser)
+    } catch {
+      case e: Throwable => {
+        throw new KamanjaException(s"Failed to resolve Physical name ${phyName} in Serializer/Deserializer for ${deserializer}", e)
+      }
+    }
+
+    return null // Should not come here
   }
 
   /**
@@ -152,26 +234,29 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         return
       }
 
-
       if (!msg.isLastDummy) {
         numberOfValidEvents += 1
-        var inputData: InputData = null
+//        var inputData: InputData = null
         var msgStr :String = null
         try {
           
           //Pass in the complete message instead of just the message string
-          inputData = CreateKafkaInput(msg, SmartFileAdapterConstants.MESSAGE_NAME, delimiters)
+//          inputData = CreateKafkaInput(msg, SmartFileAdapterConstants.MESSAGE_NAME, delimiters)
           msgStr = new String(msg.msg)
           if(message_metadata && !msgStr.startsWith("fileId")){
-            msgStr = "fileId" + delimiters.keyAndValueDelimiter + FileProcessor.getIDFromFileCache(msg.relatedFileName) +
-              delimiters.fieldDelimiter +
-              "fileOffset" + delimiters.keyAndValueDelimiter + msg.msgOffset.toString() +
-              delimiters.fieldDelimiter + msgStr
+            msgStr = "fileId" + keyAndValueDelimiter + FileProcessor.getIDFromFileCache(msg.relatedFileName) +
+              fieldDelimiter +
+              "fileOffset" + keyAndValueDelimiter + msg.msgOffset.toString() +
+              fieldDelimiter + msgStr
           }
           
           currentOffset += 1
 
-          val partitionKey = objInst.asInstanceOf[MessageContainerObjBase].PartitionKeyData(inputData).mkString(",")
+          // val partitionKey = objInst.asInstanceOf[MessageContainerObjBase].PartitionKeyData(inputData).mkString(",")
+
+          // BUGBUG:: Previously we were using msg.msg. Should we use msgStr or msg.msg.
+          val container = deserMsgBindingInfo.serInstance.deserialize(msgStr.getBytes(), objFullName)
+          val partitionKey = container.getPartitionKey.mkString(",")
 
           // By far the most common path..  just add the message
           if (msg.offsetInFile == FileProcessor.NOT_RECOVERY_SITUATION) {
@@ -510,75 +595,76 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
 
   /**
    *
-   * @param inputData
-   * @param associatedMsg
-   * @param delimiters
-   * @return
+    * //   * @param inputData
+    * //   * @param associatedMsg
+    * //   * @param delimiters
+    * //   * @return
    */
-  private def CreateKafkaInput(inputData: KafkaMessage, associatedMsg: String, delimiters: DataDelimiters): InputData = {
-    
-    val msgStr = new String(inputData.msg)
-    
-    if (associatedMsg == null || associatedMsg.size == 0) {
-      throw new Exception("KV data expecting Associated messages as input.")
-    }
-
-    if (delimiters.fieldDelimiter == null) delimiters.fieldDelimiter = ","
-    if (delimiters.valueDelimiter == null) delimiters.valueDelimiter = "~"
-    if (delimiters.keyAndValueDelimiter == null) delimiters.keyAndValueDelimiter = "\\x01"
-    
-    //Add Patterns
-    val fieldPattern = Pattern.quote(delimiters.fieldDelimiter)
-    val kvPattern = Pattern.quote(delimiters.keyAndValueDelimiter)
-    val valuePattern = Pattern.quote(delimiters.valueDelimiter)
-
-    val str_arr = msgStr.split(fieldPattern, -1)
-    
-    val inpData = new KvData(msgStr, delimiters)
-    val dataMap = scala.collection.mutable.Map[String, String]()
-
-    if (delimiters.fieldDelimiter.compareTo(delimiters.keyAndValueDelimiter) == 0) {
-      if (str_arr.size % 2 != 0) {
-        
-        val errStr1 = "Expecting Key & Value pairs are even number of tokens when FieldDelimiter & KeyAndValueDelimiter are matched. We got %d tokens from input string %s".format(str_arr.size, msgStr)
-        val errStr2 = "Expecting Key & Value pairs to be even number of tokens when FieldDelimiter & KeyAndValueDelimiter are matched. We got %d tokens from input string %s, reading file %s at offset %d".format(str_arr.size, msgStr, inputData.relatedFileName, inputData.msgOffset)
-        
-        //Flag to handle logging the exception metadata
-        if(exception_metadata){
-          logger.error(errStr2)
-          throw KVMessageFormatingException(errStr2, null)
-        }else{
-          logger.error(errStr1)
-          throw KVMessageFormatingException(errStr1, null)
-        }
-        
-      }
-      for (i <- 0 until str_arr.size by 2) {
-        dataMap(str_arr(i).trim) = str_arr(i + 1)
-      }
-    } else {
-      str_arr.foreach(kv => {
-        val kvpair = kv.split(kvPattern)
-        if (kvpair.size != 2) {
-          throw KVMessageFormatingException("Expecting Key & Value pair only ", null)
-        }
-        dataMap(kvpair(0).trim) = kvpair(1)
-      })
-    }
-    
-    inpData.dataMap = dataMap.toMap
-    inpData
-
-  }
+//  private def CreateKafkaInput(inputData: KafkaMessage, associatedMsg: String, delimiters: DataDelimiters): InputData = {
+//
+//    val msgStr = new String(inputData.msg)
+//
+//    if (associatedMsg == null || associatedMsg.size == 0) {
+//      throw new Exception("KV data expecting Associated messages as input.")
+//    }
+//
+//    if (delimiters.fieldDelimiter == null) delimiters.fieldDelimiter = ","
+//    if (delimiters.valueDelimiter == null) delimiters.valueDelimiter = "~"
+//    if (delimiters.keyAndValueDelimiter == null) delimiters.keyAndValueDelimiter = "\\x01"
+//
+//    //Add Patterns
+//    val fieldPattern = Pattern.quote(delimiters.fieldDelimiter)
+//    val kvPattern = Pattern.quote(delimiters.keyAndValueDelimiter)
+//    val valuePattern = Pattern.quote(delimiters.valueDelimiter)
+//
+//    val str_arr = msgStr.split(fieldPattern, -1)
+//
+//    val inpData = new KvData(msgStr, delimiters)
+//    val dataMap = scala.collection.mutable.Map[String, String]()
+//
+//    if (delimiters.fieldDelimiter.compareTo(delimiters.keyAndValueDelimiter) == 0) {
+//      if (str_arr.size % 2 != 0) {
+//
+//        val errStr1 = "Expecting Key & Value pairs are even number of tokens when FieldDelimiter & KeyAndValueDelimiter are matched. We got %d tokens from input string %s".format(str_arr.size, msgStr)
+//        val errStr2 = "Expecting Key & Value pairs to be even number of tokens when FieldDelimiter & KeyAndValueDelimiter are matched. We got %d tokens from input string %s, reading file %s at offset %d".format(str_arr.size, msgStr, inputData.relatedFileName, inputData.msgOffset)
+//
+//        //Flag to handle logging the exception metadata
+//        if(exception_metadata){
+//          logger.error(errStr2)
+//          throw KVMessageFormatingException(errStr2, null)
+//        }else{
+//          logger.error(errStr1)
+//          throw KVMessageFormatingException(errStr1, null)
+//        }
+//
+//      }
+//      for (i <- 0 until str_arr.size by 2) {
+//        dataMap(str_arr(i).trim) = str_arr(i + 1)
+//      }
+//    } else {
+//      str_arr.foreach(kv => {
+//        val kvpair = kv.split(kvPattern)
+//        if (kvpair.size != 2) {
+//          throw KVMessageFormatingException("Expecting Key & Value pair only ", null)
+//        }
+//        dataMap(kvpair(0).trim) = kvpair(1)
+//      })
+//    }
+//
+//    inpData.dataMap = dataMap.toMap
+//    inpData
+//
+//  }
 
   /**
    *
    * @return
    */
-  private def configureMessageDef(): com.ligadata.KamanjaBase.BaseMsgObj = {
+  private def configureMessageDef(): (com.ligadata.KamanjaBase.MessageFactoryInterface, String) = {
     val loaderInfo = new KamanjaLoaderInfo()
     var msgDef: MessageDef = null
-    var baseMsgObj: com.ligadata.KamanjaBase.BaseMsgObj = null
+    var baseMsgObj: com.ligadata.KamanjaBase.MessageFactoryInterface = null
+    var objFullName: String = null
     try {
       val (typNameSpace, typName) = com.ligadata.kamanja.metadata.Utils.parseNameTokenNoVersion(inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
     //  msgDef =  FileProcessor.getMsgDef(typNameSpace,typName) //
@@ -633,7 +719,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
 
       var isMsg = false
       while (curClz != null && isMsg == false) {
-        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.BaseMsgObj")
+        isMsg = Utils.isDerivedFrom(curClz, "com.ligadata.KamanjaBase.MessageFactoryInterface")
         if (isMsg == false)
           curClz = curClz.getSuperclass()
       }
@@ -643,8 +729,9 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           // Trying Singleton Object
           val module = loaderInfo.mirror.staticModule(clsName)
           val obj = loaderInfo.mirror.reflectModule(module)
-          objInst = obj.instance
-          baseMsgObj = objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
+          val objInst = obj.instance
+          objFullName = msgDef.FullName
+          baseMsgObj = objInst.asInstanceOf[com.ligadata.KamanjaBase.MessageFactoryInterface]
         } catch {
           case e: java.lang.NoClassDefFoundError => {
             logger.error("SMART FILE CONSUMER:  ERROR", e)
@@ -652,8 +739,9 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
           }
           case e: Exception => {
             try {
-              objInst = tempCurClass.newInstance
-              baseMsgObj = objInst.asInstanceOf[com.ligadata.KamanjaBase.BaseMsgObj]
+              val objInst = tempCurClass.newInstance
+              objFullName = msgDef.FullName
+              baseMsgObj = objInst.asInstanceOf[com.ligadata.KamanjaBase.MessageFactoryInterface]
             } catch {
               case e: Throwable => {
                 logger.error("SMART FILE CONSUMER:  ERROR", e)
@@ -668,7 +756,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         }
       }
     })
-    return baseMsgObj
+    return (baseMsgObj, objFullName)
   }
 
   private def getPartition(key: Any, numPartitions: Int): Int = {
