@@ -201,6 +201,17 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
 
       } while (lastReadLen > 0)
 
+      //now if readlen>0 means there is one last message.
+      //most likely this happens if last message is not followed by the separator
+      if(readlen > 0){
+        val lastMsg: Array[Byte] = byteBuffer.slice(0, readlen)
+        currentMsgNum += 1
+        val msgOffset = globalOffset + lastMsg.length + message_separator_len //byte offset of next message in the file
+        val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, false, false, fileHandler, null, msgOffset)
+        messageFoundCallback(smartFileMessage, consumerContext)
+
+      }
+
     }
     catch {
       case ioe: IOException => {
