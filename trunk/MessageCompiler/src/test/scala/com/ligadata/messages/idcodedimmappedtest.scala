@@ -34,9 +34,9 @@ object IdCodeDimMappedTest extends RDDObject[IdCodeDimMappedTest] with Container
 
   override def getPrimaryKeyNames: Array[String] = Array("id");
 
-  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+  // override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
 
-   override def getTimePartitionInfo: TimePartitionInfo = {
+  override def getTimePartitionInfo: TimePartitionInfo = {
     var timePartitionInfo: TimePartitionInfo = new TimePartitionInfo();
     timePartitionInfo.setFieldName("id");
     timePartitionInfo.setFormat("epochtime");
