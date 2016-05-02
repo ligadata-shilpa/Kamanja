@@ -189,26 +189,28 @@ object Utils {
     if (jars != null) {
       // Loading all jars
       for (j <- jars) {
-        logger.debug("Processing Jar " + j.trim)
-        val fl = new File(j.trim)
-        if (fl.exists) {
-          try {
-            if (loadedJars(fl.getPath())) {
-              logger.debug("Jar " + j.trim + " already loaded to class path.")
-            } else {
-              loader.addURL(fl.toURI().toURL())
-              logger.debug("Jar " + j.trim + " added to class path.")
-              loadedJars += fl.getPath()
+        if (j != null) {
+          logger.debug("Processing Jar " + j.trim)
+          val fl = new File(j.trim)
+          if (fl.exists) {
+            try {
+              if (loadedJars(fl.getPath())) {
+                logger.debug("Jar " + j.trim + " already loaded to class path.")
+              } else {
+                loader.addURL(fl.toURI().toURL())
+                logger.debug("Jar " + j.trim + " added to class path.")
+                loadedJars += fl.getPath()
+              }
+            } catch {
+              case e: Exception => {
+                logger.error("Jar " + j.trim + " failed added to class path.", e)
+                return false
+              }
             }
-          } catch {
-            case e: Exception => {
-              logger.error("Jar " + j.trim + " failed added to class path.", e)
-              return false
-            }
+          } else {
+            logger.error("Jar " + j.trim + " not found")
+            return false
           }
-        } else {
-          logger.error("Jar " + j.trim + " not found")
-          return false
         }
       }
     }
