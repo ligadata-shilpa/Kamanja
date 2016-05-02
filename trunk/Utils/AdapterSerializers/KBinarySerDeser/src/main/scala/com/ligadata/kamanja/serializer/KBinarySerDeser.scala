@@ -178,7 +178,7 @@ class KBinarySerDeser extends SerializeDeserialize {
         WriteFldInfo(dos, fld)
       valueType.getTypeCategory match {
         case MAP => mapAsKBinary(dos, valueType, rawValue.asInstanceOf[scala.collection.immutable.Map[Any, Any]])
-        case ARRAY => arrayAsKBinary(dos, valueType, rawValue.asInstanceOf[Array[Any]])
+        case ARRAY => arrayAsKBinary(dos, valueType, rawValue.asInstanceOf[Array[_]])
         case (MESSAGE | CONTAINER) => serializeContainer(dos, valueType.getName, rawValue.asInstanceOf[ContainerInterface])
         case (BOOLEAN | BYTE | CHAR | LONG | DOUBLE | FLOAT | INT | STRING) => WriteVal(dos, valueType.getTypeCategory, rawValue)
         case _ => throw new UnsupportedObjectException(s"container type ${valueType.getName} not currently serializable", null)
@@ -269,7 +269,7 @@ class KBinarySerDeser extends SerializeDeserialize {
       valType match {
         case (BOOLEAN | BYTE | CHAR | LONG | INT | FLOAT | DOUBLE | STRING) => WriteVal(dos, valType, v)
         case MAP => mapGenericAsKBinary(dos, v.asInstanceOf[scala.collection.immutable.Map[Any, Any]])
-        case ARRAY => arrayGenericAsKBinary(dos, v.asInstanceOf[Array[Any]])
+        case ARRAY => arrayGenericAsKBinary(dos, v.asInstanceOf[Array[_]])
         case (CONTAINER | MESSAGE) => serializeContainer(dos, "", v.asInstanceOf[ContainerInterface])
         case NONE => ; // shouldn't match this
       }
@@ -286,7 +286,7 @@ class KBinarySerDeser extends SerializeDeserialize {
     * @return Unit
     */
   @throws(classOf[IOException])
-  private def arrayAsKBinary(dos: DataOutputStream, attribType: AttributeTypeInfo, array: Array[Any]): Unit = {
+  private def arrayAsKBinary(dos: DataOutputStream, attribType: AttributeTypeInfo, array: Array[_]): Unit = {
     val itmType = attribType.getTypeCategory
     val memberCnt = if (array == null) 0 else array.size
     Debug(s"KBinarySerDeser:arrayAsKBinary ->, itmType: ${itmType.getValue}, array.size: $memberCnt")
@@ -297,7 +297,7 @@ class KBinarySerDeser extends SerializeDeserialize {
         itmType match {
           case (BOOLEAN | BYTE | LONG | CHAR | INT | FLOAT | DOUBLE | STRING) => WriteVal(dos, itmType, itm)
           case MAP => mapGenericAsKBinary(dos, itm.asInstanceOf[scala.collection.immutable.Map[Any, Any]])
-          case ARRAY => arrayGenericAsKBinary(dos, itm.asInstanceOf[Array[Any]])
+          case ARRAY => arrayGenericAsKBinary(dos, itm.asInstanceOf[Array[_]])
           case (CONTAINER | MESSAGE) => serializeContainer(dos, "", itm.asInstanceOf[ContainerInterface])
           case NONE => ; // shouldn't match this
         }
@@ -346,7 +346,7 @@ class KBinarySerDeser extends SerializeDeserialize {
     }
   }
 
-  private def arrayGenericAsKBinary(dos: DataOutputStream, array: Array[Any]): Unit = {
+  private def arrayGenericAsKBinary(dos: DataOutputStream, array: Array[_]): Unit = {
     val memberCnt = if (array == null) 0 else array.size
     val itmType = arrayElemType(array)
     if ((array != null) && (itmType == NONE))
