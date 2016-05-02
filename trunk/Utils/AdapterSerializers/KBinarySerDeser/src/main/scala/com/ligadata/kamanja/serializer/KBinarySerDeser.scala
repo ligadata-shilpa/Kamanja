@@ -287,12 +287,12 @@ class KBinarySerDeser extends SerializeDeserialize {
     */
   @throws(classOf[IOException])
   private def arrayAsKBinary(dos: DataOutputStream, attribType: AttributeTypeInfo, array: Array[_]): Unit = {
-    val itmType = attribType.getTypeCategory
+    val itmType = attribType.getValTypeCategory
     val memberCnt = if (array == null) 0 else array.size
     Debug(s"KBinarySerDeser:arrayAsKBinary ->, itmType: ${itmType.getValue}, array.size: $memberCnt")
     WriteArrayHeader(dos, ArrayHeader(itmType, memberCnt))
 
-    if (array != null) {
+    if (array != null && memberCnt > 0) {
       array.foreach(itm => {
         itmType match {
           case (BOOLEAN | BYTE | LONG | CHAR | INT | FLOAT | DOUBLE | STRING) => WriteVal(dos, itmType, itm)
