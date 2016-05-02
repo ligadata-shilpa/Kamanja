@@ -77,7 +77,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   var msgFormatType = inConfiguration.getOrElse(SmartFileAdapterConstants.MSG_FORMAT,null)
   if (msgFormatType == null) {
     shutdown
-    throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MSG_FORMAT)
+    throw MissingPropertyException("Missing Paramter: " + SmartFileAdapterConstants.MSG_FORMAT, null)
   }
 
   delimiters.keyAndValueDelimiter = inConfiguration.getOrElse(SmartFileAdapterConstants.KV_SEPARATOR, ":")
@@ -95,7 +95,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
   var objInst: Any = configureMessageDef
   if (objInst == null) {
     shutdown
-    throw UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
+    throw UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME), null)
   }
 
   /**
@@ -546,10 +546,10 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         //Flag to handle logging the exception metadata
         if(exception_metadata){
           logger.error(errStr2)
-          throw KVMessageFormatingException(errStr2)
+          throw KVMessageFormatingException(errStr2, null)
         }else{
           logger.error(errStr1)
-          throw KVMessageFormatingException(errStr1)
+          throw KVMessageFormatingException(errStr1, null)
         }
         
       }
@@ -560,7 +560,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       str_arr.foreach(kv => {
         val kvpair = kv.split(kvPattern)
         if (kvpair.size != 2) {
-          throw KVMessageFormatingException("Expecting Key & Value pair only ")
+          throw KVMessageFormatingException("Expecting Key & Value pair only ", null)
         }
         dataMap(kvpair(0).trim) = kvpair(1)
       })
@@ -587,19 +587,19 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
       case e: Exception => {
         shutdown
         logger.error("Unable to to parse message defintion", e)
-        throw new UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
+        throw new UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME), null)
       }
       case e: Throwable => {
         shutdown
         logger.error("Unable to to parse message defintion", e)
-        throw new UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
+        throw new UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME), null)
       }
     }
 
     if (msgDef == null) {
       shutdown
       logger.error("Unable to to retrieve message defintion")
-      throw UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME))
+      throw UnsupportedObjectException("Unknown message definition " + inConfiguration(SmartFileAdapterConstants.MESSAGE_NAME), null)
     }
     // Just in case we want this to deal with more then 1 MSG_DEF in a future.  - msgName paramter will probably have to
     // be an array inthat case.. but for now......
