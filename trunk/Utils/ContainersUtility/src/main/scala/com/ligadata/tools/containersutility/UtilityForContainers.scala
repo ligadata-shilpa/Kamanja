@@ -402,9 +402,13 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
 
     containerObj.foreach(item => {
       if (item.keys.size == 0) {
-        var timerange = new TimeRange(item.begintime.toLong, item.endtime.toLong)
-        //logger.info("select data from %s container for timeranges: BeginTime: %d - EndTime: %d".format(typename,timerange.beginTime,timerange.endTime))
-        kvstore.get(typename, Array(timerange), retriveData)
+        if(item.begintime.equals("-1") && item.endtime.equals("-1")){
+          kvstore.get(typename, retriveData)
+        } else {
+          var timerange = new TimeRange(item.begintime.toLong, item.endtime.toLong)
+          //logger.info("select data from %s container for timeranges: BeginTime: %d - EndTime: %d".format(typename,timerange.beginTime,timerange.endTime))
+          kvstore.get(typename, Array(timerange), retriveData)
+        }
       } else  if (item.begintime.equals(Long.MinValue.toString) || item.endtime.equals(Long.MaxValue.toString)) {
         kvstore.get(typename, item.keys, retriveData)
       } else {
