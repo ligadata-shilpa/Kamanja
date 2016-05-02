@@ -115,7 +115,6 @@ Like the other examples, you can also push this directly on the command line too
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '[{"AdapterName": "kafkaAdapterInput1", "MessageNames": ["com.botanical.json.ordermsg", "com.botanical.json.shippingmsg"], "Serializer": "com.ligadata.kamanja.serializer.JsonSerDeser"}, {"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.emailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": "true", "alwaysQuoteFields": "false"} }, {"AdapterName": "hBaseStore1", "MessageNames": ["com.botanical.json.audit.ordermsg", "com.botanical.json.audit.shippingmsg"], "Serializer": "com.ligadata.kamanja.serializer.JsonSerDeser"} ]'
 
 
-
 **List Adapter Message Bindings**
 
 The following list commands are supported:
@@ -136,6 +135,19 @@ Removal of a binding is accomplished with this command.
 _Remove the supplied binding key_
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding key 'hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser'
+
+
+[
+  "kafkaAdapterInput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser",
+  "kafkaAdapterInput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser",
+  "hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser",
+  "hBaseStore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser"
+]
+
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding FROMSTRING '["kafkaAdapterInput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser", "kafkaAdapterInput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser", "hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser", "hBaseStore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser"]'
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding FROMFILE someFile.path.that.contains.the.array.above.json'
 
 **Failure test cases**
 
