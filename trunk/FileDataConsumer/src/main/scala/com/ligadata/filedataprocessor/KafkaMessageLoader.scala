@@ -147,7 +147,7 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
         FileProcessor.markFileProcessingEnd(msg.relatedFileName)
         
         writeGenericMsg("Corrupt file detected", msg.relatedFileName, inConfiguration(SmartFileAdapterConstants.KAFKA_STATUS_TOPIC))
-        closeOutFile(msg.relatedFileName)
+        closeOutFile(msg.relatedFileName, true)
         fileBeingProcessed = ""
         return
       }
@@ -370,13 +370,15 @@ class KafkaMessageLoader(partIdx: Int, inConfiguration: scala.collection.mutable
    *
    * @param fileName
    */
-  private def closeOutFile(fileName: String): Unit = {
+  private def closeOutFile(fileName: String, isResultOfCorruption : Boolean = false): Unit = {
     try {
       logger.info("SMART FILE CONSUMER ("+partIdx+") - cleaning up after " + fileName)
       // Either move or rename the file.
       
       val fileStruct = fileName.split("/")
-      
+
+      if(isResultOfCorruption) writeStatusMsg(fileName, true)
+
       //Take care of multiple directories
       logger.info("SMART FILE CONSUMER ("+partIdx+") Moving File" + fileName + " to " + inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO))
       Files.move(Paths.get(fileName), Paths.get( inConfiguration(SmartFileAdapterConstants.DIRECTORY_TO_MOVE_TO) + "/" + fileStruct(fileStruct.size - 1)),REPLACE_EXISTING)
