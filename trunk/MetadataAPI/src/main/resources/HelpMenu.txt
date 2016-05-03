@@ -25,12 +25,10 @@ kamanja update container input(optional) TENANTID <tenantId>
 kamanja get container input(optional)
 kamanja get all containers
 kamanja remove container input(optional)
+kamanja remove adaptermessagebinding '<adapter name>,<namespace.msgname>,namespace.serializername>'
 IV. Type operations
-kamanja add type input(optional)
 kamanja get type input(optional)
 kamanja get all types
-kamanja remove type input(optional)
-kamanja load types from a file
 kamanja dump all types
 V. Function operations
 kamanja add function input(optional)
@@ -45,18 +43,6 @@ kamanja upload compile config input(optional)
 kamanja dump all cfg objects
 kamanja remove engine config
 kamanja add adaptermessagebinding FROMFILE input
-VII. Output message operations
-kamanja add output message input(optional)
-kamanja get all output messages
-kamanja get output message
-kamanja remove output message
-kamanja update output message input(optional)
-VIII. Concept operations
-kamanja add concept input(optional)
-kamanja remove concept input(optional)
-kamanja update concept input(optional)
-kamanja load concepts from a file
-kamanja dump all concepts
 IX. Jar operations
 kamanja upload jar
 X. Cluster, metadata and adapter operations

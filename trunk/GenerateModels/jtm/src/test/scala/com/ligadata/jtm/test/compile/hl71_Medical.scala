@@ -1,5 +1,5 @@
 
-package com.ligadata.kamanja.test.V1000000; 
+package com.ligadata.kamanja.samples.messages.V1000000; 
 
 import org.json4s.jackson.JsonMethods._;
 import org.json4s.DefaultFormats;
@@ -13,17 +13,17 @@ import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
 
     
  
-object varin1 extends RDDObject[varin1] with MessageFactoryInterface { 
+object HL71 extends RDDObject[HL71] with MessageFactoryInterface { 
  
   val log = LogManager.getLogger(getClass)
-	type T = varin1 ;
-	override def getFullTypeName: String = "com.ligadata.kamanja.test.varin1"; 
-	override def getTypeNameSpace: String = "com.ligadata.kamanja.test"; 
-	override def getTypeName: String = "varin1"; 
+	type T = HL71 ;
+	override def getFullTypeName: String = "com.ligadata.kamanja.samples.messages.HL71"; 
+	override def getTypeNameSpace: String = "com.ligadata.kamanja.samples.messages"; 
+	override def getTypeName: String = "HL71"; 
 	override def getTypeVersion: String = "000000.000001.000000"; 
 	override def getSchemaId: Int = 0; 
 	override def getTenantId: String = ""; 
-	override def createInstance: varin1 = new varin1(varin1); 
+	override def createInstance: HL71 = new HL71(HL71); 
 	override def isFixed: Boolean = false; 
 	override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.MESSAGE
 	override def getFullName = getFullTypeName; 
@@ -32,9 +32,9 @@ object varin1 extends RDDObject[varin1] with MessageFactoryInterface {
 
     def build = new T(this)
     def build(from: T) = new T(from)
-   override def getPartitionKeyNames: Array[String] = Array[String](); 
+   override def getPartitionKeyNames: Array[String] = Array("desynpuf_id"); 
 
-  override def getPrimaryKeyNames: Array[String] = Array[String](); 
+  override def getPrimaryKeyNames: Array[String] = Array("desynpuf_id", "clm_id"); 
    
   
   override def getTimePartitionInfo: TimePartitionInfo = { return null;}  // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
@@ -55,7 +55,7 @@ object varin1 extends RDDObject[varin1] with MessageFactoryInterface {
       return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
     }
   
-    override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanja.test" , "name" : "varin1" , "fields":[{ "name" : "in1" , "type" : "string"},{ "name" : "in2" , "type" : "int"}]}""";  
+    override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.kamanja.samples.messages" , "name" : "hl71" , "fields":[{ "name" : "desynpuf_id" , "type" : "string"},{ "name" : "clm_id" , "type" : "long"}]}""";  
 
     final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
       
@@ -64,7 +64,7 @@ object varin1 extends RDDObject[varin1] with MessageFactoryInterface {
         if (oldVerobj == null) return null;
         oldVerobj match {
           
-      case oldVerobj: com.ligadata.kamanja.test.V1000000.varin1 => { return  convertToVer1000000(oldVerobj); } 
+      case oldVerobj: com.ligadata.kamanja.samples.messages.V1000000.HL71 => { return  convertToVer1000000(oldVerobj); } 
           case _ => {
             throw new Exception("Unhandled Version Found");
           }
@@ -77,7 +77,7 @@ object varin1 extends RDDObject[varin1] with MessageFactoryInterface {
       return null;
     }
   
-    private def convertToVer1000000(oldVerobj: com.ligadata.kamanja.test.V1000000.varin1): com.ligadata.kamanja.test.V1000000.varin1= {
+    private def convertToVer1000000(oldVerobj: com.ligadata.kamanja.samples.messages.V1000000.HL71): com.ligadata.kamanja.samples.messages.V1000000.HL71= {
       return oldVerobj
     }
   
@@ -91,25 +91,25 @@ object varin1 extends RDDObject[varin1] with MessageFactoryInterface {
   override def CreateNewContainer: BaseContainer= null;
   override def IsFixed: Boolean = false
   override def IsKv: Boolean = true
-  override def CanPersist: Boolean = false
+  override def CanPersist: Boolean = true
   override def isMessage: Boolean = true
   override def isContainer: Boolean = false
-  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj varin1") };
-  override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj varin1");
-  override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj varin1");
+  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj HL71") };
+  override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj HL71");
+  override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj HL71");
  override def NeedToTransformData: Boolean = false
     }
 
-class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInterface(factory) { 
+class HL71(factory: MessageFactoryInterface, other: HL71) extends MessageInterface(factory) { 
  
-  val log = varin1.log
+  val log = HL71.log
 
       var attributeTypes = generateAttributeTypes;
       
     private def generateAttributeTypes(): Array[AttributeTypeInfo] = {
       var attributeTypes = new Array[AttributeTypeInfo](2);
-   		 attributeTypes(0) = new AttributeTypeInfo("in1", 0, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
-		 attributeTypes(1) = new AttributeTypeInfo("in2", 1, AttributeTypeInfo.TypeCategory.INT, -1, -1, 0)
+   		 attributeTypes(0) = new AttributeTypeInfo("desynpuf_id", 0, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
+		 attributeTypes(1) = new AttributeTypeInfo("clm_id", 1, AttributeTypeInfo.TypeCategory.LONG, -1, -1, 0)
 
      
       return attributeTypes
@@ -122,13 +122,40 @@ class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInt
       fromFunc(other)
     }
     
-    override def save: Unit = { /* varin1.saveOne(this) */}
+    override def save: Unit = { /* HL71.saveOne(this) */}
   
-    def Clone(): ContainerOrConcept = { varin1.build(this) }
+    def Clone(): ContainerOrConcept = { HL71.build(this) }
 
-		override def getPartitionKey: Array[String] = Array[String]() 
+		override def getPartitionKey: Array[String] = {
+		var partitionKeys: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
+		try {
+		 partitionKeys += com.ligadata.BaseTypes.StringImpl.toString(get("desynpuf_id").asInstanceOf[String]);
+		 }catch {
+          case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      };
+      		 partitionKeys.toArray; 
 
-		override def getPrimaryKey: Array[String] = Array[String]() 
+ 		} 
+ 
+
+		override def getPrimaryKey: Array[String] = {
+		var primaryKeys: scala.collection.mutable.ArrayBuffer[String] = scala.collection.mutable.ArrayBuffer[String]();
+		try {
+		 primaryKeys += com.ligadata.BaseTypes.StringImpl.toString(get("desynpuf_id").asInstanceOf[String]);
+		 primaryKeys += com.ligadata.BaseTypes.LongImpl.toString(get("clm_id").asInstanceOf[Long]);
+		 }catch {
+          case e: Exception => {
+          log.debug("", e)
+          throw e
+        }
+      };
+      		 primaryKeys.toArray; 
+
+ 		} 
+ 
 
     override def getAttributeType(name: String): AttributeTypeInfo = {
       if (name == null || name.trim() == "") return null;
@@ -264,7 +291,7 @@ class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInt
       v.toString
     }  
     
-    private def fromFunc(other: varin1): varin1 = {  
+    private def fromFunc(other: HL71): HL71 = {  
       
      if (other.valuesMap != null) {
       other.valuesMap.foreach(vMap => {
@@ -293,12 +320,12 @@ class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInt
       return this;
     }
     
-	 def within1(value: String) : varin1 = {
-		 valuesMap("in1") = new AttributeValue(value, keyTypes("in1")) 
+	 def withdesynpuf_id(value: String) : HL71 = {
+		 valuesMap("desynpuf_id") = new AttributeValue(value, keyTypes("desynpuf_id")) 
 	 return this 
  	 } 
-	 def within2(value: Int) : varin1 = {
-		 valuesMap("in2") = new AttributeValue(value, keyTypes("in2")) 
+	 def withclm_id(value: Long) : HL71 = {
+		 valuesMap("clm_id") = new AttributeValue(value, keyTypes("clm_id")) 
 	 return this 
  	 } 
 
@@ -306,7 +333,7 @@ class varin1(factory: MessageFactoryInterface, other: varin1) extends MessageInt
       this(factory, null)
      }
     
-    def this(other: varin1) = {
+    def this(other: HL71) = {
       this(other.getFactory.asInstanceOf[MessageFactoryInterface], other)
     }
 
