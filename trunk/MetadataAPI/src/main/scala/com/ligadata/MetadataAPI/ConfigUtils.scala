@@ -1187,6 +1187,14 @@ object ConfigUtils {
         jsonStr1 = JsonSerializer.replaceLast(jsonStr1, "}", ",")
         jsonStr = jsonStr + jsonStr1
       }
+      val tenants = MdMgr.GetMdMgr.GetAllTenantInfos
+      if (tenants.length != 0) {
+        cfgObjList = cfgObjList :+ tenants
+        jsonStr1 = JsonSerializer.SerializeCfgObjectListToJson("Tenants", tenants)
+        jsonStr1 = jsonStr1.substring(1)
+        jsonStr1 = JsonSerializer.replaceLast(jsonStr1, "}", ",")
+        jsonStr = jsonStr + jsonStr1
+      }
       val nodes = MdMgr.GetMdMgr.Nodes.values.toArray
       if (nodes.length != 0) {
         cfgObjList = cfgObjList :+ nodes
