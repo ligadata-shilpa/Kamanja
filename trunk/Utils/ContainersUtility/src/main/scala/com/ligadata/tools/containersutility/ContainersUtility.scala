@@ -45,7 +45,7 @@ Usage: $KAMANJA_HOME/bin/ContainerUtility.sh
     --compressionstring <the extension of file gz or dat *mandatory for select and not necessary for truncate and delete*>
 
 Sample uses:
-      bash $KAMANJA_HOME/bin/ContainerUtility.sh --containername System.TestContainer --config $KAMANJA_HOME/config/Engine1Config.properties --oepration truncate
+      bash $KAMANJA_HOME/bin/ContainerUtility.sh --containername System.TestContainer --config $KAMANJA_HOME/config/Engine1Config.properties --operation truncate
     """
   }
 
@@ -167,17 +167,17 @@ Sample uses:
           sys.exit(1)
         }
 
-//        if (serializerOptionsJson.equals(null)) { // check if user pass serializerOptionsJson for select operation
-//          logger.error("you should pass a serializeroptionsjson option for select operation")
-//          logger.info(usage)
-//          sys.exit(1)
-//        }
+        if (serializerOptionsJson == null) { // check if user pass serializerOptionsJson for select operation
+          logger.error("you should pass a serializeroptionsjson option for select operation")
+          logger.info(usage)
+          sys.exit(1)
+        }
 
-//        if (compressionString.equals(null)) {// check if user pass compressionString for select operation
-//          logger.error("you should pass a compressionString option for select operation")
-//          logger.info(usage)
-//          sys.exit(1)
-//        }
+        if (compressionString == null) {// check if user pass compressionString for select operation
+          logger.error("you should pass a compressionString option for select operation")
+          logger.info(usage)
+          sys.exit(1)
+        }
       }
     }
 
@@ -217,7 +217,8 @@ Sample uses:
               if (!operation.equals("")) {
                 if (operation.equalsIgnoreCase("truncate")) {
                   utilmaker.TruncateContainer(containerName, dstore)
-                  logger.warn("Truncate %s container successfully".format(containerName))
+                  logger.info("Truncate %s container successfully".format(containerName))
+                  println(" [RESULT] Truncate %s container successfully".format(containerName))
                 } else if (operation.equalsIgnoreCase("delete")) {
                   if (containerObj.size == 0) {
                     logger.error("Failed to delete data from %s container, at least one item (keys, timerange) should not be null for delete operation".format(containerName))
@@ -225,7 +226,8 @@ Sample uses:
                   }
                   else {
                     utilmaker.DeleteFromContainer(containerName, containerObj, dstore)
-                    logger.warn("The data deleted successfully")
+                    logger.info("The data deleted successfully")
+                    println(" [RESULT] The data deleted successfully")
                   }
                 } else if (operation.equalsIgnoreCase("select")) {
                   if (containerObj.size == 0) {
@@ -239,14 +241,15 @@ Sample uses:
                     }
                     val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
                     val contInFl = containerName.trim.replace(".", "_").replace("\\", "_").replace("/", "_")
-                    val filename = output + "/" + contInFl + "_result_" + dateFormat.format(new java.util.Date()) + ".dat"
+                    var filename = output + "/" + contInFl + "_result_" + dateFormat.format(new java.util.Date()) + ".dat"
 
                     var os: OutputStream = null
 
                     try {
                       if (compressionString == null || compressionString.trim.size == 0) {
                         os = new FileOutputStream(filename);
-                      } else if (compressionString.trim.compareToIgnoreCase("gz") == 0) {
+                      } else if (compressionString.trim.equalsIgnoreCase("gz")) {
+                        filename = filename + ".gz"
                         os = new GZIPOutputStream(new FileOutputStream(filename))
                       } else {
                         throw new Exception("Compression %s is not yet handled. We support only uncompressed file & GZ files".format(compressionString))
@@ -261,8 +264,10 @@ Sample uses:
                         }
                       }
                       val countOfRow = utilmaker.GetFromContainer(containerName, containerObj, dstore, serializerName, serializerOptionsJson, getData)
-                      logger.warn("%d rows fetched successfully".format(countOfRow))
-                      logger.warn("You can find data in this file: %s".format(filename))
+                      logger.info("%d rows fetched successfully".format(countOfRow))
+                      println(" [RESULT] %d rows fetched successfully".format(countOfRow))
+                      logger.info("You can find data in this file: %s".format(filename))
+                      println(" [RESULT] You can find data in this file: %s".format(filename))
                     } catch {
                       case e: Exception => {
                         logger.error("Failed to select data", e)
