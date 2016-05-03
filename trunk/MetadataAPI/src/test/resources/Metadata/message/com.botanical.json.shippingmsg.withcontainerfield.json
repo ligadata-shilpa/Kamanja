@@ -1,7 +1,7 @@
 {
   "Message": {
     "NameSpace": "com.botanical.json",
-    "Name": "shippingmsg",
+    "Name": "shippingmsg2",
     "Version": "1.00",
     "Description": "shipping message",
     "Fixed": "true",
@@ -38,8 +38,8 @@
       },
       {
         "Field": {
-          "Name": "ConfirmationEmail",
-          "Type": "com.botanical.csv.emailmsg"
+          "Name": "PackageDescription",
+          "Type": "com.botanical.json.packageDescr"
         }
       },
       {

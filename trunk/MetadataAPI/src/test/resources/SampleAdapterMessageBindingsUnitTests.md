@@ -159,17 +159,15 @@ _mapped message used in following test case_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.csv.mapped.emailmsg.json tenantid "botanical"
 
-kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.mappedemailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser
-
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding key 'kafkaAdapterOutput2,com.botanical.csv.mappedemailmsg,com.ligadata.kamanja.serializer.csvserdeser'
 
 _csv serializer with mapped message_
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.mappedemailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": true, "alwaysQuoteFields": false } }'
 
-_csv serializer with message field_
+_csv serializer with container field_
 
-	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.emailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": true, "alwaysQuoteFields": false } }'
+	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.json.shippingmsg2"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": true, "alwaysQuoteFields": false } }'
 
 
 _bad adapter name_
@@ -258,13 +256,19 @@ _Define the system bindings_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMFILE $KAMANJA_HOME/config/SystemMsgs_Adapter_Binding.json
 
+_Define the containers_
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add container $MetadataDir/container/packageDescr.json TENANTID "botanical"
+
 _Define the messages_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.csv.emailmsg.json tenantid "botanical"
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.shippingmsg.json tenantid "botanical"
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.shippingmsg.withcontainerfield.json tenantid "botanical"
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.audit.shippingmsg.json tenantid "botanical"
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.audit.ordermsg.json tenantid "botanical"
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.json.ordermsg.json tenantid "botanical"
+
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties get all messages
 
