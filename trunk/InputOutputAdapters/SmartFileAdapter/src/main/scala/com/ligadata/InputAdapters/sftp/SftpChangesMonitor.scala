@@ -32,7 +32,7 @@ class SftpFileHandler extends SmartFileHandler{
   private var remoteFullPath = ""
 
   private var connectionConfig : FileAdapterConnectionConfig = null
-  private var manager : StandardFileSystemManager = null
+  //private var manager : StandardFileSystemManager = null
   private var in : InputStream = null
   //private var bufferedReader : BufferedReader = null
 
@@ -110,12 +110,10 @@ class SftpFileHandler extends SmartFileHandler{
     logger.debug(s"Opening SFTP file ($getFullPath) to read")
 
     try {
-      manager = new StandardFileSystemManager()
-      manager.init()
+      /*manager = new StandardFileSystemManager()
+      manager.init()*/
 
-      val tempInputStream = getDefaultInputStream()
       val compressionType = CompressionUtil.getFileType(this, null)
-      tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
       in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
       in
     }
@@ -228,6 +226,10 @@ class SftpFileHandler extends SmartFileHandler{
         return false
       }
     }
+    finally{
+      if(channelSftp != null) channelSftp.exit()
+      if(session != null) session.disconnect()
+    }
   }
 
   @throws(classOf[Exception])
@@ -246,8 +248,8 @@ class SftpFileHandler extends SmartFileHandler{
       in = null
     }
 
-    channelSftp.exit()
-    session.disconnect()
+    if(channelSftp != null) channelSftp.exit()
+    if(session != null) session.disconnect()
   }
 
   @throws(classOf[Exception])
@@ -306,7 +308,8 @@ class SftpFileHandler extends SmartFileHandler{
       }
 
     } finally {
-
+      if(channelSftp != null) channelSftp.exit()
+      if(session != null) session.disconnect()
     }
   }
 
@@ -451,7 +454,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     val directChildren = getRemoteFolderContents(parentfolder, manager).sortWith(_.getContent.getLastModifiedTime < _.getContent.getLastModifiedTime)
     var changeType : FileChangeType = null //new, modified
 
-    logger.debug("got the following children for checked file " + directChildren.map(c => c.getURL.toString).mkString(", "))
+    //logger.debug("got the following children for checked folder " + directChildren.map(c => c.getURL.toString).mkString(", "))
     //process each file reported by FS cache.
     directChildren.foreach(child => {
       val currentChildEntry = makeFileEntry(child)
@@ -514,7 +517,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
       if(isDirectParentDir(fileEntry, parentfolder)){
         if(!directChildren.exists(fileStatus => fileStatus.getURL().toString.equals(fileEntry.name))) {
           //key that is no more in the folder => file/folder deleted
-          logger.debug("file {} is no more under folder  {}, must be deleted from map", fileEntry.name, fileEntry.parent)
+          logger.debug("file {} is no more under folder  {}, will be deleted from map", fileEntry.name, fileEntry.parent)
           deletedFiles += fileEntry.name
         }
         else {
