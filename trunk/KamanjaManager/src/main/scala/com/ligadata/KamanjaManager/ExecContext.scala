@@ -169,6 +169,17 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
       val (msg2TenantId, cntr1) = KamanjaManager.instance.resolveMsg2TenantId
 
       if (allData != null && nodeContext != null && nodeContext.getEnvCtxt() != null) {
+
+        if (LOG.isDebugEnabled) {
+          allData.foreach(containerAndData => {
+            val nm = if (containerAndData != null && containerAndData._1 != null) containerAndData._1.toLowerCase() else ""
+            var tenatId = if (containerAndData != null && containerAndData._2 != null && containerAndData._2.size > 0) msg2TenantId.getOrElse(containerAndData._2(0).container.getFullTypeName.toLowerCase(), "tenant1") else "tenant1"
+            val sz = if (containerAndData != null && containerAndData._2 != null) containerAndData._2.size else 0
+            val canPersist = if (containerAndData != null && containerAndData._2 != null && containerAndData._2.size > 0) containerAndData._2(0).container.asInstanceOf[ContainerInterface].CanPersist().toString else "false"
+            LOG.debug("Save Data Before Filter: Container:%s with TenatId %s has %d values. canPersist:%s".format(nm, tenatId, sz, canPersist))
+          })
+        }
+
         // All containers data for Tenant
         val validDataToCommit = scala.collection.mutable.Map[String, ArrayBuffer[(String, Array[ContainerInterface])]]()
         allData.filter(containerAndData => (containerAndData != null && containerAndData._2 != null && containerAndData._2.size > 0 &&
@@ -183,6 +194,9 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
         })
 
         validDataToCommit.foreach(kv => {
+          if (LOG.isDebugEnabled) {
+            LOG.debug("Save Data AterFilter: Container:%s has %d values.".format(kv._1, kv._2.size))
+          }
           nodeContext.getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
         })
       }
