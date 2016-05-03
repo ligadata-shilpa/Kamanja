@@ -159,6 +159,10 @@ _mapped message used in following test case_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.csv.mapped.emailmsg.json tenantid "botanical"
 
+kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.mappedemailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding key 'kafkaAdapterOutput2,com.botanical.csv.mappedemailmsg,com.ligadata.kamanja.serializer.csvserdeser'
+
 _csv serializer with mapped message_
 
 	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.mappedemailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": true, "alwaysQuoteFields": false } }'
