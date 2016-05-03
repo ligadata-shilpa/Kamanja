@@ -728,6 +728,10 @@ object ConfigUtils {
           clustersList.foreach(clustny => {
             val cluster = clustny.asInstanceOf[Map[String, Any]] //BUGBUG:: Do we need to check the type before converting
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
+            if (ClusterId.length == 0) {
+              val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : ClusterId Must be present to upload Cluster Config " + ErrorCodeConstants.Upload_Config_Failed)
+              return apiResult.toString()
+            }
             logger.debug("Processing the cluster => " + ClusterId)
             // save in memory
             val ci = MdMgr.GetMdMgr.MakeCluster(ClusterId, "", "")
@@ -753,7 +757,16 @@ object ConfigUtils {
             valueList = valueList :+ value
 
             // gather config name-value pairs
-            val cfgMap = new scala.collection.mutable.HashMap[String, String]
+            var cfgMap: scala.collection.mutable.HashMap[String,String] = null
+
+            // Upload the latest and see if any are new updates
+            val currentCic = MdMgr.GetMdMgr.GetClusterCfg(ClusterId.toLowerCase.trim)
+            if (currentCic == null) {
+              cfgMap = new scala.collection.mutable.HashMap[String, String]
+            } else {
+              cfgMap = currentCic.CfgMap.map(elem =>{elem._1 -> elem._2})
+            }
+
             if (cluster.contains("SystemCatalog"))
               cfgMap("SystemCatalog") = getStringFromJsonNode(cluster.getOrElse("SystemCatalog", null))
             if (cluster.contains("ZooKeeperInfo"))
@@ -795,6 +808,7 @@ object ConfigUtils {
             value = MetadataAPISerialization.serializeObjectToJson(cic).getBytes//serializer.SerializeObjectToByteArray(cic)
             keyList = keyList :+ key.toLowerCase
             valueList = valueList :+ value
+
 
             if (cluster.contains("Nodes")) {
               val nodes = cluster.get("Nodes").get.asInstanceOf[List[_]]
