@@ -70,6 +70,7 @@ class CsvSerDeser extends SerializeDeserialize {
     var _config = Map[String,String]()
     var _emitHeaderFirst : Boolean = false
     var _fieldDelimiter  = ","
+    var _valDelimiter = "-"
     var _lineDelimiter = "\n"
     var _nullValue = ""
     var _alwaysQuoteField = false
@@ -92,7 +93,7 @@ class CsvSerDeser extends SerializeDeserialize {
           * JSON implementation.  Either of those should be chosen
           */
         if (! v.isFixed) {
-            throw new UnsupportedObjectException(s"type name $containerName is a mapped message container type... Csv emcodings of mapped messages are not currently supported...choose JSON or (when available) Kamanja VCSV serialize/deserialize... deserialize fails.",null)
+            throw new UnsupportedObjectException(s"CsvSerDeser::serialize, type name $containerName is a mapped message container type... Csv emcodings of mapped messages are not currently supported...choose JSON or (when available) Kamanja VCSV serialize/deserialize... deserialize fails.",null)
         }
 
         /* The check for empty container should be done at adapter binding level rather than here.
@@ -100,7 +101,7 @@ class CsvSerDeser extends SerializeDeserialize {
          */
         val fields = v.getAllAttributeValues
         if (fields.isEmpty) {
-            throw new ObjectNotFoundException(s"The container $containerName surprisingly has no fields...serialize fails", null)
+            throw new ObjectNotFoundException(s"CsvSerDeser::serialize, The container $containerName surprisingly has no fields...serialize fails", null)
         }
 
         var processCnt : Int = 0
@@ -113,7 +114,7 @@ class CsvSerDeser extends SerializeDeserialize {
                 emitField(sb, attr, doTrailingComma)
             } else {
               // right thing to do is to emit NULL as special value - either as empty in output or some special indication such as -
-                throw new ObjectNotFoundException(s"during serialize()...attribute ${attr.getValueType.getName} could not be found in the container... mismatch", null)
+                throw new ObjectNotFoundException(s"CsvSerDeser::serialize, during serialize()...attribute ${attr.getValueType.getName} could not be found in the container... mismatch", null)
             }
         })
         val strRep = sb.toString()
@@ -185,14 +186,32 @@ class CsvSerDeser extends SerializeDeserialize {
             fld = valueType.getTypeCategory match {
                 case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT) => rawValue.toString
                 case STRING => escapeQuotes(rawValue.asInstanceOf[String])
-                case (MAP | CONTAINER | MESSAGE | ARRAY) => throw new NotImplementedFunctionException(s"emitField: complex type: ${valueType.getKeyTypeCategory.getValue}, fldName: ${valueType.getName}, not supported in standard csv format", null);
+                case ARRAY => { emitArray(sb, valueType, rawValue.asInstanceOf[Array[_]]); "" }
+                case (MAP | CONTAINER | MESSAGE ) => throw new NotImplementedFunctionException(s"emitField: complex type: ${valueType.getKeyTypeCategory.getValue}, fldName: ${valueType.getName}, not supported in standard csv format", null);
                 case _ => throw new ObjectNotFoundException(s"emitField: invalid value type: ${valueType.getKeyTypeCategory.getValue}, fldName: ${valueType.getName} could not be resolved", null)
             }
-            Debug(s"emit field $typeName with value possibly quoted and escaped = $fld")
+            Debug(s"CsvSerDeser::emitField $typeName with value possibly quoted and escaped = $fld")
         }
         sb.append(fld)
         if(doTrailingComma)
             sb.append(_fieldDelimiter)
+    }
+
+    private def emitArray(sb: StringBuilder, valueType: AttributeTypeInfo, array: Array[_]) = {
+        var idx = 0
+        if (array != null && array.size > 0) {
+            val itemType = valueType.getValTypeCategory
+            array.foreach(itm => {
+                if (idx > 0) sb.append(_valDelimiter)
+                idx += 1
+                val itemStr = itemType match {
+                    case (BOOLEAN | BYTE | LONG | DOUBLE | FLOAT | INT | CHAR) => if(itm != null) itm.toString else ""
+                    case STRING => escapeQuotes(itm.asInstanceOf[String])
+                    case _ => throw new UnsupportedObjectException("CsvSerDeser::emitArray - Not yet handled itemType: " + itemType.getValue, null)
+                }
+                sb.append(itemStr)
+            })
+        }
     }
 
     /**
@@ -208,10 +227,13 @@ class CsvSerDeser extends SerializeDeserialize {
         val buffer : StringBuilder = new StringBuilder
         val fieldDelimiter = _fieldDelimiter(0)
         val escapeChar = _escapeChar(0)
+        val valueDelimiter = _valDelimiter(0)
+
         valueStr.foreach(ch => {
             val esc = ch match {
                 case `escapeChar` => _escapeChar
                 case `fieldDelimiter` => _escapeChar
+//              case `valueDelimiter` => _escapeChar
                 case '"' => _escapeChar
                 case '\\' => _escapeChar
                 case _ => ""
@@ -242,6 +264,7 @@ class CsvSerDeser extends SerializeDeserialize {
         _objResolver = objResolver
         _config = configProperties.asScala
         _fieldDelimiter = _config.getOrElse("fieldDelimiter", ",")
+        _valDelimiter = _config.getOrElse("valDelimiter", "-")
         _lineDelimiter =  _config.getOrElse("lineDelimiter", "\n")
         _nullValue =  _config.getOrElse("nullValue", "")
         _escapeChar = _config.getOrElse("escChar", "\\")
@@ -249,6 +272,30 @@ class CsvSerDeser extends SerializeDeserialize {
         _alwaysQuoteField = alwaysQuoteFieldStr.toLowerCase.startsWith("t")
 
         _isReady = (_objResolver != null && _config != null)
+    }
+
+
+    private def deserializeArray(fldStr: String, attr: AttributeTypeInfo): Any = {
+        val rawValFields : Array[String] = if (fldStr != null) {
+            fldStr.split(_valDelimiter)
+        } else {
+            Array[String]()
+        }
+        val itemType = attr.getValTypeCategory
+        var retVal: Any = Array[Any]()
+
+        val fld = itemType match {
+            case LONG =>    retVal = rawValFields.map(itm => if(itm != null && itm.length > 0) itm.toLong else 0).toArray
+            case INT =>     retVal = rawValFields.map(itm => if(itm != null && itm.length > 0) itm.toInt else 0).toArray
+            case BYTE =>    retVal = rawValFields.map(itm => if(itm != null && itm.length > 0) itm.toByte else 0).toArray
+            case BOOLEAN => retVal = rawValFields.map(itm => if(itm != null && itm.length > 0) itm.toBoolean else 0).toArray
+            case DOUBLE =>  retVal = rawValFields.map(itm => if(itm != null && itm.length > 0) itm.toDouble else 0).toArray
+            case FLOAT =>   retVal = rawValFields.map(itm => if(itm != null && itm.length > 0) itm.toFloat else 0).toArray
+            case STRING =>  retVal = rawValFields
+            case CHAR =>    retVal = rawValFields.map(itm => if (itm != null && itm.length > 0) itm.charAt(0) else ' ').toArray
+            case _ => throw new ObjectNotFoundException(s"CsvSerDeser::deserializeArray, invalid value type: ${itemType.getValue}, fldName: ${itemType.name} could not be resolved", null)
+        }
+        retVal
     }
 
     private def resolveValue(fldStr: String, attr: AttributeTypeInfo): Any = {
@@ -259,6 +306,7 @@ class CsvSerDeser extends SerializeDeserialize {
         tc match {
             case CHAR =>   returnVal = if( fld.length > 0) fld(0) else null
             case STRING => returnVal = fld
+            case ARRAY =>  returnVal = deserializeArray(fldStr, attr)
             case _ => {
                 val f1 = fld.trim
                 tc match {
@@ -271,7 +319,7 @@ class CsvSerDeser extends SerializeDeserialize {
                     case _ => {
                         // Unhandled type
                         try
-                            Error("For FieldData:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName, attr.getIndex, attr.getTypeCategory.toString))
+                            Error("For CsvSerDeser::resolveValue:%s we did not find valid Category Type in attribute info(Name:%s, Index:%d, getTypeCategory:%s)".format(fld, attr.getName, attr.getIndex, attr.getTypeCategory.toString))
                         catch {
                             case e: Throwable => {
                                 Error(e)
@@ -283,7 +331,7 @@ class CsvSerDeser extends SerializeDeserialize {
         }
         if(isDebugEnabled) {
             val dumpStr = if(returnVal != null) returnVal.toString else "null"
-            Debug(s"Resolve value, name: ${attr.getName} value: $dumpStr\n")
+            Debug(s"CsvSerDeser::resolveValue, name: ${attr.getName} value: $dumpStr\n")
         }
         returnVal
     }
