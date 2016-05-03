@@ -34,7 +34,7 @@ object ContainersUtility extends App with LogTrait {
 
   def usage: String = {
     """
-Usage: $KAMANJA_HOME/binContainerUtility
+Usage: $KAMANJA_HOME/bin/ContainerUtility.sh
     --config <config file while has jarpaths, metadata store information & data store information> $KAMANJA_HOME/config/Engine1config.properties
     --containername <full package qualified name of a Container without version> test.kamanja.container
     --operation <truncate, select, delete>
@@ -45,7 +45,7 @@ Usage: $KAMANJA_HOME/binContainerUtility
     --compressionstring <the extension of file gz or dat *mandatory for select and not necessary for truncate and delete*>
 
 Sample uses:
-      java -jar /tmp/KamanjaInstall/ContainersUtility-1.0 --containername System.TestContainer --config /tmp/KamanjaInstall/EngineConfig.cfg --keyfieldname Id --oepration truncate
+      bash $KAMANJA_HOME/bin/ContainerUtility.sh --containername System.TestContainer --config $KAMANJA_HOME/config/Engine1Config.properties --oepration truncate
     """
   }
 
@@ -209,7 +209,7 @@ Sample uses:
           if (dstore != null) {
             try {
               dstore.setObjectResolver(utilmaker)
-              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.jsonserdeser", scala.collection.immutable.Map[String, Any]())
+              dstore.setDefaultSerializerDeserializer("com.ligadata.kamanja.serializer.kbinaryserdeser", scala.collection.immutable.Map[String, Any]())
 //              if(!dstore.isContainerExists(containerName)){
 //                logger.error("there is no %s container in datastore".format(containerName))
 //                sys.exit(1)

@@ -728,6 +728,10 @@ object ConfigUtils {
           clustersList.foreach(clustny => {
             val cluster = clustny.asInstanceOf[Map[String, Any]] //BUGBUG:: Do we need to check the type before converting
             val ClusterId = cluster.getOrElse("ClusterId", "").toString.trim.toLowerCase
+            if (ClusterId.length == 0) {
+              val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : ClusterId Must be present to upload Cluster Config " + ErrorCodeConstants.Upload_Config_Failed)
+              return apiResult.toString()
+            }
             logger.debug("Processing the cluster => " + ClusterId)
             // save in memory
             val ci = MdMgr.GetMdMgr.MakeCluster(ClusterId, "", "")
@@ -753,7 +757,17 @@ object ConfigUtils {
             valueList = valueList :+ value
 
             // gather config name-value pairs
-            val cfgMap = new scala.collection.mutable.HashMap[String, String]
+            var cfgMap: scala.collection.mutable.HashMap[String,String] = null
+
+            // Upload the latest and see if any are new updates - do it like this to make sure
+            // incremental update does not remove existing values
+            val currentCic = MdMgr.GetMdMgr.GetClusterCfg(ClusterId.toLowerCase.trim)
+            if (currentCic == null) {
+              cfgMap = new scala.collection.mutable.HashMap[String, String]
+            } else {
+              cfgMap = currentCic.CfgMap.map(elem =>{elem._1 -> elem._2})
+            }
+
             if (cluster.contains("SystemCatalog"))
               cfgMap("SystemCatalog") = getStringFromJsonNode(cluster.getOrElse("SystemCatalog", null))
             if (cluster.contains("ZooKeeperInfo"))
@@ -795,6 +809,7 @@ object ConfigUtils {
             value = MetadataAPISerialization.serializeObjectToJson(cic).getBytes//serializer.SerializeObjectToByteArray(cic)
             keyList = keyList :+ key.toLowerCase
             valueList = valueList :+ value
+
 
             if (cluster.contains("Nodes")) {
               val nodes = cluster.get("Nodes").get.asInstanceOf[List[_]]
@@ -906,6 +921,19 @@ object ConfigUtils {
                 val tenantId = adap.getOrElse("TenantId", "").toString.trim
                 val clsNm = adap.getOrElse("ClassName", "").toString.trim
                 val jarnm = adap.getOrElse("JarName", "").toString.trim
+
+                if (nm.trim.length == 0) {
+                  val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : Name must be set in the adapter for cluster " + ClusterId + ", " + ErrorCodeConstants.Upload_Config_Failed)
+                  return apiResult.toString()
+                }
+                if (typStr.trim.length == 0) {
+                  val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : Type String must be set in the adapter for cluster " + ClusterId + ", " + ErrorCodeConstants.Upload_Config_Failed)
+                  return apiResult.toString()
+                }
+                if (tenantId.trim.length == 0) {
+                  val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : Tenant ID must be set in the adapter for cluster " + ClusterId + ", " + ErrorCodeConstants.Upload_Config_Failed)
+                  return apiResult.toString()
+                }
 
                 var depJars: List[String] = null
                 if (adap.contains("DependencyJars")) {
@@ -1183,6 +1211,14 @@ object ConfigUtils {
       if (clusterCfgs.length != 0) {
         cfgObjList = cfgObjList :+ clusterCfgs
         jsonStr1 = JsonSerializer.SerializeCfgObjectListToJson("ClusterCfgs", clusterCfgs)
+        jsonStr1 = jsonStr1.substring(1)
+        jsonStr1 = JsonSerializer.replaceLast(jsonStr1, "}", ",")
+        jsonStr = jsonStr + jsonStr1
+      }
+      val tenants = MdMgr.GetMdMgr.GetAllTenantInfos
+      if (tenants.length != 0) {
+        cfgObjList = cfgObjList :+ tenants
+        jsonStr1 = JsonSerializer.SerializeCfgObjectListToJson("Tenants", tenants)
         jsonStr1 = jsonStr1.substring(1)
         jsonStr1 = JsonSerializer.replaceLast(jsonStr1, "}", ",")
         jsonStr = jsonStr + jsonStr1

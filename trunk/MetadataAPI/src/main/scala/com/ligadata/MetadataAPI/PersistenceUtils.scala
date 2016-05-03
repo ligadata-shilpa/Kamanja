@@ -585,7 +585,7 @@ object PersistenceUtils {
       if (obj.DependencyJarNames != null) {
         obj.DependencyJarNames.foreach(j => {
           // do not upload if it already exist & just uploaded/checked in db, minor optimization
-          if (j.endsWith(".jar") && checkedJars.contains(j) == false && excludeSystemJars.contains(j) == false) {
+          if (j != null && j.endsWith(".jar") && checkedJars.contains(j) == false && excludeSystemJars.contains(j) == false) {
             var loadObject = false
             val jarName = com.ligadata.Utils.Utils.GetValidJarFile(jarPaths, j)
             val value = MetadataAPIImpl.GetJarAsArrayOfBytes(jarName)

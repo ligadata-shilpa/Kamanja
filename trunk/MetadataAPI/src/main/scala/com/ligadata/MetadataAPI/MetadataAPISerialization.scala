@@ -87,6 +87,7 @@ object MetadataAPISerialization {
               ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("CreationTime" -> o.CreationTime) ~
+              ("IsFixed" -> containerDef.IsFixed) ~
               ("Author" -> o.Author) ~
               ("OwnerId" -> o.OwnerId) ~
               ("TenantId" -> o.TenantId) ~
@@ -143,6 +144,7 @@ object MetadataAPISerialization {
               ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("CreationTime" -> o.CreationTime) ~
+              ("IsFixed" -> containerDef.IsFixed) ~
               ("Author" -> o.Author) ~
               ("OwnerId" -> o.OwnerId) ~
               ("TenantId" -> o.TenantId) ~
@@ -776,25 +778,48 @@ object MetadataAPISerialization {
       fr.foreach(f => {
         foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
       })
-      val msgDef = MdMgr.GetMdMgr.MakeFixedMsg(
-        MsgDefInst.Message.NameSpace,
-        MsgDefInst.Message.Name,
-        MsgDefInst.Message.PhysicalName,
-        attrList1,
-        MsgDefInst.Message.OwnerId,
-        MsgDefInst.Message.TenantId,
-        MsgDefInst.Message.NumericTypes.UniqId,
-        MsgDefInst.Message.NumericTypes.MdElementId,
-        MsgDefInst.Message.SchemaId,
-        MsgDefInst.Message.AvroSchema,
-        MsgDefInst.Message.NumericTypes.Version,
-        MsgDefInst.Message.JarName,
-        MsgDefInst.Message.DependencyJars.toArray,
-        primaryKeys,
-        foreignKeys,
-        MsgDefInst.Message.PartitionKey.toArray,
-        false, MsgDefInst.Message.Persist
-      )
+
+      val msgDef =
+        if (MsgDefInst.Message.IsFixed) {
+          MdMgr.GetMdMgr.MakeFixedMsg(
+            MsgDefInst.Message.NameSpace,
+            MsgDefInst.Message.Name,
+            MsgDefInst.Message.PhysicalName,
+            attrList1,
+            MsgDefInst.Message.OwnerId,
+            MsgDefInst.Message.TenantId,
+            MsgDefInst.Message.NumericTypes.UniqId,
+            MsgDefInst.Message.NumericTypes.MdElementId,
+            MsgDefInst.Message.SchemaId,
+            MsgDefInst.Message.AvroSchema,
+            MsgDefInst.Message.NumericTypes.Version,
+            MsgDefInst.Message.JarName,
+            MsgDefInst.Message.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            MsgDefInst.Message.PartitionKey.toArray,
+            false, MsgDefInst.Message.Persist
+          )
+        } else {
+          MdMgr.GetMdMgr.MakeMappedMsg(
+            MsgDefInst.Message.NameSpace,
+            MsgDefInst.Message.Name,
+            MsgDefInst.Message.PhysicalName,
+            attrList1,
+            MsgDefInst.Message.NumericTypes.Version,
+            MsgDefInst.Message.JarName,
+            MsgDefInst.Message.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            MsgDefInst.Message.PartitionKey.toArray,
+            false, MsgDefInst.Message.OwnerId,
+            MsgDefInst.Message.TenantId,
+            MsgDefInst.Message.NumericTypes.UniqId,
+            MsgDefInst.Message.NumericTypes.MdElementId,
+            MsgDefInst.Message.SchemaId,
+            MsgDefInst.Message.AvroSchema,
+            MsgDefInst.Message.Persist)
+        }
 
       msgDef.tranId = MsgDefInst.Message.NumericTypes.TransId
       msgDef.origDef = MsgDefInst.Message.OrigDef
@@ -848,25 +873,48 @@ object MetadataAPISerialization {
       })
 
 
-      val contDef = MdMgr.GetMdMgr.MakeFixedContainer(
-        ContDefInst.Container.NameSpace,
-        ContDefInst.Container.Name,
-        ContDefInst.Container.PhysicalName,
-        attrList1,
-        ContDefInst.Container.OwnerId,
-        ContDefInst.Container.TenantId,
-        ContDefInst.Container.NumericTypes.UniqId,
-        ContDefInst.Container.NumericTypes.MdElementId,
-        ContDefInst.Container.SchemaId,
-        ContDefInst.Container.AvroSchema,
-        ContDefInst.Container.NumericTypes.Version,
-        ContDefInst.Container.JarName,
-        ContDefInst.Container.DependencyJars.toArray,
-        primaryKeys,
-        foreignKeys,
-        ContDefInst.Container.PartitionKey.toArray,
-        false, ContDefInst.Container.Persist
-      )
+      val contDef =
+        if (ContDefInst.Container.IsFixed) {
+          MdMgr.GetMdMgr.MakeFixedContainer(
+            ContDefInst.Container.NameSpace,
+            ContDefInst.Container.Name,
+            ContDefInst.Container.PhysicalName,
+            attrList1,
+            ContDefInst.Container.OwnerId,
+            ContDefInst.Container.TenantId,
+            ContDefInst.Container.NumericTypes.UniqId,
+            ContDefInst.Container.NumericTypes.MdElementId,
+            ContDefInst.Container.SchemaId,
+            ContDefInst.Container.AvroSchema,
+            ContDefInst.Container.NumericTypes.Version,
+            ContDefInst.Container.JarName,
+            ContDefInst.Container.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            ContDefInst.Container.PartitionKey.toArray,
+            false, ContDefInst.Container.Persist
+          )
+        } else {
+          MdMgr.GetMdMgr.MakeMappedContainer(
+            ContDefInst.Container.NameSpace,
+            ContDefInst.Container.Name,
+            ContDefInst.Container.PhysicalName,
+            attrList1,
+            ContDefInst.Container.NumericTypes.Version,
+            ContDefInst.Container.JarName,
+            ContDefInst.Container.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            ContDefInst.Container.PartitionKey.toArray,
+            ContDefInst.Container.OwnerId,
+            ContDefInst.Container.TenantId,
+            ContDefInst.Container.NumericTypes.UniqId,
+            ContDefInst.Container.NumericTypes.MdElementId,
+            ContDefInst.Container.SchemaId,
+            ContDefInst.Container.AvroSchema,
+            false, ContDefInst.Container.Persist
+          )
+        }
 
       contDef.tranId = ContDefInst.Container.NumericTypes.TransId
       contDef.origDef = ContDefInst.Container.OrigDef
@@ -1763,6 +1811,7 @@ object MetadataAPISerialization {
 
     /**
       * Resurrect the AdapterMessageBinding instance from the supplied JValue.
+      *
       * @param bindingJson the json4s JValue containing the AdapterMessageBinding content
       * @return an AdapterMessageBinding instance
       *
@@ -1963,7 +2012,7 @@ case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: 
 
 case class MsgAttr(NameSpace: String, Name: String, TypNameSpace: String, TypName: String, Version: Long, CollectionType: String)
 
-case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], MsgAttributes: List[MsgAttr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, Author: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String)
+case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], MsgAttributes: List[MsgAttr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, Author: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String, IsFixed: Boolean)
 
 case class PrimaryKeys(constraintName: String, key: List[String])
 

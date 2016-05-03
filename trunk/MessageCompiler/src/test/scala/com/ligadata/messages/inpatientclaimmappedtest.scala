@@ -229,11 +229,6 @@ class InpatientClaimMappedTest(factory: ContainerFactoryInterface, other: Inpati
     return valuesMap.map(f => f._2).toArray;
   }
 
-  override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-    //valuesMap.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-    return null;
-  }
-
   override def set(keyName: String, value: Any) = {
     if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
     val key = keyName.toLowerCase;

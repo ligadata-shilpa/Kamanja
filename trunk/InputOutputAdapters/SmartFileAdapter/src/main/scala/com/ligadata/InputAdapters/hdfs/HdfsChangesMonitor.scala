@@ -23,6 +23,7 @@ class HdfsFileEntry {
   var name : String = ""
   var lastReportedSize : Long = 0
   var lastModificationTime : Long = 0
+  var parent : String = ""
   //boolean processed
 }
 
@@ -86,9 +87,8 @@ class HdfsFileHandler extends SmartFileHandler{
   @throws(classOf[KamanjaException])
   def openForRead(): InputStream = {
     try {
-      val tempInputStream = getDefaultInputStream()
+
       val compressionType = CompressionUtil.getFileType(this, null)
-      tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
       in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
       in
     }
@@ -342,10 +342,8 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
                 if (modifiedFiles.nonEmpty)
                   modifiedFiles.foreach(tuple => {
                     val handler = new MofifiedFileCallbackHandler(tuple._1, modifiedFileCallback)
-                    // run the callback in a different thread
-                    new Thread(handler).start()
-                    //globalFileMonitorCallbackService.execute(handler)
-                    //modifiedFileCallback(tuple._1,tuple._2)
+                    logger.debug("hdfs monitor is calling file callback for MonitorController for file {}", tuple._1.getFullPath)
+                    modifiedFileCallback(tuple._1)
 
                   }
                   )
@@ -392,7 +390,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
         isChanged = true
         changeType = if(isFirstCheck) AlreadyExisting else New
 
-        val fileEntry = makeFileEntry(fileStatus)
+        val fileEntry = makeFileEntry(fileStatus, parentfolder)
         filesStatusMap.put(uniquePath, fileEntry)
         if(fileStatus.isDirectory)
           modifiedDirs += uniquePath
@@ -427,21 +425,34 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
 
     val deletedFiles = new ArrayBuffer[String]()
-    filesStatusMap.keys.filter(filePath => isDirectParentDir(filePath, parentfolder)).foreach(pathKey =>
+    /*filesStatusMap.keys.filter(filePath => isDirectParentDir(filePath, parentfolder)).foreach(pathKey =>
       if(!directChildren.exists(fileStatus => fileStatus.getPath.toString.equals(pathKey))){ //key that is no more in the folder => file/folder deleted
         deletedFiles += pathKey
       }
-    )
+    )*/
+    filesStatusMap.values.foreach(fileEntry =>{
+      //logger.debug("checking if file {} is deleted, parent is {}. comparing to folder {}",
+        //fileEntry.name, fileEntry.parent, parentfolder)
+      if(isDirectParentDir(fileEntry, parentfolder)){
+        if(!directChildren.exists(fileStatus => fileStatus.getPath.toString.equals(fileEntry.name))) {
+          //key that is no more in the folder => file/folder deleted
+          logger.debug("file {} is no more under folder  {}, will be deleted from map", fileEntry.name, parentfolder)
+          deletedFiles += fileEntry.name
+        }
+        else {
+          //logger.debug("file {} is still under folder  {}", fileEntry.name, fileEntry.parent)
+        }
+      }
+    })
     deletedFiles.foreach(f => filesStatusMap.remove(f))
   }
 
 
-  private def isDirectParentDir(file : String, dir : String) : Boolean = {
+  private def isDirectParentDir(fileEntry : HdfsFileEntry, dir : String) : Boolean = {
     try{
-      val filePath = new org.apache.hadoop.fs.Path(file)
-      val directParentDir = filePath.getParent.toString
-      val dirPath = new org.apache.hadoop.fs.Path(dir).toString
-      dirPath.toString.equals(directParentDir)
+
+      //logger.debug("isDirectParentDir - comparing {} to {}", fileEntry.parent, dir)
+      fileEntry.parent.toString.equals(dir)
     }
     catch{
       case ex : Exception => false
@@ -449,12 +460,13 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     }
   }
 
-  private def makeFileEntry(fileStatus : FileStatus) : HdfsFileEntry = {
+  private def makeFileEntry(fileStatus : FileStatus, parentfolder : String) : HdfsFileEntry = {
 
     val newFile = new HdfsFileEntry()
     newFile.lastReportedSize = fileStatus.getLen
     newFile.name = fileStatus.getPath.toString
     newFile.lastModificationTime = fileStatus.getModificationTime
+    newFile.parent = parentfolder
     newFile
   }
 

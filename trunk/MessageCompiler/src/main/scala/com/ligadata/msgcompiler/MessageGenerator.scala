@@ -115,7 +115,7 @@ class MessageGenerator {
       getSetFixed = getSetFixed.append(getOrElseByIndexFunc);
       getSetFixed = getSetFixed.append(getAttributeNamesFixed);
       getSetFixed = getSetFixed.append(getAllAttributeValuesFixed(message));
-      getSetFixed = getSetFixed.append(getAttributeNameAndValueIterator);
+     // getSetFixed = getSetFixed.append(getAttributeNameAndValueIterator);
       getSetFixed = getSetFixed.append(setByKeyFunc(message));
       if (message.Elements != null && message.timePartition != null) {
         getSetFixed = getSetFixed.append(setFuncByOffset(message.Elements, message.Name, mdMgr, message.timePartition.Key));
@@ -903,7 +903,7 @@ class MessageGenerator {
      if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
       val key = keyName.toLowerCase;
    
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container """ + message.Name + """");
+      if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message/container """ + message.Name + """", null);
       return get(keyTypes(key).getIndex)
   }
   """
@@ -967,7 +967,7 @@ class MessageGenerator {
       return "";
     var keysStr = new StringBuilder(8 * 1024)
     try {
-      keysStr.append("%s if (!keyTypes.contains(key)) throw new Exception(s\"Key $key does not exists in message %s\")%s".format(msgConstants.pad3, message.Name, msgConstants.newline));
+      keysStr.append("%s if (!keyTypes.contains(key)) throw new KeyNotFoundException(s\"Key $key does not exists in message %s\", null)%s".format(msgConstants.pad3, message.Name, msgConstants.newline));
       keysStr.append("%s set(keyTypes(key).getIndex, value); %s".format(msgConstants.pad3, msgConstants.newline));
 
     } catch {

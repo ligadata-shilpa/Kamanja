@@ -6,17 +6,15 @@ import org.json4s.DefaultFormats;
 import org.json4s.Formats;
 import com.ligadata.KamanjaBase._;
 import com.ligadata.BaseTypes._;
-import com.ligadata.Exceptions.StackTrace;
+import com.ligadata.Exceptions._;
 import org.apache.logging.log4j.{ Logger, LogManager }
 import java.util.Date;
 import java.io.{ DataInputStream, DataOutputStream, ByteArrayOutputStream }
 
-
-
 object KamanjaModelEvent extends RDDObject[KamanjaModelEvent] with ContainerFactoryInterface {
 
   val log = LogManager.getLogger(getClass)
-  type T = KamanjaModelEvent ;
+  type T = KamanjaModelEvent;
   override def getFullTypeName: String = "com.ligadata.KamanjaBase.KamanjaModelEvent";
   override def getTypeNameSpace: String = "com.ligadata.KamanjaBase";
   override def getTypeName: String = "KamanjaModelEvent";
@@ -36,9 +34,7 @@ object KamanjaModelEvent extends RDDObject[KamanjaModelEvent] with ContainerFact
 
   override def getPrimaryKeyNames: Array[String] = Array[String]();
 
-
-  override def getTimePartitionInfo: TimePartitionInfo = { return null;}  // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
-
+  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
 
   override def hasPrimaryKey(): Boolean = {
     val pKeys = getPrimaryKeyNames();
@@ -64,7 +60,7 @@ object KamanjaModelEvent extends RDDObject[KamanjaModelEvent] with ContainerFact
       if (oldVerobj == null) return null;
       oldVerobj match {
 
-        case oldVerobj: com.ligadata.KamanjaBase.KamanjaModelEvent => { return  convertToVer1000000000000(oldVerobj); }
+        case oldVerobj: com.ligadata.KamanjaBase.KamanjaModelEvent => { return convertToVer1000000000000(oldVerobj); }
         case _ => {
           throw new Exception("Unhandled Version Found");
         }
@@ -77,18 +73,17 @@ object KamanjaModelEvent extends RDDObject[KamanjaModelEvent] with ContainerFact
     return null;
   }
 
-  private def convertToVer1000000000000(oldVerobj: com.ligadata.KamanjaBase.KamanjaModelEvent): com.ligadata.KamanjaBase.KamanjaModelEvent= {
+  private def convertToVer1000000000000(oldVerobj: com.ligadata.KamanjaBase.KamanjaModelEvent): com.ligadata.KamanjaBase.KamanjaModelEvent = {
     return oldVerobj
   }
-
 
   /****   DEPRECATED METHODS ***/
   override def FullName: String = getFullTypeName
   override def NameSpace: String = getTypeNameSpace
   override def Name: String = getTypeName
   override def Version: String = getTypeVersion
-  override def CreateNewMessage: BaseMsg= null;
-  override def CreateNewContainer: BaseContainer= createInstance.asInstanceOf[BaseContainer];
+  override def CreateNewMessage: BaseMsg = null;
+  override def CreateNewContainer: BaseContainer = createInstance.asInstanceOf[BaseContainer];
   override def IsFixed: Boolean = true
   override def IsKv: Boolean = false
   override def CanPersist: Boolean = false
@@ -116,7 +111,6 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
     attributeTypes(5) = new AttributeTypeInfo("producedmessages", 5, AttributeTypeInfo.TypeCategory.ARRAY, 4, -1, 0)
     attributeTypes(6) = new AttributeTypeInfo("error", 6, AttributeTypeInfo.TypeCategory.STRING, -1, -1, 0)
 
-
     return attributeTypes
   }
 
@@ -127,7 +121,7 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
     fromFunc(other)
   }
 
-  override def save: Unit = { /* KamanjaModelEvent.saveOne(this) */}
+  override def save: Unit = { /* KamanjaModelEvent.saveOne(this) */ }
 
   def Clone(): ContainerOrConcept = { KamanjaModelEvent.build(this) }
 
@@ -138,12 +132,11 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
   override def getAttributeType(name: String): AttributeTypeInfo = {
     if (name == null || name.trim() == "") return null;
     attributeTypes.foreach(attributeType => {
-      if(attributeType.getName == name.toLowerCase())
+      if (attributeType.getName == name.toLowerCase())
         return attributeType
     })
     return null;
   }
-
 
   var modelid: Long = _;
   var elapsedtimeinms: Float = _;
@@ -159,7 +152,7 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
   }
 
   private def getWithReflection(keyName: String): AnyRef = {
-    if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
     val key = keyName.toLowerCase;
     val ru = scala.reflect.runtime.universe
     val m = ru.runtimeMirror(getClass.getClassLoader)
@@ -184,15 +177,15 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
   }
 
   private def getByName(keyName: String): AnyRef = {
-    if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
     val key = keyName.toLowerCase;
 
-    if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message/container KamanjaModelEvent");
+    if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message/container KamanjaModelEvent", null);
     return get(keyTypes(key).getIndex)
   }
 
   override def getOrElse(keyName: String, defaultVal: Any): AnyRef = { // Return (value, type)
-    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
     val key = keyName.toLowerCase;
     try {
       val value = get(key.toLowerCase())
@@ -206,9 +199,8 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
     return null;
   }
 
-
-  override def get(index : Int) : AnyRef = { // Return (value, type)
-    try{
+  override def get(index: Int): AnyRef = { // Return (value, type)
+    try {
       index match {
         case 0 => return this.modelid.asInstanceOf[AnyRef];
         case 1 => return this.elapsedtimeinms.asInstanceOf[AnyRef];
@@ -220,7 +212,7 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
 
         case _ => throw new Exception(s"$index is a bad index for message KamanjaModelEvent");
       }
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -259,8 +251,8 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
   }
 
   override def getAllAttributeValues(): Array[AttributeValue] = { // Has ( value, attributetypeinfo))
-  var attributeVals = new Array[AttributeValue](7);
-    try{
+    var attributeVals = new Array[AttributeValue](7);
+    try {
       attributeVals(0) = new AttributeValue(this.modelid, keyTypes("modelid"))
       attributeVals(1) = new AttributeValue(this.elapsedtimeinms, keyTypes("elapsedtimeinms"))
       attributeVals(2) = new AttributeValue(this.eventepochtime, keyTypes("eventepochtime"))
@@ -269,7 +261,7 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
       attributeVals(5) = new AttributeValue(this.producedmessages, keyTypes("producedmessages"))
       attributeVals(6) = new AttributeValue(this.error, keyTypes("error"))
 
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -279,21 +271,15 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
     return attributeVals;
   }
 
-  override def getAttributeNameAndValueIterator(): java.util.Iterator[AttributeValue] = {
-    //getAllAttributeValues.iterator.asInstanceOf[java.util.Iterator[AttributeValue]];
-    return null; // Fix - need to test to make sure the above iterator works properly
-
-  }
-
   override def set(keyName: String, value: Any) = {
-    if(keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name "+keyName);
+    if (keyName == null || keyName.trim.size == 0) throw new Exception("Please provide proper key name " + keyName);
     val key = keyName.toLowerCase;
     try {
 
-      if (!keyTypes.contains(key)) throw new Exception(s"Key $key does not exists in message KamanjaModelEvent")
+      if (!keyTypes.contains(key)) throw new KeyNotFoundException(s"Key $key does not exists in message KamanjaModelEvent", null)
       set(keyTypes(key).getIndex, value);
 
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -302,54 +288,53 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
 
   }
 
-
-  def set(index : Int, value :Any): Unit = {
+  def set(index: Int, value: Any): Unit = {
     if (value == null) throw new Exception(s"Value is null for index $index in message KamanjaModelEvent ")
-    try{
+    try {
       index match {
         case 0 => {
-          if(value.isInstanceOf[Long])
+          if (value.isInstanceOf[Long])
             this.modelid = value.asInstanceOf[Long];
           else throw new Exception(s"Value is the not the correct type for field modelid in message KamanjaModelEvent")
         }
         case 1 => {
-          if(value.isInstanceOf[Float])
+          if (value.isInstanceOf[Float])
             this.elapsedtimeinms = value.asInstanceOf[Float];
           else throw new Exception(s"Value is the not the correct type for field elapsedtimeinms in message KamanjaModelEvent")
         }
         case 2 => {
-          if(value.isInstanceOf[Long])
+          if (value.isInstanceOf[Long])
             this.eventepochtime = value.asInstanceOf[Long];
           else throw new Exception(s"Value is the not the correct type for field eventepochtime in message KamanjaModelEvent")
         }
         case 3 => {
-          if(value.isInstanceOf[Boolean])
+          if (value.isInstanceOf[Boolean])
             this.isresultproduced = value.asInstanceOf[Boolean];
           else throw new Exception(s"Value is the not the correct type for field isresultproduced in message KamanjaModelEvent")
         }
         case 4 => {
-          if(value.isInstanceOf[scala.Array[Long]])
+          if (value.isInstanceOf[scala.Array[Long]])
             this.consumedmessages = value.asInstanceOf[scala.Array[Long]];
-          else if(value.isInstanceOf[scala.Array[_]])
+          else if (value.isInstanceOf[scala.Array[_]])
             this.consumedmessages = value.asInstanceOf[scala.Array[_]].map(v => v.asInstanceOf[Long]);
           else throw new Exception(s"Value is the not the correct type for field consumedmessages in message KamanjaModelEvent")
         }
         case 5 => {
-          if(value.isInstanceOf[scala.Array[Long]])
+          if (value.isInstanceOf[scala.Array[Long]])
             this.producedmessages = value.asInstanceOf[scala.Array[Long]];
-          else if(value.isInstanceOf[scala.Array[_]])
+          else if (value.isInstanceOf[scala.Array[_]])
             this.producedmessages = value.asInstanceOf[scala.Array[_]].map(v => v.asInstanceOf[Long]);
           else throw new Exception(s"Value is the not the correct type for field producedmessages in message KamanjaModelEvent")
         }
         case 6 => {
-          if(value.isInstanceOf[String])
+          if (value.isInstanceOf[String])
             this.error = value.asInstanceOf[String];
           else throw new Exception(s"Value is the not the correct type for field error in message KamanjaModelEvent")
         }
 
         case _ => throw new Exception(s"$index is a bad index for message KamanjaModelEvent");
       }
-    }catch {
+    } catch {
       case e: Exception => {
         log.debug("", e)
         throw e
@@ -359,7 +344,7 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
   }
 
   override def set(key: String, value: Any, valTyp: String) = {
-    throw new Exception ("Set Func for Value and ValueType By Key is not supported for Fixed Messages" )
+    throw new Exception("Set Func for Value and ValueType By Key is not supported for Fixed Messages")
   }
 
   private def fromFunc(other: KamanjaModelEvent): KamanjaModelEvent = {
@@ -367,52 +352,50 @@ class KamanjaModelEvent(factory: ContainerFactoryInterface, other: KamanjaModelE
     this.elapsedtimeinms = com.ligadata.BaseTypes.FloatImpl.Clone(other.elapsedtimeinms);
     this.eventepochtime = com.ligadata.BaseTypes.LongImpl.Clone(other.eventepochtime);
     this.isresultproduced = com.ligadata.BaseTypes.BoolImpl.Clone(other.isresultproduced);
-    if (other.consumedmessages != null ) {
+    if (other.consumedmessages != null) {
       consumedmessages = new scala.Array[Long](other.consumedmessages.length);
       consumedmessages = other.consumedmessages.map(v => com.ligadata.BaseTypes.LongImpl.Clone(v));
-    }
-    else this.consumedmessages = null;
-    if (other.producedmessages != null ) {
+    } else this.consumedmessages = null;
+    if (other.producedmessages != null) {
       producedmessages = new scala.Array[Long](other.producedmessages.length);
       producedmessages = other.producedmessages.map(v => com.ligadata.BaseTypes.LongImpl.Clone(v));
-    }
-    else this.producedmessages = null;
+    } else this.producedmessages = null;
     this.error = com.ligadata.BaseTypes.StringImpl.Clone(other.error);
 
     this.setTimePartitionData(com.ligadata.BaseTypes.LongImpl.Clone(other.getTimePartitionData));
     return this;
   }
 
-  def withmodelid(value: Long) : KamanjaModelEvent = {
+  def withmodelid(value: Long): KamanjaModelEvent = {
     this.modelid = value
     return this
   }
-  def withelapsedtimeinms(value: Float) : KamanjaModelEvent = {
+  def withelapsedtimeinms(value: Float): KamanjaModelEvent = {
     this.elapsedtimeinms = value
     return this
   }
-  def witheventepochtime(value: Long) : KamanjaModelEvent = {
+  def witheventepochtime(value: Long): KamanjaModelEvent = {
     this.eventepochtime = value
     return this
   }
-  def withisresultproduced(value: Boolean) : KamanjaModelEvent = {
+  def withisresultproduced(value: Boolean): KamanjaModelEvent = {
     this.isresultproduced = value
     return this
   }
-  def withconsumedmessages(value: scala.Array[Long]) : KamanjaModelEvent = {
+  def withconsumedmessages(value: scala.Array[Long]): KamanjaModelEvent = {
     this.consumedmessages = value
     return this
   }
-  def withproducedmessages(value: scala.Array[Long]) : KamanjaModelEvent = {
+  def withproducedmessages(value: scala.Array[Long]): KamanjaModelEvent = {
     this.producedmessages = value
     return this
   }
-  def witherror(value: String) : KamanjaModelEvent = {
+  def witherror(value: String): KamanjaModelEvent = {
     this.error = value
     return this
   }
 
-  def this(factory:ContainerFactoryInterface) = {
+  def this(factory: ContainerFactoryInterface) = {
     this(factory, null)
   }
 

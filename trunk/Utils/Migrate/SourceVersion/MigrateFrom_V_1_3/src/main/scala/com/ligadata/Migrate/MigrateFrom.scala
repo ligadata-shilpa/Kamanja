@@ -42,7 +42,7 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  private var _srouceInstallPath: String = _
+  private var _sourceInstallPath: String = _
   private var _metadataStoreInfo: String = _
   private var _dataStoreInfo: String = _
   private var _statusStoreInfo: String = _
@@ -714,13 +714,13 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
     }
   }
 
-  override def init(srouceInstallPath: String, metadataStoreInfo: String, dataStoreInfo: String, statusStoreInfo: String, sourceReadFailuresFilePath: String): Unit = {
-    isValidPath(srouceInstallPath, true, false, "srouceInstallPath")
-    isValidPath(srouceInstallPath + "/bin", true, false, "bin folder in srouceInstallPath")
-    isValidPath(srouceInstallPath + "/lib/system", true, false, "/lib/system folder in srouceInstallPath")
-    isValidPath(srouceInstallPath + "/lib/application", true, false, "/lib/application folder in srouceInstallPath")
+  override def init(sourceInstallPath: String, metadataStoreInfo: String, dataStoreInfo: String, statusStoreInfo: String, sourceReadFailuresFilePath: String): Unit = {
+    isValidPath(sourceInstallPath, true, false, "sourceInstallPath")
+    isValidPath(sourceInstallPath + "/bin", true, false, "bin folder in sourceInstallPath")
+    isValidPath(sourceInstallPath + "/lib/system", true, false, "/lib/system folder in sourceInstallPath")
+    isValidPath(sourceInstallPath + "/lib/application", true, false, "/lib/application folder in sourceInstallPath")
 
-    _srouceInstallPath = srouceInstallPath
+    _sourceInstallPath = sourceInstallPath
     _metadataStoreInfo = metadataStoreInfo
     _dataStoreInfo = dataStoreInfo
     _statusStoreInfo = statusStoreInfo
@@ -839,12 +839,12 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
 
     val excludedMetadataTypes = if (excludeMetadata != null && excludeMetadata.length > 0) excludeMetadata.map(t => t.toLowerCase.trim).toSet else Set[String]()
 
-    val installPath = new File(_srouceInstallPath)
+    val installPath = new File(_sourceInstallPath)
 
     var fromVersionInstallationPath = installPath.getAbsolutePath
 
-    val sysPath = new File(_srouceInstallPath + "/lib/system")
-    val appPath = new File(_srouceInstallPath + "/lib/application")
+    val sysPath = new File(_sourceInstallPath + "/lib/system")
+    val appPath = new File(_sourceInstallPath + "/lib/application")
 
     val fromVersionJarPaths = collection.immutable.Set[String](sysPath.getAbsolutePath, appPath.getAbsolutePath)
 
@@ -1007,12 +1007,12 @@ class MigrateFrom_V_1_3 extends MigratableFrom {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
-    val installPath = new File(_srouceInstallPath)
+    val installPath = new File(_sourceInstallPath)
 
     var fromVersionInstallationPath = installPath.getAbsolutePath
 
-    val sysPath = new File(_srouceInstallPath + "/lib/system")
-    val appPath = new File(_srouceInstallPath + "/lib/application")
+    val sysPath = new File(_sourceInstallPath + "/lib/system")
+    val appPath = new File(_sourceInstallPath + "/lib/application")
 
     val fromVersionJarPaths = collection.immutable.Set[String](sysPath.getAbsolutePath, appPath.getAbsolutePath)
 

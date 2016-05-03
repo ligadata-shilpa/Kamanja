@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.ligadata.models.samples.finance.V1
+package com.ligadata.models.samples.finance.V4
 import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
@@ -30,7 +30,8 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
   val log = new com.ligadata.runtime.Log(this.getClass.getName)
   import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
-    Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%d".format(txnCtxt.transId, triggerdSetIndex, outputDefault))
+    if (isTraceEnabled)
+      Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%s".format(txnCtxt.transId, triggerdSetIndex, outputDefault.toString))
     if(isDebugEnabled)
     {
       execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
@@ -38,25 +39,27 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     //
     //
     def exeGenerated_transactionmsg_1(msg1: com.ligadata.kamanja.samples.messages.V1000000.TransactionMsgIn): Array[MessageInterface] = {
+      Debug("exeGenerated_transactionmsg_1")
       // Split the incoming data
-      val mapData: System.MapOfString = KeyValueMap(msg1.data, "|", "=")
-      def process_o1(): Array[MessageInterface] = {
-        // extract the type
-        val typeName: String = mapData.typename
-        if (!("com.ligadata.kamanja.samples.messages.TransactionMsg" == typeName)) return Array.empty[MessageInterface]
-        val result = com.ligadata.kamanja.samples.messages.V1000000.TransactionMsg.createInstance
-        result.branchid = conversion.ToInteger(mapData.get("branchid"))
-        result.custid = conversion.ToLong(mapData.get("custid"))
-        result.locationid = conversion.ToInteger(mapData.get("locationid"))
-        result.balance = conversion.ToDouble(mapData.get("balance"))
-        result.amount = conversion.ToDouble(mapData.get("amount"))
-        result.transtype = mapData.get("transtype")
-        result.accno = conversion.ToLong(mapData.get("accno"))
-        result.date = conversion.ToInteger(mapData.get("date"))
-        result.time = conversion.ToInteger(mapData.get("time"))
+      val arraydata: Array[String] = msg1.data.split(",")
+      // extract the type
+      val typeName: String = arraydata(0)
+      def process_o2(): Array[MessageInterface] = {
+        Debug("exeGenerated_transactionmsg_1::process_o2")
+        if (!("com.ligadata.kamanja.samples.messages.HL7" == typeName)) {
+          Debug("Filtered: transactionmsg@o2")
+          return Array.empty[MessageInterface]
+        }
+        val result = com.ligadata.kamanja.samples.messages.V1000000.HL71.createInstance
+        /*
+        result.desynpuf_id = arraydata(1)
+        result.clm_id = conversion.ToLong(arraydata(2))
+        */
+        result.set("clm_from_dt", arraydata(3))
+        result.set("clm_thru_dt", arraydata(4))
         Array(result)
       }
-      process_o1()
+      process_o2()
     }
     // Evaluate messages
     val msgs = execMsgsSet.map(m => m.getFullTypeName -> m).toMap
@@ -64,11 +67,12 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    if(msg1!=null) {
-      exeGenerated_transactionmsg_1(msg1)
-    } else {
-      Array.empty[MessageInterface]
-    }
+      (if(msg1!=null) {
+        exeGenerated_transactionmsg_1(msg1)
+      } else {
+        Array.empty[MessageInterface]
+      }) ++
+        Array.empty[MessageInterface]
     if(isDebugEnabled)
     {
       results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))

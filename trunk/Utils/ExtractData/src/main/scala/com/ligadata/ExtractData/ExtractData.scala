@@ -29,6 +29,9 @@ import scala.reflect.runtime.{ universe => ru }
 import scala.collection.mutable.TreeSet
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
+import java.lang.reflect.Modifier
 import com.ligadata.Serialize._
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.kamanja.metadata.MdMgr._
@@ -43,6 +46,18 @@ import com.ligadata.StorageBase.{ DataStore, Transaction }
 import java.util.Date
 import java.text.SimpleDateFormat
 import com.ligadata.KamanjaVersion.KamanjaVersion
+
+class ExcludeLogger extends ExclusionStrategy {
+  override def shouldSkipField(f: FieldAttributes): Boolean = {
+    //val exclude = f.getName().endsWith("LOG")
+    val exclude = f.getDeclaredClass().getName().equals("org.apache.log4j.Logger")
+    //println("name is " + f.getName() + "type is " + f.getDeclaredClass().getName() + " exclude " + exclude)
+    return exclude
+  }
+  override def shouldSkipClass(c: Class[_]): Boolean = {
+    return false
+  }
+}
 
 object ExtractData extends ObjectResolver {
   private val LOG = LogManager.getLogger(getClass);
@@ -284,7 +299,8 @@ object ExtractData extends ObjectResolver {
     val hasValidPrimaryKey = (partKey != null && primaryKey != null && partKey.size > 0 && primaryKey.size > 0)
 
     var os: OutputStream = null
-    val gson = new Gson();
+    //val gson = new Gson();
+    val gson = new GsonBuilder().setExclusionStrategies(new ExcludeLogger()).create()
 
     try {
       val compString = if (compressionString == null) null else compressionString.trim
@@ -302,6 +318,10 @@ object ExtractData extends ObjectResolver {
       val getObjFn = (k: Key, v: Any, serType: String, typ: String, ver:Int) => {
         val dta = v.asInstanceOf[ContainerInterface]
         if (dta != null) {
+          //val aa = dta.getNativeKeyValues
+          //aa.keys.foreach{ i => print(aa(i))}
+          //println("")
+
           if (hasValidPrimaryKey) {
             // Search for primary key match
             if (primaryKey.sameElements(dta.getPrimaryKey)) {
@@ -457,4 +477,3 @@ object ExtractData extends ObjectResolver {
     sys.exit(exitCode)
   }
 }
-
