@@ -759,7 +759,8 @@ object ConfigUtils {
             // gather config name-value pairs
             var cfgMap: scala.collection.mutable.HashMap[String,String] = null
 
-            // Upload the latest and see if any are new updates
+            // Upload the latest and see if any are new updates - do it like this to make sure
+            // incremental update does not remove existing values
             val currentCic = MdMgr.GetMdMgr.GetClusterCfg(ClusterId.toLowerCase.trim)
             if (currentCic == null) {
               cfgMap = new scala.collection.mutable.HashMap[String, String]
@@ -920,6 +921,19 @@ object ConfigUtils {
                 val tenantId = adap.getOrElse("TenantId", "").toString.trim
                 val clsNm = adap.getOrElse("ClassName", "").toString.trim
                 val jarnm = adap.getOrElse("JarName", "").toString.trim
+
+                if (nm.trim.length == 0) {
+                  val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : Name must be set in the adapter for cluster " + ClusterId + ", " + ErrorCodeConstants.Upload_Config_Failed)
+                  return apiResult.toString()
+                }
+                if (typStr.trim.length == 0) {
+                  val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : Type String must be set in the adapter for cluster " + ClusterId + ", " + ErrorCodeConstants.Upload_Config_Failed)
+                  return apiResult.toString()
+                }
+                if (tenantId.trim.length == 0) {
+                  val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UploadConfig", cfgStr, "Error : Tenant ID must be set in the adapter for cluster " + ClusterId + ", " + ErrorCodeConstants.Upload_Config_Failed)
+                  return apiResult.toString()
+                }
 
                 var depJars: List[String] = null
                 if (adap.contains("DependencyJars")) {
