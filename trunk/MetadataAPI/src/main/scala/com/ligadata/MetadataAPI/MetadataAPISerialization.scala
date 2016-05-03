@@ -829,7 +829,7 @@ object MetadataAPISerialization {
       msgDef.creationTime = MsgDefInst.Message.NumericTypes.CreationTime
       msgDef.modTime = MsgDefInst.Message.NumericTypes.ModTime
       msgDef.description = MsgDefInst.Message.Description
-      msgDef.author = MsgDefInst.Message.Author
+      msgDef.author = "" // MsgDefInst.Message.Author
       msgDef.mdElemStructVer = MsgDefInst.Message.NumericTypes.MdElemStructVer
       msgDef.cType.persist = MsgDefInst.Message.Persist
       msgDef.active = MsgDefInst.Message.IsActive
@@ -924,7 +924,7 @@ object MetadataAPISerialization {
       contDef.creationTime = ContDefInst.Container.NumericTypes.CreationTime
       contDef.modTime = ContDefInst.Container.NumericTypes.ModTime
       contDef.description = ContDefInst.Container.Description
-      contDef.author = ContDefInst.Container.Author
+      contDef.author = "" // ContDefInst.Container.Author
       contDef.mdElemStructVer = ContDefInst.Container.NumericTypes.MdElemStructVer
       contDef.cType.persist = ContDefInst.Container.Persist
       contDef.active = ContDefInst.Container.IsActive
@@ -2012,7 +2012,7 @@ case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: 
 
 case class MsgAttr(NameSpace: String, Name: String, TypNameSpace: String, TypName: String, Version: Long, CollectionType: String)
 
-case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], MsgAttributes: List[MsgAttr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, Author: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String, IsFixed: Boolean)
+case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], MsgAttributes: List[MsgAttr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String, IsFixed: Boolean)
 
 case class PrimaryKeys(constraintName: String, key: List[String])
 

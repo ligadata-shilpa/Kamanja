@@ -367,8 +367,19 @@ class CompilerProxy {
       val msg = new MessageCompiler()
       logger.debug("Call Message Compiler ....")
       val schemaId = MetadataAPIImpl.GetSchemaId
+      var elementId: Long = 0
       val ((classStrVer, classStrVerJava), msgDef, (classStrNoVer, classStrNoVerJava), rawMsgStr) = msg.processMsgDef(msgDefStr, "JSON", mgr, schemaId, tenantId, recompile)
       logger.debug("Message Compilation done ...." + JsonSerializer.SerializeObjectToJson(msgDef))
+
+      // Element ID will be replaced if this is an ADD, so pull the exisiting guy
+      if (msgDef.MdElementCategory.equalsIgnoreCase("message")) {
+        val existingObject = MdMgr.GetMdMgr.Message(msgDef.NameSpace, msgDef.Name, -1, false)
+        elementId = if (existingObject == None) MetadataAPIImpl.GetMdElementId else existingObject.get.MdElementId
+      } else {
+        val existingObject = MdMgr.GetMdMgr.Container(msgDef.NameSpace, msgDef.Name, -1, false)
+        elementId = if (existingObject == None) MetadataAPIImpl.GetMdElementId else existingObject.get.MdElementId
+      }
+
 
       val nameArray = msgDef.PhysicalName.split('.')
       var realClassName: String = ""
@@ -465,7 +476,7 @@ class CompilerProxy {
 
       msgDef.objectDefinition = msgDefStr
       msgDef.objectFormat = fJSON
-      msgDef.mdElementId = MetadataAPIImpl.GetMdElementId
+      msgDef.mdElementId = elementId
       msgDef.uniqueId = MetadataAPIImpl.GetUniqueId
 
       (classStrVer, msgDef, classStrNoVer)
