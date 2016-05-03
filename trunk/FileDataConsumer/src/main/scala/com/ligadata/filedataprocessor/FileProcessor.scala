@@ -1303,7 +1303,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         }
         case ioe: IOException => {
           logger.error("Failed to read file " + fileName, ioe)
-          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.BROKEN_FILE, isLastChunk, partMap)
+          val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
           return
         }
