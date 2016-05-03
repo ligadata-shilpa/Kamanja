@@ -138,20 +138,35 @@ _Remove the supplied binding key_
 
 
 [
-  "kafkaAdapterInput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser",
-  "kafkaAdapterInput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser",
-  "hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser",
-  "hBaseStore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser"
+	"kafkaadapterinput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.jsonserdeser",
+	"kafkaadapterinput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.jsonserdeser",
+	"kafkaadapteroutput2,com.botanical.csv.emailmsg,com.ligadata.kamanja.serializer.csvserdeser",
+	"hbasestore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.jsonserdeser",
+	"hbasestore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.jsonserdeser"
 ]
 
+_From String_
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding FROMSTRING '["kafkaadapterinput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.jsonserdeser", "kafkaadapterinput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.jsonserdeser", "kafkaadapteroutput2,com.botanical.csv.emailmsg,com.ligadata.kamanja.serializer.csvserdeser", "hbasestore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.jsonserdeser", "hbasestore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.jsonserdeser"]'
 
-$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding FROMSTRING '["kafkaAdapterInput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser", "kafkaAdapterInput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser", "hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser", "hBaseStore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser"]'
-
-$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding FROMFILE someFile.path.that.contains.the.array.above.json'
+_From File_
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties remove adaptermessagebinding FROMFILE $MetadataDir/config/AdapterMessageBindingsDeleteForClusterConfig1.4.0.json
 
 **Failure test cases**
 
 Each test case has a one message and multiple message version.
+
+_mapped message used in following test case_
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add message $MetadataDir/message/com.botanical.csv.mapped.emailmsg.json tenantid "botanical"
+
+_csv serializer with mapped message_
+
+	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.mappedemailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": true, "alwaysQuoteFields": false } }'
+
+_csv serializer with message field_
+
+	$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '{"AdapterName": "kafkaAdapterOutput2", "MessageNames": ["com.botanical.csv.emailmsg"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"lineDelimiter": "\r\n", "fieldDelimiter": ",", "produceHeader": true, "alwaysQuoteFields": false } }'
+
 
 _bad adapter name_
 	
@@ -234,6 +249,10 @@ setPathsFor.scala --installDir $KAMANJA_HOME --templateFile $MetadataDir/templat
 _Define the cluster info_
 
 $KAMANJA_HOME/bin/kamanja $apiConfigProperties upload cluster config $KAMANJA_HOME/config/adapterMessageBindingClusterConfig.json
+
+_Define the system bindings_
+
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMFILE $KAMANJA_HOME/config/SystemMsgs_Adapter_Binding.json
 
 _Define the messages_
 

@@ -145,6 +145,94 @@ object AdapterMessageBindingUtils {
     }
 
     /**
+      * Remove the bindings found in the supplied list.  Their form should be:
+      *
+      * '''
+      *     "AdapterName,Namespace.MessageName,Namespace.SerializerName"
+      * '''
+      *
+      * Note: If any of the bindings are not found in the metadata cache, no bindings are removed.
+      *
+      * @param bindingList a List of binding keys to be removed.
+      * @param userId the user requesting this operation
+      * @return result string for all of the AdapterMessageBindings removed.
+      */
+    def RemoveAdapterMessageBindings(bindingList : List[String], userId : Option[String]) : String = {
+
+        /** Only remove the bindings iff all of them can be removed */
+        val allBindingsPresent : List[String] = bindingList.map(bindingKey => {
+            if (mdMgr.AllAdapterMessageBindings.contains(bindingKey))
+                bindingKey
+            else
+                s"BINDING NOT PRESENT - $bindingKey"
+        })
+
+        val removalMayProceed : Boolean = allBindingsPresent.length == bindingList.length
+        val result : String = if (removalMayProceed) {
+            /** Create a list of bindings that were removed. This should not happen but due to the allBindingsPresent
+              * check above... BUT should the key not be present, a null is returned by the code below.. that will
+              * cause error message to be issued and warning that our "reject all remove" logic attempted with the
+              * allBindingsPresent check above is not correct or complete in some way.
+              */
+            val cacheRemoveResults: List[(AdapterMessageBinding, String)] = bindingList.map(bindingKey => {
+                (mdMgr.RemoveAdapterMessageBinding(bindingKey), bindingKey)
+            })
+
+            val interimresults: String = if (cacheRemoveResults != null) {
+
+                val xid: Long = PersistenceUtils.GetNewTranId
+                val results: List[(AdapterMessageBinding, String)] = cacheRemoveResults.map(bindingPair => {
+                    val (binding, keyUsed): (AdapterMessageBinding, String) = bindingPair
+                    val (bindingRem, removeResult): (AdapterMessageBinding, String) = if (binding != null) {
+                        /** Assign a current transaction id to the object so that we don't rezero the counter in NotifyEngine */
+                        binding.tranId = xid
+                        val fqBindingName: String = binding.FullBindingName
+                        ConfigUtils.RemoveAdapterMessageBindingFromCache(fqBindingName)
+
+                        val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding", fqBindingName, ErrorCodeConstants.Remove_AdapterMessageBinding_Successful)
+                        (binding, apiResult.toString())
+                    } else {
+                        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "Remove AdapterMessageBinding", keyUsed, ErrorCodeConstants.Remove_AdapterMessageBinding_Failed)
+                        (binding, apiResult.toString())
+
+                    }
+                    (bindingRem, removeResult)
+
+                })
+
+                /** Sanity check ... */
+                val ok : Boolean = cacheRemoveResults.count(pair => pair._1 != null) == cacheRemoveResults.length
+                val zkNotifyResults : String = if (ok) {
+                    /** Notify the cluster via zookeeper of removal */
+                    val bindingsRemoved: Array[BaseElemDef] = cacheRemoveResults.map(pair => pair._1).toArray
+                    val operations: Array[String] = bindingsRemoved.map(binding => "Remove")
+                    val bindingsThatWereRemoved: String = bindingsRemoved.map(b => b.asInstanceOf[AdapterMessageBinding].FullBindingName).mkString(", ")
+                    logger.debug(s"Notify cluster via zookeeper that this binding has been removed... $bindingsThatWereRemoved")
+                    MetadataAPIImpl.NotifyEngine(bindingsRemoved, operations)
+                    val apiResult = new ApiResult(ErrorCodeConstants.Success, "Remove AdapterMessageBinding Zookeeper Notification", bindingsThatWereRemoved, ErrorCodeConstants.Remove_AdapterMessageBinding_Successful)
+                    apiResult.toString
+                } else {
+                    val apiResult = new ApiResult(ErrorCodeConstants.Failure, "Remove AdapterMessageBinding", s"${ErrorCodeConstants.Remove_AdapterMessageBinding_Failed} ; ${ErrorCodeConstants.Remove_AdapterMessageBinding_Failed}", "Verification logic that all adapters were present is either incorrect or incomplete in some way!")
+                    apiResult.toString()
+                }
+                /** The complete message consists of the cache removal results + the zkNotification result from the entire list.*/
+                val cacheRemoveMsgs : String = results.map(pair => pair._2).mkString(",\n")
+                s"$cacheRemoveMsgs,\n$zkNotifyResults"
+            } else {
+                val apiResult = new ApiResult(ErrorCodeConstants.Failure, "Remove AdapterMessageBinding", null, s"${ErrorCodeConstants.Remove_AdapterMessageBinding_Failed} : no bindings could be removed... internal logic error")
+                apiResult.toString()
+            }
+            interimresults
+        } else {
+            val bindingsPresentMsg : String = allBindingsPresent.mkString(", ")
+            val overallApiResult = new ApiResult(ErrorCodeConstants.Failure, "Remove AdapterMessageBinding", null, s"${ErrorCodeConstants.Remove_AdapterMessageBinding_Failed} : no bindings could be removed... one or more bindings are missing... $bindingsPresentMsg")
+            overallApiResult.toString()
+        }
+
+        s"[\n$result\n]"
+    }
+
+    /**
       * Answer all of the  AdapaterMessageBindings defined.
       *
       * @return a Map[String, AapterMessageBinding] with 0 or more kv pairs.
@@ -300,6 +388,7 @@ object AdapterMessageBindingUtils {
             if (! msgPresent) {
                 buffer.append(s"The message $messageName cannot be found in the metadata...; ")
             }
+
             msgD
         } else {
             null
@@ -320,27 +409,29 @@ object AdapterMessageBindingUtils {
          *
          * FIXME: if the namespace of the standard csv serializer changes, the constant below MUST change with it.
          */
-        val csvNamespaceName : String = "com.ligadata.kamanja.serializer.delimitedserdeser"
+        val csvNamespaceName : String = "com.ligadata.kamanja.serializer.csvserdeser"
         val serializerNamespaceName : String = if (serializer != null) s"${serializer.FullName.toLowerCase}" else "_no_name_"
         val isCsvSerializer : Boolean = (serializerNamespaceName == csvNamespaceName)
-        val msgFields : Array[BaseAttributeDef] = if (msgDef != null && isCsvSerializer) {
+        val (msgFields, isMappedCSVAttempt) : (Array[BaseAttributeDef], Boolean) = if (msgDef != null && isCsvSerializer) {
             if (msgDef.containerType.isInstanceOf[MappedMsgTypeDef]) {
-                val mappedMsg : MappedMsgTypeDef = msgDef.containerType.asInstanceOf[MappedMsgTypeDef]
-                mappedMsg.attrMap.values.toArray
+                (null, true)
             } else if (msgDef.containerType.isInstanceOf[StructTypeDef]) {
                 val structMsg : StructTypeDef = msgDef.containerType.asInstanceOf[StructTypeDef]
-                structMsg.memberDefs
+                (structMsg.memberDefs, false)
             } else {
                 logger.error(s"A MessageDef ${msgDef.FullName} has a type is not a MappedMsgTypeDef or StructTypeDef.")
-                null
+                (null, false)
             }
         } else {
-            null
+            (null,false) // no need to check for json or kbinary serializers
         }
 
-        val msgHasContainerFields : Boolean = (msgFields != null && msgFields.filter(fld => fld.typeDef.isInstanceOf[ContainerTypeDef]).length > 0)
+        val msgHasContainerFields : Boolean = (msgFields != null && msgFields.count(fld => fld.typeDef.isInstanceOf[ContainerTypeDef]) > 0)
         if (msgHasContainerFields) {
             buffer.append(s"The message $messageName has container type fields.  These are not handled by the $csvNamespaceName serializer...; ")
+        }
+        if (isMappedCSVAttempt) {
+            buffer.append(s"MAPPED messages like $messageName are not handled by the $csvNamespaceName serializer at this time...; ")
         }
 
         val ok : Boolean = buffer.isEmpty

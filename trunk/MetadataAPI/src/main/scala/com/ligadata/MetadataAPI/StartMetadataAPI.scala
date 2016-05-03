@@ -534,11 +534,23 @@ object StartMetadataAPI {
         }
         case Action.REMOVEADAPTERMESSAGEBINDING => {
             val bindingKey : String = extraCmdArgs.getOrElse(Action.REMOVEADAPTERMESSAGEBINDING.toString, "")
-            if (bindingKey.isEmpty) {
-                println(s"Remove Adapter Message Binding syntax: \nkamanja <apiconfig> remove adaptermessagebinding '<adapter name>,<namespace.msgname>,namespace.serializername>'")
-                throw new RuntimeException(s"Remove Adapter Message Binding syntax: \nkamanja <apiconfig> remove adaptermessagebinding '<adapter name>,<namespace.msgname>,namespace.serializername>'")
+            if (bindingKey.nonEmpty) {
+                response = AdapterMessageBindingService.removeAdapterMessageBinding(bindingKey, userId)
+            } else {
+
+                val bindingString: String = extraCmdArgs.getOrElse(FROMSTRING, "")
+                val bindingFilePath: String = extraCmdArgs.getOrElse(FROMFILE, "")
+                fileinquesiton = bindingFilePath
+                val invalidArgs : Boolean = (bindingString.nonEmpty && bindingFilePath.nonEmpty) || (bindingString.isEmpty && bindingFilePath.isEmpty)
+                if (invalidArgs) {
+                    println(s"Remove Adapter Message Binding - invalid arguments supplied.  Check the syntax.  One of three ways are permissible:\nkamanja <apiconfig> remove adaptermessagebinding FROMFILE <file path with json content for binding key(s)>\nkamanja <apiconfig> remove adaptermessagebinding FROMSTRING '[ <json array item or items of the form adapterName,namespace.messageName,namespace.serializerName> ]'\nkamanja <apiconfig> remove adaptermessagebinding KEY '<adapterName,namespace.messageName,namespace.serializerName>'")
+                    throw new RuntimeException(s"Remove Adapter Message Binding - invalid arguments supplied.  Check the syntax.  One of three ways are permissible:\nkamanja <apiconfig> remove adaptermessagebinding FROMFILE <file path with json content for binding key(s)>\nkamanja <apiconfig> remove adaptermessagebinding FROMSTRING '[ <json array item or items of the form adapterName,namespace.messageName,namespace.serializerName> ]'\nkamanja <apiconfig> remove adaptermessagebinding KEY '<adapterName,namespace.messageName,namespace.serializerName>'")
+                } else if (bindingString.nonEmpty) {
+                    response = AdapterMessageBindingService.removeFromInlineAdapterMessageBinding(bindingString, userId)
+                } else if (bindingFilePath.nonEmpty) {
+                    response = AdapterMessageBindingService.removeFromFileAnAdapterMessageBinding(bindingFilePath, userId)
+                }
             }
-            response = AdapterMessageBindingService.removeAdapterMessageBinding(bindingKey, userId)
         }
 
         case Action.LISTADAPTERMESSAGEBINDINGS => {

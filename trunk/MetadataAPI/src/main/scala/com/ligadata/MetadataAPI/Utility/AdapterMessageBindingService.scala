@@ -161,6 +161,108 @@ object AdapterMessageBindingService {
         result
     }
 
+   // response = AdapterMessageBindingService.removeFromInlineAdapterMessageBinding(bindingString, userId)
+//} else if (bindingFilePath.nonEmpty) {
+
+    /**
+      * Remove one or more adapter message bindings from an inline string spec of a json array.  The expectation is it
+      * will contain one or more binding keys (adapterName,namespaceMsgName,namespaceSerializerName) flattened to a single line.
+      * For example,
+      *
+      * '''
+      *     ["kafkaAdapterInput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser", "kafkaAdapterInput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser", "hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser", "hBaseStore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser"]
+      * '''
+      *
+      * @param input in the form of a JSON string specifying the binding(s)
+      * @param userId the user that is performing the add (currently optional)
+      * @return a JSON message result
+      */
+    def removeFromInlineAdapterMessageBinding(input: String, userId : Option[String]) : String = {
+
+        val userIdentifier : String = userId.getOrElse(null)
+        if (userIdentifier != null) {
+            /** FIXME: discern (when implemented) if this user is authorized to execute this command */
+        } else {
+            /** FIXME: complain that there is no user id when that day comes that the user must be specified */
+        }
+
+        val inputTrimmed : String = if (input != null) input.trim else null
+        if (input == null) {
+            throw InvalidArgumentException("attempting to remove adapter message binding with bogus input text", null)
+        }
+        val isInlineSpec : Boolean = (inputTrimmed.startsWith("["))
+        val result : String = if (isInlineSpec) {
+            removeAdapterMessageBindingFromJson(inputTrimmed, userId)
+        } else {
+            throw InvalidArgumentException("the adapter string specified must currently a json array. See manual for syntax", null)
+        }
+        result
+    }
+
+    /**
+      * Remove one or more adapter message bindings from content of the file.  The expectation is that the file
+      * will contain a JSON Array of one or more binding keys (adapterName,namespaceMsgName,namespaceSerializerName).
+      * For example,
+      *
+      * '''
+      *     [
+      *      "kafkaAdapterInput1,com.botanical.json.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser",
+      *      "kafkaAdapterInput1,com.botanical.json.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser",
+      *      "hBaseStore1,com.botanical.json.audit.ordermsg,com.ligadata.kamanja.serializer.JsonSerDeser",
+      *      "hBaseStore1,com.botanical.json.audit.shippingmsg,com.ligadata.kamanja.serializer.JsonSerDeser"
+      *     ]
+      * '''
+      *
+      * @param input a path specification of a file that contains the binding(s).
+      * @param userId the user that is performing the add (currently optional)
+      * @return JSON result string describing all results
+      */
+    def removeFromFileAnAdapterMessageBinding(input: String, userId : Option[String]) : String = {
+
+        val userIdentifier : String = userId.getOrElse(null)
+        if (userIdentifier != null) {
+            /** FIXME: discern (when implemented) if this user is authorized to execute this command */
+        } else {
+            /** FIXME: complain that there is no user id when that day comes that the user must be specified */
+        }
+
+        val inputTrimmed : String = if (input != null) input.trim else null
+        if (input == null) {
+            throw InvalidArgumentException("attempting to remove by file one or adapter message binding with bogus input text", null)
+        }
+        val jsonText: String = Source.fromFile(input).mkString
+        val result = removeAdapterMessageBindingFromJson(jsonText, userId)
+        result
+    }
+
+
+    /**
+      * Remove the adapter message binding or bindings mentioned in the string
+      *
+      * @param input a Json string ... currently must be [ key, key,... ] where key is in the form of
+      *              "adaptername,namespace.msgname,namespace.serializername"
+      * @param userId the user requesting this operation
+      * @return ; JSON result string describing all results
+      */
+    @throws(classOf[com.ligadata.Exceptions.InvalidArgumentException])
+    private def removeAdapterMessageBindingFromJson(input: String, userId : Option[String]) : String = {
+
+        val trimmedInput : String = input.trim
+        val isList : Boolean = trimmedInput.startsWith("[")
+
+        val reasonable : Boolean = isList
+        if (! reasonable) {
+            throw InvalidArgumentException("the adapter string specified must be currently be a json array.", null)
+        }
+        val result : String = if (isList) {
+            val bindingSpecList : List[String] = jsonStringAsColl(input).asInstanceOf[List[String]]
+            AdapterMessageBindingUtils.RemoveAdapterMessageBindings(bindingSpecList, userId)
+        } else {
+            ""
+        }
+        result
+    }
+
     /**
       * Answer the full binding names of all of the  AdapaterMessageBindings defined.
       *
