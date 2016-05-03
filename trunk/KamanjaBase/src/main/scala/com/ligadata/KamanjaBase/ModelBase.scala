@@ -980,10 +980,17 @@ class ModelBaseObjMdlInstanceFactory(modelDef: ModelDef, nodeContext: NodeContex
   override def createResultObject() = mdlBaseObj.CreateResultObject()
 
   override def isModelInstanceReusable(): Boolean = {
-    // Temporary Transaction context & model contexts
-    val tmpTxnCtxt = new TransactionContext(0, nodeContext, Array[Byte](), EventOriginInfo(null, null), 0, null)
-    val modelContext = new ModelContext(tmpTxnCtxt, null, tmpTxnCtxt.getInputMessageData(), tmpTxnCtxt.getPartitionKey())
-    mdlBaseObj.CreateNewModel(modelContext).isModelInstanceReusable()
+    // Default value
+    var isReusable = false
+    try {
+      // Temporary Transaction context & model contexts
+      val tmpTxnCtxt = new TransactionContext(0, nodeContext, Array[Byte](), EventOriginInfo(null, null), 0, null)
+      val modelContext = new ModelContext(tmpTxnCtxt, null, tmpTxnCtxt.getInputMessageData(), tmpTxnCtxt.getPartitionKey())
+      isReusable = mdlBaseObj.CreateNewModel(modelContext).isModelInstanceReusable()
+    } catch {
+      case e: Throwable => { /* in case of exceptions we are just returning isReusable as false. That may be an issue. The assumption is create model and calling isModelInstanceReusable should not have big logic on messages etc. */ }
+    }
+    isReusable
   }
 }
 
