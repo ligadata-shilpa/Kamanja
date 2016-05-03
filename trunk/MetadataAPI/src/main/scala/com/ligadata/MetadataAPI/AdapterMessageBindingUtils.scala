@@ -438,7 +438,7 @@ object AdapterMessageBindingUtils {
         }
 
         /** 8) input adapter check.  Prevent more than one binding on an input adapter */
-        val isInputAdapter : Boolean = adapter.TypeString.compareToIgnoreCase("input") == 0
+        val isInputAdapter : Boolean = (adapter != null && adapter.TypeString.compareToIgnoreCase("input") == 0)
         if (isInputAdapter) {
             /** count the number of bindings for this input adapter... There should be NONE at this point */
             val existingBindings : scala.collection.immutable.Map[String,AdapterMessageBinding] =  mdMgr.BindingsForAdapter(adapter.Name)
