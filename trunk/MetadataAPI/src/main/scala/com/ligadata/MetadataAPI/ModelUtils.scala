@@ -1318,7 +1318,7 @@ object ModelUtils {
           s"UpdateModel version $version of $modelNmSpace.$modelNm results:\n$rmModelResult\n$addResult"
         } else {
           val reasonForFailure: String = if (modDef != null) {
-            ErrorCodeConstants.Update_Model_Failed_Invalid_Version
+            ErrorCodeConstants.Update_Model_Failed_Higher_Version_Required
           } else {
             ErrorCodeConstants.Update_Model_Failed
           }
@@ -1533,7 +1533,7 @@ object ModelUtils {
         result
 
       } else {
-        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Invalid_Version else ErrorCodeConstants.Update_Model_Failed
+        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Update_Model_Failed
         val modDefName: String = if (modDef != null) modDef.FullName else "(kpmml compile failed)"
         val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = KPMML)", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
@@ -1639,7 +1639,9 @@ object ModelUtils {
         result
 
       } else {
-        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Invalid_Version else ErrorCodeConstants.Update_Model_Failed
+        // 1090 - Introduced to let user know higher version required - Change begins
+        val reasonForFailure: String = if (modDef != null) ErrorCodeConstants.Update_Model_Failed_Higher_Version_Required else ErrorCodeConstants.Update_Model_Failed
+        // 1090 - Change ends
         val modDefName: String = if (modDef != null) modDef.FullName else "(jtm compile failed)"
         val modDefVer: String = if (modDef != null) MdMgr.Pad0s2Version(modDef.Version) else MdMgr.UnknownVersion
         var apiResult = new ApiResult(ErrorCodeConstants.Failure, s"UpdateModel(type = JTM)", null, reasonForFailure + ":" + modDefName + "." + modDefVer)
