@@ -523,6 +523,15 @@ class MigrateTo_V_1_4 extends MigratableTo {
       throw new Exception("tenantId can't be null")
     }
 
+    if (adapterMessageBindings != null && adapterMessageBindings.size > 0) {
+      _adapterMessageBindings = Some(adapterMessageBindings)
+    }
+    else {
+      throw new Exception("adapterMessageBindings can't be null")
+    }
+
+    isValidPath(adapterMessageBindings);
+    
     val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     val metaDataStoreInfo = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("METADATA_DATASTORE");
@@ -576,13 +585,6 @@ class MigrateTo_V_1_4 extends MigratableTo {
     _mergeContainerAndMessages = mergeContainerAndMessages
 
     _tenantDsDb = GetDataStoreHandle(toVersionJarPaths, tenantDatastoreInfo)
-
-    if (adapterMessageBindings != null && adapterMessageBindings.size > 0) {
-      _adapterMessageBindings = Some(adapterMessageBindings)
-    }
-    else {
-      throw new Exception("adapterMessageBindings can't be null")
-    }
 
     _bInit = true
   }
