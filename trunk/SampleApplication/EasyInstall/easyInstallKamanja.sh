@@ -187,7 +187,7 @@ cp MetadataAPI/target/scala-2.10/metadataapi* $systemlib
 cp KamanjaManager/target/scala-2.10/kamanjamanager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.10/methodextractor* $bin
 cp Utils/SimpleKafkaProducer/target/scala-2.10/simplekafkaproducer* $systemlib
-cp Utils/ExtractData/target/scala-2.10/extractdata* $bin
+cp Utils/ExtractData/target/scala-2.10/extractdata* $systemlib
 cp Utils/JdbcDataCollector/target/scala-2.10/jdbcdatacollector* $systemlib
 cp MetadataAPIService/target/scala-2.10/metadataapiservice* $systemlib
 cp FileDataConsumer/target/scala-2.10/filedataconsumer* $systemlib
@@ -478,7 +478,7 @@ cp MetadataAPI/target/scala-2.11/metadataapi* $systemlib
 cp KamanjaManager/target/scala-2.11/kamanjamanager* $systemlib
 # cp Pmml/MethodExtractor/target/scala-2.11/methodextractor* $bin
 cp Utils/SimpleKafkaProducer/target/scala-2.11/simplekafkaproducer* $systemlib
-cp Utils/ExtractData/target/scala-2.11/extractdata* $bin
+cp Utils/ExtractData/target/scala-2.11/extractdata* $systemlib
 cp Utils/JdbcDataCollector/target/scala-2.11/jdbcdatacollector* $systemlib
 cp MetadataAPIService/target/scala-2.11/metadataapiservice* $systemlib
 cp FileDataConsumer/target/scala-2.11/filedataconsumer* $systemlib
