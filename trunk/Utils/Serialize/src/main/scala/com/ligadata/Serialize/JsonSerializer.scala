@@ -866,6 +866,13 @@ object JsonSerializer {
           ("CfgMap" -> o.cfgMap))
         compact(render(json))
       }
+      case o: TenantInfo => {
+        val json = (("TenantId" -> o.tenantId) ~
+          ("Description" -> o.description) ~
+          ("PrimaryDataStore" -> o.primaryDataStore) ~
+          ("CacheConfig" -> o.cacheConfig))
+        compact(render(json))
+      }
       case o: NodeInfo => {
         val json = (("NodeId" -> o.nodeId) ~
           ("NodePort" -> o.nodePort) ~
