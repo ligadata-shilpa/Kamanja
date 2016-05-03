@@ -59,6 +59,8 @@ sed "s/{InstallDirectory}/$install_dir_repl/g;s/{ScalaInstallDirectory}/$scala_h
 sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/script/ContainersUtility_Template.sh > $install_dir/bin/ContainersUtility.sh
 sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/script/JsonChecker_Template.sh > $install_dir/bin/JsonChecker.sh
 sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/script/FileDataConsumer_Template.sh > $install_dir/bin/FileDataConsumer.sh
+sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/script/ExtractData_Template.sh > $install_dir/bin/ExtractData.sh
+sed "s/{InstallDirectory}/$install_dir_repl/g" $install_dir/template/script/JdbcDataCollector_Template.sh > $install_dir/bin/JdbcDataCollector.sh
 
 #new one
 #HelloWorld
