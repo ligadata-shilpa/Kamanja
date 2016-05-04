@@ -18,9 +18,10 @@
 package com.ligadata.OutputAdapters
 
 import java.util.{ Properties, Arrays }
+import com.ligadata.KamanjaBase.{ContainerInterface, TransactionContext, NodeContext}
 import kafka.common.{ QueueFullException, FailedToSendMessageException }
 import org.apache.logging.log4j.{ Logger, LogManager }
-import com.ligadata.InputOutputAdapterInfo.{ AdapterConfiguration, OutputAdapter, OutputAdapterObj, CountersAdapter }
+import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration.{ KafkaConstants, KafkaQueueAdapterConfiguration }
 import com.ligadata.Exceptions.{ FatalAdapterException }
 import com.ligadata.HeartBeat.{Monitorable, MonitorComponentInfo}
@@ -35,8 +36,8 @@ import scala.actors.threadpool.{ TimeUnit, ExecutorService, Executors }
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
-object KafkaProducer extends OutputAdapterObj {
-  def CreateOutputAdapter(inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter): OutputAdapter = new KafkaProducer(inputConfig, cntrAdapter)
+object KafkaProducer extends OutputAdapterFactory {
+  def CreateOutputAdapter(inputConfig: AdapterConfiguration, nodeContext: NodeContext): OutputAdapter = new KafkaProducer(inputConfig, nodeContext)
   val HB_PERIOD = 5000
 
   // Statistics Keys
@@ -51,7 +52,7 @@ object KafkaProducer extends OutputAdapterObj {
 // New Producer configs are found @ http://kafka.apache.org/082/documentation.html#newproducerconfigs
 // We still have ordering issues with Kafka. Once case is, if Kafka goes down and comes back and if we have list of new messages to send before it trigger failure, the new messages may go first
 
-class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: CountersAdapter) extends OutputAdapter {
+class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeContext) extends OutputAdapter {
   private[this] val LOG = LogManager.getLogger(getClass);
 
   //BUGBUG:: Not Checking whether inputConfig is really QueueAdapterConfiguration or not. 
@@ -78,7 +79,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
   val linger_ms = qc.otherconfigs.getOrElse("linger.ms", default_linger_ms).toString.trim()
   val timeout_ms = qc.otherconfigs.getOrElse("timeout.ms", default_timeout_ms).toString.trim()
   val metadata_fetch_timeout_ms = qc.otherconfigs.getOrElse("metadata.fetch.timeout.ms", default_metadata_fetch_timeout_ms).toString.trim()
-
+  private var msgCount = 0
   val counterLock = new Object
 
   private var metrics: collection.mutable.Map[String,Any] = collection.mutable.Map[String,Any]()
@@ -334,6 +335,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
 
   /**
    *
+   *
    * @return
    */
   override def getComponentStatusAndMetrics: MonitorComponentInfo = {
@@ -341,12 +343,17 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     return new MonitorComponentInfo( AdapterConfiguration.TYPE_OUTPUT, qc.Name, KafkaProducer.ADAPTER_DESCRIPTION, startTime, lastSeen,  Serialization.write(metrics).toString)
   }
 
+  override def getComponentSimpleStats: String = {
+    return key + "->" + msgCount
+  }
+
   /**
    *
-   * @param messages
-   * @param partKeys
+   * @param tnxCtxt
+   * @param outputContainers
    */
-  override def send(messages: Array[Array[Byte]], partKeys: Array[Array[Byte]]): Unit = {
+  override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
+    if (outputContainers.size == 0) return
 
     // Sanity checks
     if (isShutdown) {
@@ -355,12 +362,15 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
       throw new Exception(szMsg)
     }
 
-    if (messages.size != partKeys.size) {
-      val szMsg = qc.Name + " KAFKA PRODUCER: Message and Partition Keys should has same number of elements. Message has %d and Partition Keys has %d".format(messages.size, partKeys.size)
+    val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
+
+    if (outContainers.size != serializedContainerData.size || outContainers.size != serializerNames.size) {
+      val szMsg = qc.Name + " KAFKA PRODUCER: Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outContainers.size, serializedContainerData.size, serializerNames.size)
       LOG.error(szMsg)
       throw new Exception(szMsg)
     }
-    if (messages.size == 0) return
+
+    if (serializedContainerData.size == 0) return
 
     if (!isHeartBeating) runHeartBeat
 
@@ -374,14 +384,14 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
     try {
       var partitionsMsgMap = scala.collection.mutable.Map[Int, ArrayBuffer[MsgDataRecievedCnt]]();
 
-      for (i <- 0 until messages.size) {
-        val partId = getPartition(partKeys(i), topicPartitionsCount)
+      for (i <- 0 until serializedContainerData.size) {
+        val partId = getPartition(outContainers(i).getPartitionKey.mkString(",").getBytes(), topicPartitionsCount)
         var ab = partitionsMsgMap.getOrElse(partId, null)
         if (ab == null) {
           ab = new ArrayBuffer[MsgDataRecievedCnt](256)
           partitionsMsgMap(partId) = ab
         }
-        val pr = new ProducerRecord(qc.topic, partId, partKeys(i), messages(i))
+        val pr = new ProducerRecord(qc.topic, partId, outContainers(i).getPartitionKey.mkString(",").getBytes(), serializedContainerData(i))
         ab += MsgDataRecievedCnt(msgInOrder.getAndIncrement, pr)
       }
 
@@ -468,6 +478,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         producer.send(msgAndCntr.msg, new Callback {
           override def onCompletion(metadata: RecordMetadata, exception: Exception): Unit = {
             val localMsgAndCntr = msgAndCntr
+            msgCount += 1
             if (exception != null) {
               LOG.warn(qc.Name + " Failed to send message into " + localMsgAndCntr.msg.topic, exception)
               addToFailedMap(localMsgAndCntr)
@@ -485,7 +496,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, cntrAdapter: Counters
         })
         lastAccessRec = null
         sentMsgsCntr += 1
-        cntrAdapter.addCntr(key, 1)
+        // cntrAdapter.addCntr(key, 1)
       })
 
       keyMessages.clear()

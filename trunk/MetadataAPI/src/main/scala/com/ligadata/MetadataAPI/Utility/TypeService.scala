@@ -19,7 +19,8 @@ package com.ligadata.MetadataAPI.Utility
 import java.io.{FileNotFoundException, File}
 
 import com.ligadata.Exceptions.{AlreadyExistsException}
-import com.ligadata.MetadataAPI.MetadataAPIImpl
+import com.ligadata.MetadataAPI.{TypeUtils, ErrorCodeConstants, ApiResult, MetadataAPIImpl}
+import com.ligadata.kamanja.metadata.BaseTypeDef
 
 import scala.io.Source
 
@@ -32,7 +33,7 @@ import scala.io._
  * Created by dhaval on 8/12/15.
  */
 object TypeService {
-  private val userid: Option[String] = Some("metadataapi")
+  private val userid: Option[String] = Some("kamanja")
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
@@ -83,53 +84,89 @@ object TypeService {
     response
   }
 
+    /**
+      * Retrieve the type info for the namespace.name.version supplied
+      * @param param namespace.name.version
+      * @return string result
+      */
   def getType(param: String=""): String ={
-    var response=""
-    try {
-      if (param.length > 0) {
-        val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
-        try {
-          return MetadataAPIImpl.GetType(ns, name,ver,"JSON", userid).toString
+    val response : String = if (param.length > 0) {
+        val (ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
+        val (typeString, ok) : (String, Boolean) = try {
+            val optTypeInfo: Option[BaseTypeDef] = TypeUtils.GetType(ns, name, ver, "JSON", userid)
+            val typeInfo: BaseTypeDef = optTypeInfo match {
+                case Some(optTypeInfo) => optTypeInfo
+                case _ => null
+            }
+            val (typeStr, succeeded) : (String, Boolean) = if (typeInfo != null) {
+                val result = s"${typeInfo.FullNameWithVer}, ${typeInfo.PhysicalName}"
+                (result,true)
+            } else {
+                (s"no type named $param",false)
+            }
+            (typeStr,succeeded)
         } catch {
-          case e: Exception => logger.error("", e)
+            case e: Exception => {
+                logger.error("", e)
+                (s"no type named $param", false)
+            }
         }
-      }
-      val typeKeys = MetadataAPIImpl.GetAllKeys("TypeDef", None)
-      if (typeKeys.length == 0) {
-        val errorMsg="Sorry, No types available, in the Metadata, to display!"
-        response=errorMsg
-      }
-      else{
-        println("\nPick the type to be displayed from the following list: ")
-        var srno = 0
-        for(typeKey <- typeKeys){
-          srno+=1
-          println("["+srno+"] "+typeKey)
+        val isItOk : Int = if (ok) ErrorCodeConstants.Success else ErrorCodeConstants.Failure
+        val resultStr: String = new ApiResult(isItOk, "getType", null, typeString).toString
+        resultStr
+    } else {
+        val result : String = try {
+            val typeKeys = MetadataAPIImpl.GetAllKeys("TypeDef", None)
+            val (msg,ok) : (String,Boolean) = if (typeKeys.length == 0) {
+                val errorMsg = "Sorry, No types available, in the Metadata, to display!"
+                (errorMsg, false)
+            } else {
+                println("\nPick the type to be displayed from the following list: ")
+                var srno = 0
+                for (typeKey <- typeKeys) {
+                    srno += 1
+                    println("[" + srno + "] " + typeKey)
+                }
+                println("Enter your choice: ")
+                val choice: Int = readInt()
+
+                val (resp,ok) : (String,Boolean) = if (choice < 1 || choice > typeKeys.length) {
+                    val errormsg = "Invalid choice " + choice + ". Start with the main menu."
+                    (errormsg, false)
+                } else {
+                    val typeKey = typeKeys(choice - 1)
+                    val typeKeyTokens = typeKey.split("\\.")
+                    val typeNameSpace = typeKeyTokens(0)
+                    val typeName = typeKeyTokens(1)
+                    val typeVersion = typeKeyTokens(2)
+                    val optTypeInfo: Option[BaseTypeDef] = TypeUtils.GetType(typeNameSpace, typeName, typeVersion, "JSON", userid)
+                    val typeInfo: BaseTypeDef = optTypeInfo match {
+                        case Some(optTypeInfo) => optTypeInfo
+                        case _ => null
+                    }
+                    val (typeStr, ok) : (String,Boolean) = if (typeInfo != null) {
+                        (s"${typeInfo.FullNameWithVer}, ${typeInfo.PhysicalName}", true)
+                    } else {
+                        (s"no type named $param", false)
+                    }
+                    (typeStr, ok)
+                }
+                (resp,ok)
+            }
+            val isItOk : Int = if (ok) ErrorCodeConstants.Success else ErrorCodeConstants.Failure
+            val resultStr: String = new ApiResult(isItOk, "getType", null, msg).toString
+            resultStr
+        } catch {
+            case e: Exception => {
+                logger.info("", e)
+                e.getStackTrace.toString
+            }
         }
-        println("Enter your choice: ")
-        val choice: Int = readInt()
-
-        if (choice < 1 || choice > typeKeys.length) {
-          val errormsg="Invalid choice " + choice + ". Start with the main menu."
-          response=errormsg
+        result
         }
-        val typeKey = typeKeys(choice - 1)
-        val typeKeyTokens = typeKey.split("\\.")
-        val typeNameSpace = typeKeyTokens(0)
-        val typeName = typeKeyTokens(1)
-        val typeVersion = typeKeyTokens(2)
-        response = MetadataAPIImpl.GetType(typeNameSpace, typeName,typeVersion, "JSON",userid).toString
-
-      }
-
-    } catch {
-      case e: Exception => {
-       logger.info("", e)
-        response=e.getStackTrace.toString
-      }
-    }
     response
   }
+
   def getAllTypes: String = {
     MetadataAPIImpl.GetAllTypes("JSON", userid)
   }

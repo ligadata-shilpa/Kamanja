@@ -130,7 +130,7 @@ class InstallDriver extends InstallDriverBase {
   def usage: String = {
     """
 Usage:
-    java -Dlog4j.configurationFile=file:./log4j2.xml -jar <some path> ClusterInstallerDriver-1.0
+    java -Dlog4j.configurationFile=file:./log4j2.xml -jar <some path> ClusterInstallerDriver-1.4.0
             /** Mandatory parameters (always) */
             --{upgrade|install}
             --apiConfig <MetadataAPIConfig.properties file>
@@ -148,6 +148,8 @@ Usage:
             [--skipPrerequisites "scala,java,hbase,kafka,zookeeper,all"]
             [--preRequisitesCheckOnly]
             [--externalJarsDir <external jars directory to be copied to installation lib/application>]
+            [--tenantId <a tenantId is applied to all metadata objects>]
+            [--adapterMessageBindings <a json file that contains adapter message bindings>]
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -166,7 +168,7 @@ Usage:
             building their respective objects. If the requested version has not been installed on the cluster nodes in question,
             the installation will fail.
 
-        [--fromKamanja] optional for install but required for upgrade..."N.N" where "N.N" can be either "1.1" or "1.2"
+        [--fromKamanja] optional for install but required for upgrade..."N.N" where "N.N" can be either "1.1" or "1.2" or "1.3"
         [--fromScala "2.10"] an optional parameter that, for the 1.3 InstallDriver, simply documents the version of Scala that
             the current 1.1. or 1.2 is using.  The value "2.10" is the only possible value for this release.
 
@@ -188,8 +190,10 @@ Usage:
             If both --skipPrerequisites and --preRequisitesOnly are specified, only the prerequisites not given in the skip list will be performed.
             Processing stops after the checks; installation and upgrade are not done.
         [--externalJarsDir <external jars directory to be copied to installation lib/application] External jars to be copied while installing/upgrading new package.
+        [--tenantId <Tenant Id to be applied to all the meta data objects being migrated.
+        [--adapterMessageBindings <a json file that contains the adapter-message-binding definitions.
 
-    The ClusterInstallerDriver-1.0 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
+    The ClusterInstallerDriver-1.4.0 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
     or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
 
     A log of the installation and optional upgrade is collected in a log file.  This log file is automatically generated and will be found in the
@@ -271,7 +275,7 @@ Usage:
     }
 
     // locate the clusterInstallerDriver app ... need its working directory to refer to others... this function
-    // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.3_2.11/bin/clusterInstallerDriver-1.0
+    // returns this form:  file:/tmp/drdigital/KamanjaInstall-1.3.3_2.11/bin/clusterInstallerDriver-1.4.0
 
     /** Obtain location of the clusterInstallerDriver fat jar.  Its directory contains the scripts we use to
       * obtain component info for the env check and the lower level cluster install script that actually does the
@@ -332,6 +336,10 @@ Usage:
           nextOption(map ++ Map('skipPrerequisites -> value), tail)
         case "--externalJarsDir" :: value :: tail =>
           nextOption(map ++ Map('externalJarsDir -> value), tail)
+        case "--tenantId" :: value :: tail =>
+          nextOption(map ++ Map('tenantId -> value), tail)
+        case "--adapterMessageBindings" :: value :: tail =>
+          nextOption(map ++ Map('adapterMessageBindings -> value), tail)
         case "--version" :: tail =>
           nextOption(map ++ Map('version -> "true"), tail)
         case option :: tail =>
@@ -372,8 +380,10 @@ Usage:
     val skipPrerequisites_opt: String = if (options.contains('skipPrerequisites)) options.apply('skipPrerequisites) else null
     val preRequisitesCheckOnly: Boolean = if (options.contains('preRequisitesCheckOnly)) options.apply('preRequisitesCheckOnly) == "true" else false
     val externalJarsDir_opt: String = if (options.contains('externalJarsDir)) options.apply('externalJarsDir) else null
+    val tenantId_opt: String = if (options.contains('tenantId)) options.apply('tenantId) else null
+    val adapterMessageBindings_opt: String = if (options.contains('adapterMessageBindings)) options.apply('adapterMessageBindings) else null
 
-    val toKamanja: String = "1.3"
+    val toKamanja: String = "1.4"
 
     // Check whether logDir is valid or not
     if (!isFileExists(logDir, false, true)) {
@@ -428,8 +438,8 @@ Try again.
     val apiConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
     val nodeConfigPathOk: Boolean = apiConfigPath != null && apiConfigPath.nonEmpty
     val tarballPathOk: Boolean = tarballPath != null && tarballPath.nonEmpty
-    val fromKamanjaOk: Boolean = install || (upgrade && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2"))
-    val fromScalaOk: Boolean = install || (upgrade && fromScala != null && fromScala.nonEmpty && (fromScala == "2.10" || fromKamanja == "2.11"))
+    val fromKamanjaOk: Boolean = install || (upgrade && fromKamanja != null && fromKamanja.nonEmpty && (fromKamanja == "1.1" || fromKamanja == "1.2") || fromKamanja == "1.3" )
+    val fromScalaOk: Boolean = install || (upgrade && fromScala != null && fromScala.nonEmpty && (fromScala == "2.10" || fromScala == "2.11"))
     val toScalaOk: Boolean = (toScala != null && toScala.nonEmpty && (toScala == "2.10" || toScala == "2.11"))
     val workingDirOk: Boolean = workingDir != null && workingDir.nonEmpty
     val logDirOk: Boolean = logDir != null && logDir.nonEmpty
@@ -466,8 +476,14 @@ Try again.
       sys.exit(1)
     }
 
+    var majorVer = KamanjaVersion.getMajorVersion
+    var minVer = KamanjaVersion.getMinorVersion
+    var microVer = KamanjaVersion.getMicroVersion
+    val scalaVersionFull = scala.util.Properties.versionNumberString
+    val scalaVersion = scalaVersionFull.substring(0, scalaVersionFull.lastIndexOf('.'))
+
     val componentVersionScriptAbsolutePath = s"$clusterInstallerDriversLocation/GetComponentsVersions.sh"
-    val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent-1.0"
+    val componentVersionJarAbsolutePath = s"$clusterInstallerDriversLocation/GetComponent_${scalaVersion}-${majorVer}.${minVer}.${microVer}.jar"
     val kamanjaClusterInstallPath = s"$clusterInstallerDriversLocation/KamanjaClusterInstall.sh"
 
     var cnt: Int = 0
@@ -479,7 +495,7 @@ Try again.
     }
 
     if (!isFileExists(componentVersionJarAbsolutePath, true)) {
-      printAndLogError("GetComponent-1.0 script is not installed in path " + clusterInstallerDriversLocation, log)
+      printAndLogError("GetComponent_2.11-1.4.0.jar is not installed in path " + clusterInstallerDriversLocation, log)
       cnt += 1
     }
 
@@ -520,21 +536,25 @@ Try again.
         givenTemplate = true
         migrateTemplate_opt.trim
       } else {
-        s"$clusterInstallerDriversLocation/../config/MigrateConfig_template.json"
+        s"$clusterInstallerDriversLocation/MigrateConfig_template.json"
       }
 
       if (!isFileExists(migrateTemplate, true)) {
         if (givenTemplate)
           printAndLogError(s"Given migrateTemplate $migrateTemplate is not valid file", log)
         else
-          printAndLogError(s"MigrateConfig_template.json is not installed in path ${clusterInstallerDriversLocation}/../config", log)
+          printAndLogError(s"MigrateConfig_template.json is not installed in path ${clusterInstallerDriversLocation}", log)
         cnt += 1
       }
 
       // Validate all arguments
-      val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
-      if (migrationToBeDone == "hmmm") {
-        printAndLogError(s"The fromKamanja ($fromKamanja) is not valid with this release... the value must be 1.1 or 1.2", log)
+      var validMigrationPaths : scala.collection.mutable.Set[String] = scala.collection.mutable.Set[String]()
+      validMigrationPaths.add("1.1 => 1.4") 
+      validMigrationPaths.add("1.2 => 1.4") 
+      validMigrationPaths.add("1.3 => 1.4") 
+
+      if ( ! validMigrationPaths.contains(fromKamanja + " => " + toKamanja) ) {
+        printAndLogError(s"The upgrade path ($fromKamanja => $toKamanja) is not valid with this release... ", log)
         cnt += 1
       }
     }
@@ -704,6 +724,25 @@ Try again.
             ""
           }
 
+        if (upgrade && (tenantId_opt == null || tenantId_opt.trim.size == 0)) {
+          printAndLogError("For upgrade, tenantid is must.", log)
+          printAndLogDebug(usage, log)
+          closeLog
+          sys.exit(1)
+        }
+
+        if (upgrade && (adapterMessageBindings_opt == null || adapterMessageBindings_opt.trim.size == 0)) {
+          printAndLogError("For upgrade, adapterMessageBindings empty/null does not import any bindings. Make sure you import them after installation.", log)
+        }
+
+        val tenantId = if (tenantId_opt == null) {""} else{ tenantId_opt }
+	      logger.info("tenantId => " + tenantId)
+
+
+        val adapterMessageBindings = if (adapterMessageBindings_opt == null) {""} else{ adapterMessageBindings_opt }
+        logger.info("adapterMessageBindings => " + adapterMessageBindings)
+
+
         /** Install the new installation */
         val nodes: String = ips.mkString(",")
         printAndLogDebug(s"Begin cluster installation... installation found on each cluster node(any {$nodes}) at $installDir", log)
@@ -721,7 +760,9 @@ Try again.
           , workingDir
           , clusterId
           , metadataDataStore
-          , externalJarsDir)
+          , externalJarsDir
+          , tenantId
+          , adapterMessageBindings)
         if (installOk) {
           /** Do upgrade if necessary */
           if (upgrade) {
@@ -739,8 +780,10 @@ Try again.
               , priorInstallDirName
               , newInstallDirName
               , physicalRootDir
-              , rootDirPath)
-            printAndLogDebug("Migration preparation " + (if (migratePreparationOk) "Succeed" else "Failed"), log)
+              , rootDirPath
+	      , tenantId
+	      , adapterMessageBindings)
+            printAndLogDebug("Migration preparation " + (if (migratePreparationOk) "Succeeded" else "Failed"), log)
             if (!migratePreparationOk) {
               printAndLogError(s"Some thing failed to prepare migration configuration. The parameters for the migration may be incorrect... aborting installation", log)
               printAndLogDebug(usage, log)
@@ -1027,10 +1070,12 @@ Try again.
       }
     } catch {
       case e: Exception => {
+        logger.error("Failed to validateClusterEnvironment", e)
         phyDirLast = rootDirPath // substitute the symbol link to see if we can test more ... this is temporary hack
         false
       }
       case t: Throwable => {
+        logger.error("Failed to validateClusterEnvironment", t)
         phyDirLast = rootDirPath
         false
       }
@@ -1417,7 +1462,9 @@ Try again.
                      , workDir: String
                      , clusterId: String
                      , metadataDataStore: String
-                     , externalJarsDir: String): Boolean = {
+                     , externalJarsDir: String
+                     , tenantId: String
+                     , adapterMessageBindings: String): Boolean = {
 
     val parentPath: String = rootDirPath.split('/').dropRight(1).mkString("/")
 
@@ -1445,7 +1492,19 @@ Try again.
     } else {
       ""
     }
-    val installCmd: Seq[String] = Seq("bash", "-c", s"$kamanjaClusterInstallPath --ClusterId '$clusterId' --WorkingDir '$workDir' --MetadataAPIConfig '$apiConfigPath' --NodeConfigPath '$nodeConfigPath' --TarballPath '$tarballPath' --ipAddrs '$ipDataFile' --ipIdTargPaths '$ipIdCfgTargDataFile' --ipPathPairs '$ipPathDataFile' --priorInstallDirPath '$priorInstallDirPath' --newInstallDirPath '$newInstallDirPath' --installVerificationFile '$verifyFilePath' $externalJarsDirOptStr ")
+    val tenantIdOptStr = if (tenantId != null && tenantId.nonEmpty) {
+      s" --tenantId '$tenantId' "
+    } else {
+      ""
+    }
+
+    val adapterMessageBindingsOptStr = if (adapterMessageBindings != null && adapterMessageBindings.nonEmpty) {
+      s" --adapterMessageBindings '$adapterMessageBindings' "
+    } else {
+      ""
+    }
+
+    val installCmd: Seq[String] = Seq("bash", "-c", s"$kamanjaClusterInstallPath --ClusterId '$clusterId' --WorkingDir '$workDir' --MetadataAPIConfig '$apiConfigPath' --NodeConfigPath '$nodeConfigPath' --TarballPath '$tarballPath' --ipAddrs '$ipDataFile' --ipIdTargPaths '$ipIdCfgTargDataFile' --ipPathPairs '$ipPathDataFile' --priorInstallDirPath '$priorInstallDirPath' --newInstallDirPath '$newInstallDirPath' --installVerificationFile '$verifyFilePath' $externalJarsDirOptStr $tenantIdOptStr $adapterMessageBindingsOptStr")
     val installCmdRep: String = installCmd.mkString(" ")
     printAndLogDebug(s"KamanjaClusterInstall cmd used: \n\n$installCmdRep", log)
 
@@ -1504,16 +1563,18 @@ Try again.
                           , priorInstallDirName: String
                           , newInstallDirName: String
                           , physicalRootDir: String
-                          , rootDirPath: String): Boolean = {
+                          , rootDirPath: String
+			  , tenantId: String
+			  , adapterMessageBindings: String): Boolean = {
 
-    val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.3" else if (fromKamanja == "1.2") "1.2=>1.3" else "hmmm"
+    val migrationToBeDone: String = if (fromKamanja == "1.1") "1.1=>1.4" else if (fromKamanja == "1.2") "1.2=>1.4" else if (fromKamanja == "1.3") "1.3=>1.4" else "hmmm"
 
     // We should use these insted of below ones
     // val kamanjaFromVersion: String = fromKamanja
     // val kamanjaFromVersionWithUnderscore: String = fromKamanja.replace('.', '_')
 
     val migratePreparationOk: Boolean = migrationToBeDone match {
-      case "1.1=>1.3" => {
+      case "1.1=>1.4" => {
         val kamanjaFromVersion: String = "1.1"
         val kamanjaFromVersionWithUnderscore: String = "1_1"
         val migrateConfigJSON: String = createMigrationConfig(log
@@ -1530,6 +1591,8 @@ Try again.
           , parentPath
           , physicalRootDir
           , rootDirPath
+          , tenantId
+          , adapterMessageBindings
         )
         migratePending = true
         migrateConfig = migrateConfigJSON
@@ -1544,7 +1607,7 @@ Try again.
         */
         true
       }
-      case "1.2=>1.3" => {
+      case "1.2=>1.4" => {
         val kamanjaFromVersion: String = "1.2"
         val kamanjaFromVersionWithUnderscore: String = "1_2"
         val migrateConfigJSON: String = createMigrationConfig(log
@@ -1561,20 +1624,41 @@ Try again.
           , parentPath
           , physicalRootDir
           , rootDirPath
+          , tenantId
+          , adapterMessageBindings
         )
         migratePending = true
         migrateConfig = migrateConfigJSON
         printAndLogDebug("Pending migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
-        /*
-                val migrateObj: Migrate = new Migrate()
-                migrateObj.registerStatusCallback(log)
-                val rc: Int = migrateObj.runFromJsonConfigString(migrateConfigJSON)
-                (rc == 0)
-                */
+        true
+      }
+      case "1.3=>1.4" => {
+        val kamanjaFromVersion: String = "1.3"
+        val kamanjaFromVersionWithUnderscore: String = "1_3"
+        val migrateConfigJSON: String = createMigrationConfig(log
+          , migrateConfigFilePath
+          , nodeConfigPath
+          , apiConfigFile
+          , kamanjaFromVersion
+          , kamanjaFromVersionWithUnderscore
+          , newInstallDirName
+          , priorInstallDirName
+          , fromScala
+          , toScala
+          , unhandledMetadataDumpDir
+          , parentPath
+          , physicalRootDir
+          , rootDirPath
+          , tenantId
+          , adapterMessageBindings
+        )
+        migratePending = true
+        migrateConfig = migrateConfigJSON
+        printAndLogDebug("Pending migrate %s with config %s".format(migrationToBeDone, migrateConfigJSON))
         true
       }
       case _ => {
-        printAndLogError("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' for the '1.3' upgrade", log)
+        printAndLogError("The 'fromKamanja' parameter is incorrect... this needs to be fixed.  The value can only be '1.1' or '1.2' or '1.3' for the '1.4' upgrade", log)
         false
       }
     }
@@ -1633,6 +1717,8 @@ Try again.
                             , parentPath: String
                             , physicalRootDir: String
                             , rootDirPath: String
+			    , tenantId: String
+			    , adapterMessageBindings: String
                            ): String = {
 
     val template: String = Source.fromFile(migrateConfigFilePath).mkString
@@ -1672,7 +1758,9 @@ Try again.
       , "{OldPackageInstallPath}" -> oldPackageInstallPath
       , "{ScalaFromVersion}" -> scalaFromVersion
       , "{ScalaToVersion}" -> scalaToVersion
-      , "{UnhandledMetadataDumpDir}" -> unhandledMetadataDumpDir)
+      , "{UnhandledMetadataDumpDir}" -> unhandledMetadataDumpDir
+      , "{TenantId}" -> tenantId
+      , "{AdapterMessageBindings}" -> adapterMessageBindings)
 
     val substitutionMap: Map[String, String] = subPairs.toMap
     val varSub = new MapSubstitution(template, substitutionMap, logger, log)
@@ -1728,8 +1816,8 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
 
   def KafkaConnections: String = {
     val kafkaAdapters: List[Map[String, Any]] = adapters.filter(adapterMap => {
-      val adapterJars: List[String] = adapterMap.getOrElse("DependencyJars", "").asInstanceOf[List[String]]
-      val hasKafka: Boolean = adapterJars.filter(jarName => jarName.contains("kafka_2")).nonEmpty
+      val clsName = adapterMap.getOrElse("ClassName", "").asInstanceOf[String].trim
+      val hasKafka: Boolean = (clsName.startsWith("com.ligadata.OutputAdapters.KafkaProducer") || clsName.startsWith("com.ligadata.InputAdapters.KafkaSimpleConsumer"))
       hasKafka
     })
     val hostConnections: List[String] = kafkaAdapters.map(adapter => {
@@ -1823,8 +1911,8 @@ class ClusterConfigMap(cfgStr: String, var clusterIdOfInterest: String) {
   }
 
   private def getDataStore: Map[String, Any] = {
-    val dataStoreMap: Map[String, Any] = if (clusterMap.size > 0 && clusterMap.contains("DataStore")) {
-      clusterMap("DataStore").asInstanceOf[Map[String, Any]]
+    val dataStoreMap: Map[String, Any] = if (clusterMap.size > 0 && clusterMap.contains("SystemCatalog")) {
+      clusterMap("SystemCatalog").asInstanceOf[Map[String, Any]]
     } else {
       Map[String, Any]()
     }

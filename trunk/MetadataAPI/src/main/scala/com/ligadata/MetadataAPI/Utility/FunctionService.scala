@@ -31,7 +31,7 @@ import scala.io._
  * Created by dhaval on 8/12/15.
  */
 object FunctionService {
-  private val userid: Option[String] = Some("metadataapi")
+  private val userid: Option[String] = Some("kamanja")
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
@@ -86,7 +86,7 @@ object FunctionService {
       if (param.length > 0) {
         val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
         try {
-          return MetadataAPIImpl.GetFunctionDef(ns, name,"JSON", userid)
+          return MetadataAPIImpl.GetFunctionDef(ns, name, ver.toString ,"JSON", userid)
         } catch {
           case e: Exception => logger.error("", e)
         }

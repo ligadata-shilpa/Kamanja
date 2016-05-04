@@ -16,6 +16,7 @@
 
 package com.ligadata.MetadataAPI
 
+import com.ligadata.Exceptions.KamanjaException
 import org.apache.logging.log4j.{ Logger, LogManager }
 
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
@@ -32,7 +33,7 @@ import com.ligadata.KamanjaVersion.KamanjaVersion
 
 object StartMetadataAPI {
 
-  var response = ""
+  var response=""
   //get default config
   val defaultConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~" )) + "/config/MetadataAPIConfig.properties"
   val loggerName = this.getClass.getName
@@ -44,12 +45,14 @@ object StartMetadataAPI {
   val REMOVE = "remove"
   val GET = "get"
   val ACTIVATE = "activate"
-  val OUTPUT = "output"
+  val OUTPUTMSG = "outmessage"
   val DEACTIVATE = "deactivate"
   val UPDATE = "update"
   val MODELS = "models"
   val MESSAGES = "messages"
   val CONTAINERS = "containers"
+  val TENANTID = "tenantid"
+  val INPUTLOC = "inputlocation"
   var expectDep = false
   var expectRemoveParm = false
   var depName: String = ""
@@ -57,10 +60,41 @@ object StartMetadataAPI {
   val MODELNAME = "MODELNAME"
   val MODELVERSION= "MODELVERSION"
   val MESSAGENAME="MESSAGENAME"
-  val extraCmdArgs = mutable.Map[String, String]()
+  val CONTAINERNAME="CONTAINERNAME"
+  val TYPENAME="TYPENAME"
+  val FUNCTIONNAME="FUNCTIONNAME"
+
+  /** AdapterMessageBinding tags */
+  val FROMFILE="FROMFILE"
+  val FROMSTRING="FROMSTRING"
+  val KEY="KEY"
+  val ADAPTERMESSAGEBINDING = "ADAPTERMESSAGEBINDING"
+
+  /** List AdapterMessageBinding filters */
+  val ADAPTERFILTER="ADAPTERFILTER"
+  val MESSAGEFILTER="MESSAGEFILTER"
+  val SERIALIZERFILTER="SERIALIZERFILTER"
+
   var expectModelName = false
   var expectModelVer = false
   var expectMessageName = false
+  var foundModelName = false
+  var foundModelVer = false
+  var foundMessageName = false
+  var expectBindingFromFile = false
+  var expectBindingFromString = false
+  var removeCmdFound = false
+  var expectRemoveBindingKey = false
+  var expectListBindingFilter = false
+  var expectAdapterFilter = false
+  var expectMessageFilter = false
+  var expectSerializerFilter = false
+  var expectOutputMsg = false
+  var varmap: scala.collection.mutable.Map[String,String] = scala.collection.mutable.Map[String,String]()
+  var expectTid: Boolean = false
+  var expectMDep: Boolean = false
+
+  val extraCmdArgs = mutable.Map[String, String]()
 
   def main(args: Array[String]) {
     if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
@@ -69,72 +103,157 @@ object StartMetadataAPI {
     }
 
     /** FIXME: the user id should be discovered in the parse of the args array */
-    val userId: Option[String] = Some("metadataapi")
+    val userId: Option[String] = Some("kamanja")
     try {
-      var argsUntilParm = 2
+      val jsonBuffer : StringBuilder = new StringBuilder
 
-      args.foreach(arg =>
-        if (arg.equalsIgnoreCase(OUTPUT) || arg.equalsIgnoreCase(UPDATE) || arg.equalsIgnoreCase(MODELS) || arg.equalsIgnoreCase(MESSAGES) || arg.equalsIgnoreCase(CONTAINERS)) {
-          argsUntilParm = 3
-        }
-      )
       args.foreach(arg => {
 
-        if (arg.endsWith(".json") || arg.endsWith(".xml") || arg.endsWith(".pmml") || arg.endsWith(".scala") || arg.endsWith(".java") || arg.endsWith(".jar")) {
-          location = arg
+          if (arg.endsWith(".json")
+              || arg.endsWith(".jtm")
+              || arg.endsWith(".xml")
+              || arg.endsWith(".pmml")
+              || arg.endsWith(".scala")
+              || arg.endsWith(".java")
+              || arg.endsWith(".jar")) {
+            extraCmdArgs(INPUTLOC) = arg
+            if (expectBindingFromFile) { /** the json test above can prevent the ordinary catch of the name below */
+              extraCmdArgs(FROMFILE) = extraCmdArgs.getOrElse(INPUTLOC,null)
+              expectBindingFromFile = false
+            }
 
-        } else if (arg.endsWith(".properties")) {
-          config = arg
+          } else if (arg.endsWith(".properties")) {
+              config = arg
+          } else {
+              if (arg != "debug") {
+                  /** ignore the debug tag */
+                  if (arg.equalsIgnoreCase(TENANTID)) {
+                      expectTid = true
+                      extraCmdArgs(TENANTID) = ""
+                  } else if (arg.equalsIgnoreCase(WITHDEP)) {
+                      expectDep = true
+                      extraCmdArgs(WITHDEP) = ""
+                  } else if (arg.equalsIgnoreCase(MODELNAME)) {
+                      expectModelName = true
+                  } else if (arg.equalsIgnoreCase(MODELVERSION)) {
+                      expectModelVer = true
+                  } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
+                      expectMessageName = true
+                  } else if (arg.equalsIgnoreCase(OUTPUTMSG)) {
+                      expectOutputMsg = true
+                  } else if (arg.equalsIgnoreCase(KEY)) {
+                      expectRemoveBindingKey = true
+                  } else if (arg.equalsIgnoreCase(FROMFILE)) {
+                      expectBindingFromFile = true
+                  } else if (arg.equalsIgnoreCase(FROMSTRING)) {
+                      expectBindingFromString = true
+                  } else if (arg.equalsIgnoreCase(ADAPTERFILTER)) {
+                      expectAdapterFilter = true
+                  } else if (arg.equalsIgnoreCase(MESSAGEFILTER)) {
+                      expectMessageFilter = true
+                  } else if (arg.equalsIgnoreCase(SERIALIZERFILTER)) {
+                      expectSerializerFilter = true
+                  } else {
+                      var argVar = arg
+                      if (expectTid) {
+                          extraCmdArgs(TENANTID) = arg
+                          expectTid = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectDep) {
+                          extraCmdArgs(WITHDEP) = arg
+                          expectDep = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectModelName) {
+                          extraCmdArgs(MODELNAME) = arg
+                          expectModelName = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectModelVer) {
+                          extraCmdArgs(MODELVERSION) = arg
+                          expectModelVer = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectMessageName) {
+                          extraCmdArgs(MESSAGENAME) = arg
+                          expectMessageName = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectOutputMsg) {
+                          extraCmdArgs(OUTPUTMSG) = arg
+                          expectOutputMsg = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectRemoveBindingKey) {
+                          expectRemoveBindingKey = false
+                          extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectBindingFromString) {
+                          extraCmdArgs(FROMSTRING) = arg
+                          expectBindingFromString = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectBindingFromFile) {
+                          extraCmdArgs(FROMFILE) = arg
+                          expectBindingFromFile = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectAdapterFilter) {
+                          extraCmdArgs(ADAPTERFILTER) = arg
+                          expectAdapterFilter = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectMessageFilter) {
+                          extraCmdArgs(MESSAGEFILTER) = arg
+                          expectMessageFilter = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (expectSerializerFilter) {
+                          extraCmdArgs(SERIALIZERFILTER) = arg
+                          expectSerializerFilter = false
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
 
-        } else {
-          if (arg.equalsIgnoreCase(WITHDEP)) {
-            expectDep = true
+                      /**
+                        * FIXME:
+                        * FIXME: The removes have positional keys... right after the command.  Downside is that
+                        * the tenant id collection uses a named style, which means that it MUST follow the
+                        * object name to be removed.  When this thing gets reworked, the object key should also
+                        * have a name like "key" as is used with the REMOVEADAPTERMESSAGEBINDING. The name/value pairs can
+                        * then be expressed in any order to the liking of the user.
+                        */
+                      if (action.equalsIgnoreCase("getmodel") || action.equalsIgnoreCase("removemodel")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(MODELNAME)) extraCmdArgs(MODELNAME) = arg
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("getmessage") || action.equalsIgnoreCase("removemessage")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(MESSAGENAME)) extraCmdArgs(MESSAGENAME) = arg
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("removecontainer") || action.equalsIgnoreCase("getcontainer")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(CONTAINERNAME)) extraCmdArgs(CONTAINERNAME) = arg
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("removetype") || action.equalsIgnoreCase("gettype")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(TYPENAME)) extraCmdArgs(TYPENAME) = arg
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+                      if (action.equalsIgnoreCase("removefunction") || action.equalsIgnoreCase("getfunction")) {
+                          /** only take the first one */
+                          if (! extraCmdArgs.contains(FUNCTIONNAME)) extraCmdArgs(FUNCTIONNAME) = arg
+                          argVar = "" // Make sure we don't add to the routing command
+                      }
+
+                      action += argVar
+                  }
+              }
           }
-          else if (expectDep) {
-            depName = arg
-            expectDep = false
-          }
-           else if ((action.equalsIgnoreCase(Action.ADDMODELPMML.toString) || action.equalsIgnoreCase(Action.UPDATEMODELPMML.toString)) && location.size > 0) {
-
-            if(arg.equalsIgnoreCase(MODELNAME)){
-              expectModelName=true
-            }else if(arg.equalsIgnoreCase(MODELVERSION)){
-              expectModelVer=true
-            }else if(arg.equalsIgnoreCase(MESSAGENAME)){
-              expectMessageName=true
-            }
-            else if (expectModelName) {
-              extraCmdArgs(MODELNAME) = arg
-              expectModelName = false
-            }
-            else if (expectModelVer) {
-              extraCmdArgs(MODELVERSION) = arg
-              expectModelVer = false
-            }
-            else if (expectMessageName) {
-              extraCmdArgs(MESSAGENAME) = arg
-              expectMessageName = false
-
-           }
-          }
-          else {
-            if ((arg.equalsIgnoreCase(REMOVE)) || (arg.equalsIgnoreCase(GET)) || (arg.equalsIgnoreCase(ACTIVATE)) || (arg.equalsIgnoreCase(DEACTIVATE)) || (arg.equalsIgnoreCase(UPDATE))) {
-              expectRemoveParm = true
-            }
-            if (expectRemoveParm) {
-              argsUntilParm = argsUntilParm - 1
-            }
-
-            if (argsUntilParm < 0) {
-              depName = arg
-            }
-            else if (arg != "debug")
-            /** ignore the debug tag */ {
-              /** concatenate the args together to form the action string... "add model pmml" becomes "addmodelpmmml" */
-              action += arg
-            }
-          }
-        }
       })
       //add configuration
       if (config == "") {
@@ -146,17 +265,19 @@ object StartMetadataAPI {
       if (action == "")
         TestMetadataAPI.StartTest
       else {
-        response = route(Action.withName(action.trim), location, depName, args, userId ,extraCmdArgs.toMap)
+        response = route(Action.withName(action.trim),  extraCmdArgs.getOrElse(INPUTLOC,""),
+          extraCmdArgs.getOrElse(WITHDEP,""), extraCmdArgs.getOrElse(TENANTID,""), args, userId ,extraCmdArgs.toMap)
         println("Result: " + response)
       }
     }
     catch {
-      case nosuchelement: NoSuchElementException => {
+      case e: NoSuchElementException => {
+        logger.error("Route not found",e.getMessage)
         /** preserve the original response ... */
-        response = s"Invalid command action! action=$action"
-
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
         /** one more try ... going the alternate route */  // do we still need this ??
-        val altResponse: String = AltRoute(args)
+       /* val altResponse: String = AltRoute(args)
         if (altResponse != null) {
           //response = altResponse
           println(response)
@@ -165,9 +286,28 @@ object StartMetadataAPI {
           /* if the AltRoute doesn't produce a valid result, we will complain with the original failure */
           println(response)
           usage
-        }
+        }*/
       }
-      case e: Throwable => e.getStackTrace.toString
+      case e: java.io.FileNotFoundException => {
+        logger.error("Unable to read a file, the file either does not exist or is inaccessible ", e.getMessage)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: Throwable => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: Exception => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: RuntimeException => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
     } finally {
       MetadataAPIImpl.shutdown
     }
@@ -177,49 +317,43 @@ object StartMetadataAPI {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }
 
-  def route(action: Action.Value, input: String, param: String = "", originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
+  def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String] ,extraCmdArgs:immutable.Map[String, String]): String = {
     var response = ""
+    var fileinquesiton = input
+    var optMsgProduced:Option[String] = None
+    var tid = if (tenantid.size > 0) Some(tenantid) else None
+
+    val outputMsgName = extraCmdArgs.getOrElse(OUTPUTMSG, null)
+
+    if( outputMsgName != null ){
+      logger.debug("The value of argument optMsgProduced will be " + outputMsgName)
+      optMsgProduced = Some(outputMsgName)
+    }
     try {
       action match {
         //message management
-        case Action.ADDMESSAGE => response = MessageService.addMessage(input)
-        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input)
+        case Action.ADDMESSAGE => response = MessageService.addMessage(input, tid)
+        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, tid)
         case Action.REMOVEMESSAGE => {
-          if (param.length == 0)
+          val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
+          if (msgName.isEmpty)
             response = MessageService.removeMessage()
           else
-            response = MessageService.removeMessage(param)
+            response = MessageService.removeMessage(msgName)
         }
 
         case Action.GETALLMESSAGES => response = MessageService.getAllMessages
         case Action.GETMESSAGE => {
-          if (param.length == 0)
+          val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
+          if (msgName.isEmpty)
             response = MessageService.getMessage()
           else
-            response = MessageService.getMessage(param)
-        }
-
-
-        //output message management
-        case Action.ADDOUTPUTMESSAGE => response = MessageService.addOutputMessage(input)
-        case Action.UPDATEOUTPUTMESSAGE => response =MessageService.updateOutputMessage(input)
-        case Action.REMOVEOUTPUTMESSAGE => response ={
-          if (param.length == 0)
-            MessageService.removeOutputMessage()
-          else
-            MessageService.removeOutputMessage(param)
-        }
-
-        case Action.GETALLOUTPUTMESSAGES => response = MessageService.getAllOutputMessages
-        case Action.GETOUTPUTMESSAGE => response = {
-          if (param.length == 0)
-            MessageService.getOutputMessage()
-          else
-            MessageService.getOutputMessage(param)
+            response = MessageService.getMessage(msgName)
         }
 
         //model management
-        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId)
+        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
+        case Action.ADDMODELJTM => response = ModelService.addModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -227,35 +361,36 @@ object StartMetadataAPI {
           val validatedModelVersion = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
           val optModelVer =  Option(validatedModelVersion)
           val optMsgVer = Option(null)
-
           response = ModelService.addModelPmml(ModelType.PMML
                                             , input
                                             , userId
                                             , modelName
                                             , optModelVer
                                             , msgName
-                                            , optMsgVer)
+                                            , optMsgVer
+                                            , tid)
         }
 
         case Action.ADDMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.addModelScala(input, "", userId)
+            response = ModelService.addModelScala(input, "", userId,optMsgProduced, tid)
           else
-            response = ModelService.addModelScala(input, param, userId)
+            response = ModelService.addModelScala(input, param, userId,optMsgProduced, tid)
         }
 
         case Action.ADDMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.addModelJava(input, "", userId)
+            response = ModelService.addModelJava(input, "", userId,optMsgProduced, tid)
           else
-            response = ModelService.addModelJava(input, param, userId)
+            response = ModelService.addModelJava(input, param, userId,optMsgProduced, tid)
         }
 
         case Action.REMOVEMODEL => {
-          if (param.length == 0)
+          val modelName : String = extraCmdArgs.getOrElse(MODELNAME, "")
+          if (modelName.isEmpty)
             response = ModelService.removeModel("", userId)
           else
-            response = ModelService.removeModel(param)
+            response = ModelService.removeModel(modelName)
         }
 
         case Action.ACTIVATEMODEL =>
@@ -272,75 +407,77 @@ object StartMetadataAPI {
           else
             ModelService.deactivateModel(param, userId)
         }
-        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId)
+        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, tid)
+        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
 
         case Action.UPDATEMODELPMML => {
           val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
           var validatedNewVersion: String = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
-          response = ModelService.updateModelPmml(input, userId, modelName, validatedNewVersion )
-          }
-
-        //case Action.UPDATEMODELSCALA => response = ModelService.updateModelscala(input)
-        //case Action.UPDATEMODELJAVA => response = ModelService.updateModeljava(input)
+          response = ModelService.updateModelPmml(input, userId, modelName, validatedNewVersion,tid)
+        }
 
         case Action.UPDATEMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.updateModelscala(input, "", userId)
+            response = ModelService.updateModelscala(input, "", userId, tid)
           else
-            response = ModelService.updateModelscala(input, param, userId)
+            response = ModelService.updateModelscala(input, param, userId, tid)
         }
 
         case Action.UPDATEMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.updateModeljava(input, "", userId)
+            response = ModelService.updateModeljava(input, "", userId, tid)
           else
-            response = ModelService.updateModeljava(input, param, userId)
+            response = ModelService.updateModeljava(input, param, userId,tid)
         }
 
         case Action.GETALLMODELS => response = ModelService.getAllModels(userId)
         case Action.GETMODEL => response = {
-          if (param.length == 0)
+            val modelName : String = extraCmdArgs.getOrElse(MODELNAME,"")
+            if (modelName.isEmpty)
             ModelService.getModel("", userId)
           else
-            ModelService.getModel(param, userId)
+            ModelService.getModel(modelName, userId)
         }
 
 
         //container management
-        case Action.ADDCONTAINER => response = ContainerService.addContainer(input)
-        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input)
+        case Action.ADDCONTAINER => response = ContainerService.addContainer(input, tid)
+        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input, tid)
         case Action.GETCONTAINER => response = {
-          if (param.length == 0)
+          val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
+          if (containerName.isEmpty)
             ContainerService.getContainer()
           else
-            ContainerService.getContainer(param)
+            ContainerService.getContainer(containerName)
         }
 
         case Action.GETALLCONTAINERS => response = ContainerService.getAllContainers
-
         case Action.REMOVECONTAINER => {
-          if (param.length == 0)
+          val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
+          if (containerName.isEmpty)
             response = ContainerService.removeContainer()
           else
-            response = ContainerService.removeContainer(param)
+            response = ContainerService.removeContainer(containerName)
         }
 
         //Type management
         case Action.ADDTYPE => response = TypeService.addType(input)
         case Action.GETTYPE => response = {
-          if (param.length == 0)
+          val typeName : String = extraCmdArgs.getOrElse(TYPENAME,"")
+          if (typeName.isEmpty)
             TypeService.getType()
           else
-            TypeService.getType(param)
+            TypeService.getType(typeName)
         }
 
         case Action.GETALLTYPES => response = TypeService.getAllTypes
         case Action.REMOVETYPE => response = {
-          if (param.length == 0)
+          val typeName : String = extraCmdArgs.getOrElse(TYPENAME,"")
+          if (typeName.isEmpty)
             TypeService.removeType()
           else
-            TypeService.removeType(param)
+            TypeService.removeType(typeName)
 
         }
         case Action.LOADTYPESFROMAFILE => response = TypeService.loadTypesFromAFile(input)
@@ -349,17 +486,19 @@ object StartMetadataAPI {
         //function management
         case Action.ADDFUNCTION => response = FunctionService.addFunction(input)
         case Action.GETFUNCTION => response = {
-          if (param.length == 0)
+          val fcnName : String = extraCmdArgs.getOrElse(FUNCTIONNAME,"")
+          if (fcnName.isEmpty)
             FunctionService.getFunction()
           else
-            FunctionService.getFunction(param)
+            FunctionService.getFunction(fcnName)
 
         }
         case Action.REMOVEFUNCTION => response = {
-          if (param.length == 0)
+          val fcnName : String = extraCmdArgs.getOrElse(FUNCTIONNAME,"")
+          if (fcnName.isEmpty)
             FunctionService.removeFunction()
           else
-            FunctionService.removeFunction(param)
+            FunctionService.removeFunction(fcnName)
         }
 
         case Action.UPDATEFUNCTION => response = FunctionService.updateFunction(input)
@@ -370,7 +509,75 @@ object StartMetadataAPI {
         case Action.UPLOADCLUSTERCONFIG => response = ConfigService.uploadClusterConfig(input)
         case Action.UPLOADCOMPILECONFIG => response = ConfigService.uploadCompileConfig(input)
         case Action.DUMPALLCFGOBJECTS => response = ConfigService.dumpAllCfgObjects
-        case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig
+        case Action.REMOVEENGINECONFIG => response = ConfigService.removeEngineConfig(input)
+
+        // adapter message bindings
+        case Action.ADDADAPTERMESSAGEBINDING => {
+            val bindingString: String = extraCmdArgs.getOrElse(FROMSTRING, "")
+            val bindingFilePath: String = extraCmdArgs.getOrElse(FROMFILE, "")
+            fileinquesiton = bindingFilePath
+            if (bindingString.nonEmpty && bindingFilePath.nonEmpty) {
+                println("Currently only a file specification OR a string specification for the bindings are permitted, not both.")
+                throw new RuntimeException(s"Currently only a file specification or a string specification for the bindings are permitted, not both.")
+            } else if (bindingString.nonEmpty) {
+                response = AdapterMessageBindingService.addFromInlineAdapterMessageBinding(bindingString, userId)
+            } else if (bindingFilePath.nonEmpty) {
+                response = AdapterMessageBindingService.addFromFileAnAdapterMessageBinding(bindingFilePath, userId)
+            } else {
+                println(s"Add Adapter Message Binding invocation is fouled up.  Check the syntax: \nkamanja <apiconfig> add adaptermessagebinding <binding spec from file path with json content | binding spec from inline json string> <file path|string>")
+                throw new RuntimeException(s"Add Adapter Message Binding invocation is fouled up.  Check the syntax: \nkamanja <apiconfig> add adaptermessagebinding <bindingfromfile|bindingfromstring> <file path|string>")
+            }
+
+        }
+        case Action.UPDATEADAPTERMESSAGEBINDING => {
+            response = AdapterMessageBindingService.updateAdapterMessageBinding(input, userId)
+        }
+        case Action.REMOVEADAPTERMESSAGEBINDING => {
+            val bindingKey : String = extraCmdArgs.getOrElse(Action.REMOVEADAPTERMESSAGEBINDING.toString, "")
+            if (bindingKey.nonEmpty) {
+                response = AdapterMessageBindingService.removeAdapterMessageBinding(bindingKey, userId)
+            } else {
+
+                val bindingString: String = extraCmdArgs.getOrElse(FROMSTRING, "")
+                val bindingFilePath: String = extraCmdArgs.getOrElse(FROMFILE, "")
+                fileinquesiton = bindingFilePath
+                val invalidArgs : Boolean = (bindingString.nonEmpty && bindingFilePath.nonEmpty) || (bindingString.isEmpty && bindingFilePath.isEmpty)
+                if (invalidArgs) {
+                    println(s"Remove Adapter Message Binding - invalid arguments supplied.  Check the syntax.  One of three ways are permissible:\nkamanja <apiconfig> remove adaptermessagebinding FROMFILE <file path with json content for binding key(s)>\nkamanja <apiconfig> remove adaptermessagebinding FROMSTRING '[ <json array item or items of the form adapterName,namespace.messageName,namespace.serializerName> ]'\nkamanja <apiconfig> remove adaptermessagebinding KEY '<adapterName,namespace.messageName,namespace.serializerName>'")
+                    throw new RuntimeException(s"Remove Adapter Message Binding - invalid arguments supplied.  Check the syntax.  One of three ways are permissible:\nkamanja <apiconfig> remove adaptermessagebinding FROMFILE <file path with json content for binding key(s)>\nkamanja <apiconfig> remove adaptermessagebinding FROMSTRING '[ <json array item or items of the form adapterName,namespace.messageName,namespace.serializerName> ]'\nkamanja <apiconfig> remove adaptermessagebinding KEY '<adapterName,namespace.messageName,namespace.serializerName>'")
+                } else if (bindingString.nonEmpty) {
+                    response = AdapterMessageBindingService.removeFromInlineAdapterMessageBinding(bindingString, userId)
+                } else if (bindingFilePath.nonEmpty) {
+                    response = AdapterMessageBindingService.removeFromFileAnAdapterMessageBinding(bindingFilePath, userId)
+                }
+            }
+        }
+
+        case Action.LISTADAPTERMESSAGEBINDINGS => {
+            val adapterfilter: String = extraCmdArgs.getOrElse(ADAPTERFILTER, "")
+            val messagefilter: String = extraCmdArgs.getOrElse(MESSAGEFILTER, "")
+            val serializerfilter: String = extraCmdArgs.getOrElse(SERIALIZERFILTER, "")
+
+            val filterCnt : Int = (if (adapterfilter.nonEmpty) 1 else 0) +
+                                  (if (messagefilter.nonEmpty) 1 else 0) +
+                                  (if (serializerfilter.nonEmpty) 1 else 0)
+            response = if (filterCnt == 0) {
+                AdapterMessageBindingService.ListAllAdapterMessageBindings
+            } else {
+                if (filterCnt == 1) {
+                    if (adapterfilter.nonEmpty) {
+                        AdapterMessageBindingService.ListBindingsForAdapter(adapterfilter)
+                    } else if (messagefilter.nonEmpty) {
+                        AdapterMessageBindingService.ListBindingsForMessage(messagefilter)
+                    } else {
+                        AdapterMessageBindingService.ListBindingsUsingSerializer(serializerfilter)
+                    }
+                } else {
+                    println("Currently only one filter is permitted for the ListAdapterMessageBindings cmd")
+                    throw new RuntimeException(s"Currently only one filter is permitted for the ListAdapterMessageBindings cmd")
+                }
+            }
+        }
 
         //concept
         case Action.ADDCONCEPT => response = ConceptService.addConcept(input)
@@ -401,15 +608,24 @@ object StartMetadataAPI {
       }
     }
     catch {
+      case e: java.util.NoSuchElementException => {
+        logger.error("Unable to access route: "+ fileinquesiton)
+        response = new ApiResult(-1, "StartMetadataAPI/route", null, s"Unable to execute command for action = $action").toString
+      }
+      case fio: java.io.FileNotFoundException => {
+        logger.error("Unable to access file: "+ fileinquesiton)
+        response=new ApiResult(-1, "StartMetadataAPI/route", null, s"Unable to execute command for action = $action").toString
+      }
 
       case e: Exception => {
         logger.warn("", e)
         /** tentative answer of unidentified command type failure. */
-        response = s"Unexpected action! action = $action"
+        response=new ApiResult(-1, "StartMetadataAPI/route", null,  s"Unexpected action! action = $action").toString
         /** one more try ... going the alternate route.
           *
           * ''Do we still need this ?'' Let's keep it for now.
           */
+       /*
         val altResponse: String = AltRoute(originalArgs)
         if (altResponse != null) {
             //response = altResponse  ... typically a parse error that is only meaningful for AltRoute processing
@@ -420,6 +636,7 @@ object StartMetadataAPI {
           printf(response)
           sys.exit(1)
         }
+        */
       }
 
     }
@@ -439,6 +656,7 @@ object StartMetadataAPI {
     *
     */
   def AltRoute(origArgs : Array[String]) : String = {
+
 
        /** trim off the config argument and if debugging the "debug" argument as well */
        val argsSansConfig : Array[String] = if (origArgs != null && origArgs.size > 0 && origArgs(0).toLowerCase == "debug") {
@@ -473,6 +691,7 @@ object StartMetadataAPI {
                            val msgVer: String = if (argMap.contains("messageversion")) argMap("messageversion") else MdMgr.LatestVersion
                            val pmmlSrc: Option[String] = if (argMap.contains("pmml")) Some(argMap("pmml")) else None
                            val pmmlPath: String = pmmlSrc.orNull
+                           val tid: Option[String] =   if (argMap.contains("tenantid")) Some(argMap("tenantid")) else None
 
                            var validatedModelVersion: String = null
                            var validatedMsgVersion: String = null
@@ -487,11 +706,12 @@ object StartMetadataAPI {
 
                            ModelService.addModelPmml(ModelType.PMML
                                , pmmlPath
-                               , Some("metadataapi")
+                               , Some("kamanja")
                                , modelName
                                , optModelVer
                                , msgName
-                               , optMsgVer)
+                               , optMsgVer
+                               , tid)
 
                        } else {
                            null
@@ -544,11 +764,12 @@ object StartMetadataAPI {
 
                                /** modelnamespace.modelname expected for modelName value */
                                val modelName: String = optModelName.orNull
+                               var tid: Option[String] =   if (argMap.contains("tenantid")) Some(argMap("tenantid")) else None
                                ModelService.updateModelPmml(pmmlPath
-                                   , Some("metadataapi")
+                                   , Some("kamanja")
                                    , modelName
-                                   , validatedNewVersion)
-                               //, optOldVer)
+                                   , validatedNewVersion
+                                   , tid)
                            }
                        } else {
                            null

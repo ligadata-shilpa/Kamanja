@@ -146,7 +146,12 @@ class LowBalanceAlert(factory: ModelInstanceFactory) extends ModelInstance(facto
 
     val curTmInMs = curDtTmInMs.getDateTimeInMs
     // create new alert history record and persist (if policy is to keep only one, this will replace existing one)
-    CustAlertHistory.build.withalertdttminms(curTmInMs).withalerttype("lowbalancealert").Save
+    val ah = CustAlertHistory.build;
+    ah.set("alertdttminms",curTmInMs);
+    ah.set("alerttype","lowbalancealert");
+    ah.save;
+
+    //CustAlertHistory.build.withalertdttminms(curTmInMs).withalerttype("lowbalancealert").Save
     // results
     new LowBalanceAlertResult().withCustId(rcntTxn.get.custid).withBranchId(rcntTxn.get.branchid).withAccNo(rcntTxn.get.accno).withCurBalance(rcntTxn.get.balance).withAlertType("lowBalanceAlert").withTriggerTime(curTmInMs)
   }
