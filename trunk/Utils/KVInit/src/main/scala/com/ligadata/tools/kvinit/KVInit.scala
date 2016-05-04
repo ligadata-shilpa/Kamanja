@@ -819,6 +819,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
 
     var hasPrimaryKey = false
+    var firstTime = true
     var triedForPrimaryKey = false
     var transService: com.ligadata.transactions.SimpleTransService = null
 
@@ -863,6 +864,12 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
           val container = deserMsgBindingInfo.serInstance.deserialize(inputStr.getBytes, typename)
           if (container != null) {
+
+            if (firstTime) {
+              firstTime = false
+              hasPrimaryKey = container.hasPrimaryKey
+            }
+
             container.setTransactionId(transId)
 
             try {
