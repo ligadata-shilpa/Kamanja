@@ -477,7 +477,9 @@ object MessageAndContainerUtils {
             }
             resultStr
           } else {
-            val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", messageText, ErrorCodeConstants.Update_Message_Failed + " Error:Invalid Version")
+            // 1112 - Introduced to let user know higher version required - Change begins
+            val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", messageText, ErrorCodeConstants.Update_Message_Failed_Higher_Version_Required)
+            // 1112 - Change ends
             apiResult.toString()
           }
         }
@@ -1403,8 +1405,8 @@ object MessageAndContainerUtils {
     */
   def IsMessageExists(objectName: String): MessageDef = {
     try {
-      val nameNodes: Array[String] = if (objectName != null && 
-					 objectName.contains('.')) objectName.split('.') 
+      val nameNodes: Array[String] = if (objectName != null &&
+	objectName.contains('.')) objectName.split('.')
 				     else Array(MdMgr.sysNS, objectName)
       var name = nameNodes(nameNodes.size-1)
       val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
@@ -1421,7 +1423,7 @@ object MessageAndContainerUtils {
           logger.debug("message not in the cache => " + objectName)
           return null;
         case Some(m) =>
-          logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + 
+          logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." +
 		       MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].ver))
           return m.asInstanceOf[MessageDef]
       }
@@ -1447,9 +1449,9 @@ object MessageAndContainerUtils {
 	return msgFullName
       }
       else{
-	var msgJson = "{\"Message\":{" + 
-	"\"NameSpace\":" + "\"" + nameSpace + "\"" + 
-	",\"Name\":" + "\"" + msgName + "\"" + 
+	var msgJson = "{\"Message\":{" +
+	"\"NameSpace\":" + "\"" + nameSpace + "\"" +
+	",\"Name\":" + "\"" + msgName + "\"" +
 	",\"Version\":\"00.00.01\"" +
 	",\"Description\":\"Default Output Message for " + name + "\"" +
         ",\"Fixed\":\"false\"" +
@@ -1457,7 +1459,7 @@ object MessageAndContainerUtils {
 	logger.info("The default output message string => " + msgJson)
 	val resultStr = AddContainerOrMessage(msgJson,"JSON",optUserId, Some(modDef.TenantId), false)
 	return msgFullName
-      } 
+      }
     }catch {
       case e: Exception => {
         logger.debug("", e)
