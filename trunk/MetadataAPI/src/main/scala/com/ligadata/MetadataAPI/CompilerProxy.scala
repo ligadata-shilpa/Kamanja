@@ -1205,7 +1205,7 @@ class CompilerProxy {
         var fullName = mdlFactory.getModelName.split('.')
 //        logger.debug("getDefaultInputMsgSets: Get the model config for " + modelConfigName)
 //        var config = if (modelConfigName != null) MdMgr.GetMdMgr.GetModelConfig(modelConfigName) else Map[String, Any]()
-        var config = if (modCfgJson != null) parse(modCfgJson).values.asInstanceOf[Map[String, Any]] else Map[String, Any]()
+        var config = if (modCfgJson != null) parse(modCfgJson).values.asInstanceOf[scala.collection.immutable.Map[String, Any]] else scala.collection.immutable.Map[String, Any]()
         logger.debug("getDefaultInputMsgSets: Size of the model config map => " + config.keys.size);
         val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
         if (typDeps != null) {
