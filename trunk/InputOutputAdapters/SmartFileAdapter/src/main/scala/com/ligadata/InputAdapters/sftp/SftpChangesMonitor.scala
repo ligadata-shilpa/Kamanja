@@ -4,17 +4,16 @@ package com.ligadata.InputAdapters.sftp
   * Created by Yasser on 3/10/2016.
   */
 import java.io._
-import java.util.zip.GZIPInputStream
 import com.ligadata.AdaptersConfiguration.{SmartFileAdapterConfiguration, FileAdapterMonitoringConfig, FileAdapterConnectionConfig}
-import com.ligadata.Exceptions.{KamanjaException}
+import com.ligadata.Exceptions.KamanjaException
 import com.ligadata.InputAdapters.FileChangeType.FileChangeType
 import com.ligadata.InputAdapters.FileChangeType._
 
 import scala.collection.mutable.{ArrayBuffer, Map}
-import org.apache.commons.vfs2.{FileType, FileObject, FileSystemOptions, Selectors}
+import org.apache.commons.vfs2.FileObject
 import org.apache.commons.vfs2.impl.StandardFileSystemManager
 import com.ligadata.InputAdapters._
-import org.apache.logging.log4j.{ Logger, LogManager }
+import org.apache.logging.log4j.LogManager
 import SftpUtility._
 import scala.actors.threadpool.{Executors, ExecutorService}
 import com.jcraft.jsch._
@@ -61,7 +60,7 @@ class SftpFileHandler extends SmartFileHandler{
 
     val hostTokens = connectionConfig.hostsList(0).split(":")
     host = hostTokens(0)
-    port = if(hostTokens(1) != null && hostTokens(1).length >0 ) hostTokens(1).toInt else 22 //default
+    port = if(hostTokens.length ==2 && hostTokens(1) != null && hostTokens(1).length >0 ) hostTokens(1).toInt else 22 //default
 
     jsch = new JSch()
     if (connectionConfig.keyFile != null && connectionConfig.keyFile.length > 0) {
@@ -72,16 +71,16 @@ class SftpFileHandler extends SmartFileHandler{
   def getFullPath = remoteFullPath
 
   //gets the input stream according to file system type - SFTP here
-  def getDefaultInputStream() : InputStream = {
+  def getDefaultInputStream : InputStream = {
 
     val ui=new SftpUserInfo(connectionConfig.password, passphrase)
 
     session = getNewSession
     session.setUserInfo(ui)
     session.connect()
-    val channel = session.openChannel("sftp");
+    val channel = session.openChannel("sftp")
     channel.connect()
-    channelSftp = channel.asInstanceOf[ChannelSftp];
+    channelSftp = channel.asInstanceOf[ChannelSftp]
 
     val inputStream : InputStream =
       try {
@@ -89,14 +88,14 @@ class SftpFileHandler extends SmartFileHandler{
         channelSftp.get(remoteFullPath)
       }
       catch {
-        case e: Exception => {
+        case e: Exception =>
           logger.error("Error getting input stream for file " + getFullPath, e)
           null
-        }
-        case e: Throwable => {
+
+        case e: Throwable =>
           logger.error("Error getting input stream for file " + getFullPath, e)
           null
-        }
+
       }
       finally {
 
@@ -114,7 +113,7 @@ class SftpFileHandler extends SmartFileHandler{
       manager.init()*/
 
       val compressionType = CompressionUtil.getFileType(this, null)
-      in = CompressionUtil.getProperInputStream(getDefaultInputStream, compressionType)
+      in = CompressionUtil.getProperInputStream(getDefaultInputStream(), compressionType)
       in
     }
     catch{
@@ -177,19 +176,19 @@ class SftpFileHandler extends SmartFileHandler{
 
       channelSftp.rename(getFullPath, remoteNewFilePath)
 
-      return true
+      true
     }
     catch {
-      case ex: Exception => {
+      case ex: Exception =>
         logger.error("Sftp File Handler - Error while trying to moving sftp file " +
           getFullPath + " to " + remoteNewFilePath, ex)
-        return false
-      }
-      case ex: Throwable => {
+        false
+
+      case ex: Throwable =>
         logger.error("Sftp File Handler - Error while trying to moving sftp file " +
           getFullPath + " to " + remoteNewFilePath, ex)
-        return false
-      }
+        false
+
     }
     finally{
       if(channelSftp != null) channelSftp.exit()
@@ -214,17 +213,17 @@ class SftpFileHandler extends SmartFileHandler{
       channelSftp.exit()
       session.disconnect()
 
-      return true
+      true
     }
     catch {
-      case ex: Exception => {
+      case ex: Exception =>
         logger.error("Sftp File Handler - Error while trying to delete sftp file " + getFullPath, ex)
-        return false
-      }
-      case ex: Throwable => {
+         false
+
+      case ex: Throwable =>
         logger.error("Sftp File Handler - Error while trying to delete sftp file " + getFullPath, ex)
-        return false
-      }
+         false
+
     }
     finally{
       if(channelSftp != null) channelSftp.exit()
@@ -253,10 +252,16 @@ class SftpFileHandler extends SmartFileHandler{
   }
 
   @throws(classOf[Exception])
-  def length : Long = getRemoteFileAttrs.getSize
+  def length : Long = {
+    val attrs = getRemoteFileAttrs
+    if (attrs == null) 0 else attrs.getSize
+  }
 
   @throws(classOf[Exception])
-  def lastModified : Long = getRemoteFileAttrs.getMTime
+  def lastModified : Long = {
+    val attrs = getRemoteFileAttrs
+    if (attrs == null) 0 else attrs.getMTime
+  }
 
   @throws(classOf[Exception])
   def exists(): Boolean = {
@@ -267,47 +272,53 @@ class SftpFileHandler extends SmartFileHandler{
   private def fileExists(channel : ChannelSftp, file : String) : Boolean = {
       try{
         channelSftp.lstat(file)
-        return true
+         true
       }
       catch{//source file does not exist, nothing to do
-        case ee  : Exception => {
+        case ee  : Exception =>
           //no need to log, file does not exist, calling threads will report
-          return false
-        }
-        case ee  : Throwable => {
-          return false
-        }
+           false
+
+        case ee  : Throwable =>
+          false
+
       }
   }
 
   @throws(classOf[Exception])
-  override def isFile: Boolean = !getRemoteFileAttrs.isDir
+  override def isFile: Boolean = {
+    val attrs = getRemoteFileAttrs
+    if (attrs == null) false else !attrs.isDir
+  }
 
   @throws(classOf[Exception])
-  override def isDirectory: Boolean = getRemoteFileAttrs.isDir
+  override def isDirectory: Boolean = {
+    val attrs = getRemoteFileAttrs
+    if (attrs == null) false else attrs.isDir
+  }
 
   private def getRemoteFileAttrs :  SftpATTRS = {
     try {
       val ui = new SftpUserInfo(connectionConfig.password, passphrase)
       session = getNewSession
-      session.setUserInfo(ui);
-      session.connect();
-      val channel = session.openChannel("sftp");
-      channel.connect();
-      channelSftp = channel.asInstanceOf[ChannelSftp];
+      session.setUserInfo(ui)
+      session.connect()
+      val channel = session.openChannel("sftp")
+      channel.connect()
+      channelSftp = channel.asInstanceOf[ChannelSftp]
       channelSftp.lstat(getFullPath)
     }
     catch {
-      case ex : Exception => {
+      case ex : Exception =>
         logger.error("Error while getting file attrs for file " + getFullPath, ex)
         null
-      }
-      case ex : Throwable => {
+
+      case ex : Throwable =>
         logger.error("Error while getting file attrs for file " + getFullPath, ex)
         null
-      }
 
     } finally {
+      logger.debug("Closing SFTP session from getRemoteFileAttrs()")
       if(channelSftp != null) channelSftp.exit()
       if(session != null) session.disconnect()
     }
@@ -334,7 +345,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
   private var port : Int = _
 
   def init(adapterSpecificCfgJson: String): Unit ={
-    val(_type, c, m) =  SmartFileAdapterConfiguration.parseSmartFileAdapterSpecificConfig(adapterName, adapterSpecificCfgJson)
+    val(_, c, m) =  SmartFileAdapterConfiguration.parseSmartFileAdapterSpecificConfig(adapterName, adapterSpecificCfgJson)
     connectionConf = c
     monitoringConf = m
 
@@ -348,16 +359,13 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     port = if(hostTokens(1) != null && hostTokens(1).length >0 ) hostTokens(1).toInt else 22 //default
   }
 
-  def monitor: Unit ={
+  def monitor(): Unit ={
 
     val manager : StandardFileSystemManager  = new StandardFileSystemManager()
 
     isMonitoring = true
     //Initializes the file manager
-    manager.init();
-
-    //Setup our SFTP configuration
-    val opts = createDefaultOptions(connectionConf)
+    manager.init()
 
     monitorsExecutorService = Executors.newFixedThreadPool(monitoringConf.locations.length)
 
@@ -399,8 +407,14 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
                    // run the callback in a different thread
                   //new Thread(handler).start()
                   globalFileMonitorCallbackService.execute(handler)*/
-                      logger.debug("calling sftp monitor is calling file callback for Monitorcontroller for file {}", tuple._1.getFullPath)
-                      modifiedFileCallback(tuple._1)
+                      logger.debug("calling sftp monitor is calling file callback for MonitorController for file {}", tuple._1.getFullPath)
+                      try {
+                        modifiedFileCallback(tuple._1)
+                      }
+                      catch{
+                        case e : Throwable =>
+                          logger.error("Smart File Consumer (Sftp) : Error while notifying Monitor about new file", e)
+                      }
 
                     }
                     )
@@ -422,12 +436,12 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
             //globalFileMonitorCallbackService.shutdown()
           }
           catch {
-            case ex: Exception => {
+            case ex: Exception =>
               logger.error("Error while monitoring folder " + targetRemoteFolder, ex)
-            }
-            case ex: Throwable => {
+
+            case ex: Throwable =>
               logger.error("Error while monitoring folder " + targetRemoteFolder, ex)
-            }
+
           }
           finally {
             manager.close()
@@ -440,7 +454,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
   }
 
-  def shutdown: Unit ={
+  def shutdown(): Unit ={
     isMonitoring = false
     monitorsExecutorService.shutdown()
   }
@@ -452,6 +466,8 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     logger.info("checking folder with full path: " + parentfolderHashed)
 
     val directChildren = getRemoteFolderContents(parentfolder, manager).sortWith(_.getContent.getLastModifiedTime < _.getContent.getLastModifiedTime)
+    logger.debug("SftpChangesMonitor - Found following children " + directChildren.map(c=>c.getURL.toString).mkString(","))
+
     var changeType : FileChangeType = null //new, modified
 
     //logger.debug("got the following children for checked folder " + directChildren.map(c => c.getURL.toString).mkString(", "))
@@ -459,21 +475,21 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     directChildren.foreach(child => {
       val currentChildEntry = makeFileEntry(child)
       var isChanged = false
-      val uniquePath = child.getURL().toString()
+      val uniquePath = child.getURL.toString
 
       if(!filesStatusMap.contains(uniquePath)){
         //path is new
         isChanged = true
         changeType = if(isFirstCheck) AlreadyExisting else New
 
-        //logger.debug("file {} is {}", uniquePath, changeType.toString)
+        logger.debug("SftpChangesMonitor - file {} is {}", uniquePath, changeType.toString)
 
         filesStatusMap.put(uniquePath, currentChildEntry)
         if(currentChildEntry.isDirectory)
           modifiedDirs += uniquePath
       }
       else{
-        //logger.debug("file {} is already in monitors filesStatusMap", uniquePath)
+        logger.debug("SftpChangesMonitor - file {} is already in monitors filesStatusMap", uniquePath)
 
         val storedEntry = filesStatusMap.get(uniquePath).get
         if(currentChildEntry.lastModificationTime >  storedEntry.lastModificationTime){//file has been modified
@@ -485,8 +501,10 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
       }
 
       //TODO : this method to find changed folders is not working as expected. so for now check all dirs
-      if(currentChildEntry.isDirectory)
+      if(currentChildEntry.isDirectory) {
+        logger.debug("SftpChangesMonitor - file {} is directory", uniquePath)
         modifiedDirs += uniquePath
+      }
 
       if(isChanged){
         if(currentChildEntry.isDirectory){
@@ -494,7 +512,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
         }
         else{
           if(changeType == New || changeType == AlreadyExisting) {
-            //logger.debug("file {} will be added to modifiedFiles map", uniquePath)
+            logger.debug("file {} will be added to modifiedFiles map", uniquePath)
             val fileHandler = new SftpFileHandler(getPathOnly(uniquePath), connectionConf)
             modifiedFiles.put(fileHandler, changeType)
           }
@@ -505,17 +523,10 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
 
     val deletedFiles = new ArrayBuffer[String]()
-    /*filesStatusMap.keys.filter(filePath => isDirectParentDir(filePath, parentfolder)).foreach(pathKey =>
-      if(!directChildren.exists(fileStatus => fileStatus.getURL().toString.equals(pathKey))){ //key that is no more in the folder => file/folder deleted
-        deletedFiles += pathKey
-      }
-    )*/
 
     filesStatusMap.values.foreach(fileEntry =>{
-      //logger.debug("checking if file {} is deleted, parent is {}. comparing to folder {}",
-        //fileEntry.name, fileEntry.parent, parentfolder)
       if(isDirectParentDir(fileEntry, parentfolder)){
-        if(!directChildren.exists(fileStatus => fileStatus.getURL().toString.equals(fileEntry.name))) {
+        if(!directChildren.exists(fileStatus => fileStatus.getURL.toString.equals(fileEntry.name))) {
           //key that is no more in the folder => file/folder deleted
           logger.debug("file {} is no more under folder  {}, will be deleted from map", fileEntry.name, fileEntry.parent)
           deletedFiles += fileEntry.name
@@ -532,7 +543,7 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
   private def getRemoteFolderContents(parentRemoteFolderUri : String, manager : StandardFileSystemManager) : Array[FileObject] = {
     val remoteDir : FileObject = manager.resolveFile(parentRemoteFolderUri )
-    val children = remoteDir.getChildren()
+    val children = remoteDir.getChildren
     children
   }
 

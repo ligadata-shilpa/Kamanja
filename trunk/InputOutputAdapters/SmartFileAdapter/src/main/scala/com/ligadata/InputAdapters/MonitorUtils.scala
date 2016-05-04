@@ -26,28 +26,36 @@ object MonitorUtils {
   val validContentTypes  = Set(PLAIN, GZIP, BZIP2, LZO) //might change to get that from some configuration
 
   def isValidFile(fileHandler: SmartFileHandler): Boolean = {
-    val filepathParts = fileHandler.getFullPath.split("/")
-    val fileName = filepathParts(filepathParts.length - 1)
-    if(fileName.startsWith("."))
-      return false
+    try {
+      val filepathParts = fileHandler.getFullPath.split("/")
+      val fileName = filepathParts(filepathParts.length - 1)
+      if (fileName.startsWith("."))
+        return false
 
-    //Check if the File exists
-    if(fileHandler.exists && fileHandler.length>0) {
+      val fileSize = fileHandler.length
+      //Check if the File exists
+      if (fileHandler.exists && fileSize > 0) {
 
-      val contentType = CompressionUtil.getFileType(fileHandler, "")
-      if(validContentTypes contains contentType){
+        val contentType = CompressionUtil.getFileType(fileHandler, "")
+        if (validContentTypes contains contentType) {
+          return true
+        } else {
+          //Log error for invalid content type
+          logger.error("SMART FILE CONSUMER (MonitorUtils): Invalid content type " + contentType + " for file " + fileHandler.getFullPath)
+        }
+      } else if (fileSize == 0) {
         return true
-      }else{
-        //Log error for invalid content type
-        logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file " + fileHandler.getFullPath)
+      } else {
+        //File doesnot exists - could be already processed
+        logger.warn("SMART FILE CONSUMER (MonitorUtils): File does not exist anymore " + fileHandler.getFullPath)
       }
-    } else if (fileHandler.length() == 0 ){
-      return true
-    }else  {
-      //File doesnot exists - could be already processed
-      //logger.warn ("SMART FILE CONSUMER (global): File aready processed " + fileHandler.getFullPath)
+      return false
     }
-    return false
+    catch{
+      case e : Throwable =>
+        logger.debug("SMART FILE CONSUMER (MonitorUtils): Error while checking validity of file "+fileHandler.getDefaultInputStream, e)
+        false
+    }
   }
 
   def toCharArray(bytes : Array[Byte]) : Array[Char] = {
