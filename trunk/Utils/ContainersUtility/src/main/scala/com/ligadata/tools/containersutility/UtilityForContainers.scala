@@ -321,7 +321,8 @@ class UtilityForContainers(val loadConfigs: Properties, val typename: String) ex
   }
   // this method used to purge (truncate) container
   def TruncateContainer(typename: String, kvstore: DataStore): Unit ={
-    logger.warn("Truncate %s container".format(typename))
+    logger.info("Truncate %s container".format(typename))
+    println(" [RESULT] Truncate %s container".format(typename))
     kvstore.TruncateContainer(Array(typename))
   }
   // this method used to dalete data from container for a specific keys in a specific time ranges
