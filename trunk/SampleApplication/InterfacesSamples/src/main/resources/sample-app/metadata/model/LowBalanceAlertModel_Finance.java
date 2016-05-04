@@ -90,10 +90,11 @@ public class LowBalanceAlertModel extends ModelInstance {
 		public LowBalanceAlertFactory(ModelDef modelDef, NodeContext nodeContext) {
 			super(modelDef, nodeContext);
 		}
+/*
 		public boolean isValidMessage(MessageContainerBase msg) {
 			return (msg instanceof TransactionMsg);
 		}
-
+*/
 		public ModelInstance createModelInstance() {
 			return new LowBalanceAlertModel(this);
 		}
