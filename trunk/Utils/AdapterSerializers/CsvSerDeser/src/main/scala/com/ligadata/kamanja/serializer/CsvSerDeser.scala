@@ -13,11 +13,6 @@ import com.ligadata.KamanjaBase.AttributeTypeInfo.TypeCategory._
 /**
   * Meta fields found at the beginning of each JSON representation of a ContainerInterface object
   */
-object CsvContainerInterfaceKeys extends Enumeration {
-    type CsvKeys = Value
-    val typename, version, physicalname = Value
-}
-
 //@@TODO: move this into utils and use for all logging
 object CSVLog {
     private val log = LogManager.getLogger(getClass)
@@ -71,6 +66,7 @@ class CsvSerDeser extends SerializeDeserialize {
     var _emitHeaderFirst : Boolean = false
     var _fieldDelimiter  = ","
     var _valDelimiter = "~"
+    var _keyDelimiter = "@"
     var _lineDelimiter = "\n"
     var _nullValue = ""
     var _alwaysQuoteField = false
@@ -106,12 +102,13 @@ class CsvSerDeser extends SerializeDeserialize {
 
         var processCnt : Int = 0
         val fieldCnt = fields.size
+        val emitKeyName = false
         fields.foreach(attr => {
             processCnt += 1
             val fld = attr.getValue
             if (fld != null) {
                 val doTrailingComma : Boolean = processCnt < fieldCnt
-                emitField(sb, attr, doTrailingComma)
+                emitField(sb, attr, doTrailingComma, emitKeyName)
             } else {
               // right thing to do is to emit NULL as special value - either as empty in output or some special indication such as -
                 throw new ObjectNotFoundException(s"CsvSerDeser::serialize, during serialize()...attribute ${attr.getValueType.getName} could not be found in the container... mismatch", null)
@@ -131,7 +128,7 @@ class CsvSerDeser extends SerializeDeserialize {
       * @param sb string builder to emit header
       * @param containerFieldsInOrder array of field definitions
       */
-    private def emitHeaderRecord(sb : StringBuilder, containerFieldsInOrder : Array[AttributeValue]): Unit = {
+    def emitHeaderRecord(sb : StringBuilder, containerFieldsInOrder : Array[AttributeValue]): Unit = {
         val quote : String = s"${'"'}"
         val fieldCnt : Int = containerFieldsInOrder.length
         var cnt : Int = 0
@@ -173,9 +170,9 @@ class CsvSerDeser extends SerializeDeserialize {
       * @param attr the attribute value that contains the data value
       * @param doTrailingComma when true follow data emission with comma; when false, emit the line delimiter configured
       */
-    private def emitField( sb: StringBuilder
+    def emitField( sb: StringBuilder
                           ,attr : com.ligadata.KamanjaBase.AttributeValue
-                          ,doTrailingComma : Boolean) = {
+                          ,doTrailingComma : Boolean, emitKeyName: Boolean) = {
         val valueType  = attr.getValueType
         val rawValue : Any = attr.getValue
         val typeName : String = valueType.getName
@@ -192,12 +189,16 @@ class CsvSerDeser extends SerializeDeserialize {
             }
             Debug(s"CsvSerDeser::emitField $typeName with value possibly quoted and escaped = $fld")
         }
+        if(emitKeyName) {
+            sb.append(typeName)
+            sb.append(_keyDelimiter)
+        }
         sb.append(fld)
         if(doTrailingComma)
             sb.append(_fieldDelimiter)
     }
 
-    private def emitArray(sb: StringBuilder, valueType: AttributeTypeInfo, array: Array[_]) = {
+    def emitArray(sb: StringBuilder, valueType: AttributeTypeInfo, array: Array[_]) = {
         var idx = 0
         if (array != null && array.size > 0) {
             val itemType = valueType.getValTypeCategory
@@ -221,7 +222,7 @@ class CsvSerDeser extends SerializeDeserialize {
       * @param valueStr string presumably that has embedded double quotes.
       * @return adjusted string
       */
-    private def escapeQuotes(valueStr : String) : String = {
+    def escapeQuotes(valueStr : String) : String = {
         val len : Int = if (valueStr != null) valueStr.length else 0
         if(len == 0) return ""
         val buffer : StringBuilder = new StringBuilder
@@ -265,6 +266,7 @@ class CsvSerDeser extends SerializeDeserialize {
         _config = configProperties.asScala
         _fieldDelimiter = _config.getOrElse("fieldDelimiter", ",")
         _valDelimiter = _config.getOrElse("valDelimiter", "~")
+        _keyDelimiter = _config.getOrElse("keyDelimiter", "@")
         _lineDelimiter =  _config.getOrElse("lineDelimiter", "\n")
         _nullValue =  _config.getOrElse("nullValue", "")
         _escapeChar = _config.getOrElse("escChar", "\\")
@@ -275,7 +277,7 @@ class CsvSerDeser extends SerializeDeserialize {
     }
 
 
-    private def deserializeArray(fldStr: String, attr: AttributeTypeInfo): Any = {
+    def deserializeArray(fldStr: String, attr: AttributeTypeInfo): Any = {
         val rawValFields : Array[String] = if (fldStr != null) {
             fldStr.split(_valDelimiter)
         } else {
@@ -298,7 +300,7 @@ class CsvSerDeser extends SerializeDeserialize {
         retVal
     }
 
-    private def resolveValue(fldStr: String, attr: AttributeTypeInfo): Any = {
+    def resolveValue(fldStr: String, attr: AttributeTypeInfo): Any = {
         val fld = if(fldStr == null) "" else fldStr
         var returnVal: Any = null
         val tc = attr.getTypeCategory
@@ -401,6 +403,129 @@ class CsvSerDeser extends SerializeDeserialize {
             ci.set(fldIdx, resolveValue(fld, attr))
             fldIdx += 1
         })
+        ci
+    }
+}
+
+class KVSerDeser extends CsvSerDeser {
+    /**
+      * Serialize the supplied container to a byte array using these CSV rules:
+      *
+      * @param v a ContainerInterface (describes a standard kamanja container)
+      */
+    @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
+    override def serialize(v : ContainerInterface) : Array[Byte] = {
+        val sb = new StringBuilder(8 * 1024)
+
+        val containerName : String = v.getFullTypeName
+        val containerType = v.getContainerType
+
+        /* The check for empty container should be done at adapter binding level rather than here.
+           For now, keep it here for debugging purpose, but needs to be removed as it is too low level to have this check and fail.
+         */
+        val fields = v.getAllAttributeValues
+        if (fields.isEmpty) {
+            throw new ObjectNotFoundException(s"KVSerDeser::serialize, The container $containerName surprisingly has no fields...serialize fails", null)
+        }
+
+        var processCnt : Int = 0
+        val fieldCnt = fields.size
+        val emitKeyName = true
+        fields.foreach(attr => {
+            processCnt += 1
+            val fld = attr.getValue
+            if (fld != null) {
+                val doTrailingComma : Boolean = processCnt < fieldCnt
+                emitField(sb, attr, doTrailingComma, emitKeyName)
+            } else {
+                // right thing to do is to emit NULL as special value - either as empty in output or some special indication such as -
+                throw new ObjectNotFoundException(s"KVSerDeser::serialize, during serialize()...attribute ${attr.getValueType.getName} could not be found in the container... mismatch", null)
+            }
+        })
+        val strRep = sb.toString()
+        if (isDebugEnabled) {
+            Debug(s"Serialized as KV, #flds: $fieldCnt, data: $strRep")
+        }
+        strRep.getBytes
+    }
+
+    /**
+      * Write the field data type names to the supplied stream.  This is called whenever the _emitHeaderFirst instance
+      * variable is true... usually just once in a given stream creation.
+      *
+      * @param sb string builder to emit header
+      * @param containerFieldsInOrder array of field definitions
+      */
+    override def emitHeaderRecord(sb : StringBuilder, containerFieldsInOrder : Array[AttributeValue]): Unit = { }
+
+    /**
+      * Deserialize the supplied byte array into some ContainerInterface instance.  Note that the header
+      * record is not handled.  The CSV stream of multiple container interface records will just stumble over
+      * such header records when they don't match the
+      *
+      * @param b the byte array containing the serialized ContainerInterface instance
+      * @return a ContainerInterface
+      */
+    @throws(classOf[com.ligadata.Exceptions.MissingPropertyException])
+    @throws(classOf[com.ligadata.Exceptions.ObjectNotFoundException])
+    @throws(classOf[com.ligadata.Exceptions.UnsupportedObjectException])
+    override def deserialize(b: Array[Byte], containerName: String) : ContainerInterface = {
+        /** get an empty ContainerInterface instance for this type name from the _objResolver */
+        val ci : ContainerInterface = _objResolver.getInstance(containerName)
+        if (ci == null) {
+            throw new ObjectNotFoundException(s"type name $containerName could not be resolved and built for deserialize",null)
+        }
+        val rawCsvContainerStr : String = new String(b)
+
+        val rawCsvFields : Array[String] = if (rawCsvContainerStr != null) {
+            rawCsvContainerStr.split(_fieldDelimiter)
+        } else {
+            Array[String]()
+        }
+        if (rawCsvFields.isEmpty) {
+            Error("The supplied KV record is empty...abandoning processing")
+            throw new ObjectNotFoundException("The supplied KV record is empty...abandoning processing", null)
+        }
+        val isFieldAndKeyDelimSame = (_fieldDelimiter == _keyDelimiter)
+        if(isFieldAndKeyDelimSame && (rawCsvFields.length % 2) != 0) {
+            Error(s"The supplied KV record has same key and field delimiters and has odd number of parts, record: $rawCsvContainerStr")
+            throw new ObjectNotFoundException("The supplied KV record format is not correct...abandoning processing", null)
+        }
+
+        var fldIdx = 0
+        val numFields = rawCsvFields.length
+
+        if (isDebugEnabled) {
+            Debug("InputData in fields:" + rawCsvFields.map(fld => if (fld == null) "<null>" else fld).mkString(","))
+        }
+
+        while (fldIdx < numFields){
+            var k = ""
+            var v = ""
+            if(isFieldAndKeyDelimSame) {
+                k = rawCsvFields(fldIdx)
+                v = rawCsvFields(fldIdx+1)
+                fldIdx += 2
+            } else {
+                val kv = rawCsvFields(fldIdx)
+                val parts = kv.split(_keyDelimiter)
+                if(parts.length != 2) {
+                    Error(s"The supplied KV record has field ($fldIdx) without key delimiter or more than one delimiter, record: $rawCsvContainerStr")
+                    throw new ObjectNotFoundException("The supplied KV record format is not correct...abandoning processing", null)
+                }
+                k = parts(0)
+                v = parts(1)
+                fldIdx += 1
+            }
+            val at = ci.getAttributeType(k)
+            if (at == null) {
+                if (!ci.isFixed)
+                    ci.set(k, v)
+            }
+            else {
+                ci.set(k, resolveValue(v, at))
+            }
+        }
         ci
     }
 }
