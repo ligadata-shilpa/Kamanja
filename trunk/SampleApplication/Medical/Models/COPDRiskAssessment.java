@@ -40,7 +40,7 @@ public class COPDRiskAssessment extends ModelInstance {
         }
 
         public String getModelName() {
-            return "com.ligadata.models.samples.models.COPDRiskAssessment";
+            return "com.ligadata.kamanja.samples.models.COPDRiskAssessment";
         }
 
         public String getVersion() {
