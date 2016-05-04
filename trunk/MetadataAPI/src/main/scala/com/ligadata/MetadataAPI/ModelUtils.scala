@@ -1231,7 +1231,13 @@ object ModelUtils {
         } else {
           null
         }
-        val (currMsgNmSp, currMsgNm, currMsgVer): (String, String, String) = MdMgr.SplitFullNameWithVersion(currentMsg)
+        /** look up the message referred to by the inputMsgSets first element... the message only has namespace and name*/
+        val nameparts : Array[String] = if (currentMsg.contains(".")) currentMsg.split('.') else Array[String]("system",currentMsg)
+        val msgnamespace : String = nameparts.dropRight(1).mkString(".")
+        val msgname : String = nameparts.last
+        val msgDef : MessageDef = mdMgr.ActiveMessage(msgnamespace,msgname)
+        val key : String = if (msgDef != null) msgDef.FullNameWithVer else s"$msgnamespace.$msgname.000000000001000000"
+        val (currMsgNmSp, currMsgNm, currMsgVer): (String, String, String) = MdMgr.SplitFullNameWithVersion(key)
 
         val ownerId: String = if (optUserid == None) "kamanja" else optUserid.get
         val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
