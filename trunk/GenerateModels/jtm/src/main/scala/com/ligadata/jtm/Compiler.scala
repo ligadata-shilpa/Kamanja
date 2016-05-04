@@ -1171,6 +1171,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
             outmessages += outputType1
 
+            val ismappedMessage = IsMappedMessage(md, outputType1)
+
             val outputElements = outputSet.toArray.map(e => {
               // e.name -> from input, from mapping, from variable
               val m = innerMapping.get(e._1)
@@ -1180,13 +1182,16 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
 
               // Coerce type
               val newExpression = Expressions.Coerce(e._2, m.get.typeName, m.get.getExpression())
-
-              "result.%s = %s".format(e._1, newExpression)
+              if(ismappedMessage) {
+                "result.set(\"%s\", %s)".format(e._1, m.get.getExpression())
+              } else {
+                "result.%s = %s".format(e._1, newExpression)
+              }
             })
 
             // If output is a dictionary, collect all mappings
             //
-            val outputElements1 = if(IsMappedMessage(md, outputType1)) {
+            val outputElements1 = if(ismappedMessage) {
 
               // Unsatisfied mappings
               val m1 = o._2.mapping.filter(f => !outputSet.contains(f._1)).toArray.map(e => {
@@ -1204,7 +1209,8 @@ class Compiler(params: CompilerBuilder) extends LogTrait {
                   if (m.isEmpty) {
                     throw new Exception("Output %s not found".format(e))
                   }
-                  "result.set(\"%s\", %s)".format(e, m.get.getExpression())
+                  ("resu" +
+                    "lt.set(\"%s\", %s)").format(e, m.get.getExpression())
                 })
               })
 

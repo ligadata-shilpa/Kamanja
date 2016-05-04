@@ -30,7 +30,7 @@ import com.ligadata.kamanja.metadata.ModelDef;
 
 class COPDRiskAssessmentFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def createModelInstance(): ModelInstance = return new COPDRiskAssessment(this)
-  override def getModelName: String = "com.ligadata.models.samples.models.COPDRisk"
+  override def getModelName: String = "com.ligadata.kamanja.samples.models.COPDRisk"
   override def getVersion: String = "0.0.1"
 }
 

@@ -82,7 +82,7 @@ public class HelloWorldModel extends ModelInstance {
 		}
 
 		public String getModelName() {
-			return "com.ligadata.models.samples.models.HelloWorldModel";
+			return "com.ligadata.kamanja.samples.models.HelloWorldModel";
 		}
 
 		public String getVersion() {

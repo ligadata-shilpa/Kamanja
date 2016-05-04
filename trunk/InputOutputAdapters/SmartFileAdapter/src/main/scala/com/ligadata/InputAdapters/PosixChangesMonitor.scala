@@ -296,7 +296,13 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
           val fileHandler = new PosixFileHandler(file.toString)
           //call the callback for new files
           logger.info(s"A new file found ${fileHandler.getFullPath}")
-          modifiedFileCallback(fileHandler)
+          try {
+            modifiedFileCallback(fileHandler)
+          }
+          catch{
+            case e : Throwable =>
+              logger.error("Smart File Consumer (Sftp) : Error while notifying Monitor about new file", e)
+          }
         }
       })
 

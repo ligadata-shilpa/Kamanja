@@ -124,7 +124,12 @@ object CompressionUtil {
         throw e
       }
     } finally {
-      is.close()
+      //try{
+        fileHandler.close()
+      //}
+      /*catch{
+        case e : Throwable => logger.warn("SmartFileConsumer - error while closing file" + fileHandler.getFullPath, e)
+      }*/
     }
     var checkMagicMatchManually = false
     if(contentType!= null && !contentType.isEmpty() && contentType.equalsIgnoreCase("application/octet-stream")){
@@ -136,7 +141,7 @@ object CompressionUtil {
         is = fileHandler.getDefaultInputStream()
         val bufferSize = 10
         val bytes = new Array[Byte](bufferSize)
-        fileHandler.read(bytes, bufferSize)
+        is.read(bytes, 0, bufferSize)
 
         magicMatcher = Magic.getMagicMatch(bytes, false)
         if(magicMatcher != null)
@@ -165,7 +170,7 @@ object CompressionUtil {
 
       }
       finally {
-        is.close()
+        fileHandler.close()
       }
     }
 
@@ -178,7 +183,7 @@ object CompressionUtil {
         logger.debug("SmartFileConsumer - checking magic numbers directly")
         is = fileHandler.getDefaultInputStream()
         val manuallyDetectedType = detectCompressionTypeByMagicNumbers(is)
-        is.close()
+        fileHandler.close()
 
         //if manual detected got unknown, keep the value plain. else get manually detected value
         if(manuallyDetectedType != UNKNOWN)

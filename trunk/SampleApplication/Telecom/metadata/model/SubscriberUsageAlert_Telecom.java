@@ -163,7 +163,7 @@ public class SubscriberUsageAlert extends ModelInstance {
         }
 
         public String getModelName() {
-            return "com.ligadata.models.samples.models.SubscriberUsageAlert";
+            return "com.ligadata.kamanja.financial.SubscriberUsageAlert";
         }
 
         public String getVersion() {

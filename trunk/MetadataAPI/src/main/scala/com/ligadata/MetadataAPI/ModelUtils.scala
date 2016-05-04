@@ -947,20 +947,21 @@ object ModelUtils {
             }
             modDefTemp
           } else {
-            val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
-
+            val modelDef = parse(mod.modelConfig).values.asInstanceOf[Map[String, Any]]
+            val key = mod.ownerId + "." + mod.name
+            val saveModelParms = modelDef.getOrElse(key, Map[String,Any]()).asInstanceOf[Map[String,Any]]
             val tmpInputMsgSets = saveModelParms.getOrElse(ModelCompilationConstants.INPUT_TYPES_SETS, null)
             var inputMsgSets = List[List[String]]()
             if (tmpInputMsgSets != null) {
               if (tmpInputMsgSets.isInstanceOf[List[Any]]) {
                 if (tmpInputMsgSets.isInstanceOf[List[List[Any]]])
                   inputMsgSets = tmpInputMsgSets.asInstanceOf[List[List[String]]]
-                if (tmpInputMsgSets.isInstanceOf[List[Array[Any]]])
+                else if (tmpInputMsgSets.isInstanceOf[List[Array[Any]]])
                   inputMsgSets = tmpInputMsgSets.asInstanceOf[List[Array[String]]].map(lst => lst.toList)
               } else if (tmpInputMsgSets.isInstanceOf[Array[Any]]) {
                 if (tmpInputMsgSets.isInstanceOf[Array[List[Any]]])
                   inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[List[String]]].toList
-                if (tmpInputMsgSets.isInstanceOf[Array[Array[Any]]])
+                else if (tmpInputMsgSets.isInstanceOf[Array[Array[Any]]])
                   inputMsgSets = tmpInputMsgSets.asInstanceOf[Array[Array[String]]].map(lst => lst.toList).toList
               }
             }
@@ -970,16 +971,22 @@ object ModelUtils {
             if (tmpOnputMsgs != null) {
               if (tmpOnputMsgs.isInstanceOf[List[_]])
                 outputMsgs = tmpOnputMsgs.asInstanceOf[List[String]]
-              if (tmpOnputMsgs.isInstanceOf[Array[_]])
+              else if (tmpOnputMsgs.isInstanceOf[Array[_]])
                 outputMsgs = tmpOnputMsgs.asInstanceOf[Array[String]].toList
             }
 
+            var oldSource = (parse(mod.objectDefinition).values.asInstanceOf[Map[String,String]]).getOrElse("source",null)
+            if (oldSource == null) {
+              return new ApiResult(ErrorCodeConstants.Failure, "RecompileModel", null, "Error :Missing original Source " + ErrorCodeConstants.Model_ReCompilation_Failed).toString
+            }
+
             val custModDef: ModelDef = compProxy.recompileModelFromSource(
-              saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
+              //saveModelParms.getOrElse(ModelCompilationConstants.SOURCECODE, "").asInstanceOf[String],
+              oldSource,
               saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
               saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
               saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-              inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), userid, mod.TenantId)
+              inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), userid, mod.TenantId, mod.modelConfig)
             custModDef
           }
         }

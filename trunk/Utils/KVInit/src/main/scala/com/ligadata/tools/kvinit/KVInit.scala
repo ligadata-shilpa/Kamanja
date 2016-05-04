@@ -593,7 +593,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
   override def getMdMgr: MdMgr = mdMgr
 
   private def collectKeyAndValues(k: Key, v: Any, dataByBucketKeyPart: TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface], loadedKeys: java.util.TreeSet[LoadKeyWithBucketId]): Unit = {
-    val value: ContainerInterface = null // SerializeDeserialize.Deserialize(v.serializedInfo, this, kvInitLoader.loader, true, "")
+    val value: ContainerInterface = v.asInstanceOf[ContainerInterface]
     val primarykey = value.getPrimaryKey
     val key = KeyWithBucketIdAndPrimaryKey(KeyWithBucketIdAndPrimaryKeyCompHelper.BucketIdForBucketKey(k.bucketKey), k, primarykey != null && primarykey.size > 0, primarykey)
     dataByBucketKeyPart.put(key, value)
@@ -819,6 +819,7 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
     var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
 
     var hasPrimaryKey = false
+    var firstTime = true
     var triedForPrimaryKey = false
     var transService: com.ligadata.transactions.SimpleTransService = null
 
@@ -863,6 +864,12 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
           val container = deserMsgBindingInfo.serInstance.deserialize(inputStr.getBytes, typename)
           if (container != null) {
+
+            if (firstTime) {
+              firstTime = false
+              hasPrimaryKey = container.hasPrimaryKey
+            }
+
             container.setTransactionId(transId)
 
             try {

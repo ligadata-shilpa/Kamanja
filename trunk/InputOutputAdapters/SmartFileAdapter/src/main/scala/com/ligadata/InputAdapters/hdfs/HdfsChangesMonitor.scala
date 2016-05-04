@@ -343,7 +343,13 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
                   modifiedFiles.foreach(tuple => {
                     val handler = new MofifiedFileCallbackHandler(tuple._1, modifiedFileCallback)
                     logger.debug("hdfs monitor is calling file callback for MonitorController for file {}", tuple._1.getFullPath)
-                    modifiedFileCallback(tuple._1)
+                    try {
+                      modifiedFileCallback(tuple._1)
+                    }
+                    catch{
+                      case e : Throwable =>
+                        logger.error("Smart File Consumer (Hdfs) : Error while notifying Monitor about new file", e)
+                    }
 
                   }
                   )

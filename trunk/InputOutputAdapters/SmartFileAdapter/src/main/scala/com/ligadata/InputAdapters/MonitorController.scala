@@ -92,8 +92,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
     */
   def fileDetectedCallback (fileHandler : SmartFileHandler) : Unit = {
     logger.debug("SMART FILE CONSUMER (MonitorController): got file {}", fileHandler.getFullPath)
-    if (MonitorUtils.isValidFile(fileHandler))
-      enQBufferedFile(fileHandler)
+    //if (MonitorUtils.isValidFile(fileHandler))
+    enQBufferedFile(fileHandler)
   }
 
   private def enQBufferedFile(fileHandler: SmartFileHandler): Unit = {
