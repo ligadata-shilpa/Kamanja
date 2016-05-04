@@ -744,7 +744,7 @@ cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/me
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template/script/scala-2.11
-cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template/script
+cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template/script
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/config
 cp -rf * $installPath/Kamanja-$ver211/config
