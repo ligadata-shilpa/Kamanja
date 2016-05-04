@@ -341,7 +341,8 @@ object AdapterMessageBindingUtils {
       * 6) if the serializer is the csv serializer, verify that none of the attributes presented in the
       * message are ContainerTypeDefs.  These are not handled by csv.  Fixed msgs with simple types only.
       * 7) if the serializer is csv, prevent mapped message binding
-      * 8)
+      * 8) prevent more than one binding on an input adapter.
+      * 9) don't allow more than one binding per message on output
       *
       * @param adapterName the name of the adapter
       * @param messageName the namespace.name of the message to be bound
@@ -449,6 +450,19 @@ object AdapterMessageBindingUtils {
                 buffer.append(s"Remove binding(s) '$bindingNames' before attempting to add the current binding... name='$adapterName,$messageName,$serializerName'")
             }
 
+        }
+
+        /** 9) only one binding on an output adapter message */
+
+        if (adapter != null) {
+            val existingAdapterBindings : Array[AdapterMessageBinding] = mdMgr.BindingsForAdapter(adapter.Name).values.toArray
+            val adapterBindingsWithThisMsg : Array[AdapterMessageBinding]  =
+                    existingAdapterBindings.filter(binding => binding.messageName.compareToIgnoreCase(msgDef.FullName) == 0)
+            if (adapterBindingsWithThisMsg.size > 0) {
+                // ... should never get more than one, but code carefully anyway...
+                // we blow out of here because that is what I was asked to do... there is no reason this can't simply be added to the error msg buffer and return.
+                throw new RuntimeException("Already found adapter bindings for this message on this adapter. String:" + adapterBindingsWithThisMsg.mkString(","))
+            }
         }
 
         val ok : Boolean = buffer.isEmpty
