@@ -1206,8 +1206,15 @@ class CompilerProxy {
 //        logger.debug("getDefaultInputMsgSets: Get the model config for " + modelConfigName)
 //        var config = if (modelConfigName != null) MdMgr.GetMdMgr.GetModelConfig(modelConfigName) else Map[String, Any]()
         var config = if (modCfgJson != null) parse(modCfgJson).values.asInstanceOf[scala.collection.immutable.Map[String, Any]] else scala.collection.immutable.Map[String, Any]()
-        logger.debug("getDefaultInputMsgSets: Size of the model config map => " + config.keys.size);
-        val typDeps = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+        logger.debug("getDefaultInputMsgSets: Size of the model config map:%d from ModelCfg:%s".format(config.size, (if (modCfgJson != null) modCfgJson else "")));
+        val typDeps1 = config.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+        val typDeps =
+        if (typDeps1 == null && config.size == 1 && config.head._2.isInstanceOf[scala.collection.immutable.Map[String, Any]]) {
+          // If we have one that may be top level map. Trying to take lower level
+          config.head._2.asInstanceOf[scala.collection.immutable.Map[String, Any]].getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, null)
+        } else {
+          typDeps1
+        }
         if (typDeps != null) {
           var deps = typDeps.asInstanceOf[List[String]]
           deps.foreach(t => {
