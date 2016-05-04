@@ -70,7 +70,7 @@ class CsvSerDeser extends SerializeDeserialize {
     var _config = Map[String,String]()
     var _emitHeaderFirst : Boolean = false
     var _fieldDelimiter  = ","
-    var _valDelimiter = "-"
+    var _valDelimiter = "~"
     var _lineDelimiter = "\n"
     var _nullValue = ""
     var _alwaysQuoteField = false
@@ -264,7 +264,7 @@ class CsvSerDeser extends SerializeDeserialize {
         _objResolver = objResolver
         _config = configProperties.asScala
         _fieldDelimiter = _config.getOrElse("fieldDelimiter", ",")
-        _valDelimiter = _config.getOrElse("valDelimiter", "-")
+        _valDelimiter = _config.getOrElse("valDelimiter", "~")
         _lineDelimiter =  _config.getOrElse("lineDelimiter", "\n")
         _nullValue =  _config.getOrElse("nullValue", "")
         _escapeChar = _config.getOrElse("escChar", "\\")

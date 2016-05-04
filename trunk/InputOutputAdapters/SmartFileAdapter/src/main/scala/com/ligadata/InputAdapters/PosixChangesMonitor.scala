@@ -62,9 +62,7 @@ class PosixFileHandler extends SmartFileHandler{
   @throws(classOf[KamanjaException])
   def openForRead(): InputStream = {
     try {
-      val tempInputStream = getDefaultInputStream()
       val fileType = CompressionUtil.getFileType(this, null)
-      tempInputStream.close() //close this one, only first bytes were read to decide compression type, reopen to read from the beginning
       in = CompressionUtil.getProperInputStream(getDefaultInputStream, fileType)
       //bufferedReader = new BufferedReader(in)
       in

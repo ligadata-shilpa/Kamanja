@@ -108,33 +108,40 @@ class GenerateAdapterBindings {
 	  am.Options = am.Options + ("produceHeader" -> "true")
 	  am.Options = am.Options + ("alwaysQuotedFields" -> "false")
 	}
-
-	
-
 	if( typeString != null ){
 	  if( ( typeString.equalsIgnoreCase("Input") || 
 	      typeString.equalsIgnoreCase("Status")) ){
-	    if( am.MessageNames != null && am.MessageNames.length > 0 ){
-	      // for status adapters, message always defults 
-	      // to com.ligadata.KamanjaBase.KamanjaStatusEvent
 	      if( typeString.equalsIgnoreCase("Status") ){
-		am.MessageNames = Array("com.ligadata.KamanjaBase.KamanjaStatusEvent").toList
+		if( am.MessageNames == null || am.MessageNames.length == 0 ){
+		  // for status adapters, message always defults 
+		  // to com.ligadata.KamanjaBase.KamanjaStatusEvent
+		  am.MessageNames = Array("com.ligadata.KamanjaBase.KamanjaStatusEvent").toList
+		}
 		am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
 		if( ! am.Options.contains("fieldDelimiter") ){
 		  am.Options = am.Options + ("fieldDelimiter" -> ",")
 		}
+		ambs = ambs :+ am
 	      }
-	      ambs = ambs :+ am
+	      else{
+		if( am.MessageNames != null && am.MessageNames.length > 0 ){
+		  am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
+		  if( ! am.Options.contains("fieldDelimiter") ){
+		    am.Options = am.Options + ("fieldDelimiter" -> ",")
+		  }
+		  ambs = ambs :+ am
+		}
+		else{
+		  logger.warn("Associated Message is not defined, A adapter-message binding is not generated for the adapter " + am.AdapterName)
+		}
+	      }
 	    }
 	    else{
-	      logger.info("Associated Message is not defined, A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	      logger.warn("The adapterType is Output type, A adapter-message binding is not generated for the adapter " + am.AdapterName)	
 	    }
-	  }
-	  else{
-	    logger.info("The adapterType is Output type, A adapter-message binding is not generated for the adapter " + am.AdapterName)	  }
 	}
 	else{
-	  logger.info("Unable to determine adapterType(Input/output/status), A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	  logger.warn("Unable to determine adapterType(Input/output/status), A adapter-message binding is not generated for the adapter " + am.AdapterName)
 	}
       })
       ambs
@@ -144,17 +151,29 @@ class GenerateAdapterBindings {
   }
 
   private def parseClusterConfig(cfgStr: String): Array[adapterMessageBinding] = {
-    logger.info("parsing json: " + cfgStr)
+    logger.info("parsing json config: " + cfgStr)
     val cfgmap = parse(cfgStr).values.asInstanceOf[Map[String, Any]]
     logger.info("cfgmap => " + cfgmap)
     var ambs = Array[adapterMessageBinding]()
+
+    var adapters:List[Map[String, Any]] = List[Map[String,Any]]()
     cfgmap.keys.foreach(key => {
       logger.info("key => " + key)
+      if ( key.equalsIgnoreCase("clusters") ){
+	var clusters = cfgmap(key).asInstanceOf[List[Map[String, Any]]]
+	logger.info("Looking for adapters defined within a cluster definition")
+	clusters.foreach( cluster => {
+	  logger.info("cluster => " + cluster)
+	  if ( cluster.contains("Adapters") ){
+	    adapters = cluster.get("Adapters").get.asInstanceOf[List[Map[String, Any]]]
+	  }
+	})
+      }
       if ( key.equalsIgnoreCase("adapters") ){
-	var adapters = cfgmap("Adapters").asInstanceOf[List[Map[String, Any]]]
-	ambs = createAdapterMessageBindings(adapters)
+	adapters = adapters ++ cfgmap("Adapters").asInstanceOf[List[Map[String, Any]]]
       }
     })
+    ambs = createAdapterMessageBindings(adapters)
     ambs
   }
 

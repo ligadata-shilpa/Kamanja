@@ -174,13 +174,13 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                     if (thisFileOrigLength == 0) {
                       val diff = System.currentTimeMillis - thisFileStarttime //d.lastModified
                       if (diff > bufferTimeout) {
-                        logger.warn("SMART FILE CONSUMER (MonitorController): Detected that " + fileHandler.getFullPath.toString + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up")
+                        logger.warn("SMART FILE CONSUMER (MonitorController): Detected that " + fileHandler.getFullPath + " has been on the buffering queue longer then " + bufferTimeout / 1000 + " seconds - Cleaning up")
                         moveFile(fileTuple._1)
                         bufferingQ_map.remove(fileTuple._1)
                       }
                     } else {
                       //Invalid File - due to content type
-                      logger.error("SMART FILE CONSUMER (MonitorController): Moving out " + fileTuple._1 + " with invalid file type ")
+                      logger.error("SMART FILE CONSUMER (MonitorController): Moving out " + fileHandler.getFullPath + " with invalid file type ")
                       moveFile(fileTuple._1)
                       bufferingQ_map.remove(fileTuple._1)
                     }
@@ -192,14 +192,15 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                 }
               } else {
                 // File System is not accessible.. issue a warning and go on to the next file.
-                logger.warn("SMART FILE CONSUMER (MonitorController): File on the buffering Q is not found " + fileTuple._1)
+                logger.warn("SMART FILE CONSUMER (MonitorController): File on the buffering Q is not found " + fileHandler.getFullPath)
+                bufferingQ_map.remove(fileTuple._1)
               }
             }
           } catch {
             case ioe: IOException => {
               thisFileFailures += 1
               if ((System.currentTimeMillis - thisFileStarttime) > maxTimeFileAllowedToLive && thisFileFailures > maxBufferErrors) {
-                logger.warn("SMART FILE CONSUMER (MonitorController): Detected that a stuck file " + fileTuple._1 + " on the buffering queue", ioe)
+                logger.warn("SMART FILE CONSUMER (MonitorController): Detected that a stuck file " + fileTuple._1.getFullPath + " on the buffering queue", ioe)
                 try {
                   moveFile(fileTuple._1)
                   bufferingQ_map.remove(fileTuple._1)

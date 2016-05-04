@@ -955,7 +955,8 @@ object JsonSerializer {
             ("Name" -> o.name) ~
             ("FullName" -> o.FullName) ~
             ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
-          ("ReportingId"-> o.uniqueId) ~
+            ("ElementId" -> o.mdElementId) ~
+            ("ReportingId"-> o.uniqueId) ~
             ("SchemaId" -> o.containerType.schemaId) ~
             ("AvroSchema" -> o.containerType.avroSchema) ~
             ("JarName" -> o.jarName) ~
@@ -1005,6 +1006,7 @@ object JsonSerializer {
             ("Name" -> o.name) ~
             ("FullName" -> o.FullName) ~
             ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
+            ("ElementId" -> o.mdElementId) ~
             ("SchemaId" -> o.containerType.schemaId) ~
             ("AvroSchema" -> o.containerType.avroSchema) ~
             ("JarName" -> o.jarName) ~
@@ -1037,6 +1039,7 @@ object JsonSerializer {
           ("NameSpace" -> o.nameSpace) ~
             ("Name" -> o.name) ~
             ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
+            ("ElementId" -> o.mdElementId) ~
             ("IsReusable" -> o.isReusable.toString) ~
             ("inputMsgSets" -> o.inputMsgSets.toList.map(m => m.toList.map(f => ("Origin" -> f.origin) ~ ("Message" -> f.message) ~ ("Attributes" -> f.attributes.toList)))) ~
             ("OutputMsgs" -> outputMsgs) ~
