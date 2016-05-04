@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.ligadata.models.samples.finance.V1
+package com.ligadata.models.samples.medical2.V1
 import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
@@ -21,7 +21,7 @@ import com.ligadata.runtime.Log
 import com.ligadata.runtime.Conversion
 class TransactionIngestFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def createModelInstance(): ModelInstance = return new TransactionIngest(this)
-  override def getModelName: String = "com.ligadata.models.samples.finance.TransactionIngest"
+  override def getModelName: String = "com.ligadata.models.samples.medical2.TransactionIngest"
   override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
@@ -92,8 +92,8 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
           return Array.empty[MessageInterface]
         }
         val result = com.ligadata.kamanja.samples.messages.V1000000.HL71.createInstance
-        result.desynpuf_id = arraydata(1)
-        result.clm_id = conversion.ToLong(arraydata(2))
+        result.set("desynpuf_id", arraydata(1))
+        result.set("clm_id", arraydata(2))
         result.set("clm_from_dt", arraydata(3))
         result.set("clm_thru_dt", arraydata(4))
         result.set("bene_birth_dt", arraydata(5))
@@ -194,11 +194,11 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         result.clm_pmt_amt = conversion.ToDouble(arraydata(7))
         result.desynpuf_id = arraydata(1)
         result.nch_bene_ip_ddctbl_amt = conversion.ToDouble(arraydata(15))
-        result.icd9_prcdr_cds = arraydata(22)
+        result.icd9_prcdr_cds = ToIntegerArray(arraydata(22), "~")
         result.segment = conversion.ToInteger(arraydata(3))
         result.clm_admsn_dt = conversion.ToInteger(arraydata(12))
         result.clm_drg_cd = conversion.ToInteger(arraydata(20))
-        result.icd9_dgns_cds = arraydata(21)
+        result.icd9_dgns_cds = arraydata(21).split("~")
         result.prvdr_num = arraydata(6)
         result.clm_from_dt = conversion.ToInteger(arraydata(4))
         result.hcpcs_cds = arraydata(23)
@@ -223,12 +223,12 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
         result.nch_prmry_pyr_clm_pd_amt = conversion.ToDouble(arraydata(8))
         result.clm_pmt_amt = conversion.ToDouble(arraydata(7))
         result.desynpuf_id = arraydata(1)
-        result.icd9_prcdr_cds = arraydata(14)
+        result.icd9_prcdr_cds = ToIntegerArray(arraydata(14), "~")
         result.segment = conversion.ToInteger(arraydata(3))
-        result.icd9_dgns_cds = arraydata(13)
+        result.icd9_dgns_cds = arraydata(13).split("~")
         result.prvdr_num = arraydata(6)
         result.clm_from_dt = conversion.ToInteger(arraydata(4))
-        result.hcpcs_cds = arraydata(18)
+        result.hcpcs_cds = arraydata(18).split("~")
         result.at_physn_npi = conversion.ToLong(arraydata(9))
         result.op_physn_npi = conversion.ToLong(arraydata(10))
         result.nch_bene_ptb_coinsrnc_amt = conversion.ToDouble(arraydata(16))

@@ -31,7 +31,7 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
   import log._
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
     if (isTraceEnabled)
-    Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%s".format(txnCtxt.transId, triggerdSetIndex, outputDefault.toString))
+      Trace(s"Model::execute transid=%d triggeredset=%d outputdefault=%s".format(txnCtxt.transId, triggerdSetIndex, outputDefault.toString))
     if(isDebugEnabled)
     {
       execMsgsSet.foreach(m => Debug( s"Input: %s -> %s".format(m.getFullTypeName, m.toString())))
@@ -65,12 +65,12 @@ class TransactionIngest(factory: ModelInstanceFactory) extends ModelInstance(fac
     // Main dependency -> execution check
     //
     val results: Array[MessageInterface] =
-    (if(msg1!=null) {
-      exeGenerated_transactionmsg_1(msg1)
-    } else {
-      Array.empty[MessageInterface]
-    }) ++
-    Array.empty[MessageInterface]
+      (if(msg1!=null) {
+        exeGenerated_transactionmsg_1(msg1)
+      } else {
+        Array.empty[MessageInterface]
+      }) ++
+        Array.empty[MessageInterface]
     if(isDebugEnabled)
     {
       results.foreach(m => Debug( s"Output: %s -> %s".format(m.getFullTypeName, m.toString())))

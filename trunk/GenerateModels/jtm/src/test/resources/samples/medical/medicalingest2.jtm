@@ -1,6 +1,6 @@
 {
   "header": {
-    "namespace": "com.ligadata.models.samples.finance",
+    "namespace": "com.ligadata.models.samples.medical2",
     "version": "0.0.1",
     "language" : "scala",
     "minVersion" : "2.11",
@@ -79,8 +79,8 @@
             "clm_utlztn_day_cnt": "$arraydata(18)",
             "nch_bene_dschrg_dt": "$arraydata(19)",
             "clm_drg_cd": "$arraydata(20)",
-            "icd9_dgns_cds": "$arraydata(21)",
-            "icd9_prcdr_cds": "$arraydata(22)",
+            "icd9_dgns_cds": "$arraydata(21).split(\"~\")",
+            "icd9_prcdr_cds": "ToIntegerArray($arraydata(22), \"~\")",
             "hcpcs_cds": "$arraydata(23)"
           }
         },
@@ -99,12 +99,12 @@
             "op_physn_npi": "$arraydata(10)",
             "ot_physn_npi": "$arraydata(11)",
             "nch_bene_blood_ddctbl_lblty_am": "$arraydata(12)",
-            "icd9_dgns_cds": "$arraydata(13)",
-            "icd9_prcdr_cds": "$arraydata(14)",
+            "icd9_dgns_cds": "$arraydata(13).split(\"~\")",
+            "icd9_prcdr_cds": "ToIntegerArray($arraydata(14), \"~\")",
             "nch_bene_ptb_ddctbl_amt": "$arraydata(15)",
             "nch_bene_ptb_coinsrnc_amt": "$arraydata(16)",
             "admtng_icd9_dgns_cd": "$arraydata(17)",
-            "hcpcs_cds": "$arraydata(18)"
+            "hcpcs_cds": "$arraydata(18).split(\"~\")"
           }
         }
       }

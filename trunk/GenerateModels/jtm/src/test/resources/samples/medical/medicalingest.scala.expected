@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package com.ligadata.models.samples.finance.V1
+package com.ligadata.models.samples.medical.V1
 import com.ligadata.KamanjaBase._
 import com.ligadata.KvBase.TimeRange
 import com.ligadata.kamanja.metadata.ModelDef
@@ -21,7 +21,7 @@ import com.ligadata.runtime.Log
 import com.ligadata.runtime.Conversion
 class TransactionIngestFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
   override def createModelInstance(): ModelInstance = return new TransactionIngest(this)
-  override def getModelName: String = "com.ligadata.models.samples.finance.TransactionIngest"
+  override def getModelName: String = "com.ligadata.models.samples.medical.TransactionIngest"
   override def getVersion: String = "0.0.1"
   override def createResultObject(): ModelResultBase = new MappedModelResults()
 }
