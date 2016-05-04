@@ -429,7 +429,7 @@ object AdapterMessageBindingUtils {
             (null,false) // no need to check for json or kbinary serializers
         }
 
-        val msgHasContainerFields : Boolean = (msgFields != null && msgFields.count(fld => fld.typeDef.isInstanceOf[ContainerTypeDef]) > 0)
+        val msgHasContainerFields : Boolean = (msgFields != null && (msgFields.filter(fld => (fld.typeDef.isInstanceOf[StructTypeDef] || fld.typeDef.isInstanceOf[MappedMsgTypeDef])).size > 0))
         if (msgHasContainerFields) { /** 6) test */
             buffer.append(s"The message $messageName has container type fields.  These are not handled by the $csvNamespaceName serializer...; ")
         }

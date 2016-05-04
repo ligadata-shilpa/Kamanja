@@ -947,8 +947,7 @@ object ModelUtils {
             }
             modDefTemp
           } else {
-            val saveModelParms = parse(mod.ObjectDefinition).values.asInstanceOf[Map[String, Any]]
-
+            val saveModelParms = parse(mod.modelConfig).values.asInstanceOf[Map[String, Any]]
             val tmpInputMsgSets = saveModelParms.getOrElse(ModelCompilationConstants.INPUT_TYPES_SETS, null)
             var inputMsgSets = List[List[String]]()
             if (tmpInputMsgSets != null) {
@@ -979,7 +978,7 @@ object ModelUtils {
               saveModelParms.getOrElse(ModelCompilationConstants.PHYSICALNAME, "").asInstanceOf[String],
               saveModelParms.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
               saveModelParms.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]],
-              inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), userid, mod.TenantId)
+              inputMsgSets, outputMsgs, ObjFormatType.asString(mod.objectFormat), userid, mod.TenantId, mod.modelConfig)
             custModDef
           }
         }
