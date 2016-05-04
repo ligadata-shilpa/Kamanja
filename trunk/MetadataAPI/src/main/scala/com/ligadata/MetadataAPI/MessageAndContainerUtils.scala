@@ -1406,7 +1406,7 @@ object MessageAndContainerUtils {
   def IsMessageExists(objectName: String): MessageDef = {
     try {
       val nameNodes: Array[String] = if (objectName != null &&
-					 objectName.contains('.')) objectName.split('.')
+	objectName.contains('.')) objectName.split('.')
 				     else Array(MdMgr.sysNS, objectName)
       var name = nameNodes(nameNodes.size-1)
       val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
