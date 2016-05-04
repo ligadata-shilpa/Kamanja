@@ -80,8 +80,8 @@
             "nch_bene_dschrg_dt": "$arraydata(19)",
             "clm_drg_cd": "$arraydata(20)",
             "icd9_dgns_cds": "$arraydata(21).split(\"~\")",
-            "icd9_prcdr_cds": "ToIntegerArray($arraydata(22), \"~\")",
-            "hcpcs_cds": "$arraydata(23)"
+            "icd9_prcdr_cds": "conversion.ToIntegerArray($arraydata(22), \"~\")",
+            "hcpcs_cds": "conversion.ToIntegerArray($arraydata(23), \"~\")"
           }
         },
         "o4": {
@@ -100,11 +100,11 @@
             "ot_physn_npi": "$arraydata(11)",
             "nch_bene_blood_ddctbl_lblty_am": "$arraydata(12)",
             "icd9_dgns_cds": "$arraydata(13).split(\"~\")",
-            "icd9_prcdr_cds": "ToIntegerArray($arraydata(14), \"~\")",
+            "icd9_prcdr_cds": "conversion.ToIntegerArray($arraydata(14), \"~\")",
             "nch_bene_ptb_ddctbl_amt": "$arraydata(15)",
             "nch_bene_ptb_coinsrnc_amt": "$arraydata(16)",
             "admtng_icd9_dgns_cd": "$arraydata(17)",
-            "hcpcs_cds": "$arraydata(18).split(\"~\")"
+            "hcpcs_cds": "conversion.ToIntegerArray($arraydata(18), \"~\")"
           }
         }
       }
