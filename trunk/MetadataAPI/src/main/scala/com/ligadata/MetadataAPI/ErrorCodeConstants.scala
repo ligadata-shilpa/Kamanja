@@ -109,7 +109,7 @@ object ErrorCodeConstants {
    val Update_Message_Successful = "Message Updated Successfully";
    val Update_Message_Failed = "Failed to Update Message";
   // 1112 - Introduced to let user know higher version required - Change begins
-  val Update_Message_Failed_Higher_Version_Required = "Failed to Update Message. Message with higher version required than any previous version."
+   val Update_Message_Failed_Higher_Version_Required = "Failed to Update Message. Message with higher version required than any previous version."
   // 1112 - Change ends
    val Remove_Message_Successful = "Deleted Message Successfully";
    val Remove_Message_Failed = "Failed to Delete Message";
