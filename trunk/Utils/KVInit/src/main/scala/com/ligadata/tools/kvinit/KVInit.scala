@@ -820,7 +820,6 @@ class KVInit(val loadConfigs: Properties, val typename: String, val dataFiles: A
 
     var hasPrimaryKey = false
     var firstTime = true
-    var triedForPrimaryKey = false
     var transService: com.ligadata.transactions.SimpleTransService = null
 
     if (zkConnectString != null && zkNodeBasePath != null && zkConnectString.size > 0 && zkNodeBasePath.size > 0) {

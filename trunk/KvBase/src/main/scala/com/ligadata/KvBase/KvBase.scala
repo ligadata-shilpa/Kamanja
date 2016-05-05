@@ -49,6 +49,18 @@ object KeyWithBucketIdAndPrimaryKeyCompHelper {
     return result
   }
 
+  def BucketIdForBucketKey(bucketKey: List[String]): Int = {
+    if (bucketKey == null) return 0
+    val prime = 31;
+    var result = 1;
+    bucketKey.foreach(k => {
+      result = result * prime
+      if (k != null)
+        result += k.hashCode();
+    })
+    return result
+  }
+
   def CompareBucketKey(k1: KeyWithBucketIdAndPrimaryKey, k2: KeyWithBucketIdAndPrimaryKey): Int = {
     // First compare bucketId
     if (k1.bucketId < k2.bucketId)

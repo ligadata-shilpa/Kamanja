@@ -210,7 +210,7 @@ class KBinarySerDeser extends SerializeDeserialize {
       case INT => dos.writeInt(v.asInstanceOf[Int])
       case FLOAT => dos.writeFloat(v.asInstanceOf[Float])
       case DOUBLE => dos.writeDouble(v.asInstanceOf[Double])
-      case STRING => dos.writeUTF(v.asInstanceOf[String])
+      case STRING => dos.writeUTF(if (v !=null) v.asInstanceOf[String] else "")
       case _ => throw new UnsupportedObjectException(s"KBinary WriteVal got unsupported type, typeId: ${typeCategory.name}", null)
     }
 
