@@ -157,6 +157,11 @@ class KBinarySerDeser extends SerializeDeserialize {
 
     serializeContainer(dos, v.getTypeName, v)
 
+    // Save TransactionId, TimePartitioinKey & RowNumber
+    dos.writeLong(v.getTransactionId)
+    dos.writeLong(v.getTimePartitionData)
+    dos.writeInt(v.getRowNumber)
+
     dos.close()
     bos.toByteArray
   }
@@ -387,6 +392,12 @@ class KBinarySerDeser extends SerializeDeserialize {
   def deserialize(b: Array[Byte], containerName: String): ContainerInterface = {
     var dis = new DataInputStream(new ByteArrayInputStream(b));
     val container = ReadContainer(dis)
+    // Set TransactionId, TimePartitioinKey & RowNumber
+    if (container != null) {
+      container.setTransactionId(dis.readLong)
+      container.setTimePartitionData(dis.readLong)
+      container.setRowNumber(dis.readInt)
+    }
     container
   }
 

@@ -719,9 +719,8 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
     if (m == null) return
     val msgNm = m.getFullTypeName.toLowerCase()
 
-    if (m.isInstanceOf[MessageContainerBase]) {
-      if (m.asInstanceOf[MessageContainerBase].getTransactionId == 0)
-        m.asInstanceOf[MessageContainerBase].setTransactionId(transId)
+    if (m.isInstanceOf[MessageContainerBase] && m.asInstanceOf[MessageContainerBase].getTransactionId <= 0) {
+      m.asInstanceOf[MessageContainerBase].setTransactionId(transId)
       m.asInstanceOf[MessageContainerBase].setRowNumber(rowId)
       rowId += 1
     }
