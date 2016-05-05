@@ -148,8 +148,8 @@ Usage:
             [--skipPrerequisites "scala,java,hbase,kafka,zookeeper,all"]
             [--preRequisitesCheckOnly]
             [--externalJarsDir <external jars directory to be copied to installation lib/application>]
-            [--tenantId <a tenantId is applied to all metadata objects>]
-            [--adapterMessageBindings <a json file that contains adapter message bindings>]
+            --tenantId <a tenantId is applied to all metadata objects>
+            --adapterMessageBindings <a json file that contains adapter message bindings>
 
     where
         --upgrade explicitly specifies that the intent to upgrade an existing cluster installation with the latest release.
@@ -190,8 +190,8 @@ Usage:
             If both --skipPrerequisites and --preRequisitesOnly are specified, only the prerequisites not given in the skip list will be performed.
             Processing stops after the checks; installation and upgrade are not done.
         [--externalJarsDir <external jars directory to be copied to installation lib/application] External jars to be copied while installing/upgrading new package.
-        [--tenantId <Tenant Id to be applied to all the meta data objects being migrated.
-        [--adapterMessageBindings <a json file that contains the adapter-message-binding definitions.
+        --tenantId <Tenant Id to be applied to all the meta data objects being migrated.
+        --adapterMessageBindings <a json file that contains the adapter-message-binding definitions.
 
     The ClusterInstallerDriver-1.4.0 is the cluster installer driver for Kamanja 1.3.  It is capable of installing a new version of 1.3
     or given the appropriate arguments, installing a new version of Kamanja 1.3 *and* upgrading a 1.1 or 1.2 installation to the 1.3 version.
