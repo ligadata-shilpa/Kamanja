@@ -17,16 +17,18 @@
 
 package com.ligadata.KamanjaBase
 
+import java.util.TreeMap
+
 import com.ligadata.Exceptions.{DeprecatedException, NotImplementedFunctionException}
 
 import scala.collection.immutable.Map
 import com.ligadata.Utils.{CacheConfig, Utils, KamanjaLoaderInfo, ClusterStatus}
-import com.ligadata.kamanja.metadata.{MdMgr, ModelDef}
+import com.ligadata.kamanja.metadata.{RelationKeyType, MdMgr, ModelDef}
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import java.io.{DataInputStream, DataOutputStream}
-import com.ligadata.KvBase.{Key, TimeRange /* , KvBaseDefalts, KeyWithBucketIdAndPrimaryKey, KeyWithBucketIdAndPrimaryKeyCompHelper */}
+import com.ligadata.KvBase._
 import com.ligadata.HeartBeat._
 
 import scala.collection.mutable.ArrayBuffer
@@ -683,6 +685,10 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   private var orgInputMsg = ContaienrWithOriginAndPartKey(null, null, null)
   private val containerOrConceptsMapByName = scala.collection.mutable.Map[String, ArrayBuffer[ContaienrWithOriginAndPartKey]]() // Saving by Name
   // private val containerOrConceptsMapByElementId = scala.collection.mutable.Map[Long, ArrayBuffer[ContaienrWithOriginAndPartKey]]() // Saving by ElementId
+
+  var dataByBucketKeyPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface](KvBaseDefalts.defualtBucketKeyComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
+  var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
+
   // orgInputMsg & msgEvent is part in this also
   private val valuesMap = new java.util.HashMap[String, Any]()
 
@@ -714,7 +720,8 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
     val msgNm = m.getFullTypeName.toLowerCase()
 
     if (m.isInstanceOf[MessageContainerBase]) {
-      m.asInstanceOf[MessageContainerBase].setTransactionId(transId)
+      if (m.asInstanceOf[MessageContainerBase].getTransactionId == 0)
+        m.asInstanceOf[MessageContainerBase].setTransactionId(transId)
       m.asInstanceOf[MessageContainerBase].setRowNumber(rowId)
       rowId += 1
     }
@@ -802,6 +809,38 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
     return true
   }
 
+  private def isContainerHasPrimaryKey(containerName: String): Boolean = {
+    if (getNodeCtxt() != null && getNodeCtxt().getEnvCtxt() != null && getNodeCtxt().getEnvCtxt()._mgr != null) {
+      val msg = getNodeCtxt().getEnvCtxt()._mgr.Message(containerName, -1, true)
+      if (msg != None) {
+        if (msg.get.cType != null) {
+          val cTypeKeys = msg.get.cType.keys
+          if (cTypeKeys != null) {
+            cTypeKeys.foreach(key => {
+              if (key.KeyType == RelationKeyType.tPrimary)
+                return true
+            })
+          }
+        }
+        return false
+      }
+      val cntr = getNodeCtxt().getEnvCtxt()._mgr.Container(containerName, -1, true)
+      if (cntr != None) {
+        if (cntr.get.cType != null) {
+          val cTypeKeys = cntr.get.cType.keys
+          if (cTypeKeys != null) {
+            cTypeKeys.foreach(key => {
+              if (key.KeyType == RelationKeyType.tPrimary)
+                return true
+            })
+          }
+        }
+        return false
+      }
+    }
+    false
+  }
+
   // containerName is full name of the message
   private def getContainersList(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Array[(String, ContainerInterface)] = {
     var tmpMsgs = Array[ContaienrWithOriginAndPartKey]()
@@ -885,6 +924,11 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
     var tmpMsgs = getContainersList(containerName, partKey, tmRange, f)
     if (tmpMsgs.size > 0)
       return Some(tmpMsgs(tmpMsgs.size - 1)._2) // Take the last one
+
+    // Check in already loaded data
+    if (isContainerHasPrimaryKey(containerName)) {
+
+    }
 
     if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
       return getNodeCtxt.getEnvCtxt.getRecent(tenantId, containerName, partKey, tmRange, f)
