@@ -38,7 +38,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 // import com.ligadata.keyvaluestore._
 import com.ligadata.HeartBeat.HeartBeatUtil
 import com.ligadata.StorageBase.{ DataStore, Transaction }
-import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
 import scala.util.parsing.json.{ JSONObject, JSONArray }
@@ -48,7 +48,7 @@ import scala.collection.mutable.HashMap
 
 import com.google.common.base.Throwables
 
-import com.ligadata.messagedef._
+import com.ligadata.msgcompiler._
 import com.ligadata.Exceptions._
 
 import scala.xml.XML
@@ -81,7 +81,7 @@ object TypeUtils {
   // system name space
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
-  lazy val serializer = SerializerManager.GetSerializer("kryo")
+  //lazy val serializer = SerializerManager.GetSerializer("kryo")
 
   def AddType(typeText: String, format: String): String = {
     try {
@@ -180,19 +180,29 @@ object TypeUtils {
     val dispkey = typeNameSpace + "." + typeName + "." + MdMgr.Pad0s2Version(version)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.DELETEOBJECT, AuditConstants.TYPE, AuditConstants.SUCCESS, "", key)
     try {
+      logger.debug("typeNameSpace: "+typeNameSpace+" typeName: "+typeName)
       val typ = MdMgr.GetMdMgr.Type(typeNameSpace, typeName, version, true)
+      logger.debug("Typ is: "+typ)
+
       typ match {
         case None =>
           None
           logger.debug("Type " + dispkey + " is not found in the cache ")
           var apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveType", null, ErrorCodeConstants.Remove_Type_Not_Found + ":" + dispkey)
           apiResult.toString()
-        case Some(ts) =>
-          MetadataAPIImpl.DeleteObject(ts.asInstanceOf[BaseElemDef])
-          ts.tranId = MetadataAPIImpl.GetNewTranId
-          MetadataAPIImpl.UpdateTranId(Array(ts))
-          var apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveType", null, ErrorCodeConstants.Remove_Type_Successful + ":" + dispkey)
+        case Some(ts) =>{
+          val cache_type=ts.asInstanceOf[BaseElemDef].getClass().getName().split("\\.").last
+          logger.debug("Deleting type "+cache_type)
+          //ArrayTypeDef & MapTypeDef cannot be serialized
+          if(!(cache_type=="StructTypeDef" || cache_type=="MappedMsgTypeDef")){
+            MetadataAPIImpl.DeleteObject(ts.asInstanceOf[BaseElemDef])
+            ts.tranId = MetadataAPIImpl.GetNewTranId
+            MetadataAPIImpl.UpdateTranId(Array(ts))
+
+          }
+          var apiResult=new ApiResult(ErrorCodeConstants.Success, "RemoveType", null, ErrorCodeConstants.Remove_Type_Successful + ":" + dispkey)
           apiResult.toString()
+        }
       }
     } catch {
       case e: ObjectNolongerExistsException => {
@@ -447,4 +457,25 @@ object TypeUtils {
       }
     }
   }
+    /**
+     * LoadTypeIntoCache
+     * @param key
+     */
+  def LoadTypeIntoCache(key: String) {
+    try {
+      logger.debug("Fetch the object " + key + " from database ")
+      val obj: (String, Any) = PersistenceUtils.GetObject(key.toLowerCase, "types")
+      logger.debug("Deserialize the object " + key)
+      val typ = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[AnyRef]
+      if (typ != null) {
+        logger.debug("Add the object " + key + " to the cache ")
+        MetadataAPIImpl.AddObjectToCache(typ, MdMgr.GetMdMgr)
+      }
+    } catch {
+      case e: Exception => {
+        logger.warn("Unable to load the object " + key + " into cache ", e)
+      }
+    }
+  }
+
 }
