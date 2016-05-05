@@ -17,7 +17,7 @@
 
 package com.ligadata.KamanjaBase
 
-import java.util.TreeMap
+//import java.util.TreeMap
 
 import com.ligadata.Exceptions.{DeprecatedException, NotImplementedFunctionException}
 
@@ -686,9 +686,9 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
   private val containerOrConceptsMapByName = scala.collection.mutable.Map[String, ArrayBuffer[ContaienrWithOriginAndPartKey]]() // Saving by Name
   // private val containerOrConceptsMapByElementId = scala.collection.mutable.Map[Long, ArrayBuffer[ContaienrWithOriginAndPartKey]]() // Saving by ElementId
 
-  var dataByBucketKeyPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface](KvBaseDefalts.defualtBucketKeyComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
-  var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
-
+//  var dataByBucketKeyPart = new TreeMap[KeyWithBucketIdAndPrimaryKey, ContainerInterface](KvBaseDefalts.defualtBucketKeyComp) // By time, BucketKey, then PrimaryKey/{transactionid & rowid}. This is little cheaper if we are going to get exact match, because we compare time & then bucketid
+//  var loadedKeys = new java.util.TreeSet[LoadKeyWithBucketId](KvBaseDefalts.defaultLoadKeyComp) // By BucketId, BucketKey, Time Range
+//
   // orgInputMsg & msgEvent is part in this also
   private val valuesMap = new java.util.HashMap[String, Any]()
 
@@ -924,11 +924,6 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
     var tmpMsgs = getContainersList(containerName, partKey, tmRange, f)
     if (tmpMsgs.size > 0)
       return Some(tmpMsgs(tmpMsgs.size - 1)._2) // Take the last one
-
-    // Check in already loaded data
-    if (isContainerHasPrimaryKey(containerName)) {
-
-    }
 
     if (getNodeCtxt != null && getNodeCtxt.getEnvCtxt != null)
       return getNodeCtxt.getEnvCtxt.getRecent(tenantId, containerName, partKey, tmRange, f)
