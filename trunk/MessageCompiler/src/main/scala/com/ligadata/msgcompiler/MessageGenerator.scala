@@ -680,7 +680,7 @@ class MessageGenerator {
       fromFunc(other)
     }
     
-    override def save: Unit = { /* """ + message.Name + """.saveOne(this) */}
+    override def save: Unit = { """ + message.Name + """.saveOne(this) }
   
     def Clone(): ContainerOrConcept = { """ + message.Name + """.build(this) }
 """

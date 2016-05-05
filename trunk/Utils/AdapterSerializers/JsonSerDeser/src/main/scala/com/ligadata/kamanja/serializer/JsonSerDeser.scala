@@ -107,6 +107,9 @@ class JSONSerDes extends SerializeDeserialize {
   var _schemaIdKeyPrefix = "@@"
 
   def SchemaIDKeyName = _schemaIdKeyPrefix + "SchemaId"
+  def TransactionIDKeyName = _schemaIdKeyPrefix + "TransactionId"
+  def TimePartitionIDKeyName = _schemaIdKeyPrefix + "TimePartitionValue"
+  def RowNumberIDKeyName = _schemaIdKeyPrefix + "RowNumber"
 
   /**
     * Serialize the supplied container to a byte array
@@ -138,12 +141,22 @@ class JSONSerDes extends SerializeDeserialize {
 
     val indentStr = getIndentStr(indentLevel)
     val schemaId = v.getSchemaId
+    val txnId = v.getTransactionId
+    val tmPartVal = v.getTimePartitionData
+    val rowNum = v.getRowNumber
     val containerJsonHead = indentStr + "{ "
     val containerJsonTail = indentStr + " }"
     sb.append(containerJsonHead)
     if (_emitSchemaId) {
       // sb.append(strLF)
       nameValueAsJson(sb, indentLevel + 1, SchemaIDKeyName, schemaId.toString, false)
+      sb.append(", ")
+      // Save TransactionId, TimePartitioinKey & RowNumber
+      nameValueAsJson(sb, indentLevel + 1, TransactionIDKeyName, txnId.toString, false)
+      sb.append(", ")
+      nameValueAsJson(sb, indentLevel + 1, TimePartitionIDKeyName, tmPartVal.toString, false)
+      sb.append(", ")
+      nameValueAsJson(sb, indentLevel + 1, RowNumberIDKeyName, rowNum.toString, false)
       if (fieldCnt > 0)
         sb.append(", ")
     }
@@ -369,7 +382,20 @@ class JSONSerDes extends SerializeDeserialize {
     val rawJsonContainerStr: String = new String(b)
     try {
       val containerInstanceMap: Map[String, Any] = jsonStringAsMap(rawJsonContainerStr)
-      deserializeContainerFromJsonMap(containerInstanceMap)
+      val container = deserializeContainerFromJsonMap(containerInstanceMap)
+
+      val txnId = toLong(containerInstanceMap.getOrElse(TransactionIDKeyName, -1))
+      val tmPartVal = toLong(containerInstanceMap.getOrElse(TimePartitionIDKeyName, -1))
+      val rowNum = toInt(containerInstanceMap.getOrElse(RowNumberIDKeyName, -1))
+
+      if (txnId >= 0)
+        container.setTransactionId(txnId)
+      if (tmPartVal >= 0)
+        container.setTimePartitionData(tmPartVal)
+      if (rowNum >= 0)
+        container.setRowNumber(rowNum)
+
+      container
     } catch {
       case e: Throwable => {
         throw new KamanjaException("Failed to deserialize JSON:" + rawJsonContainerStr, e)

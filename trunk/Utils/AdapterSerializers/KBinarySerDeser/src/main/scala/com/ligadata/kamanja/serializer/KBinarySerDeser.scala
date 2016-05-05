@@ -157,6 +157,11 @@ class KBinarySerDeser extends SerializeDeserialize {
 
     serializeContainer(dos, v.getTypeName, v)
 
+    // Save TransactionId, TimePartitioinKey & RowNumber
+    dos.writeLong(v.getTransactionId)
+    dos.writeLong(v.getTimePartitionData)
+    dos.writeInt(v.getRowNumber)
+
     dos.close()
     bos.toByteArray
   }
@@ -210,7 +215,7 @@ class KBinarySerDeser extends SerializeDeserialize {
       case INT => dos.writeInt(v.asInstanceOf[Int])
       case FLOAT => dos.writeFloat(v.asInstanceOf[Float])
       case DOUBLE => dos.writeDouble(v.asInstanceOf[Double])
-      case STRING => dos.writeUTF(v.asInstanceOf[String])
+      case STRING => dos.writeUTF(if (v !=null) v.asInstanceOf[String] else "")
       case _ => throw new UnsupportedObjectException(s"KBinary WriteVal got unsupported type, typeId: ${typeCategory.name}", null)
     }
 
@@ -387,6 +392,12 @@ class KBinarySerDeser extends SerializeDeserialize {
   def deserialize(b: Array[Byte], containerName: String): ContainerInterface = {
     var dis = new DataInputStream(new ByteArrayInputStream(b));
     val container = ReadContainer(dis)
+    // Set TransactionId, TimePartitioinKey & RowNumber
+    if (container != null) {
+      container.setTransactionId(dis.readLong)
+      container.setTimePartitionData(dis.readLong)
+      container.setRowNumber(dis.readInt)
+    }
     container
   }
 

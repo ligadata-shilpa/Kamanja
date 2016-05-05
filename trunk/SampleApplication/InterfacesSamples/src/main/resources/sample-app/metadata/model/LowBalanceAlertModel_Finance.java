@@ -26,13 +26,17 @@ public class LowBalanceAlertModel extends ModelInstance {
     	super(factory);
     }
 
-	public ModelResultBase execute(TransactionContext txnCtxt, boolean outputDefault) {
+    public ContainerOrConcept[] execute(TransactionContext txnCtxt, ContainerOrConcept[] execMsgsSet, int matchedInputSetIndex, boolean outputDefault) {
+        if (execMsgsSet.length == 0) {
+            ContainerInterface[] returnArr = new ContainerInterface[0];
+            return returnArr;
+        }
+        //Get the current transaction data
+        TransactionMsg rcntTxn = (TransactionMsg) execMsgsSet[0];
 
     	GlobalPreferences gPref = (GlobalPreferences) GlobalPreferences.getRecentOrNew(new String[]{"Type1"});  //(new String[]{"Type1"});
 
     	CustPreferences cPref = (CustPreferences) CustPreferences.getRecentOrNew();
-
-
 
     	if(cPref.minbalancealertoptout())
     	{
@@ -48,10 +52,6 @@ public class LowBalanceAlertModel extends ModelInstance {
     	}
 
 
-
-
-    	TransactionMsg rcntTxn = (TransactionMsg) txnCtxt.getMessage();
-
     	 if (rcntTxn.balance() >= gPref.minalertbalance())
     	      return null;
 
@@ -63,17 +63,16 @@ public class LowBalanceAlertModel extends ModelInstance {
 	    ah.set("alerttype","lowbalancealert");
 	    ah.save();
 
-
-
-
-        Result[] actualResult = {new Result("Customer ID",rcntTxn.custid()),
-        						 new Result("Branch ID",rcntTxn.branchid()),
-        						 new Result("Account No.",rcntTxn.accno()),
-        						 new Result("Current Balance",rcntTxn.balance()),
-        						 new Result("Alert Type","lowbalancealert"),
-        						 new Result("Trigger Time",new RddDate(curTmInMs).toString())
-        };
-        return new MappedModelResults().withResults(actualResult);
+		LowBalanceAlertOutputMsg msg = (LowBalanceAlertOutputMsg) LowBalanceAlertOutputMsg.createInstance();
+		msg.set(0, rcntTxn.custid());
+		msg.set(1, rcntTxn.branchid());
+		msg.set(2, rcntTxn.accno());
+		msg.set(3, rcntTxn.balance());
+		msg.set(4, "lowBalanceAlert");
+		msg.set(5, curTmInMs);
+		ContainerInterface[] returnArr = new ContainerInterface[1];
+		returnArr[0] = msg;
+		return returnArr;
   }
 
     /**
@@ -91,10 +90,11 @@ public class LowBalanceAlertModel extends ModelInstance {
 		public LowBalanceAlertFactory(ModelDef modelDef, NodeContext nodeContext) {
 			super(modelDef, nodeContext);
 		}
+/*
 		public boolean isValidMessage(MessageContainerBase msg) {
 			return (msg instanceof TransactionMsg);
 		}
-
+*/
 		public ModelInstance createModelInstance() {
 			return new LowBalanceAlertModel(this);
 		}
@@ -113,13 +113,4 @@ public class LowBalanceAlertModel extends ModelInstance {
 	}
 
 }
-
-
-
-
-
-
-
-
-
 

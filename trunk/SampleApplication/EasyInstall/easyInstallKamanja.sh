@@ -394,6 +394,9 @@ cp * $installPath/Kamanja-$ver210/input/SampleApplications/metadata/type
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template
 cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template
 
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template/script/scala-2.10
+cp -rf * $installPath/Kamanja-$ver210/input/SampleApplications/template/script
+
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/config
 cp -rf * $installPath/Kamanja-$ver210/config
 #Finance
@@ -688,6 +691,9 @@ cp * $installPath/Kamanja-$ver211/input/SampleApplications/metadata/type
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template
 cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template
+
+cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/template/script/scala-2.11
+cp -rf * $installPath/Kamanja-$ver211/input/SampleApplications/template/script
 
 cd $srcPath/SampleApplication/InterfacesSamples/src/main/resources/sample-app/metadata/config
 cp -rf * $installPath/Kamanja-$ver211/config

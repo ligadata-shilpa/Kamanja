@@ -195,7 +195,7 @@ class ExecContextImpl(val input: InputAdapter, val curPartitionKey: PartitionUni
 
         validDataToCommit.foreach(kv => {
           if (LOG.isDebugEnabled) {
-            LOG.debug("Save Data AterFilter: Container:%s has %d values.".format(kv._1, kv._2.size))
+            LOG.debug("Save Data AfterFilter: Tenant:%s has %d values.".format(kv._1, kv._2.size))
           }
           nodeContext.getEnvCtxt().commitData(kv._1, txnCtxt, kv._2.toArray)
         })

@@ -108,6 +108,9 @@ object ErrorCodeConstants {
    val Add_Message_Failed = "Failed to Add Message";
    val Update_Message_Successful = "Message Updated Successfully";
    val Update_Message_Failed = "Failed to Update Message";
+  // 1112 - Introduced to let user know higher version required - Change begins
+   val Update_Message_Failed_Higher_Version_Required = "Failed to Update Message. Message with higher version required than any previous version."
+  // 1112 - Change ends
    val Remove_Message_Successful = "Deleted Message Successfully";
    val Remove_Message_Failed = "Failed to Delete Message";
    val Remove_Message_Failed_Not_Found = "Failed to Delete Message. Message Not found"
@@ -224,7 +227,7 @@ object ErrorCodeConstants {
    val Add_AdapterMessageBinding_Successful = "Add adapter message binding successful"
    val Add_AdapterMessageBinding_Failed = "Failed to add adapter message binding"
    val Remove_AdapterMessageBinding_Successful = "Remove adapter message binding successful"
-   val Remove_AdapterMessageBinding_Failed = "Failed to add adapter message binding"
+   val Remove_AdapterMessageBinding_Failed = "Failed to remove adapter message binding"
 
    //Object
    val Get_All_Object_Keys_Successful = "Successfully fetched all object keys";
