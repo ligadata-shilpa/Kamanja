@@ -95,7 +95,27 @@ elif [ "$INPUT" = "stop" ]; then
     ID=`ps -ef | grep -i java | grep "com.ligadata.KamanjaManager.KamanjaManager" | tr -s " " | xargs | cut -d" " -f2`
     echo "Stopping Kamanja with process id: $ID"
     kill $ID
-    sleep 2
+#  1063 Change begins - Ensure kamanja process killed    
+#    sleep 2
+    echo -n "Waiting Kamanja with process id: $ID to gracefully exit"
+    tries=0 
+    while sleep 5; do
+      echo -n "."
+      ID=`ps -ef | grep -i java | grep "com.ligadata.KamanjaManager.KamanjaManager" | tr -s " " | xargs | cut -d" " -f2`
+      if [ "$ID" = "" ]; then
+          echo "." 
+          echo "Kamanja successfully stopped"
+          exit 0
+       fi
+       tries=`expr $tries + 1`
+       if [ "$tries" -gt 11 ] ; then
+          kill -9 $ID
+          echo "Kamanja stopped"
+          exit 0
+        fi
+     done
+#  1063 Change ends
+# The following code should never execute but let it be there for defensive reasons.
     ID=`ps -ef | grep -i java | grep "com.ligadata.KamanjaManager.KamanjaManager" | tr -s " " | xargs | cut -d" " -f2`
     if [ "$ID" != "" ]; then
         echo "Failed to stop Kamanja. Found process $ID"
