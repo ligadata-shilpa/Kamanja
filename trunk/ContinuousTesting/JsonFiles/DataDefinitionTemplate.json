@@ -2,104 +2,29 @@
     "fields": {
         "field": [
             {
-                "name": "eventSource",
+                "name": "msgname",
                 "type": "string",
+                "length": "55"
+            },
+			{
+                "name": "msisdn",
+                "type": "long",
+                "length": "4"
+            },
+			{
+                "name": "usage",
+                "type": "long",
                 "length": "3"
             },
-            {
-                "name": "type",
-                "type": "string",
-                "length": "3"
+			{
+                "name": "date",
+                "type": "date2",
+                "length": "8"
             },
-            {
-                "name": "id",
+			{
+                "name": "time",
                 "type": "integer",
-                "length": "5"
-            },
-            {
-                "name": "datetime",
-                "type": "timestamp",
-                "length": "1"
-            },
-            {
-                "name": "timezone",
-                "type": "integer",
-                "length": "3"
-            },
-            {
-                "name": "systemUser",
-                "type": "string",
-                "length": "6"
-            },
-            {
-                "name": "device",
-                "type": "string",
-                "length": "5"
-            },
-            {
-                "name": "processId",
-                "type": "integer",
-                "length": "5"
-            },
-            {
-                "name": "resource",
-                "type": "string",
-                "length": "10"
-            },
-            {
-                "name": "resourceHost",
-                "type": "string",
-                "length": "7"
-            },
-            {
-                "name": "resourcePort",
-                "type": "integer",
-                "length": "3"
-            },
-            {
-                "name": "resourceProtocol",
-                "type": "string",
-                "length": "6"
-            },
-            {
-                "name": "user",
-                "type": "string",
-                "length": "7"
-            },
-            {
-                "name": "action",
-                "type": "string",
-                "length": "5"
-            },
-            {
-                "name": "result",
-                "type": "integer",
-                "length": "3"
-            },
-            {
-                "name": "confidentialRecordCount",
-                "type": "integer",
-                "length": "3"
-            },
-            {
-                "name": "proprietaryDataLabels",
-                "type": "string",
-                "length": "20"
-            },
-            {
-                "name": "proprietaryRecordCount",
-                "type": "integer",
-                "length": "2"
-            },
-            {
-                "name": "ait",
-                "type": "integer",
-                "length": "3"
-            },
-            {
-                "name": "application",
-                "type": "string",
-                "length": "6"
+                "length": "9"
             }
         ]
     }

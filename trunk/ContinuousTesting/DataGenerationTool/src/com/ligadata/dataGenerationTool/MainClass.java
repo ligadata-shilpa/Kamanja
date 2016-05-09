@@ -1,16 +1,15 @@
 package com.ligadata.dataGenerationTool;
 
+import com.ligadata.dataGenerationTool.bean.ConfigObj;
+import com.ligadata.dataGenerationTool.bean.FileNameConfig;
+import org.apache.log4j.Logger;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-
-import com.ligadata.dataGenerationTool.bean.ConfigObj;
-import com.ligadata.dataGenerationTool.bean.FileNameConfig;
-
-import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 public class MainClass {
 
@@ -34,7 +33,7 @@ public class MainClass {
 
 		// read configuration file
 		// logger.info("Reading config file from " + args[0]);
-		String configFileLocation = args[0]; // "C:/Users/haitham-pc/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataGenerationConfig.json";
+		String configFileLocation = "C:/Users/Haitham/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataGenerationConfig.json";
 
 		// DataGenerationConfig.json file
 		JSONObject configJson = json.ReadJsonFile(configFileLocation);
@@ -49,7 +48,7 @@ public class MainClass {
 		
 		// DurationInHours
 		double loopEndTime = time.RunDurationTime(configObj);
-		HashMap<String, String> fieldsHash = new HashMap<String, String>();
+		LinkedHashMap<String, String> fieldsHash = new LinkedHashMap<String,String>();
 		List<String> fieldsList;
 		String hit;
 

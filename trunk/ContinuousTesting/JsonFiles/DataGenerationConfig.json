@@ -6,10 +6,10 @@
   "DropInFiles": "true",
   "PushToKafka": "false",
   "FileSplitPer": "10s",
-  "Delimiter": "\u0001",
+  "Delimiter": ",",
   "CompressFormat": "",
-  "TemplatePath" : "C:/Users/haitham-pc/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataDefinitionTemplate.json",
-  "DestiniationPath" : "C:/Users/haitham-pc/Desktop/GenereatedData/",
+  "TemplatePath" : "C:/Users/Haitham/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataDefinitionTemplate.json",
+  "DestiniationPath" : "C:/Users/Haitham/Desktop/GenereatedData/",
   "SequenceId" : "0",
-  "MessageType" : "KV"
+  "MessageType" : "CSV"
 }
