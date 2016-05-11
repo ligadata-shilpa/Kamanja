@@ -52,16 +52,16 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
 
     else {
       //just run it in a separate thread
-      //val extractorThread = new Runnable() {
-        //override def run(): Unit = {
+      val extractorThread = new Runnable() {
+        override def run(): Unit = {
           readBytesChunksFromFile()
-        //}
-     // }
-      //extractExecutor.execute(extractorThread)
+        }
+      }
+      extractExecutor.execute(extractorThread)
 
       //keep updating status so leader knows participant is working fine
       //TODO : find a way to send the update in same reading thread
-      /*val statusUpdateThread = new Runnable() {
+      val statusUpdateThread = new Runnable() {
         override def run(): Unit = {
           try {
             while (!finished) {
@@ -83,7 +83,7 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
           }
         }
       }
-      updatExecutor.execute(statusUpdateThread)*/
+      updatExecutor.execute(statusUpdateThread)
     }
   }
 
@@ -137,10 +137,10 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
       logger.debug("SMART FILE CONSUMER - skipping into offset {} while reading file {}", startOffset.toString, fileName)
     var totalReadLen = 0
     do{
-      logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} ",
-        Math.min(maxlen, startOffset - totalReadLen).toString, fileHandler.getFullPath)
       curReadLen = fileHandler.read(byteBuffer, 0, Math.min(maxlen, startOffset - totalReadLen))
       totalReadLen += curReadLen
+      logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} but got only {} bytes",
+        Math.min(maxlen, startOffset - totalReadLen).toString, fileHandler.getFullPath, curReadLen.toString)
     }while(totalReadLen < startOffset && curReadLen >0)
 
     logger.debug("SMART FILE CONSUMER - totalReadLen from file {} is {}", fileHandler.getFullPath,totalReadLen.toString)
@@ -156,30 +156,31 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
           try {
 
             if (Thread.currentThread().isInterrupted) {
-              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - interrupted while reading file {}", fileHandler.getFullPath)
+              logger.info("SMART FILE CONSUMER (FileMessageExtractor) - interrupted while reading file {}", fileHandler.getFullPath)
               processingInterrupted = true
               break
             }
             if(parentExecutor == null){
-              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - (parentExecutor = null) while reading file {}", fileHandler.getFullPath)
+              logger.info("SMART FILE CONSUMER (FileMessageExtractor) - (parentExecutor = null) while reading file {}", fileHandler.getFullPath)
               processingInterrupted = true
               break
             }
             if(parentExecutor.isShutdown){
-              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is shutdown while reading file {}", fileHandler.getFullPath)
+              logger.info("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is shutdown while reading file {}", fileHandler.getFullPath)
               processingInterrupted = true
               break
             }
             if(parentExecutor.isTerminated){
-              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is terminated while reading file {}", fileHandler.getFullPath)
+              logger.info("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is terminated while reading file {}", fileHandler.getFullPath)
               processingInterrupted = true
               break
             }
 
-            logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} ",
-              (maxlen - readlen - 1).toString, fileHandler.getFullPath)
             var curReadLen = fileHandler.read(byteBuffer, readlen, maxlen - readlen - 1)
             lastReadLen = curReadLen
+
+            logger.debug("SMART FILE CONSUMER - reading {} bytes from file {}. got actually {} bytes ",
+              (maxlen - readlen - 1).toString, fileHandler.getFullPath, curReadLen.toString)
 
             if (curReadLen > 0) {
               readlen += curReadLen
@@ -189,10 +190,9 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
             val minBuf = maxlen / 3; // We are expecting at least 1/3 of the buffer need to fill before
             while (readlen < minBuf && curReadLen > 0) {
               // Re-reading some more data
-              logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} ",
-                (maxlen - readlen - 1).toString, fileHandler.getFullPath)
-
               curReadLen = fileHandler.read(byteBuffer, readlen, maxlen - readlen - 1)
+              logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} . got actually {} bytes",
+                (maxlen - readlen - 1).toString, fileHandler.getFullPath, curReadLen.toString)
               if (curReadLen > 0) {
                 readlen += curReadLen
               }
@@ -307,22 +307,22 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
     for(i <- 0 to len - 1){
 
       if (Thread.currentThread().isInterrupted) {
-        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - interrupted while extracting messages from file {}", fileHandler.getFullPath)
+        logger.info("SMART FILE CONSUMER (FileMessageExtractor) - interrupted while extracting messages from file {}", fileHandler.getFullPath)
         processingInterrupted = true
         break
       }
       if(parentExecutor == null){
-        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - (parentExecutor = null) while extracting messages from file {}", fileHandler.getFullPath)
+        logger.info("SMART FILE CONSUMER (FileMessageExtractor) - (parentExecutor = null) while extracting messages from file {}", fileHandler.getFullPath)
         processingInterrupted = true
         break
       }
       if(parentExecutor.isShutdown){
-        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is shutdown while extracting messages from file {}", fileHandler.getFullPath)
+        logger.info("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is shutdown while extracting messages from file {}", fileHandler.getFullPath)
         processingInterrupted = true
         break
       }
       if(parentExecutor.isTerminated){
-        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is terminated while extracting messages from file {}", fileHandler.getFullPath)
+        logger.info("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is terminated while extracting messages from file {}", fileHandler.getFullPath)
         processingInterrupted = true
         break
       }

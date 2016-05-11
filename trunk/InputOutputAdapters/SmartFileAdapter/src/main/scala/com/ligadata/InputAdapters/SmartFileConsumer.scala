@@ -285,8 +285,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       initialFilesHandled = true//nothing to handle
 
     //now run the monitor
-    monitorController.init(initialFilesToProcess.toList)
-    monitorController.startMonitoring()
+    if(!isShutdown) {
+      monitorController.init(initialFilesToProcess.toList)
+      monitorController.startMonitoring()
+    }
 
   }
 
@@ -776,12 +778,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       statusToSendToLeader = File_Processing_Status_Interrupted
     }
     else if(status == SmartFileConsumer.FILE_STATUS_CORRUPT) {
-      LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) file ({}) is corrupt",
+      LOG.error("SMART FILE CONSUMER - participant node ({}), partition ({}) file ({}) is corrupt",
         context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
       statusToSendToLeader = File_Processing_Status_Corrupted
     }
     else {
-      LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) reports file not found ({})",
+      LOG.warn("SMART FILE CONSUMER - participant node ({}), partition ({}) reports file not found ({})",
         context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
       statusToSendToLeader = File_Processing_Status_NotFound
     }

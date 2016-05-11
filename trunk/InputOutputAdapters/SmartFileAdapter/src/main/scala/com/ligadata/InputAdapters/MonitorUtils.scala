@@ -80,7 +80,7 @@ object MonitorUtils {
       }
     } catch  {
       case ie : InterruptedException => {
-        logger.warn("InterruptedException for " + id, ie)
+        logger.info("InterruptedException for " + id, ie)
         // (Re-)Cancel if current thread also interrupted
         pool.shutdownNow();
         // Preserve interrupt status
