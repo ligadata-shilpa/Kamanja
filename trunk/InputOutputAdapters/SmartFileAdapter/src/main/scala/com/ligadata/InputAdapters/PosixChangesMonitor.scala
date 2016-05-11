@@ -105,7 +105,7 @@ class PosixFileHandler extends SmartFileHandler{
 
       if (fileObject.exists()) {
         fileObject.renameTo(destFileObj)
-        logger.debug("Moved remote file success")
+        logger.debug("Moved file success")
         fileFullPath = newFilePath
         return true
       }
@@ -214,6 +214,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
 
   def monitor: Unit ={
 
+    logger.info("Posix Changes Monitor - start monitoring")
     //TODO : consider running each folder monitoring in a separate thread
     isMonitoring = true
 
@@ -295,7 +296,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
           //FileProcessor.enQBufferedFile(file.toString)
           val fileHandler = new PosixFileHandler(file.toString)
           //call the callback for new files
-          logger.info(s"A new file found ${fileHandler.getFullPath}")
+          logger.info(s"Posix Changes Monitor - A new file found ${fileHandler.getFullPath}")
           try {
             modifiedFileCallback(fileHandler)
           }
@@ -310,12 +311,13 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
       val deletedFiles = new ArrayBuffer[String]()
       fileCacheLock.synchronized {
         fileCache.foreach(fileCacheEntry => {
-          //logger.debug("file in map is {}, its parent is {}, the folder beind checked is {}",
+          //logger.debug("file in map is {}, its parent is {}, the folder being checked is {}",
             //fileCacheEntry._1,  new File(fileCacheEntry._1).getParent, parentDir.toString.trim)
 
           if (new File(fileCacheEntry._1).getParent.trim.equals(parentDir.toString.trim)) {
             //logger.debug("file in map is direct child of checked folder")
-            if (!files.exists(fileName => fileName.equals(fileCacheEntry._1))) {
+            //logger.debug("checked folder's children are {}", files)
+            if (!files.exists(file => file.toString.equals(fileCacheEntry._1))) {
               //key that is no more in the folder => file/folder deleted
               //logger.debug("file in map is not currenlty in children list of the folder, adding it to deleted files list")
               deletedFiles += fileCacheEntry._1
@@ -324,7 +326,10 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
         })
 
         //logger.debug("deleted files list is {}", deletedFiles)
-        deletedFiles.foreach(f => fileCache -= f)//remove from file cache
+        deletedFiles.foreach(f => {
+          logger.debug("checkExistingFiles - removing file {} from map {}", f, fileCache)
+          fileCache -= f
+        })//remove from file cache
       }
 
 
@@ -345,7 +350,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
         return true
       }
       else {
-        fileCache(file) = scala.compat.Platform.currentTime
+        fileCache.put(file, scala.compat.Platform.currentTime)
         return false
       }
     }
