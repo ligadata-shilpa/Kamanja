@@ -113,6 +113,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   private val requestQLock = new Object
   private val processingQLock = new Object
+  private val processingQChangeLock = new Object
 
   //******************************************************************************************************
   //***************************node sync related code**********
@@ -309,60 +310,80 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     else
       LOG.debug("Smart File Consumer - previousStatusMap is {}", previousStatusMap)
 
-    val processingQueue = getFileProcessingQueue
     val currentStatusMap = scala.collection.mutable.Map[String, Long]()
 
-    processingQueue.foreach(processStr => {
-      val processStrTokens = processStr.split(":")
-      val pathTokens = processStrTokens(0).split("/")
-      val fileInProcess = processStrTokens(1)
-      val nodeId = pathTokens(0)
-      val partitionId = pathTokens(1)
+    processingQChangeLock.synchronized {
+      val processingQueue = getFileProcessingQueue
 
-      val cacheKey = Status_Check_Cache_KeyParent + "/" + nodeId + "/" + partitionId
-      val statusData = envContext.getConfigFromClusterCache(cacheKey) // filename~offset~timestamp
-      val statusDataStr : String = if(statusData == null) null else new String(statusData)
+      val queuesToRemove = ArrayBuffer[(String, String, String, String, String)]()
+      processingQueue.foreach(processStr => {
+        val processStrTokens = processStr.split(":")
+        val pathTokens = processStrTokens(0).split("/")
+        val fileInProcess = processStrTokens(1)
+        val nodeId = pathTokens(0)
+        val partitionId = pathTokens(1)
 
-      if(previousStatusMap != null && statusDataStr == null || statusDataStr.trim.length == 0){
-        LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
+        val cacheKey = Status_Check_Cache_KeyParent + "/" + nodeId + "/" + partitionId
+        val statusData = envContext.getConfigFromClusterCache(cacheKey) // filename~offset~timestamp
+        val statusDataStr: String = if (statusData == null) null else new String(statusData)
 
-        LOG.error("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but not found in node updated status",
-          fileInProcess, partitionId, nodeId)
-      }
-      else if(statusDataStr == null || statusDataStr.trim.length == 0){
-        LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
+        if (previousStatusMap != null && statusDataStr == null || statusDataStr.trim.length == 0) {
+          LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
 
-        LOG.debug("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but not found in node updated status",
-          fileInProcess, partitionId, nodeId)
-      }
-      else{
-        LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
-
-        val statusDataTokens = statusDataStr.split("~")
-        val fileInStatus = statusDataTokens(0)
-        val currentTimeStamp = statusDataTokens(2).toLong
-
-        if(previousStatusMap != null && !fileInStatus.equals(fileInProcess))
-          LOG.error("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but found this file {} in node updated status",
-            fileInProcess, partitionId, nodeId, fileInStatus)
-        else{
-
-          if(previousStatusMap != null && previousStatusMap.contains(fileInStatus)){
-            val previousTimestamp = previousStatusMap(fileInStatus)
-            if(currentTimeStamp == previousTimestamp)
-              LOG.error("Smart File Consumer - file {} is being processed by partition {} on node {}, but status hasn't been updated",
-                fileInStatus, partitionId, nodeId)
-          }
-
-          currentStatusMap.put(fileInStatus, currentTimeStamp)
+          LOG.error("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but not found in node updated status",
+            fileInProcess, partitionId, nodeId)
         }
-      }
-    })
+        else if (statusDataStr == null || statusDataStr.trim.length == 0) {
+          LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
 
+          LOG.debug("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but not found in node updated status",
+            fileInProcess, partitionId, nodeId)
+        }
+        else {
+          LOG.debug("Smart File Consumer - current participants status in cache is {}", statusDataStr)
+
+          val statusDataTokens = statusDataStr.split("~")
+          val fileInStatus = statusDataTokens(0)
+          val currentTimeStamp = statusDataTokens(2).toLong
+
+          if (previousStatusMap != null && !fileInStatus.equals(fileInProcess))
+            LOG.error("Smart File Consumer - file {} is supposed to be processed by partition {} on node {} but found this file {} in node updated status",
+              fileInProcess, partitionId, nodeId, fileInStatus)
+          else {
+
+            if (previousStatusMap != null && previousStatusMap.contains(fileInStatus)) {
+              val previousTimestamp = previousStatusMap(fileInStatus)
+              if (currentTimeStamp == previousTimestamp) {
+                LOG.error("Smart File Consumer - file {} is being processed by partition {} on node {}, but status hasn't been updated for {} ms",
+                  fileInStatus, partitionId, nodeId, ((currentTimeStamp - previousTimestamp)/1000).toString)
+
+
+                if (currentTimeStamp - previousTimestamp > maxWaitingTimeForNodeStatus) {
+                  //node is not processing for too long
+                  queuesToRemove.append((processStr, fileInProcess, fileInStatus, nodeId, partitionId))
+                }
+              }
+            }
+
+            currentStatusMap.put(fileInStatus, currentTimeStamp)
+          }
+        }
+      })
+
+      queuesToRemove.foreach(removeInfo => {
+        LOG.debug("Smart File Consumer - removing the following from processing queue", removeInfo._1)
+        //TODO : remove
+        //saveFileProcessingQueue(processingQueue diff List(removeInfo._1))
+        //previousStatusMap.remove(removeInfo._3)
+        //TODO : should be removed from cache status ?
+      })
+    }
     LOG.debug("Smart File Consumer - currentStatusMap is {}", currentStatusMap)
 
     currentStatusMap
   }
+
+  val maxWaitingTimeForNodeStatus = 3 * 1000000000L;//3 seconds, value is in nanoseconds. //TODO : maybe better to deal in ms
 
   /*val File_Offset_Cache_Key_Prefix = "Smart_File_Adapter/" + adapterConfig.Name + "/" + "Offsets/"//participants sets the value, to be read by leader, stores offset for each file (one key per file)
   def getFileOffsetCacheKey(fileName : String) = File_Offset_Cache_Key_Prefix + fileName
@@ -440,11 +461,13 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     }
   }
   def saveFileProcessingQueue(requestQueue : List[String]) : Unit = {
-    processingQLock.synchronized {
-      val cacheData = requestQueue.mkString("|")
-      LOG.debug("Smart File Consumer - saving following value to processing queue: " + cacheData)
-      envContext.saveConfigInClusterCache(File_Processing_Cache_Key, cacheData.getBytes)
-    }
+    //processingQChangeLock.synchronized {
+      processingQLock.synchronized {
+        val cacheData = requestQueue.mkString("|")
+        LOG.debug("Smart File Consumer - saving following value to processing queue: " + cacheData)
+        envContext.saveConfigInClusterCache(File_Processing_Cache_Key, cacheData.getBytes)
+      }
+    
   }
 
   //what a leader should do when recieving file processing request
@@ -987,7 +1010,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       pid._val.asInstanceOf[SmartFilePartitionUniqueRecordValue].Offset, ignoreFirstMsg)).mkString("~")
 
     val SendStartInfoToLeaderPath = sendStartInfoToLeaderParentPath + "/" + clusterStatus.nodeId  // Should be different for each Nodes
-    LOG.debug("Smart File Consumer - Node {} is sending start info to leader. path is {}, value is {} ",
+    LOG.info("Smart File Consumer - Node {} is sending start info to leader. path is {}, value is {} ",
       clusterStatus.nodeId, SendStartInfoToLeaderPath, myPartitionInfo)
     envContext.setListenerCacheKey(SendStartInfoToLeaderPath, myPartitionInfo) // => Goes to Leader
 

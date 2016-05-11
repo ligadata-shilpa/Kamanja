@@ -3,6 +3,7 @@ package com.ligadata.InputAdapters
 import java.io.IOException
 import com.ligadata.AdaptersConfiguration.SmartFileAdapterConfiguration
 import org.apache.logging.log4j.LogManager
+import scala.util.control.Breaks._
 
 import scala.actors.threadpool.Executors
 
@@ -134,74 +135,91 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
       logger.debug("SMART FILE CONSUMER - skipping into offset {} while reading file {}", startOffset.toString, fileName)
     var totalReadLen = 0
     do{
+      logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} ",
+        Math.min(maxlen, startOffset).toString, fileHandler.getFullPath)
       curReadLen = fileHandler.read(byteBuffer, 0, Math.min(maxlen, startOffset))
       totalReadLen += curReadLen
     }while(totalReadLen < startOffset && curReadLen >0)
+
+    logger.debug("SMART FILE CONSUMER - totalReadLen from file {} is ", fileHandler.getFullPath,totalReadLen.toString)
+
     globalOffset = totalReadLen
 
     curReadLen = 0
 
     try {
 
-      do {
-        try {
+      breakable {
+        do {
+          try {
 
-          var curReadLen = fileHandler.read(byteBuffer, readlen, maxlen - readlen - 1)
-          lastReadLen = curReadLen
+            if (Thread.currentThread().isInterrupted) {
+              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - interrupted while reading file {}", fileHandler.getFullPath)
+              break
+            }
 
-          if (curReadLen > 0){
-            readlen += curReadLen
-          }
-          else // First time reading into buffer triggered end of file (< 0)
-            readlen = curReadLen
-          val minBuf = maxlen / 3; // We are expecting at least 1/3 of the buffer need to fill before
-          while (readlen < minBuf && curReadLen > 0) {
-            // Re-reading some more data
-            curReadLen = fileHandler.read(byteBuffer, readlen, maxlen - readlen - 1)
-            if (curReadLen > 0){
+            logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} ",
+              (maxlen - readlen - 1).toString, fileHandler.getFullPath)
+            var curReadLen = fileHandler.read(byteBuffer, readlen, maxlen - readlen - 1)
+            lastReadLen = curReadLen
+
+            if (curReadLen > 0) {
               readlen += curReadLen
             }
-            lastReadLen = curReadLen
-          }
+            else // First time reading into buffer triggered end of file (< 0)
+              readlen = curReadLen
+            val minBuf = maxlen / 3; // We are expecting at least 1/3 of the buffer need to fill before
+            while (readlen < minBuf && curReadLen > 0) {
+              // Re-reading some more data
+              logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} ",
+                (maxlen - readlen - 1).toString, fileHandler.getFullPath)
 
-        } catch {
-
-          case ioe: IOException => {
-            logger.error("Failed to read file " + fileName, ioe)
-            finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
-            shutdownThreads
-            return
-          }
-          case e: Throwable => {
-            logger.error("Failed to read file, file corrupted " + fileName, e)
-            finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
-            shutdownThreads
-            return
-          }
-        }
-        if (readlen > 0) {
-          len += readlen
-
-          //e.g we have 1024, but 1000 is consumeByte
-          val consumedBytes = extractMessages(byteBuffer, readlen)
-          if (consumedBytes < readlen) {
-            val remainigBytes = readlen - consumedBytes
-            val newByteBuffer = new Array[Byte](maxlen)
-            // copy reaming from byteBuffer to byteBuffer
-            /*System.arraycopy(byteBuffer, consumedBytes + 1, newByteBuffer, 0, remainigBytes)
-            byteBuffer = newByteBuffer*/
-            for(i <- 0 to readlen - consumedBytes){
-              byteBuffer(i) = byteBuffer(consumedBytes + i)
+              curReadLen = fileHandler.read(byteBuffer, readlen, maxlen - readlen - 1)
+              if (curReadLen > 0) {
+                readlen += curReadLen
+              }
+              lastReadLen = curReadLen
             }
 
-            readlen = readlen - consumedBytes
-          }
-          else {
-            readlen = 0
-          }
-        }
+          } catch {
 
-      } while (lastReadLen > 0)
+            case ioe: IOException => {
+              logger.error("Failed to read file " + fileName, ioe)
+              finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
+              shutdownThreads
+              return
+            }
+            case e: Throwable => {
+              logger.error("Failed to read file, file corrupted " + fileName, e)
+              finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_CORRUPT)
+              shutdownThreads
+              return
+            }
+          }
+          if (readlen > 0) {
+            len += readlen
+
+            //e.g we have 1024, but 1000 is consumeByte
+            val consumedBytes = extractMessages(byteBuffer, readlen)
+            if (consumedBytes < readlen) {
+              val remainigBytes = readlen - consumedBytes
+              val newByteBuffer = new Array[Byte](maxlen)
+              // copy reaming from byteBuffer to byteBuffer
+              /*System.arraycopy(byteBuffer, consumedBytes + 1, newByteBuffer, 0, remainigBytes)
+            byteBuffer = newByteBuffer*/
+              for (i <- 0 to readlen - consumedBytes) {
+                byteBuffer(i) = byteBuffer(consumedBytes + i)
+              }
+
+              readlen = readlen - consumedBytes
+            }
+            else {
+              readlen = 0
+            }
+          }
+
+        } while (lastReadLen > 0)
+      }
 
       //now if readlen>0 means there is one last message.
       //most likely this happens if last message is not followed by the separator
