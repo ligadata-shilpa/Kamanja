@@ -5,7 +5,7 @@ import com.ligadata.AdaptersConfiguration.SmartFileAdapterConfiguration
 import org.apache.logging.log4j.LogManager
 import scala.util.control.Breaks._
 
-import scala.actors.threadpool.Executors
+import scala.actors.threadpool.{ExecutorService, Executors}
 
 /**
   *
@@ -17,7 +17,8 @@ import scala.actors.threadpool.Executors
   * @param messageFoundCallback to call for every read message
   * @param finishCallback call when finished reading
   */
-class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
+class FileMessageExtractor(parentExecutor: ExecutorService,
+                            adapterConfig : SmartFileAdapterConfiguration,
                            fileHandler: SmartFileHandler,
                            startOffset : Int,
                            consumerContext : SmartFileConsumerContext,
@@ -39,6 +40,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
   private val StatusUpdateInterval = 1000//ms
 
   private var finished = false
+  private var processingInterrupted = false
 
 
 
@@ -50,16 +52,16 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
 
     else {
       //just run it in a separate thread
-      val extractorThread = new Runnable() {
-        override def run(): Unit = {
+      //val extractorThread = new Runnable() {
+        //override def run(): Unit = {
           readBytesChunksFromFile()
-        }
-      }
-      extractExecutor.execute(extractorThread)
+        //}
+     // }
+      //extractExecutor.execute(extractorThread)
 
       //keep updating status so leader knows participant is working fine
       //TODO : find a way to send the update in same reading thread
-      val statusUpdateThread = new Runnable() {
+      /*val statusUpdateThread = new Runnable() {
         override def run(): Unit = {
           try {
             while (!finished) {
@@ -81,7 +83,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
           }
         }
       }
-      updatExecutor.execute(statusUpdateThread)
+      updatExecutor.execute(statusUpdateThread)*/
     }
   }
 
@@ -136,12 +138,12 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     var totalReadLen = 0
     do{
       logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} ",
-        Math.min(maxlen, startOffset).toString, fileHandler.getFullPath)
-      curReadLen = fileHandler.read(byteBuffer, 0, Math.min(maxlen, startOffset))
+        Math.min(maxlen, startOffset - totalReadLen).toString, fileHandler.getFullPath)
+      curReadLen = fileHandler.read(byteBuffer, 0, Math.min(maxlen, startOffset - totalReadLen))
       totalReadLen += curReadLen
     }while(totalReadLen < startOffset && curReadLen >0)
 
-    logger.debug("SMART FILE CONSUMER - totalReadLen from file {} is ", fileHandler.getFullPath,totalReadLen.toString)
+    logger.debug("SMART FILE CONSUMER - totalReadLen from file {} is {}", fileHandler.getFullPath,totalReadLen.toString)
 
     globalOffset = totalReadLen
 
@@ -155,6 +157,22 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
 
             if (Thread.currentThread().isInterrupted) {
               logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - interrupted while reading file {}", fileHandler.getFullPath)
+              processingInterrupted = true
+              break
+            }
+            if(parentExecutor == null){
+              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - (parentExecutor = null) while reading file {}", fileHandler.getFullPath)
+              processingInterrupted = true
+              break
+            }
+            if(parentExecutor.isShutdown){
+              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is shutdown while reading file {}", fileHandler.getFullPath)
+              processingInterrupted = true
+              break
+            }
+            if(parentExecutor.isTerminated){
+              logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is terminated while reading file {}", fileHandler.getFullPath)
+              processingInterrupted = true
               break
             }
 
@@ -223,7 +241,7 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
 
       //now if readlen>0 means there is one last message.
       //most likely this happens if last message is not followed by the separator
-      if(readlen > 0){
+      if(readlen > 0 && !processingInterrupted){
         val lastMsg: Array[Byte] = byteBuffer.slice(0, readlen)
         currentMsgNum += 1
         val msgOffset = globalOffset + lastMsg.length + message_separator_len //byte offset of next message in the file
@@ -261,8 +279,13 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
       }
     }
     finally{
-      if(finishCallback != null)
-        finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_FINISHED)
+      if(finishCallback != null) {
+        if(processingInterrupted)
+          finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_ProcessingInterrupted)
+        else
+          finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_FINISHED)
+      }
+
       shutdownThreads()
     }
 
@@ -282,6 +305,28 @@ class FileMessageExtractor(adapterConfig : SmartFileAdapterConfiguration,
     var prevIndx = indx
 
     for(i <- 0 to len - 1){
+
+      if (Thread.currentThread().isInterrupted) {
+        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - interrupted while extracting messages from file {}", fileHandler.getFullPath)
+        processingInterrupted = true
+        break
+      }
+      if(parentExecutor == null){
+        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - (parentExecutor = null) while extracting messages from file {}", fileHandler.getFullPath)
+        processingInterrupted = true
+        break
+      }
+      if(parentExecutor.isShutdown){
+        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is shutdown while extracting messages from file {}", fileHandler.getFullPath)
+        processingInterrupted = true
+        break
+      }
+      if(parentExecutor.isTerminated){
+        logger.warn("SMART FILE CONSUMER (FileMessageExtractor) - parentExecutor is terminated while extracting messages from file {}", fileHandler.getFullPath)
+        processingInterrupted = true
+        break
+      }
+
       if (chunk(i).asInstanceOf[Char] == message_separator) {
         val newMsg: Array[Byte] = chunk.slice(prevIndx, indx)
         if(newMsg.length > 0) {

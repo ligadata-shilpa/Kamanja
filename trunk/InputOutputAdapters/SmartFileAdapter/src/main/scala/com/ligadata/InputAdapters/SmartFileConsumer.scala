@@ -57,6 +57,7 @@ object SmartFileConsumer extends InputAdapterFactory {
   val FILE_STATUS_FINISHED = 0
   val FILE_STATUS_NOT_FOUND = -1
   val FILE_STATUS_CORRUPT = -2
+  val FILE_STATUS_ProcessingInterrupted = -3
 
   def CreateInputAdapter(inputConfig: AdapterConfiguration, execCtxtObj: ExecContextFactory, nodeContext: NodeContext): InputAdapter = new SmartFileConsumer(inputConfig, execCtxtObj, nodeContext)
 
@@ -123,7 +124,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   val smartFileToLeaderPath = smartFileCommunicationPath + "/ToLeader"
   val requestFilePath = smartFileToLeaderPath + "/RequestFile"
   val fileProcessingPath = smartFileToLeaderPath + "/FileProcessing"
+
   val File_Processing_Status_Finished = "finished"
+  val File_Processing_Status_Interrupted = "interrupted"
+  val File_Processing_Status_Corrupted = "corrupted"
+  val File_Processing_Status_NotFound = "notfound"
+
   val filesParallelismParentPath = smartFileCommunicationPath + "/FilesParallelism"
   val sendStartInfoToLeaderParentPath = smartFileToLeaderPath + "/StartInfo"
 
@@ -372,9 +378,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
       queuesToRemove.foreach(removeInfo => {
         LOG.debug("Smart File Consumer - removing the following from processing queue", removeInfo._1)
-        //TODO : remove
-        //saveFileProcessingQueue(processingQueue diff List(removeInfo._1))
-        //previousStatusMap.remove(removeInfo._3)
+
+        saveFileProcessingQueue(processingQueue diff List(removeInfo._1))
+        previousStatusMap.remove(removeInfo._3)
         //TODO : should be removed from cache status ?
       })
     }
@@ -467,7 +473,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         LOG.debug("Smart File Consumer - saving following value to processing queue: " + cacheData)
         envContext.saveConfigInClusterCache(File_Processing_Cache_Key, cacheData.getBytes)
       }
-    
+
   }
 
   //what a leader should do when recieving file processing request
@@ -489,8 +495,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         //just add to request queue
         var requestQueue = getFileRequestsQueue
         requestQueue = requestQueue ::: List(requestingNodeId + "/" + requestingThreadId + ":" + fileToProcessKeyPath)
-        saveFileRequestsQueue(requestQueue)
-        LOG.debug("Smart File Consumer - finished call to saveFileRequestsQueue, from requestFileLeaderCallback")
+        if(!isShutdown)
+          saveFileRequestsQueue(requestQueue)
+
 
         assignFileProcessingIfPossible()
       }
@@ -503,6 +510,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   //   and if there is file needs processing
   //if all conditions met then assign a file to first request in the queue
   private def assignFileProcessingIfPossible(): Unit ={
+
+    if(isShutdown)
+      return
 
     if(initialFilesHandled) {
       LOG.debug("Smart File Consumer - Leader is checking if it is possible to assign a new file to process")
@@ -667,7 +677,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         val valueTokens = eventPathData.split("\\|")
         val processingFilePath = valueTokens(0)
         val status = valueTokens(1)
-        if (status == File_Processing_Status_Finished) {
+        //if (status == File_Processing_Status_Finished) {
           LOG.info("Smart File Consumer (Leader) - File ({}) processing finished", processingFilePath)
 
           val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
@@ -677,20 +687,19 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
           val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + ":" + processingFilePath
           LOG.debug("Smart File Consumer (Leader) - removing from processing queue: "+ valueInProcessingQueue)
           processingQueue = processingQueue diff List(valueInProcessingQueue)
-          saveFileProcessingQueue(processingQueue)
+          if(!isShutdown)
+            saveFileProcessingQueue(processingQueue)
 
           //since a file just got finished, a new one can be processed
           assignFileProcessingIfPossible()
 
-          moveFile(processingFilePath)
-        }
-        else {
-          //if processing status is NOT finished
-
-        }
+          if(status == File_Processing_Status_Finished || statusUpdateInterval == File_Processing_Status_Corrupted)
+            moveFile(processingFilePath)
+        //}
+        //else {
+        //}
 
       }
-      //CHILD_REMOVED should do anything for remove?
     }
   }
 
@@ -744,7 +753,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, fileToProcessName)
     //now read the file and call sendSmartFileMessageToEngin for each message, and when finished call fileMessagesExtractionFinished_Callback to update status
-    val fileMessageExtractor = new FileMessageExtractor(adapterConfig, fileHandler, offset, context,
+    val fileMessageExtractor = new FileMessageExtractor(participantExecutor, adapterConfig, fileHandler, offset, context,
       sendSmartFileMessageToEngin, fileMessagesExtractionFinished_Callback)
     fileMessageExtractor.extractMessages()
   }
@@ -754,25 +763,44 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   def fileMessagesExtractionFinished_Callback(fileHandler: SmartFileHandler, context : SmartFileConsumerContext,
                                              status : Int) : Unit = {
 
-    if(status == SmartFileConsumer.FILE_STATUS_FINISHED)
+    var statusToSendToLeader = ""
+
+    if(status == SmartFileConsumer.FILE_STATUS_FINISHED) {
       LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) finished reading file ({})",
         context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
-    else
-      LOG.error("SMART FILE CONSUMER - participant node ({}), partition ({}) reports file not found ({})",
+      statusToSendToLeader = File_Processing_Status_Finished
+    }
+    else if(status == SmartFileConsumer.FILE_STATUS_ProcessingInterrupted) {
+      LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) interrupted while reading file ({})",
         context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
+      statusToSendToLeader = File_Processing_Status_Interrupted
+    }
+    else if(status == SmartFileConsumer.FILE_STATUS_CORRUPT) {
+      LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) file ({}) is corrupt",
+        context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
+      statusToSendToLeader = File_Processing_Status_Corrupted
+    }
+    else {
+      LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) reports file not found ({})",
+        context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
+      statusToSendToLeader = File_Processing_Status_NotFound
+    }
 
     //set file status as finished
     val pathKey = fileProcessingPath + "/" + context.nodeId + "/" + context.partitionId
-    val data = fileHandler.getFullPath + "|" + File_Processing_Status_Finished
+    val data = fileHandler.getFullPath + "|" + statusToSendToLeader
     envContext.setListenerCacheKey(pathKey, data)
 
 
     //send a new file request to leader
-    val requestData =  smartFileFromLeaderPath + "/" + context.nodeId+ "/" + context.partitionId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<partitionId id>
-    val requestPathKey = requestFilePath + "/" + context.nodeId + "/" + context.partitionId
-    LOG.info ("SMART FILE CONSUMER - participant ({}) - sending a file request to leader on partition ({})", context.nodeId, context.partitionId.toString)
-    LOG.debug("SMART FILE CONSUMER - sending the request using path ({}) using value ({})", requestPathKey, requestData)
-    envContext.setListenerCacheKey(requestPathKey, requestData)
+    if(!isShutdown) {
+      //shutdown will clear all queues
+      val requestData = smartFileFromLeaderPath + "/" + context.nodeId + "/" + context.partitionId //listen to this SmartFileCommunication/FromLeader/<NodeId>/<partitionId id>
+      val requestPathKey = requestFilePath + "/" + context.nodeId + "/" + context.partitionId
+      LOG.info("SMART FILE CONSUMER - participant ({}) - sending a file request to leader on partition ({})", context.nodeId, context.partitionId.toString)
+      LOG.debug("SMART FILE CONSUMER - sending the request using path ({}) using value ({})", requestPathKey, requestData)
+      envContext.setListenerCacheKey(requestPathKey, requestData)
+    }
   }
 
   //what a participant should do parallelism value changes

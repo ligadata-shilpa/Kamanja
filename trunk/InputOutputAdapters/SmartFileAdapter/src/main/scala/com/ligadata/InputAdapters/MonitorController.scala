@@ -80,6 +80,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
 
     if(smartFileMonitor != null)
       smartFileMonitor.shutdown()
+    else
+      logger.debug("smartFileMonitor is null")
 
     keepMontoringBufferingFiles = false
     MonitorUtils.shutdownAndAwaitTermination(globalFileMonitorService, "MonitorController globalFileMonitorService")

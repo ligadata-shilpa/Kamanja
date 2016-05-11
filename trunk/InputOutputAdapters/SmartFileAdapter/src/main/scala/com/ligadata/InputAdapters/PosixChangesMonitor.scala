@@ -277,7 +277,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
   }
 
   def shutdown: Unit ={
-    //TODO : use an executor object to run the monitoring and stop here
+    logger.debug("Shutting down PosixChangesMonitor")
     isMonitoring = false
 
     monitorsExecutorService.shutdown()
