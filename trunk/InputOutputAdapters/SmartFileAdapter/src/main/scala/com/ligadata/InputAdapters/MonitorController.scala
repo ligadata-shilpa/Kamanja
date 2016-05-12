@@ -167,10 +167,15 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                   // If the length is > 0, we assume that the file completed transfer... (very problematic, but unless
                   // told otherwise by BofA, not sure what else we can do here.
                   if (thisFileOrigLength > 0 && MonitorUtils.isValidFile(fileHandler)) {
-                    logger.info("SMART FILE CONSUMER (MonitorController):  File READY TO PROCESS " + fileHandler.getFullPath)
-                    enQFile(fileTuple._1, NOT_RECOVERY_SITUATION, fileHandler.lastModified)
+                    if(isEnqueued(fileTuple._1)){
+                      logger.debug("SMART FILE CONSUMER (MonitorController):  File already enqueued " + fileHandler.getFullPath)
+                    }else{
+                      logger.info("SMART FILE CONSUMER (MonitorController):  File READY TO PROCESS " + fileHandler.getFullPath)
+                      enQFile(fileTuple._1, NOT_RECOVERY_SITUATION, fileHandler.lastModified)
+                      newlyAdded.append(fileHandler)
+                    }
                     bufferingQ_map.remove(fileTuple._1)
-                    newlyAdded.append(fileHandler)
+
                   } else {
                     // Here becayse either the file is sitll of len 0,or its deemed to be invalid.
                     if (thisFileOrigLength == 0) {
@@ -259,7 +264,15 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
       logger.info("SMART FILE CONSUMER (MonitorController):  enq file " + fileHandler.getFullPath + " with priority " + createDate+" --- curretnly " + fileQ.size + " files on a QUEUE")
       fileQ += new EnqueuedFileHandler(fileHandler, offset, createDate, partMap)
     }
+  }
 
+  private def isEnqueued(fileHandler: SmartFileHandler) : Boolean = {
+    fileQLock.synchronized {
+      if (fileQ.isEmpty) {
+        return false
+      }
+      fileQ.exists(f => f.fileHandler.getFullPath.equals(fileHandler.getFullPath))
+    }
   }
 
   private def deQFile: EnqueuedFileHandler = {
