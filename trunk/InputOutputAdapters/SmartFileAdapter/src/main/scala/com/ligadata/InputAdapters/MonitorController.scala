@@ -119,6 +119,8 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
     logger.debug("SMART FILE CONSUMER (MonitorController):  monitorBufferingFiles")
 
     var specialWarnCounter: Int = 1
+
+    var checkCount = 1
     while (keepMontoringBufferingFiles) {
       // Scan all the files that we are buffering, if there is not difference in their file size.. move them onto
       // the FileQ, they are ready to process.
@@ -252,6 +254,11 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
         })
 
       }
+
+      checkCount += 1
+      if(checkCount > 3)
+        initialFiles = null
+
       // Give all the files a 1 second to add a few bytes to the contents
       try {
         Thread.sleep(refreshRate)
