@@ -273,11 +273,17 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     //now since we have start info for all participants
     //collect file names and offsets
+    val initialFileNames = ArrayBuffer[String]()
+
     val initialFilesToProcess = ArrayBuffer[(String, Int, String, Int)]()
     allNodesStartInfo.foreach(nodeStartInfo => nodeStartInfo._2.foreach(nodePartitionInfo => {
       LOG.debug("nodePartitionInfo._2 = " + (if(nodePartitionInfo._2 == null) "actual null" else nodePartitionInfo._2))
-      if(nodePartitionInfo._2.trim.length > 0 && !nodePartitionInfo._2.trim.equals("null"))
-        initialFilesToProcess.append((nodeStartInfo._1,nodePartitionInfo._1, nodePartitionInfo._2, nodePartitionInfo._3))
+      if(nodePartitionInfo._2.trim.length > 0 && !nodePartitionInfo._2.trim.equals("null")) {
+        if(!initialFileNames.contains(nodePartitionInfo._2.trim)) {
+          initialFilesToProcess.append((nodeStartInfo._1, nodePartitionInfo._1, nodePartitionInfo._2, nodePartitionInfo._3))
+          initialFileNames.append(nodePartitionInfo._2.trim)
+        }
+      }
       //(node, partitionId, file name, offset)
     }))
 

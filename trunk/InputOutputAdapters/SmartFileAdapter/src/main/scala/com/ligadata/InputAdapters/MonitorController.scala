@@ -151,6 +151,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                 case Some(initialFileInfo) => initialFiles = initialFiles diff List(initialFileInfo)
               }*/
               logger.debug("SMART FILE CONSUMER (MonitorController): file {} is already in initial files", fileHandler.getFullPath)
+              bufferingQ_map.remove(fileHandler)
               initialFiles = initialFiles diff matchingFileInfo
 
               logger.debug("SMART FILE CONSUMER (MonitorController): now initialFiles = {}",initialFiles)
