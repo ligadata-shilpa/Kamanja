@@ -359,7 +359,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.OrigDef === actual.OrigDef)
     assert(expected.OwnerId === actual.OwnerId)
     assert(expected.TenantId === actual.TenantId)
-    //assert(expected.Author === actual.Author) //TODO: actual.Author is being set to empty string. Need to be fixed.
+    assert(expected.Author === actual.Author) //TODO: actual.Author is being set to empty string. Need to be fixed.
     assert(expected.UniqId === actual.UniqId)
     assert(expected.MdElementId === actual.MdElementId)
     assert(expected.IsDeleted === actual.IsDeleted)
@@ -386,7 +386,7 @@ class MetadataAPISerializationTest extends FlatSpec with BeforeAndAfterAll {
     assert(expected.OrigDef === actual.OrigDef)
     assert(expected.OwnerId === actual.OwnerId)
     assert(expected.TenantId === actual.TenantId)
-    //assert(expected.Author === actual.Author) //TODO: actual.Author is being set to empty string. Need to be fixed.
+    assert(expected.Author === actual.Author) //TODO: actual.Author is being set to empty string. Need to be fixed.
     assert(expected.UniqId === actual.UniqId)
     assert(expected.MdElementId === actual.MdElementId)
     assert(expected.IsDeleted === actual.IsDeleted)
