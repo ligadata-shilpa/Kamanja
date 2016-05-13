@@ -244,7 +244,7 @@ class HdfsFileHandler extends SmartFileHandler{
 /**
  * callback is the function to call when finding a modified file, currently has one parameter which is the file path
  */
-class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{
+class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileHandler, Boolean) => Unit) extends SmartFileMonitor{
 
   private var isMonitoring = false
   
@@ -341,10 +341,9 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
                 if (modifiedFiles.nonEmpty)
                   modifiedFiles.foreach(tuple => {
-                    val handler = new MofifiedFileCallbackHandler(tuple._1, modifiedFileCallback)
-                    logger.debug("hdfs monitor is calling file callback for MonitorController for file {}", tuple._1.getFullPath)
+
                     try {
-                      modifiedFileCallback(tuple._1)
+                      modifiedFileCallback(tuple._1, tuple._2 == AlreadyExisting)
                     }
                     catch{
                       case e : Throwable =>

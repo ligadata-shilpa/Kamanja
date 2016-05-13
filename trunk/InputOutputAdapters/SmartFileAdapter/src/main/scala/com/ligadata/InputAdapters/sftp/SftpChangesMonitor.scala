@@ -330,7 +330,7 @@ class SftpFileHandler extends SmartFileHandler{
   override def isAccessible : Boolean = exists()
 }
 
-class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor{
+class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileHandler, Boolean) => Unit) extends SmartFileMonitor{
 
   private var isMonitoring = false
   lazy val loggerName = this.getClass.getName
@@ -407,9 +407,10 @@ class SftpChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
                    // run the callback in a different thread
                   //new Thread(handler).start()
                   globalFileMonitorCallbackService.execute(handler)*/
-                      logger.debug("calling sftp monitor is calling file callback for MonitorController for file {}", tuple._1.getFullPath)
+                      logger.debug("calling sftp monitor is calling file callback for MonitorController for file {}, initial = {}",
+                        tuple._1.getFullPath, (tuple._2 == AlreadyExisting).toString)
                       try {
-                        modifiedFileCallback(tuple._1)
+                        modifiedFileCallback(tuple._1, tuple._2 == AlreadyExisting)
                       }
                       catch{
                         case e : Throwable =>

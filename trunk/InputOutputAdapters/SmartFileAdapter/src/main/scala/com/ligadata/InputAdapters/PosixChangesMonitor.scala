@@ -182,7 +182,7 @@ class PosixFileHandler extends SmartFileHandler{
   * @param adapterName
   * @param modifiedFileCallback
   */
-class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileHandler) => Unit) extends SmartFileMonitor {
+class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileHandler, Boolean) => Unit) extends SmartFileMonitor {
 
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
@@ -228,6 +228,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
         override def run() = {
           try{
             breakable {
+              var isFirstScan = true
               while (isMonitoring) {
                 try {
                   logger.info(s"Watching directory $targetFolder")
@@ -242,11 +243,15 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
                     dirsToCheck.remove(0)
 
                     val dir = new File(dirToCheck)
-                    checkExistingFiles(dir)
-                    dir.listFiles.filter(_.isDirectory).foreach(d => dirsToCheck += d.toString)
+                    checkExistingFiles(dir, isFirstScan)
+                    //dir.listFiles.filter(_.isDirectory).foreach(d => dirsToCheck += d.toString)
+
 
                     errorWaitTime = 1000
                   }
+
+                  isFirstScan = false
+
                 } catch {
                   case e: Exception => {
                     logger.warn("Unable to access Directory, Retrying after " + errorWaitTime + " seconds", e)
@@ -285,7 +290,7 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
   }
 
 
-  private def checkExistingFiles(parentDir: File): Unit = {
+  private def checkExistingFiles(parentDir: File, isFirstScan : Boolean): Unit = {
     // Process all the existing files in the directory that are not marked complete.
     if (parentDir.exists && parentDir.isDirectory) {
       val files = parentDir.listFiles.filter(_.isFile).sortWith(_.lastModified < _.lastModified).toList
@@ -296,9 +301,9 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
           //FileProcessor.enQBufferedFile(file.toString)
           val fileHandler = new PosixFileHandler(file.toString)
           //call the callback for new files
-          logger.info(s"Posix Changes Monitor - A new file found ${fileHandler.getFullPath}")
+          logger.info(s"Posix Changes Monitor - A new file found ${fileHandler.getFullPath}. initial = $isFirstScan")
           try {
-            modifiedFileCallback(fileHandler)
+            modifiedFileCallback(fileHandler, isFirstScan)
           }
           catch{
             case e : Throwable =>

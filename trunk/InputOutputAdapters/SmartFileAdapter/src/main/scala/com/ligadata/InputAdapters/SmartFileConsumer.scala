@@ -16,11 +16,11 @@ import scala.actors.threadpool.{Executors, ExecutorService}
 import scala.collection.mutable.{Map, MultiMap, HashMap, ArrayBuffer}
 
 case class BufferLeftoversArea(workerNumber: Int, leftovers: Array[Byte], relatedChunk: Int)
-case class BufferToChunk(len: Int, payload: Array[Byte], chunkNumber: Int, relatedFileHandler: SmartFileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
-case class SmartFileMessage(msg: Array[Byte], offsetInFile: Int, isLast: Boolean, isLastDummy: Boolean, relatedFileHandler: SmartFileHandler, partMap: scala.collection.mutable.Map[Int,Int], msgOffset: Long)
+//case class BufferToChunk(len: Int, payload: Array[Byte], chunkNumber: Int, relatedFileHandler: SmartFileHandler, firstValidOffset: Int, isEof: Boolean, partMap: scala.collection.mutable.Map[Int,Int])
+case class SmartFileMessage(msg: Array[Byte], offsetInFile: Long, relatedFileHandler: SmartFileHandler, msgOffset: Long)
 case class FileStatus(status: Int, offset: Long, createDate: Long)
-case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])
-case class EnqueuedFileHandler(fileHandler: SmartFileHandler, offset: Int, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
+//case class OffsetValue (lastGoodOffset: Int, partitionOffsets: Map[Int,Int])
+case class EnqueuedFileHandler(fileHandler: SmartFileHandler, offset: Long, createDate: Long,  partMap: scala.collection.mutable.Map[Int,Int])
 
 
 class SmartFileConsumerContext{
@@ -159,7 +159,8 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   private var keepCheckingStatus = false
 
-  private val allNodesStartInfo = scala.collection.mutable.Map[String, List[(Int, String, Int, Boolean)]]()
+  //key is node id, value is (partition id, file name, offset, ignoreFirstMsg)
+  private val allNodesStartInfo = scala.collection.mutable.Map[String, List[(Int, String, Long, Boolean)]]()
 
   envContext.registerNodesChangeNotification(nodeChangeCallback)
 
@@ -275,13 +276,22 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     //collect file names and offsets
     val initialFileNames = ArrayBuffer[String]()
 
-    val initialFilesToProcess = ArrayBuffer[(String, Int, String, Int)]()
+    val initialFilesToProcess = ArrayBuffer[(String, Int, String, Long)]()
     allNodesStartInfo.foreach(nodeStartInfo => nodeStartInfo._2.foreach(nodePartitionInfo => {
+      val fileName = nodePartitionInfo._2.trim
       LOG.debug("nodePartitionInfo._2 = " + (if(nodePartitionInfo._2 == null) "actual null" else nodePartitionInfo._2))
-      if(nodePartitionInfo._2.trim.length > 0 && !nodePartitionInfo._2.trim.equals("null")) {
-        if(!initialFileNames.contains(nodePartitionInfo._2.trim)) {
-          initialFilesToProcess.append((nodeStartInfo._1, nodePartitionInfo._1, nodePartitionInfo._2, nodePartitionInfo._3))
-          initialFileNames.append(nodePartitionInfo._2.trim)
+      if(fileName.length > 0 && !fileName.equals("null")) {
+        if(!initialFileNames.contains(fileName.trim)) {
+          val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, fileName)
+          if(fileHandler.exists()){//no need to assign deleted files or files with size less than initial offset
+
+            initialFilesToProcess.append((nodeStartInfo._1, nodePartitionInfo._1, fileName, nodePartitionInfo._3))
+            initialFileNames.append(fileName)
+          }
+          else{
+            LOG.warn("Smart File Consumer - File ({}) does not exist",fileName)
+          }
+
         }
       }
       //(node, partitionId, file name, offset)
@@ -295,7 +305,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
     //now run the monitor
     if(!isShutdown) {
-      monitorController.init(initialFilesToProcess.toList)
+      monitorController.init(initialFileNames.toList)
       monitorController.startMonitoring()
     }
 
@@ -588,7 +598,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
               " to Node " + requestingNodeId + ", thread Id=" + requestingThreadId)
 
             //leave offset management to engine, usually this will be other than zero when calling startProcessing
-            val offset = 0 //getFileOffsetFromCache(fileToProcessFullPath)
+            val offset = 0L //getFileOffsetFromCache(fileToProcessFullPath)
             val data = fileToProcessFullPath + "|" + offset
 
             //there are files that need to process
@@ -624,7 +634,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private var initialFilesHandled = false
   //used to assign files to participants right after calling start processing, if the engine has files to be processed
   //initialFilesToProcess: list of (node, partitionId, file name, offset)
-  private def assignInitialFiles(initialFilesToProcess : Array[(String, Int, String, Int)]): Unit = {
+  private def assignInitialFiles(initialFilesToProcess : Array[(String, Int, String, Long)]): Unit = {
     LOG.debug("Smart File Consumer - handling initial assignment ")
 
     if (initialFilesToProcess == null || initialFilesToProcess.length == 0) {
@@ -695,7 +705,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     val sendingNodeStartInfo = dataAr.map(dataItem => {
       val trimmedItem = dataItem.substring(1,dataItem.length-1) // remove parenthesis
       val itemTokens = trimmedItem.split(",")
-      (itemTokens(0).toInt, itemTokens(1), itemTokens(2).toInt, itemTokens(3).toBoolean)
+      (itemTokens(0).toInt, itemTokens(1), itemTokens(2).toLong, itemTokens(3).toBoolean)
     }).toList
 
     allNodesStartInfo.put(sendingNodeId, sendingNodeStartInfo)
@@ -765,7 +775,7 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
     //data has format <file name>|offset
     val dataTokens = eventPathData.split("\\|")
     val fileToProcessName = dataTokens(0)
-    val offset = dataTokens(1).toInt
+    val offset = dataTokens(1).toLong
 
     val keyTokens = eventPath.split("/")
     val processingThreadId = keyTokens(keyTokens.length - 1).toInt
@@ -1087,6 +1097,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
 
   private def sendSmartFileMessageToEngin(smartMessage : SmartFileMessage,
                                           smartFileConsumerContext: SmartFileConsumerContext): Unit ={
+
+    //in case the msg extracotr still had some msgs to send but some parts of the engine were already shutdown, just ignore
+    if(isShutdown)
+      return
 
     //LOG.debug("Smart File Consumer - Node {} will send a msg to engine. partition id= {}. msg={}",
       //smartFileConsumerContext.nodeId, smartFileConsumerContext.partitionId.toString, new String(smartMessage.msg))

@@ -19,7 +19,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
 
   val NOT_RECOVERY_SITUATION = -1
 
-  private val bufferingQ_map: scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int)] = scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int)]()
+  private val bufferingQ_map: scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int, Boolean)] = scala.collection.mutable.Map[SmartFileHandler, (Long, Long, Int, Boolean)]()
   private val bufferingQLock = new Object
   private var smartFileMonitor : SmartFileMonitor = null
 
@@ -38,9 +38,9 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
-  private var initialFiles :  List[(String, Int, String, Int)] = null
+  private var initialFiles :  List[String] = null
 
-  def init(files :  List[(String, Int, String, Int)]): Unit ={
+  def init(files :  List[String]): Unit ={
     initialFiles = files
   }
 
@@ -92,15 +92,15 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
     * it basically does what method processExistingFiles used to do in file consumer tool
     * @param fileHandler
     */
-  def fileDetectedCallback (fileHandler : SmartFileHandler) : Unit = {
+  def fileDetectedCallback (fileHandler : SmartFileHandler, initiallyExists : Boolean) : Unit = {
     logger.debug("SMART FILE CONSUMER (MonitorController): got file {}", fileHandler.getFullPath)
     //if (MonitorUtils.isValidFile(fileHandler))
-    enQBufferedFile(fileHandler)
+    enQBufferedFile(fileHandler, initiallyExists)
   }
 
-  private def enQBufferedFile(fileHandler: SmartFileHandler): Unit = {
+  private def enQBufferedFile(fileHandler: SmartFileHandler, initiallyExists : Boolean): Unit = {
     bufferingQLock.synchronized {
-      bufferingQ_map(fileHandler) = (0L, System.currentTimeMillis(),0) // Initially, always set to 0.. this way we will ensure that it has time to be processed
+      bufferingQ_map(fileHandler) = (0L, System.currentTimeMillis(),0, initiallyExists)
     }
   }
 
@@ -120,7 +120,6 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
 
     var specialWarnCounter: Int = 1
 
-    var checkCount = 1
     while (keepMontoringBufferingFiles) {
       // Scan all the files that we are buffering, if there is not difference in their file size.. move them onto
       // the FileQ, they are ready to process.
@@ -135,6 +134,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
           var thisFileFailures: Int = fileTuple._2._3
           var thisFileStarttime: Long = fileTuple._2._2
           var thisFileOrigLength: Long = fileTuple._2._1
+          val initiallyExists = fileTuple._2._4
 
 
           try {
@@ -142,11 +142,11 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
 
             logger.debug("SMART FILE CONSUMER (MonitorController):  monitorBufferingFiles - file " + fileHandler.getFullPath)
 
-            val matchingFileInfo : List[(String, Int, String, Int)] =
+            /*val matchingFileInfo : List[(String, Int, String, Int)] =
               if (initialFiles ==null) null
-              else initialFiles.filter(tuple => tuple._3.equals(fileHandler.getFullPath))
+              else initialFiles.filter(tuple => tuple._3.equals(fileHandler.getFullPath))*/
 
-            if (matchingFileInfo != null && matchingFileInfo.size > 0) {
+            if (initiallyExists && initialFiles != null && initialFiles.contains(fileHandler.getFullPath)) {
               //this is an initial file, the leader will take care of it, ignore
               /*initialFiles.filter(tuple => tuple._3.equals(fileHandler.getFullPath)) match{
                 case None =>
@@ -154,7 +154,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
               }*/
               logger.debug("SMART FILE CONSUMER (MonitorController): file {} is already in initial files", fileHandler.getFullPath)
               bufferingQ_map.remove(fileHandler)
-              initialFiles = initialFiles diff matchingFileInfo
+              //initialFiles = initialFiles diff fileHandler.getFullPath
 
               logger.debug("SMART FILE CONSUMER (MonitorController): now initialFiles = {}",initialFiles)
             }
@@ -198,7 +198,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                 } else {
                   logger.debug("SMART FILE CONSUMER (MonitorController):  File {} size changed from {} to {}",
                     fileHandler.getFullPath, thisFileOrigLength.toString, fileTuple._2._1.toString)
-                  bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
+                  bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures, initiallyExists)
                 }
               } else {
                 // File System is not accessible.. issue a warning and go on to the next file.
@@ -220,7 +220,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                   }
                 }
               } else {
-                bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
+                bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures, initiallyExists)
                 logger.warn("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ", ioe)
               }
             }
@@ -237,7 +237,7 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
                   }
                 }
               } else {
-                bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures)
+                bufferingQ_map(fileTuple._1) = (thisFileOrigLength, thisFileStarttime, thisFileFailures, initiallyExists)
                 logger.error("SMART_FILE_CONSUMER: IOException trying to monitor the buffering queue ", e)
               }
             }
@@ -254,10 +254,6 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
         })
 
       }
-
-      checkCount += 1
-      if(checkCount > 3)
-        initialFiles = null
 
       // Give all the files a 1 second to add a few bytes to the contents
       try {

@@ -20,7 +20,7 @@ import scala.actors.threadpool.{ExecutorService, Executors}
 class FileMessageExtractor(parentExecutor: ExecutorService,
                             adapterConfig : SmartFileAdapterConfiguration,
                            fileHandler: SmartFileHandler,
-                           startOffset : Int,
+                           startOffset : Long,
                            consumerContext : SmartFileConsumerContext,
                            messageFoundCallback : (SmartFileMessage, SmartFileConsumerContext) => Unit,
                            finishCallback : (SmartFileHandler, SmartFileConsumerContext, Int) => Unit ) {
@@ -32,7 +32,7 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   private var currentMsgNum = -1 // to start from zero
-  private var globalOffset = 0
+  private var globalOffset = 0L
 
   private val extractExecutor = Executors.newFixedThreadPool(1)
   private val updatExecutor = Executors.newFixedThreadPool(1)
@@ -136,11 +136,13 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
     if(startOffset > 0)
       logger.debug("SMART FILE CONSUMER - skipping into offset {} while reading file {}", startOffset.toString, fileName)
     var totalReadLen = 0
+    var lengthToRead : Int = 0
     do{
-      curReadLen = fileHandler.read(byteBuffer, 0, Math.min(maxlen, startOffset - totalReadLen))
+      lengthToRead = Math.min(maxlen, startOffset - totalReadLen).toInt
+      curReadLen = fileHandler.read(byteBuffer, 0, lengthToRead)
       totalReadLen += curReadLen
       logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} but got only {} bytes",
-        Math.min(maxlen, startOffset - totalReadLen).toString, fileHandler.getFullPath, curReadLen.toString)
+        lengthToRead.toString, fileHandler.getFullPath, curReadLen.toString)
     }while(totalReadLen < startOffset && curReadLen >0)
 
     logger.debug("SMART FILE CONSUMER - totalReadLen from file {} is {}", fileHandler.getFullPath,totalReadLen.toString)
@@ -245,7 +247,7 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
         val lastMsg: Array[Byte] = byteBuffer.slice(0, readlen)
         currentMsgNum += 1
         val msgOffset = globalOffset + lastMsg.length + message_separator_len //byte offset of next message in the file
-        val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, false, false, fileHandler, null, msgOffset)
+        val smartFileMessage = new SmartFileMessage(lastMsg, msgOffset, fileHandler, msgOffset)
         messageFoundCallback(smartFileMessage, consumerContext)
 
       }
@@ -333,7 +335,7 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
           currentMsgNum += 1
           //if(globalOffset >= startOffset) {//send messages that are only after startOffset
           val msgOffset = globalOffset + newMsg.length + message_separator_len //byte offset of next message in the file
-          val smartFileMessage = new SmartFileMessage(newMsg, msgOffset, false, false, fileHandler, null, msgOffset)
+          val smartFileMessage = new SmartFileMessage(newMsg, msgOffset, fileHandler, msgOffset)
             messageFoundCallback(smartFileMessage, consumerContext)
 
           //}
