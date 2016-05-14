@@ -214,7 +214,10 @@ trait MetadataAPIService extends HttpService {
   private def processPutRequest(objtype: String, body: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String], modelcompileinfo: Option[String], tid: Option[String] ): Unit = {
     val action = "Update" + objtype
     val notes = "Invoked " + action + " API "
-    if (objtype.equalsIgnoreCase("Container")) {
+    if (objtype.equalsIgnoreCase("AdapterMessageBinding")) {
+      // Not Supported yet
+      rContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Operatin not supported")).toString)
+    } else if (objtype.equalsIgnoreCase("Container")) {
       val updateContainerDefsService = actorRefFactory.actorOf(Props(new UpdateContainerService(rContext, userid, password, role, tid)))
       updateContainerDefsService ! UpdateContainerService.Process(body)
     } else if (objtype.equalsIgnoreCase("Model")) {
@@ -297,7 +300,11 @@ trait MetadataAPIService extends HttpService {
   private def processPostRequest(objtype: String, body: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String], modelcompileinfo: Option[String], tenantId: Option[String]): Unit = {
     val action = "Add" + objtype
     val notes = "Invoked " + action + " API "
-    if (objtype.equalsIgnoreCase("Container")) {
+
+    if (objtype.equalsIgnoreCase("AdapterMessageBinding")) {
+      val addAdapterMsgBindingsService = actorRefFactory.actorOf(Props(new AddAdapterMessageBindingsService(rContext, userid, password, role)))
+      addAdapterMsgBindingsService ! AddAdapterMessageBindingsService.Process(body)
+    } else if (objtype.equalsIgnoreCase("Container")) {
       val addContainerDefsService = actorRefFactory.actorOf(Props(new AddContainerService(rContext, userid, password, role, tenantId)))
       addContainerDefsService ! AddContainerService.Process(body)
     } else if (objtype.equalsIgnoreCase("Model")) {
