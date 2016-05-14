@@ -40,6 +40,7 @@ trait MetadataAPIService extends HttpService {
 
   APIInit.Init
   val KEY_TOKN = "keys"
+  val ADAPTER_MSG_BINDING = "adaptermessagebinding"
   val AUDIT_LOG_TOKN = "audit_log"
   val LEADER_TOKN = "leader"
   val APIName = "MetadataAPIService"
@@ -85,6 +86,9 @@ trait MetadataAPIService extends HttpService {
                   // strip the first token and send the rest
                   val filterParameters = toknRoute.slice(1, toknRoute.size)
                   requestContext => processGetAuditLogRequest(filterParameters, requestContext, user, password, role)
+                }
+                else if (toknRoute(0).equalsIgnoreCase(ADAPTER_MSG_BINDING)) {
+                  requestContext => processGetAdapterMessageBindingObjectRequest(toknRoute(1).toLowerCase, toknRoute(2).toLowerCase, requestContext, user, password, role)
                 }
                 else {
                   requestContext => processGetObjectRequest(toknRoute(0).toLowerCase, toknRoute(1).toLowerCase, requestContext, user, password, role)
@@ -383,7 +387,22 @@ trait MetadataAPIService extends HttpService {
       val heartBeatSerivce = actorRefFactory.actorOf(Props(new GetHeartbeatService(rContext, userid, password, role)))
       heartBeatSerivce ! GetHeartbeatService.Process(nodeIds, detailsLevel)
   }
-  
+
+
+  /**
+    *
+    */
+  private def processGetAdapterMessageBindingObjectRequest(objType: String, objKey: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
+    val action = "Get" + objType
+    val notes = "Invoked " + action + " API "
+    var argParm: String = null
+
+    val allObjectsService = actorRefFactory.actorOf(Props(new GetAdapterMessageBindigsService(rContext, userid, password, role)))
+    allObjectsService ! GetAdapterMessageBindigsService.Process(objType, objKey)
+
+  }
+
+
   /**
    *
    */
