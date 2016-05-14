@@ -466,8 +466,7 @@ object StartMetadataAPI {
         case Action.ADDTYPE =>  {
           response = new ApiResult(0, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
         }
-          //response = TypeService.addType(input)
-          // 1116 - Changes end - The above line is commented since the TYPE actions is deprecated
+        // 1116 - Changes end - The above line is commented since the TYPE actions is deprecated
         case Action.GETTYPE => response = {
           val typeName : String = extraCmdArgs.getOrElse(TYPENAME,"")
           if (typeName.isEmpty)
@@ -481,18 +480,9 @@ object StartMetadataAPI {
         case Action.REMOVETYPE => {
           response = new ApiResult(0, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
         }
-        //response = {
-          //val typeName : String = extraCmdArgs.getOrElse(TYPENAME,"")
-          //if (typeName.isEmpty)
-            //TypeService.removeType()
-         // else
-           // TypeService.removeType(typeName)
-
-          //  }
         case Action.LOADTYPESFROMAFILE =>{
           response = new ApiResult(0, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
         }
-        //response = TypeService.loadTypesFromAFile(input)
         // 1116 - Changes end - The above line is commented since the TYPE actions is deprecated
         case Action.DUMPALLTYPESBYOBJTYPEASJSON => response = TypeService.dumpAllTypesByObjTypeAsJson
 
