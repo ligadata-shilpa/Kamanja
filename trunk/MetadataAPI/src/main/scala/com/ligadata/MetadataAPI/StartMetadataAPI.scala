@@ -464,7 +464,7 @@ object StartMetadataAPI {
         //Type management
         // 1116 - Changes begin
         case Action.ADDTYPE =>  {
-          response = new ApiResult(0, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
+          response = new ApiResult(ErrorCodeConstants.Success, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
         }
         // 1116 - Changes end - The above line is commented since the TYPE actions is deprecated
         case Action.GETTYPE => response = {
@@ -478,10 +478,10 @@ object StartMetadataAPI {
         case Action.GETALLTYPES => response = TypeService.getAllTypes
           // 1116 - Changes begin
         case Action.REMOVETYPE => {
-          response = new ApiResult(0, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
+          response = new ApiResult(ErrorCodeConstants.Success, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
         }
         case Action.LOADTYPESFROMAFILE =>{
-          response = new ApiResult(0, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
+          response = new ApiResult(ErrorCodeConstants.Success, "StartMetadataAPI/route", null, s"The action = $action is no longer supported").toString
         }
         // 1116 - Changes end - The above line is commented since the TYPE actions is deprecated
         case Action.DUMPALLTYPESBYOBJTYPEASJSON => response = TypeService.dumpAllTypesByObjTypeAsJson
