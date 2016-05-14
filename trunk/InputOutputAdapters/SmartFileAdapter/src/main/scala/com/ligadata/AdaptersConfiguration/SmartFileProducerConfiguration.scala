@@ -27,7 +27,7 @@ class SmartFileProducerConfiguration extends AdapterConfiguration {
   var fileNamePrefix: String = "" // prefix for the file names
   var messageSeparator: String = "" // optional separator inserted between messages
   var compressionString: String = null // If it is null or empty we treat it as TEXT file
-  var rolloverInterval: Int = 0 // in seconds. create new output file every rolloverInterval secs 
+  var rolloverInterval: Int = 0 // in minutes. create new output file every rolloverInterval mins 
   var partitionFormat: String = null // folder structure for partitions
   var partitionBuckets: Int = 0 //  number of files to create within a partition
 

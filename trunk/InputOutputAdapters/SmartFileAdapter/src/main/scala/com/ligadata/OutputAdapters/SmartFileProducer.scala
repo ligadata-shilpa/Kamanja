@@ -109,44 +109,75 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     }).toList
     partitionFormatString = partitionVariable.replaceAllIn(fc.partitionFormat, "%s")
   }
-
-  var fileRoller: Thread = null
+  
+  var nextRolloverTime: Long = 0 
   if (fc.rolloverInterval > 0) {
-    LOG.info("Smart File Producer " + fc.Name + ": File rollover is configured. Will rollover files every " + fc.rolloverInterval + " seconds.")
-    fileRoller = new Thread {
-      override def run {
-        LOG.info("Smart File Producer " + fc.Name + ": Rolling over files.")
-        try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
+    LOG.info("Smart File Producer " + fc.Name + ": File rollover is configured. Will rollover files every " + fc.rolloverInterval + " minutes.")
+    val dt = System.currentTimeMillis()
+    nextRolloverTime = (dt - (dt % (fc.rolloverInterval * 60 * 1000))) + fc.rolloverInterval * 60 * 1000
+  }
 
-        while (!shutDown) {
-          WriteLock(_reent_lock) 
+  //  var fileRoller: Thread = null
+  //  if (fc.rolloverInterval > 0) {
+  //    LOG.info("Smart File Producer " + fc.Name + ": File rollover is configured. Will rollover files every " + fc.rolloverInterval + " seconds.")
+  //    fileRoller = new Thread {
+  //      override def run {
+  //        LOG.info("Smart File Producer " + fc.Name + ": Rolling over files.")
+  //        try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
+  //
+  //        while (!shutDown) {
+  //          WriteLock(_reent_lock) 
+  //          try {
+  //            for ((name, pf) <- partitionStreams) {
+  //              if (pf != null) {
+  //                LOG.debug("Smart File Producer " + fc.Name + ": Rolling file at " + name)
+  //                try {
+  //                  pf.synchronized {
+  //                    pf.outStream.close
+  //                  }
+  //                } catch {
+  //                  case e: Exception => LOG.debug("Smart File Producer " + fc.Name + ": Error closing file: ", e)
+  //                }
+  //              }
+  //            }
+  //            partitionStreams.clear()
+  //          } finally {
+  //            WriteUnlock(_reent_lock)
+  //          }
+  //
+  //          try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
+  //        }
+  //      }
+  //    }
+  //
+  //    fileRoller.start
+  //  }
+
+  private def rolloverFiles() = {
+    LOG.info("Smart File Producer " + fc.Name + ": Rolling over files.")
+
+    WriteLock(_reent_lock)
+    try {
+      for ((name, pf) <- partitionStreams) {
+        if (pf != null) {
+          LOG.debug("Smart File Producer " + fc.Name + ": Rolling file at " + name)
           try {
-            for ((name, pf) <- partitionStreams) {
-              if (pf != null) {
-                LOG.debug("Smart File Producer " + fc.Name + ": Rolling file at " + name)
-                try {
-                  pf.synchronized {
-                    pf.outStream.close
-                  }
-                } catch {
-                  case e: Exception => LOG.debug("Smart File Producer " + fc.Name + ": Error closing file: ", e)
-                }
-              }
+            pf.synchronized {
+              pf.outStream.close
             }
-            partitionStreams.clear()
-          } finally {
-            WriteUnlock(_reent_lock)
+          } catch {
+            case e: Exception => LOG.debug("Smart File Producer " + fc.Name + ": Error closing file: ", e)
           }
-
-          try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
         }
       }
+      partitionStreams.clear()
+    } finally {
+      WriteUnlock(_reent_lock)
     }
 
-    fileRoller.start
   }
-  
-  private def openFile(fileName: String) = if(fc.uri.startsWith("hdfs://")) openHdfsFile(fileName) else openFsFile(fileName)
+
+  private def openFile(fileName: String) = if (fc.uri.startsWith("hdfs://")) openHdfsFile(fileName) else openFsFile(fileName)
   private def write(os: OutputStream, message: Array[Byte]) = if(fc.uri.startsWith("hdfs://")) writeToHdfs(os, message) else writeToFs(os, message)
 
   private def openFsFile(fileName: String): OutputStream = {
@@ -247,7 +278,9 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
       try {
         // need to check again to make sure other threads did not update
         if (!partitionStreams.contains(key)) { // need to check again
-          val fileName = "%s/%s/%s%s-%d-%d.dat%s".format(fc.uri, path, fc.fileNamePrefix, nodeId, bucket, System.currentTimeMillis(), extensions.getOrElse(fc.compressionString, ""))
+          val dt = if(nextRolloverTime > 0) nextRolloverTime - (fc.rolloverInterval * 60 * 1000) else System.currentTimeMillis
+          val ts = new java.text.SimpleDateFormat("yyyyMMdd'T'HHmm").format(new java.util.Date(dt))
+          val fileName = "%s/%s/%s%s-%d-%s.dat%s".format(fc.uri, path, fc.fileNamePrefix, nodeId, bucket, ts, extensions.getOrElse(fc.compressionString, ""))
           var os = openFile(fileName)
           if (compress)
             os = new CompressorStreamFactory().createCompressorOutputStream(fc.compressionString, os)
@@ -308,8 +341,12 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
   override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
     if (outputContainers.size == 0) return
 
-    lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
-    metrics("MessagesProcessed").asInstanceOf[AtomicLong].incrementAndGet()
+    val dt = System.currentTimeMillis
+    lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(dt))
+    if(nextRolloverTime > 0 && dt > nextRolloverTime) {
+      rolloverFiles()
+      nextRolloverTime += (fc.rolloverInterval * 60 * 1000)
+    }
     
     val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
 
@@ -335,6 +372,7 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
             }
             isSuccess = true
             LOG.debug("finished writing message")
+            metrics("MessagesProcessed").asInstanceOf[AtomicLong].incrementAndGet()
           } catch {
             case fio: IOException => {
               LOG.warn("Smart File Producer " + fc.Name + ": Unable to write to file " + pf.name)
@@ -369,10 +407,10 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     try {
       shutDown = true
 
-      if (fileRoller != null) {
-        fileRoller.interrupt
-        fileRoller = null
-      }
+//      if (fileRoller != null) {
+//        fileRoller.interrupt
+//        fileRoller = null
+//      }
 
       for ((name, pf) <- partitionStreams) {
         if (pf != null) {

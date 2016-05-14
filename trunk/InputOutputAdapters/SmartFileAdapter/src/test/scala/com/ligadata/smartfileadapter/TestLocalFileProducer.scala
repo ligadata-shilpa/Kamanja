@@ -436,11 +436,11 @@ class TestLocalFileProducer extends FunSpec with BeforeAndAfter with ShouldMatch
     it("should rollover file when RolloverInterval is given") {
       
       inputConfig.adapterSpecificCfg =
-        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"MessageSeparator\": \"\\n\", \"RolloverInterval\": \"10\"}"
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"MessageSeparator\": \"\\n\", \"RolloverInterval\": \"1\"}"
 
       val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
       sfp.send(null, data)
-      Thread.sleep(15000)
+      Thread.sleep(60000)
       sfp.send(null, data)
       sfp.Shutdown()
 
