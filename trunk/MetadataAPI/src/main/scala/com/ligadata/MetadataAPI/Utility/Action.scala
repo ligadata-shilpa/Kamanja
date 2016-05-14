@@ -91,4 +91,8 @@ object Action extends Enumeration {
   val DUMPALLCLUSTERS=Value("dumpallclusters")
   val DUMPALLCLUSTERCFGS=Value("dumpallclustercfgs")
   val DUMPALLADAPTERS=Value("dumpalladapters")
+  
+  val GETTYPEBYSCHEMAID = Value("gettypebyschemaId")
+  val GETTYPEBYELEMENTID = Value("gettypebyelementid")
+   
 }

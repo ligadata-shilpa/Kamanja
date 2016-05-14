@@ -169,13 +169,13 @@ object MessageAndContainerUtils {
       msgType match {
         case "MessageDef" | "ContainerDef" => {
           // ArrayOf<TypeName>
-          var obj: BaseElemDef = mdMgr.MakeArray(msgDef.nameSpace, "arrayof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+          var obj: BaseElemDef = mdMgr.MakeArray(msgDef.nameSpace, "arrayof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */ , msgDef.ver, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
 
           // MapOf<TypeName>
-          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */ , recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
@@ -252,7 +252,7 @@ object MessageAndContainerUtils {
   def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
     var resultStr: String = ""
 
-    if (tenantId == None)    return (new ApiResult(ErrorCodeConstants.Failure, "AddContainer/AddMessage", null, s"Tenant ID is required to perform an ADD CONTAINER or an ADD MESSAGE operation")).toString
+    if (tenantId == None) return (new ApiResult(ErrorCodeConstants.Failure, "AddContainer/AddMessage", null, s"Tenant ID is required to perform an ADD CONTAINER or an ADD MESSAGE operation")).toString
 
     try {
       var compProxy = new CompilerProxy
@@ -427,7 +427,7 @@ object MessageAndContainerUtils {
     var resultStr: String = ""
     try {
 
-      if (tenantId == None)  return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
+      if (tenantId == None) return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
 
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -905,7 +905,6 @@ object MessageAndContainerUtils {
     RemoveContainer(sysNS, containerName, version, userid)
   }
 
-
   /**
     * getBaseType
     *
@@ -1335,7 +1334,6 @@ object MessageAndContainerUtils {
     }
   }
 
-
   /**
     * Check whether message already exists in metadata manager. Ideally,
     * we should never add the message into metadata manager more than once
@@ -1516,7 +1514,7 @@ object MessageAndContainerUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "messages")
       logger.debug("Deserialize the object " + key)
-      val msg: MessageDef =MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[MessageDef] //serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[MessageDef]
+      val msg: MessageDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[MessageDef] //serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[MessageDef]
       logger.debug("Get the jar from database ")
       val msgDef = msg.asInstanceOf[MessageDef]
       MetadataAPIImpl.DownloadJarFromDB(msgDef)
@@ -1537,7 +1535,7 @@ object MessageAndContainerUtils {
   def LoadContainerIntoCache(key: String) {
     try {
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "containers")
-      val cont: ContainerDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[ContainerDef]//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[ContainerDef]
+      val cont: ContainerDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[ContainerDef] //serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[ContainerDef]
       logger.debug("Get the jar from database ")
       val contDef = cont.asInstanceOf[ContainerDef]
       MetadataAPIImpl.DownloadJarFromDB(contDef)
@@ -1746,5 +1744,54 @@ object MessageAndContainerUtils {
     List[String]()
   }
 
+  def GetTypeBySchemaId(schemaId: Int, userid: Option[String]): String = {
+    if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.GETOBJECT), AuditConstants.GETOBJECT, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", schemaId.toString)
+    try {
+      val o = MdMgr.GetMdMgr.ContainerForSchemaId(schemaId)
+      o match {
+        case None =>
+          None
+          logger.debug("message/container not found => " + schemaId)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + schemaId)
+          apiResult.toString()
+        case Some(m) =>
+          logger.debug("message/container found => " + m.asInstanceOf[ContainerDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ContainerDef].Version))
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeBySchemaId", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Container_From_Cache_Successful)
+          apiResult.toString()
+      }
+    } catch {
+      case e: Exception => {
+
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + schemaId.toString)
+        apiResult.toString()
+      }
+    }
+  }
+
+  def GetTypeByElementId(elementId: Long, userid: Option[String]): String = {
+    if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.GETOBJECT), AuditConstants.GETOBJECT, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", elementId.toString)
+    try {
+      val o = MdMgr.GetMdMgr.ElementForElementId(elementId)
+      o match {
+        case None =>
+          None
+          logger.debug("message/container/model not found => " + elementId)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + elementId)
+          apiResult.toString()
+        case Some(m) =>
+          logger.debug("message/container/model found => " + m.asInstanceOf[BaseElem].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[BaseElem].Version))
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeByElementId", "", ErrorCodeConstants.Get_Container_From_Cache_Successful)
+          apiResult.toString()
+      }
+    } catch {
+      case e: Exception => {
+
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + elementId.toString)
+        apiResult.toString()
+      }
+    }
+  }
 
 }
