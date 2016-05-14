@@ -10,7 +10,7 @@ class TestProducerConfigs extends FunSpec with BeforeAndAfter with ShouldMatcher
   describe("Test Smart File Producer configuration") {
 
     val inputConfig = new AdapterConfiguration()
-    inputConfig.Name = "TestOutput_2"
+    inputConfig.Name = "TestOutput"
     inputConfig.className = "com.ligadata.InputAdapters.SamrtFileProducer$"
     inputConfig.jarName = "smartfileinputoutputadapters_2.10-1.0.jar"
 
@@ -20,11 +20,12 @@ class TestProducerConfigs extends FunSpec with BeforeAndAfter with ShouldMatcher
         """
   		  |{
   		  |  "Uri": "hdfs://nameservice/folder/to/save",
-	  	  |  "FileNamePrefix": "Data"
-		    |  "Compression": "gzip"
-  		  |  "RolloverInterval": "3600"
-	  	  |  "Partition": "year=${yyyy}/month=${MM}/day=${dd}"
-		    |  "PartitionBuckets": "10"
+	  	  |  "FileNamePrefix": "Data",
+        |  "MessageSeparator": "\n",
+		    |  "Compression": "gz",
+  		  |  "RolloverInterval": "3600",
+	  	  |  "TimePartitionFormat": "year=${yyyy}/month=${MM}/day=${dd}",
+		    |  "PartitionBuckets": "10",
 		    |  "Kerberos": {
 	  	  |	     "Principal": "user@domain.com",
 	  	  |	     "Keytab": "/path/to/keytab/user.keytab"
@@ -36,7 +37,8 @@ class TestProducerConfigs extends FunSpec with BeforeAndAfter with ShouldMatcher
 
       conf.uri shouldEqual  "hdfs://nameservice/folder/to/save"
       conf.fileNamePrefix shouldEqual "Data"
-      conf.compressionString shouldEqual "gzip"
+      conf.messageSeparator shouldEqual "\n"
+      conf.compressionString shouldEqual "gz"
       conf.rolloverInterval shouldEqual 3600
       conf.partitionFormat shouldEqual "year=${yyyy}/month=${MM}/day=${dd}"
       conf.partitionBuckets shouldEqual 10

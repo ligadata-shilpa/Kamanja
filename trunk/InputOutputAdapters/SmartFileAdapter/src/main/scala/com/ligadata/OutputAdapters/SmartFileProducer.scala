@@ -45,6 +45,11 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
   private[this] val fc = SmartFileProducerConfiguration.getAdapterConfig(inputConfig)
   private var ugi: UserGroupInformation = null
   private var partitionStreams: collection.mutable.Map[String,OutputStream] = collection.mutable.Map[String,OutputStream]()
+  private var extensions: scala.collection.immutable.Map[String, String] = Map(
+      (CompressorStreamFactory.BZIP2, ".bz2"),
+      (CompressorStreamFactory.GZIP, ".gz"),
+      (CompressorStreamFactory.XZ, ".xz"))
+      
   
   private var shutDown:Boolean = false
   private val nodeId = if(nodeContext==null || nodeContext.getEnvCtxt()==null) "1" else nodeContext.getEnvCtxt().getNodeId()
@@ -62,9 +67,7 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
   if (compress) {
     if (CompressorStreamFactory.BZIP2.equalsIgnoreCase(fc.compressionString) ||
       CompressorStreamFactory.GZIP.equalsIgnoreCase(fc.compressionString) ||
-      CompressorStreamFactory.XZ.equalsIgnoreCase(fc.compressionString) ||
-      CompressorStreamFactory.PACK200.equalsIgnoreCase(fc.compressionString))
-      //CompressorStreamFactory.DEFLATE.equalsIgnoreCase(fc.CompressionString))
+      CompressorStreamFactory.XZ.equalsIgnoreCase(fc.compressionString))
       LOG.debug("Smart File Producer " + fc.Name + " Using compression: " + fc.compressionString)
     else
       throw FatalAdapterException("Unsupported compression type " + fc.compressionString + " for Smart File Producer: " + fc.Name, new Exception("Invalid Parameters"))
@@ -88,7 +91,8 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     fileRoller = new Thread {
       override def run {
         LOG.info("Smart File Producer " + fc.Name + ": Rolling over files.")
-        Thread.sleep(fc.rolloverInterval * 1000)
+        try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
+
         while (!shutDown) {
           _lock.synchronized {
             for ((name, os) <- partitionStreams) {
@@ -103,6 +107,8 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
             }
             partitionStreams.clear()
           }
+
+          try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
         }
       }
     }
@@ -117,7 +123,9 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     var os: OutputStream = null
     while (os == null) {
       try {
-        os = new FileOutputStream(fileName, true) 
+        val file = new File(fileName)
+        file.getParentFile().mkdirs();
+        os = new FileOutputStream(file, true) 
       } catch {
         case fio: IOException => {
           LOG.warn("Smart File Producer " + fc.Name + ": Unable to create a file destination " + fc.uri + " due to an IOException", fio)
@@ -189,24 +197,30 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     
     val pk = record.getPartitionKey()
     var bucket:Int = 0
-    if(pk != null && pk.length > 0 && fc.partitionBuckets > 1)
+    if(pk != null && pk.length > 0 && fc.partitionBuckets > 1) {
       bucket = pk.mkString("").hashCode() % fc.partitionBuckets
+    }
   
     if(dateTime > 0 && partitionFormatString != null && partitionDateFormats != null) {
       val values = partitionDateFormats.map(fmt => fmt.format(dateTime))
       key = record.getTypeName() + "/" + partitionFormatString.format(values: _*)
     }
     
-    if(!partitionStreams.contains(key)) {
-      val fileName = "%s/%s/%s-%s-%d-%d.dat".format(fc.uri, key, fc.fileNamePrefix, nodeId, bucket, System.currentTimeMillis())
-      var os = openFile(fileName)
-      if (compress)
-        os = new CompressorStreamFactory().createCompressorOutputStream(fc.compressionString, os)
-        
-      partitionStreams(key) = os
-    }
+    val path = key
+    key = key + bucket
+
+    _lock.synchronized {
+      if (!partitionStreams.contains(key)) {
+        val fileName = "%s/%s/%s%s-%d-%d.dat%s".format(fc.uri, path, fc.fileNamePrefix, nodeId, bucket, System.currentTimeMillis(), extensions.getOrElse(fc.compressionString, ""))
+        var os = openFile(fileName)
+        if (compress)
+          os = new CompressorStreamFactory().createCompressorOutputStream(fc.compressionString, os)
+
+        partitionStreams(key) = os
+      }
     
-    return partitionStreams(key)
+      return partitionStreams(key)
+    }
   }
   
   private def writeToFs(os: OutputStream, message: Array[Byte]) = {
@@ -229,7 +243,7 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
 
   // Locking before we write into file
   // To send an array of messages. messages.size should be same as partKeys.size
-  override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = _lock.synchronized {
+  override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
     if (outputContainers.size == 0) return
 
     val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
@@ -249,8 +263,9 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
         while (!isSuccess) {
           try {
             val os = getOutputStream(record);
-            //os.write(message);
-            write(os, message)
+            os.synchronized {
+              write(os, message)
+            }
             isSuccess = true
             LOG.debug("finished writing message")
           } catch {
@@ -282,8 +297,10 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
   override def Shutdown(): Unit = _lock.synchronized {
     shutDown = true
     
-    if(fileRoller != null)
+    if(fileRoller != null) {
       fileRoller.interrupt
+      fileRoller = null
+    }
   
     for ( (name, os) <- partitionStreams ) {
       if (os != null) {
@@ -291,6 +308,7 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
         os.close
       }
     }
+    partitionStreams.clear()
   }
 
 }

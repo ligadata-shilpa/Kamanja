@@ -6,6 +6,87 @@ import com.ligadata.AdaptersConfiguration.SmartFileProducerConfiguration
 import com.ligadata.OutputAdapters.SmartFileProducer
 import com.ligadata.InputOutputAdapterInfo.AdapterConfiguration
 import com.ligadata.Exceptions.{ KamanjaException, FatalAdapterException, KeyNotFoundException }
+import scala.meta.tokens.Token.`override`
+import scala.collection.JavaConversions._
+import java.io.File
+import org.apache.commons.io.FileUtils
+
+object ParameterContainer extends RDDObject[ParameterContainer] with ContainerFactoryInterface {
+  type T = ParameterContainer;
+  override def getFullTypeName: String = "com.ligadata.smartfileadapter.test.ParameterContainer";
+  override def getTypeNameSpace: String = "com.ligadata.smartfileadapter.test";
+  override def getTypeName: String = "ParameterContainer";
+  override def getTypeVersion: String = "000001.000000.000000";
+  override def getSchemaId: Int = 5;
+  override def getTenantId: String = "system";
+  override def createInstance: ParameterContainer = new ParameterContainer(ParameterContainer);
+  override def isFixed: Boolean = true;
+  override def getContainerType: ContainerTypes.ContainerType = ContainerTypes.ContainerType.CONTAINER
+  override def getFullName = getFullTypeName;
+  override def getRddTenantId = getTenantId;
+  override def toJavaRDDObject: JavaRDDObject[T] = JavaRDDObject.fromRDDObject[T](this);  
+  
+  override def FullName: String = getFullTypeName
+  override def NameSpace: String = getTypeNameSpace
+  override def Name: String = getTypeName
+  override def Version: String = getTypeVersion
+  override def CreateNewMessage: BaseMsg = null;
+  override def CreateNewContainer: BaseContainer = createInstance.asInstanceOf[BaseContainer];
+  override def IsFixed: Boolean = true
+  override def IsKv: Boolean = false
+  override def CanPersist: Boolean = false
+  override def isMessage: Boolean = false
+  override def isContainer: Boolean = true
+  override def PartitionKeyData(inputdata: InputData): Array[String] = { throw new Exception("Deprecated method PartitionKeyData in obj ParameterContainer") };
+  override def PrimaryKeyData(inputdata: InputData): Array[String] = throw new Exception("Deprecated method PrimaryKeyData in obj ParameterContainer");
+  override def TimePartitionData(inputdata: InputData): Long = throw new Exception("Deprecated method TimePartitionData in obj ParameterContainer");
+  override def NeedToTransformData: Boolean = false
+  
+  def build = new T(this)
+  def build(from: T) = null
+  
+  override def getPartitionKeyNames: Array[String] = Array[String]("id");
+
+  override def getPrimaryKeyNames: Array[String] = Array[String]();
+
+  override def getTimePartitionInfo: TimePartitionInfo = { return null; } // FieldName, Format & Time Partition Types(Daily/Monthly/Yearly)
+
+  override def hasPrimaryKey(): Boolean = {
+    val pKeys = getPrimaryKeyNames();
+    return (pKeys != null && pKeys.length > 0);
+  }
+
+  override def hasPartitionKey(): Boolean = {
+    val pKeys = getPartitionKeyNames();
+    return (pKeys != null && pKeys.length > 0);
+  }
+
+  override def hasTimePartitionInfo(): Boolean = {
+    val tmInfo = getTimePartitionInfo();
+    return (tmInfo != null && tmInfo.getTimePartitionType != TimePartitionInfo.TimePartitionType.NONE);
+  }
+  override def getAvroSchema: String = """{ "type": "record",  "namespace" : "com.ligadata.smartfileadapter.test" , "name" : "ParameterContainer" , "fields":[{ "name" : "id" , "type" : "int"},{ "name" : "name" , "type" : "string"},{ "name" : "value" , "type" : "string"}]}""";
+
+  final override def convertFrom(srcObj: Any): T = convertFrom(createInstance(), srcObj);
+
+  override def convertFrom(newVerObj: Any, oldVerobj: Any): ContainerInterface = {
+    try {
+      if (oldVerobj == null) return null;
+      oldVerobj match {
+
+        case oldVerobj: com.ligadata.smartfileadapter.ParameterContainer => { return oldVerobj; }
+        case _ => {
+          throw new Exception("Unhandled Version Found");
+        }
+      }
+    } catch {
+      case e: Exception => {
+        throw e
+      }
+    }
+    return null;
+  }
+}
 
 class ParameterContainer(factory: ContainerFactoryInterface) extends ContainerInterface(factory) {
 
@@ -21,10 +102,10 @@ class ParameterContainer(factory: ContainerFactoryInterface) extends ContainerIn
   }
   
   var keyTypes: Map[String, AttributeTypeInfo] = attributeTypes.map { a => (a.getName, a) }.toMap;
-  
-  def Clone(): ContainerOrConcept = { null }
+    
+  def Clone(): ContainerOrConcept = { ParameterContainer.build(this) }
   override def save: Unit = { }
-  override def getPartitionKey: Array[String] = Array[String]()
+  override def getPartitionKey: Array[String] = Array[String](id.toString)
   override def getPrimaryKey: Array[String] = Array[String]()
   
   override def getAttributeTypes(): Array[AttributeTypeInfo] = {
@@ -176,34 +257,205 @@ class ParameterContainer(factory: ContainerFactoryInterface) extends ContainerIn
   }
 }
 
+trait JsonDefaultSerializerDeserializer extends AdaptersSerializeDeserializers{
+  override def getDefaultSerializerDeserializer(): MsgBindingInfo = { 
+    new MsgBindingInfo("com.ligadata.kamanja.serializer.jsonserdes", scala.collection.immutable.Map[String, Any](), "", new com.ligadata.kamanja.serializer.JSONSerDes())
+  }
+}
+
 class TestLocalFileProducer extends FunSpec with BeforeAndAfter with ShouldMatchers with BeforeAndAfterAll with GivenWhenThen {
 
-  describe("Test Smart File Producer configuration") {
+  val location = getClass.getResource("/producer").getPath
+  println(location)
+  val dir = new File(location + "/ParameterContainer")
+
+  before {
+    println("Before Test Deleting directory " + dir.getAbsolutePath)
+    FileUtils.deleteDirectory(dir)
+  }
+  
+  after {
+    println("After Test Deleting directory " + dir.getAbsolutePath)
+    //FileUtils.deleteDirectory(dir)
+  }
+
+  describe("Test Smart File Producer") {
 
     val inputConfig = new AdapterConfiguration()
-    inputConfig.Name = "TestOutput_2"
+    inputConfig.Name = "TestOutput"
     inputConfig.className = "com.ligadata.InputAdapters.SamrtFileProducer$"
     inputConfig.jarName = "smartfileinputoutputadapters_2.10-1.0.jar"
 
-    it("should read configuration correctly from a valid JSON") {
+    val data = new Array[ContainerInterface](3)
+    data(0) = new ParameterContainer(ParameterContainer)
+    data(0).set(0, 10)
+    data(0).set(1, "parameter1")
+    data(0).set(2, "value1")
+    data(0).setTimePartitionData(1462912843000L)  // May 10, 2016
+    data(1) = new ParameterContainer(ParameterContainer)
+    data(1).set(0, 20)
+    data(1).set(1, "parameter2")
+    data(1).set(2, "value2")
+    data(1).setTimePartitionData(1462912843000L)  // May 10, 2016
+    data(2) = new ParameterContainer(ParameterContainer)
+    data(2).set(0, 30)
+    data(2).set(1, "parameter3")
+    data(2).set(2, "value3")
+    data(2).setTimePartitionData(1462999243000L)  // May 11, 2016
 
+    it("should produce a text file with json output") {
+      
       inputConfig.adapterSpecificCfg =
-        """
-  		  |{
-  		  |  "Uri": "file://nameservice/folder/to/save",
-	  	  |  "FileNamePrefix": "Data"
-	  	  |}
-		    """.stripMargin
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\"}"
 
-      val conf = SmartFileProducerConfiguration.getAdapterConfig(inputConfig)
-      val sfp = SmartFileProducer.CreateOutputAdapter(conf, null)
-      val data = new Array[ContainerInterface](3)
-      data(0) = new ParameterContainer(null)
-    
-      //sfp.send(null, data)
-      assert(1 == 1)
+      val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
+      sfp.send(null, data)
+      sfp.Shutdown()
+
+      val outfiles = FileUtils.listFiles(dir, Array("dat"), true)
+      println("Number of file produced: " + outfiles.size())
+      assert( outfiles.size() > 0)
+      
+      val file = outfiles.iterator().next()
+      println("File " + file.getAbsolutePath)
+      val actual = FileUtils.readFileToString(file)
+      val expected = FileUtils.readFileToString(new File(location + "/unpartionedjson.expected"))
+      assert(actual == expected)
     }
-        
+
+    it("should produce a .gz file when Compression is gzip") {
+      
+      inputConfig.adapterSpecificCfg =
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"Compression\": \"gz\"}"
+
+      val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
+      sfp.send(null, data)
+      sfp.Shutdown()
+
+      val outfiles = FileUtils.listFiles(dir, Array("dat.gz"), true)
+      println("Number of file produced: " + outfiles.size())
+      assert( outfiles.size() > 0)
+      
+      val file = outfiles.iterator().next()
+      println("File " + file.getAbsolutePath)
+      val actual = FileUtils.readFileToString(file)
+      val expected = FileUtils.readFileToString(new File(location + "/unpartionedjson.expected.gz"))
+      assert(actual == expected)
+    }
+    
+    it("should produce a .bz2 file when Compression is bzip2") {
+      
+      inputConfig.adapterSpecificCfg =
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"Compression\": \"bzip2\"}"
+
+      val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
+      sfp.send(null, data)
+      sfp.Shutdown()
+
+      val outfiles = FileUtils.listFiles(dir, Array("dat.bz2"), true)
+      println("Number of file produced: " + outfiles.size())
+      assert( outfiles.size() > 0)
+      
+      val file = outfiles.iterator().next()
+      println("File " + file.getAbsolutePath)
+      val actual = FileUtils.readFileToString(file)
+      val expected = FileUtils.readFileToString(new File(location + "/unpartionedjson.expected.bz2"))
+      assert(actual == expected)
+    }
+
+    it("should produce a .xz file when Compression is xz") {
+      
+      inputConfig.adapterSpecificCfg =
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"Compression\": \"xz\"}"
+
+      val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
+      sfp.send(null, data)
+      sfp.Shutdown()
+
+      val outfiles = FileUtils.listFiles(dir, Array("dat.xz"), true)
+      println("Number of file produced: " + outfiles.size())
+      assert( outfiles.size() > 0)
+      
+      val file = outfiles.iterator().next()
+      println("File " + file.getAbsolutePath)
+      val actual = FileUtils.readFileToString(file)
+      val expected = FileUtils.readFileToString(new File(location + "/unpartionedjson.expected.xz"))
+      assert(actual == expected)
+    }
+    
+    it("should partition using time patition when Partition is given") {
+      
+      inputConfig.adapterSpecificCfg =
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"TimePartitionFormat\": \"year=${yyyy}/month=${MM}/day=${dd}\"}"
+
+      val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
+      sfp.send(null, data)
+      sfp.Shutdown()
+
+      val outfiles = FileUtils.listFiles(dir, Array("dat"), true)
+      println("Number of file produced: " + outfiles.size())
+      assert(outfiles.size() > 1)
+      
+      outfiles.foreach(file => {
+        println("File " + file.getAbsolutePath)
+        val expected = if (file.getAbsolutePath.contains("year=2016/month=05/day=10"))
+          FileUtils.readFileToString(new File(location + "/may10partitionjson.expected"))
+        else if (file.getAbsolutePath.contains("year=2016/month=05/day=11"))
+          FileUtils.readFileToString(new File(location + "/may11partitionjson.expected"))
+        else ""
+        val actual = FileUtils.readFileToString(file)
+        assert(actual == expected)
+      })
+    }
+
+    it("should partition using patition key when PartitionBuckets is given") {
+      
+      inputConfig.adapterSpecificCfg =
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"PartitionBuckets\": \"2\"}"
+
+      val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
+      sfp.send(null, data)
+      sfp.Shutdown()
+
+      val outfiles = FileUtils.listFiles(dir, Array("dat"), true)
+      println("Number of file produced: " + outfiles.size())
+      assert(outfiles.size() > 1)
+      
+      outfiles.foreach(file => {
+        println("File " + file.getAbsolutePath)
+        val expected = if (file.getAbsolutePath.contains("Data-1-0"))
+          FileUtils.readFileToString(new File(location + "/bucket0json.expected"))
+        else if (file.getAbsolutePath.contains("Data-1-1"))
+          FileUtils.readFileToString(new File(location + "/bucket1json.expected"))
+        else ""
+        val actual = FileUtils.readFileToString(file)
+        assert(actual == expected)
+      })
+    }
+
+    it("should rollover file when RolloverInterval is given") {
+      
+      inputConfig.adapterSpecificCfg =
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"RolloverInterval\": \"10\"}"
+
+      val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
+      sfp.send(null, data)
+      Thread.sleep(15000)
+      sfp.send(null, data)
+      sfp.Shutdown()
+
+      val outfiles = FileUtils.listFiles(dir, Array("dat"), true)
+      println("Number of file produced: " + outfiles.size())
+      assert(outfiles.size() > 1)
+      
+      outfiles.foreach(file => {
+        println("File " + file.getAbsolutePath)
+        val actual = FileUtils.readFileToString(file)
+        val expected = FileUtils.readFileToString(new File(location + "/unpartionedjson.expected"))
+        assert(actual == expected)
+      })
+    }
+
   }
 
 }

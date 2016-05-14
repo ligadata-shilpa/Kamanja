@@ -24,7 +24,8 @@ import org.json4s.native.JsonMethods._
 
 class SmartFileProducerConfiguration extends AdapterConfiguration {
   var uri: String = null //folder to write files
-  var fileNamePrefix: String = "Data" // prefix for the file names
+  var fileNamePrefix: String = "" // prefix for the file names
+  var messageSeparator: String = "" // optional separator inserted between messages
   var compressionString: String = null // If it is null or empty we treat it as TEXT file
   var rolloverInterval: Int = 0 // in seconds. create new output file every rolloverInterval secs 
   var partitionFormat: String = null // folder structure for partitions
@@ -65,11 +66,13 @@ object SmartFileProducerConfiguration {
         adapterConfig.uri = kv._2.toString.trim
       } else if (kv._1.compareToIgnoreCase("FileNamePrefix") == 0) {
         adapterConfig.fileNamePrefix = kv._2.toString.trim
+      } else if (kv._1.compareToIgnoreCase("MessageSeparator") == 0) {
+        adapterConfig.messageSeparator = kv._2.toString
       } else if (kv._1.compareToIgnoreCase("Compression") == 0) {
         adapterConfig.compressionString = kv._2.toString.trim
       } else if (kv._1.compareToIgnoreCase("RolloverInterval") == 0) {
         adapterConfig.rolloverInterval = kv._2.toString.toInt
-      } else if (kv._1.compareToIgnoreCase("Partition") == 0) {
+      } else if (kv._1.compareToIgnoreCase("TimePartitionFormat") == 0) {
         adapterConfig.partitionFormat = kv._2.toString.trim
       } else if (kv._1.compareToIgnoreCase("PartitionBuckets") == 0) {
         adapterConfig.partitionBuckets = kv._2.toString.toInt
