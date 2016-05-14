@@ -276,7 +276,7 @@ class TestLocalFileProducer extends FunSpec with BeforeAndAfter with ShouldMatch
   
   after {
     println("After Test Deleting directory " + dir.getAbsolutePath)
-    //FileUtils.deleteDirectory(dir)
+    FileUtils.deleteDirectory(dir)
   }
 
   describe("Test Smart File Producer") {
@@ -323,7 +323,7 @@ class TestLocalFileProducer extends FunSpec with BeforeAndAfter with ShouldMatch
       assert(actual == expected)
     }
 
-    it("should produce a .gz file when Compression is gzip") {
+    it("should produce a .gz file when Compression is gz") {
       
       inputConfig.adapterSpecificCfg =
         "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"Compression\": \"gz\"}"

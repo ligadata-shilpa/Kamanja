@@ -23,6 +23,7 @@ import java.util.zip.{ ZipException, GZIPOutputStream }
 import java.nio.file.{ Paths, Files }
 import java.net.URI
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import com.ligadata.KamanjaBase.{ContainerInterface, TransactionContext, NodeContext}
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration.SmartFileProducerConfiguration
@@ -42,8 +43,28 @@ object SmartFileProducer extends OutputAdapterFactory {
 case class PartitionFile(key: String, name: String, outStream: OutputStream, var records: Long, var size: Long)
 
 class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeContext) extends OutputAdapter {
-  private[this] val _lock = new Object()
   private[this] val LOG = LogManager.getLogger(getClass);
+  
+  private val _reent_lock = new ReentrantReadWriteLock(true)
+  private def ReadLock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.readLock().lock()
+  }
+ 
+  private def ReadUnlock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.readLock().unlock()
+  }
+ 
+  private def WriteLock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.writeLock().lock()
+  }
+ 
+  private def WriteUnlock(reent_lock: ReentrantReadWriteLock): Unit = {
+    if (reent_lock != null)
+      reent_lock.writeLock().unlock()
+  }
 
   private[this] val fc = SmartFileProducerConfiguration.getAdapterConfig(inputConfig)
   private var ugi: UserGroupInformation = null
@@ -98,7 +119,8 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
         try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
 
         while (!shutDown) {
-          _lock.synchronized {
+          WriteLock(_reent_lock) 
+          try {
             for ((name, pf) <- partitionStreams) {
               if (pf != null) {
                 LOG.debug("Smart File Producer " + fc.Name + ": Rolling file at " + name)
@@ -112,6 +134,8 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
               }
             }
             partitionStreams.clear()
+          } finally {
+            WriteUnlock(_reent_lock)
           }
 
           try { Thread.sleep(fc.rolloverInterval * 1000) } catch { case e: Exception => {} }
@@ -215,22 +239,37 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     val path = key
     key = key + bucket
 
-    _lock.synchronized {
-      if (!partitionStreams.contains(key)) {
-        val fileName = "%s/%s/%s%s-%d-%d.dat%s".format(fc.uri, path, fc.fileNamePrefix, nodeId, bucket, System.currentTimeMillis(), extensions.getOrElse(fc.compressionString, ""))
-        var os = openFile(fileName)
-        if (compress)
-          os = new CompressorStreamFactory().createCompressorOutputStream(fc.compressionString, os)
+    ReadLock(_reent_lock)
+    if (!partitionStreams.contains(key)) {
+      //upgrade to write lock
+      ReadUnlock(_reent_lock)
+      WriteLock(_reent_lock)
+      try {
+        // need to check again to make sure other threads did not update
+        if (!partitionStreams.contains(key)) { // need to check again
+          val fileName = "%s/%s/%s%s-%d-%d.dat%s".format(fc.uri, path, fc.fileNamePrefix, nodeId, bucket, System.currentTimeMillis(), extensions.getOrElse(fc.compressionString, ""))
+          var os = openFile(fileName)
+          if (compress)
+            os = new CompressorStreamFactory().createCompressorOutputStream(fc.compressionString, os)
 
-        partitionStreams(key) = new PartitionFile(key, fileName, os, 0, 0)
+          partitionStreams(key) = new PartitionFile(key, fileName, os, 0, 0)
+          ReadLock(_reent_lock) // downgrade to original readlock
+        }
+      } finally {
+        WriteUnlock(_reent_lock) // release write lock
       }
-    
+    }
+
+    try {
       return partitionStreams(key)
+    } finally {
+      ReadUnlock(_reent_lock)
     }
   }
   
   private def reopenPartitionFile(pf: PartitionFile): PartitionFile = {
-    _lock.synchronized {
+    WriteLock(_reent_lock)
+    try {
       partitionStreams.remove(pf.key)
       var os = openFile(pf.name)
       if (compress)
@@ -239,6 +278,8 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
       partitionStreams(pf.key) = new PartitionFile(pf.key, pf.name, os, 0, 0)
 
       return partitionStreams(pf.key)
+    } finally {
+      WriteUnlock(_reent_lock)
     }
   }
   
@@ -274,7 +315,6 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
 
     if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
       LOG.error("Smart File Producer " + fc.Name + ": Messages, messages serialized data & serializer names should has same number of elements. Messages:%d, Messages Serialized data:%d, serializerNames:%d".format(outputContainers.size, serializedContainerData.size, serializerNames.size))
-      //TODO Need to record an error here... is this a job for the ERROR Q?
       return
     }
     if (serializedContainerData.size == 0) return
@@ -324,23 +364,28 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     }
   }
 
-  override def Shutdown(): Unit = _lock.synchronized {
-    shutDown = true
-    
-    if(fileRoller != null) {
-      fileRoller.interrupt
-      fileRoller = null
-    }
+  override def Shutdown(): Unit = {
+    WriteLock(_reent_lock)
+    try {
+      shutDown = true
 
-    for ((name, pf) <- partitionStreams) {
-      if (pf != null) {
-        LOG.debug("Smart File Producer " + fc.Name + ": closing file at " + name)
-        pf.synchronized {
-          pf.outStream.close
+      if (fileRoller != null) {
+        fileRoller.interrupt
+        fileRoller = null
+      }
+
+      for ((name, pf) <- partitionStreams) {
+        if (pf != null) {
+          LOG.debug("Smart File Producer " + fc.Name + ": closing file at " + name)
+          pf.synchronized {
+            pf.outStream.close
+          }
         }
       }
+      partitionStreams.clear()
+    } finally {
+      WriteUnlock(_reent_lock)
     }
-    partitionStreams.clear()
   }
 
 }
