@@ -432,10 +432,20 @@ trait MetadataAPIService extends HttpService {
   private def processDeleteRequest(objtype: String, objKey: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
     val action = "Remove" + objtype
     val notes = "Invoked " + action + " API "
-    var argParm: String = verifyInput(objKey, objtype, rContext)
+    var argParm: String = null
+    if (!objtype.equalsIgnoreCase("Config") &&
+        !objtype.equalsIgnoreCase("AdapterMessageBinding"))
+      argParm = verifyInput(objKey, objtype, rContext)
+    else
+      argParm = objKey
+
     if (argParm == null) return
 
-    if (objtype.equalsIgnoreCase("Container") || objtype.equalsIgnoreCase("Model") || objtype.equalsIgnoreCase("Message") ||
+    if (objtype.equalsIgnoreCase("AdapterMessageBinding")) {
+      val removeObjectsService = actorRefFactory.actorOf(Props(new RemoveAdapterMsgBindingsService(rContext, userid, password, role)))
+      removeObjectsService ! RemoveAdapterMsgBindingsService.Process(argParm)
+    }
+    else if (objtype.equalsIgnoreCase("Container") || objtype.equalsIgnoreCase("Model") || objtype.equalsIgnoreCase("Message") ||
       objtype.equalsIgnoreCase("Function") || objtype.equalsIgnoreCase("Concept") || objtype.equalsIgnoreCase("Type") || objtype.equalsIgnoreCase("OutputMsg")) {
       val removeObjectsService = actorRefFactory.actorOf(Props(new RemoveObjectsService(rContext, userid, password, role)))
       removeObjectsService ! RemoveObjectsService.Process(argParm)
