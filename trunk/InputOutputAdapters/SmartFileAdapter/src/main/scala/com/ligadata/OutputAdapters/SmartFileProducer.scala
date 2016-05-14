@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.zip.{ ZipException, GZIPOutputStream }
 import java.nio.file.{ Paths, Files }
 import java.net.URI
+import java.util.concurrent.atomic.AtomicLong
 import com.ligadata.KamanjaBase.{ContainerInterface, TransactionContext, NodeContext}
 import com.ligadata.InputOutputAdapterInfo._
 import com.ligadata.AdaptersConfiguration.SmartFileProducerConfiguration
@@ -38,13 +39,15 @@ object SmartFileProducer extends OutputAdapterFactory {
   def CreateOutputAdapter(inputConfig: AdapterConfiguration, nodeContext: NodeContext): OutputAdapter = new SmartFileProducer(inputConfig, nodeContext)
 }
 
+case class PartitionFile(key: String, name: String, outStream: OutputStream, var records: Long, var size: Long)
+
 class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: NodeContext) extends OutputAdapter {
   private[this] val _lock = new Object()
   private[this] val LOG = LogManager.getLogger(getClass);
 
   private[this] val fc = SmartFileProducerConfiguration.getAdapterConfig(inputConfig)
   private var ugi: UserGroupInformation = null
-  private var partitionStreams: collection.mutable.Map[String,OutputStream] = collection.mutable.Map[String,OutputStream]()
+  private var partitionStreams: collection.mutable.Map[String, PartitionFile] = collection.mutable.Map[String,PartitionFile]()
   private var extensions: scala.collection.immutable.Map[String, String] = Map(
       (CompressorStreamFactory.BZIP2, ".bz2"),
       (CompressorStreamFactory.GZIP, ".gz"),
@@ -59,6 +62,7 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
   private var startTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
   private var lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
   private var metrics: scala.collection.mutable.Map[String, Any] = scala.collection.mutable.Map[String, Any]()
+  metrics("MessagesProcessed") = new AtomicLong(0)
 
   if(fc.uri.startsWith("file://"))
     fc.uri = fc.uri.substring("file://".length()-1)
@@ -95,11 +99,13 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
 
         while (!shutDown) {
           _lock.synchronized {
-            for ((name, os) <- partitionStreams) {
-              if (os != null) {
+            for ((name, pf) <- partitionStreams) {
+              if (pf != null) {
                 LOG.debug("Smart File Producer " + fc.Name + ": Rolling file at " + name)
                 try {
-                  os.close
+                  pf.synchronized {
+                    pf.outStream.close
+                  }
                 } catch {
                   case e: Exception => LOG.debug("Smart File Producer " + fc.Name + ": Error closing file: ", e)
                 }
@@ -191,7 +197,7 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
     ""
   }
 
-  private def getOutputStream(record: ContainerInterface) : OutputStream = {
+  private def getPartionFile(record: ContainerInterface) : PartitionFile = {
     var key = record.getTypeName();
     val dateTime = record.getTimePartitionData()
     
@@ -216,20 +222,35 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
         if (compress)
           os = new CompressorStreamFactory().createCompressorOutputStream(fc.compressionString, os)
 
-        partitionStreams(key) = os
+        partitionStreams(key) = new PartitionFile(key, fileName, os, 0, 0)
       }
     
       return partitionStreams(key)
     }
   }
   
+  private def reopenPartitionFile(pf: PartitionFile): PartitionFile = {
+    _lock.synchronized {
+      partitionStreams.remove(pf.key)
+      var os = openFile(pf.name)
+      if (compress)
+        os = new CompressorStreamFactory().createCompressorOutputStream(fc.compressionString, os)
+
+      partitionStreams(pf.key) = new PartitionFile(pf.key, pf.name, os, 0, 0)
+
+      return partitionStreams(pf.key)
+    }
+  }
+  
   private def writeToFs(os: OutputStream, message: Array[Byte]) = {
     os.write(message);
+    os.flush()
   }
 
   private def writeToHdfs(os: OutputStream, message: Array[Byte]) = {
     try {
       os.write(message);
+      os.flush()
     } catch {
       case e: Exception => {
         if (fc.kerberos != null) {
@@ -246,6 +267,9 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
   override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
     if (outputContainers.size == 0) return
 
+    lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
+    metrics("MessagesProcessed").asInstanceOf[AtomicLong].incrementAndGet()
+    
     val (outContainers, serializedContainerData, serializerNames) = serialize(tnxCtxt, outputContainers)
 
     if (outputContainers.size != serializedContainerData.size || outputContainers.size != serializerNames.size) {
@@ -260,20 +284,26 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
       (serializedContainerData, outputContainers).zipped.foreach((message, record) => {
         var isSuccess = false
         numOfRetries = 0
+        var pf = getPartionFile(record);
         while (!isSuccess) {
           try {
-            val os = getOutputStream(record);
-            os.synchronized {
-              write(os, message)
+            pf.synchronized {
+              val data = message++fc.messageSeparator.getBytes
+              write(pf.outStream, data)
+              pf.records += 1
+              pf.size += data.length
             }
             isSuccess = true
             LOG.debug("finished writing message")
           } catch {
             case fio: IOException => {
-              LOG.warn("Smart File Producer " + fc.Name + ": Unable to write to file " + fc.uri)
-              if (numOfRetries >= MAX_RETRIES) {
-                LOG.error("Smart File Producer " + fc.Name + ": Unable to create a file destination after " + MAX_RETRIES + " tries.  Aborting.", fio)
-                throw FatalAdapterException("Unable to open connection to specified file after " + MAX_RETRIES + " retries", fio)
+              LOG.warn("Smart File Producer " + fc.Name + ": Unable to write to file " + pf.name)
+              if (numOfRetries == MAX_RETRIES) {
+                LOG.warn("Smart File Producer " + fc.Name + ": Unable to write to file destination after " + MAX_RETRIES + " tries.  Trying to reopen file " + pf.name, fio)
+                pf = reopenPartitionFile(pf)              
+              } else if (numOfRetries > MAX_RETRIES) {
+                LOG.error("Smart File Producer " + fc.Name + ": Unable to write to file destination after " + MAX_RETRIES + " tries.  Aborting.", fio)
+                throw FatalAdapterException("Unable to write to specified file after " + MAX_RETRIES + " retries", fio)
               }
               numOfRetries += 1
               LOG.warn("Smart File Producer " + fc.Name + ": Retyring " + numOfRetries + "/" + MAX_RETRIES)
@@ -301,11 +331,13 @@ class SmartFileProducer(val inputConfig: AdapterConfiguration, val nodeContext: 
       fileRoller.interrupt
       fileRoller = null
     }
-  
-    for ( (name, os) <- partitionStreams ) {
-      if (os != null) {
+
+    for ((name, pf) <- partitionStreams) {
+      if (pf != null) {
         LOG.debug("Smart File Producer " + fc.Name + ": closing file at " + name)
-        os.close
+        pf.synchronized {
+          pf.outStream.close
+        }
       }
     }
     partitionStreams.clear()

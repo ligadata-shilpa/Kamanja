@@ -306,7 +306,7 @@ class TestLocalFileProducer extends FunSpec with BeforeAndAfter with ShouldMatch
     it("should produce a text file with json output") {
       
       inputConfig.adapterSpecificCfg =
-        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\"}"
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"MessageSeparator\": \"\\n\"}"
 
       val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
       sfp.send(null, data)
@@ -436,7 +436,7 @@ class TestLocalFileProducer extends FunSpec with BeforeAndAfter with ShouldMatch
     it("should rollover file when RolloverInterval is given") {
       
       inputConfig.adapterSpecificCfg =
-        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"RolloverInterval\": \"10\"}"
+        "{\"Uri\": \"file://" + location + "\",\"FileNamePrefix\": \"Data-\", \"MessageSeparator\": \"\\n\", \"RolloverInterval\": \"10\"}"
 
       val sfp = new SmartFileProducer(inputConfig, null) with JsonDefaultSerializerDeserializer
       sfp.send(null, data)
