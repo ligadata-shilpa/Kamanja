@@ -194,13 +194,6 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
     throw CreateConnectionException("Unable to find jarpaths in adapterConfig ", new Exception("Invalid adapterConfig"))
   }
 
-  var jdbcJar: String = null;
-  if (parsed_json.contains("jdbcJar")) {
-    jdbcJar = parsed_json.get("jdbcJar").get.toString.trim
-  } else {
-    throw CreateConnectionException("Unable to find jdbcJar in adapterConfig ", new Exception("Invalid adapterConfig"))
-  }
-
   // The following three properties are used for connection pooling
   var maxActiveConnections = 1000
   if (parsed_json.contains("maxActiveConnections")) {
@@ -236,7 +229,6 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   logger.info("username => " + user)
   logger.info("SchemaName => " + SchemaName)
   logger.info("jarpaths => " + jarpaths)
-  logger.info("jdbcJar  => " + jdbcJar)
   logger.info("clusterdIndex  => " + clusteredIndex)
   logger.info("autoCreateTables  => " + autoCreateTables)
 
@@ -249,11 +241,19 @@ class SqlServerAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConf
   }
 
   var jdbcUrl = "jdbc:sqlserver://" + sqlServerInstance + ";databaseName=" + database + ";user=" + user + ";password=" + password
-
+  
   var jars = new Array[String](0)
-  var jar = jarpaths + "/" + jdbcJar
-  jars = jars :+ jar
-
+  val f = new File(jarpaths)
+  val these = f.listFiles
+  
+  val jar = these.filter{ f =>
+	""".*\.jar$""".r.findFirstIn(f.getName).isDefined
+  }
+  
+  jar.foreach(f=>
+	jars=jars :+ f.getAbsolutePath
+  )
+	
   val driverType = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
   try {
     logger.info("Loading the Driver..")
