@@ -1752,18 +1752,18 @@ object MessageAndContainerUtils {
         case None =>
           None
           logger.debug("message/container not found => " + schemaId)
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + schemaId)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, ErrorCodeConstants.Get_Type_By_SchemaId_Failed + ":" + schemaId)
           apiResult.toString()
         case Some(m) =>
           logger.debug("message/container found => " + m.asInstanceOf[ContainerDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ContainerDef].Version))
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeBySchemaId", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Container_From_Cache_Successful)
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeBySchemaId", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Type_By_SchemaId_Successful)
           apiResult.toString()
       }
     } catch {
       case e: Exception => {
 
         logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + schemaId.toString)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Type_By_SchemaId_Failed + ":" + schemaId.toString)
         apiResult.toString()
       }
     }
@@ -1777,18 +1777,18 @@ object MessageAndContainerUtils {
         case None =>
           None
           logger.debug("message/container/model not found => " + elementId)
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + elementId)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, ErrorCodeConstants.Get_Type_By_ElementId_Failed + ":" + elementId)
           apiResult.toString()
         case Some(m) =>
           logger.debug("message/container/model found => " + m.asInstanceOf[BaseElem].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[BaseElem].Version))
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeByElementId", "", ErrorCodeConstants.Get_Container_From_Cache_Successful)
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeByElementId", "", ErrorCodeConstants.Get_Type_By_ElementId_Successful)
           apiResult.toString()
       }
     } catch {
       case e: Exception => {
 
         logger.debug("", e)
-        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + elementId.toString)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Type_By_ElementId_Failed + ":" + elementId.toString)
         apiResult.toString()
       }
     }

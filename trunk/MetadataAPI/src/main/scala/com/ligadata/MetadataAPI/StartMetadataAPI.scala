@@ -294,6 +294,7 @@ object StartMetadataAPI {
     }
     catch {
       case e: NoSuchElementException => {
+        println("action trim"+action.trim());
         logger.error("Route not found",e.getMessage)
         /** preserve the original response ... */
         response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
@@ -574,7 +575,8 @@ object StartMetadataAPI {
                 }
             }
           }
-        }
+        
+        
 
         case Action.LISTADAPTERMESSAGEBINDINGS => {
             val adapterfilter: String = extraCmdArgs.getOrElse(ADAPTERFILTER, "")
