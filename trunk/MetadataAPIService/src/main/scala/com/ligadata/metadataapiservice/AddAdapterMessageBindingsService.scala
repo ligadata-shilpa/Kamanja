@@ -49,7 +49,7 @@ class AddAdapterMessageBindingsService(requestContext: RequestContext, userid:Op
   val logger = LogManager.getLogger(loggerName)
   // logger.setLevel(Level.TRACE);
 
-  val APIName = "GetAdapterMessageBindigsService"
+  val APIName = "AddAdapterMessageBindigsService"
 
   def addAdapterMessageBindingObjects(source: String): String = {
 
@@ -58,25 +58,34 @@ class AddAdapterMessageBindingsService(requestContext: RequestContext, userid:Op
     val isMap : Boolean = trimmedInput.startsWith("{")
     val isList : Boolean = trimmedInput.startsWith("[")
 
-    val reasonable : Boolean = isMap || isList
-    if (! reasonable) {
-      throw InvalidArgumentException("the adapter string specified must be either a json map or json array.", null)
-    }
-    val result : String = if (isMap) {
-      val bindingSpec : scala.collection.immutable.Map[String,Any] = jsonStringAsColl(trimmedInput).asInstanceOf[scala.collection.immutable.Map[String,Any]]
-      val mutableBindingSpec : Map[String,Any] = Map[String,Any]()
-      bindingSpec.foreach(pair => mutableBindingSpec(pair._1) = pair._2)
-      AdapterMessageBindingUtils.AddAdapterMessageBinding(mutableBindingSpec, userid)
-    } else {
-      val bindingSpecList : List[scala.collection.immutable.Map[String,Any]] = jsonStringAsColl(trimmedInput).asInstanceOf[List[scala.collection.immutable.Map[String,Any]]]
-      val mutableMapsList : List[Map[String,Any]] = bindingSpecList.map(aMap => {
+    try {
+      val reasonable : Boolean = isMap || isList
+      if (! reasonable) {
+        throw InvalidArgumentException("the adapter string specified must be either a json map or json array.", null)
+      }
+      val result : String = if (isMap) {
+        val bindingSpec : scala.collection.immutable.Map[String,Any] = jsonStringAsColl(trimmedInput).asInstanceOf[scala.collection.immutable.Map[String,Any]]
         val mutableBindingSpec : Map[String,Any] = Map[String,Any]()
-        aMap.foreach(pair => mutableBindingSpec(pair._1) = pair._2)
-        mutableBindingSpec
-      })
-      AdapterMessageBindingUtils.AddAdapterMessageBinding(mutableMapsList, userid)
+        bindingSpec.foreach(pair => mutableBindingSpec(pair._1) = pair._2)
+        AdapterMessageBindingUtils.AddAdapterMessageBinding(mutableBindingSpec, userid)
+      } else {
+        val bindingSpecList : List[scala.collection.immutable.Map[String,Any]] = jsonStringAsColl(trimmedInput).asInstanceOf[List[scala.collection.immutable.Map[String,Any]]]
+        val mutableMapsList : List[Map[String,Any]] = bindingSpecList.map(aMap => {
+          val mutableBindingSpec : Map[String,Any] = Map[String,Any]()
+          aMap.foreach(pair => mutableBindingSpec(pair._1) = pair._2)
+          mutableBindingSpec
+        })
+        AdapterMessageBindingUtils.AddAdapterMessageBinding(mutableMapsList, userid)
+      }
+      return result
+    } catch {
+      case e: Exception => {
+        return (new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: Unable to add adapter " + e.getMessage).toString)
+      }
+      case e: Throwable => {
+        return (new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: Unable to add adapter " + e.getMessage).toString)
+      }
     }
-    result
   }
 
 
