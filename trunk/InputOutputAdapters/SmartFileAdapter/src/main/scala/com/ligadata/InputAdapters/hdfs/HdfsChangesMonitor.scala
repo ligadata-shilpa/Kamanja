@@ -258,6 +258,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
   private var monitoringConf :  FileAdapterMonitoringConfig = null
   private var monitorsExecutorService: ExecutorService = null
   private var hdfsConfig : Configuration = null
+  private val filesStatusMap = Map[String, HdfsFileEntry]()
 
   def init(adapterSpecificCfgJson: String): Unit ={
     val(_type, c, m) =  SmartFileAdapterConfiguration.parseSmartFileAdapterSpecificConfig(adapterName, adapterSpecificCfgJson)
@@ -277,6 +278,11 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
     }
 
     hdfsConfig = HdfsUtility.createConfig(connectionConf)
+  }
+
+  def markFileAsProcessed(filePath : String) : Unit = {
+    logger.info("Smart File Consumer (SFTP Monitor) - removing file {} from map {} as it is processed", filePath, filesStatusMap)
+    filesStatusMap.remove(filePath)
   }
 
   def shutdown: Unit ={
@@ -314,7 +320,6 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
         override def run() = {
 
-          val filesStatusMap = Map[String, HdfsFileEntry]()
           var firstCheck = true
 
           while (isMonitoring) {
@@ -334,7 +339,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
                 modifiedDirs.remove(0)
                 val fs = FileSystem.get(hdfsConfig)
-                findDirModifiedDirectChilds(aFolder, fs, filesStatusMap, modifiedDirs, modifiedFiles, firstCheck)
+                findDirModifiedDirectChilds(aFolder, fs, modifiedDirs, modifiedFiles, firstCheck)
 
                 //logger.debug("Closing Hd File System object fs in monitorDirChanges()")
                 //fs.close()
@@ -379,7 +384,7 @@ class HdfsChangesMonitor (adapterName : String, modifiedFileCallback:(SmartFileH
 
   }
 
-  private def findDirModifiedDirectChilds(parentfolder : String, hdFileSystem : FileSystem, filesStatusMap : Map[String, HdfsFileEntry],
+  private def findDirModifiedDirectChilds(parentfolder : String, hdFileSystem : FileSystem,
                                           modifiedDirs : ArrayBuffer[String], modifiedFiles : Map[SmartFileHandler, FileChangeType], isFirstCheck : Boolean){
     logger.info("checking folder with full path: " + parentfolder)
 

@@ -56,6 +56,12 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
       throw new KamanjaException("Smart File Consumer - Target Dir " + adapterConfig.monitoringConfig.targetMoveDir + " is not accessible. It must be readable and writable", null)
   }
 
+  def markFileAsProcessed(filePath : String) : Unit = {
+    if(smartFileMonitor != null){
+      smartFileMonitor.markFileAsProcessed(filePath)
+    }
+  }
+
   def startMonitoring(): Unit ={
     smartFileMonitor = SmartFileMonitorFactory.createSmartFileMonitor(adapterConfig.Name, adapterConfig._type, fileDetectedCallback)
     smartFileMonitor.init(adapterConfig.adapterSpecificCfg)

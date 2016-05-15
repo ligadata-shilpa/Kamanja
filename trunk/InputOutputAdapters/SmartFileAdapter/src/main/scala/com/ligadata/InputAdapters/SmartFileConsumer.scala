@@ -728,27 +728,28 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         val processingFilePath = valueTokens(0)
         val status = valueTokens(1)
         //if (status == File_Processing_Status_Finished) {
-          LOG.info("Smart File Consumer (Leader) - File ({}) processing finished", processingFilePath)
+        LOG.info("Smart File Consumer (Leader) - File ({}) processing finished", processingFilePath)
 
-          val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
+        val correspondingRequestFileKeyPath = requestFilePath + "/" + processingNodeId //e.g. SmartFileCommunication/ToLeader/ProcessedFile/<nodeid>
 
-          //remove the file from processing queue
-          var processingQueue = getFileProcessingQueue
-          val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + ":" + processingFilePath
-          LOG.debug("Smart File Consumer (Leader) - removing from processing queue: "+ valueInProcessingQueue)
-          processingQueue = processingQueue diff List(valueInProcessingQueue)
-          if(!isShutdown)
-            saveFileProcessingQueue(processingQueue)
+        //remove the file from processing queue
+        var processingQueue = getFileProcessingQueue
+        val valueInProcessingQueue = processingNodeId + "/" + processingThreadId + ":" + processingFilePath
+        LOG.debug("Smart File Consumer (Leader) - removing from processing queue: "+ valueInProcessingQueue)
+        processingQueue = processingQueue diff List(valueInProcessingQueue)
+        if(!isShutdown)
+          saveFileProcessingQueue(processingQueue)
 
-          //since a file just got finished, a new one can be processed
-          assignFileProcessingIfPossible()
+        //since a file just got finished, a new one can be processed
+        assignFileProcessingIfPossible()
 
-          if(status == File_Processing_Status_Finished || statusUpdateInterval == File_Processing_Status_Corrupted)
-            moveFile(processingFilePath)
-        //}
-        //else {
-        //}
-
+        if(status == File_Processing_Status_Finished || status == File_Processing_Status_Corrupted) {
+          val moved = moveFile(processingFilePath)
+          if(moved)
+            monitorController.markFileAsProcessed(processingFilePath)
+        }
+        else if(status == File_Processing_Status_NotFound)
+          monitorController.markFileAsProcessed(processingFilePath)
       }
     }
   }
@@ -917,22 +918,30 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   }
 
   //after a file is changed, move it into targetMoveDir
-  private def moveFile(originalFilePath : String): Unit = {
+  private def moveFile(originalFilePath : String): Boolean = {
     val targetMoveDir = adapterConfig.monitoringConfig.targetMoveDir
     val fileStruct = originalFilePath.split("/")
     try {
       val fileHandler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, originalFilePath)
       LOG.info("SMART FILE CONSUMER Moving File" + originalFilePath + " to " + targetMoveDir)
       if (fileHandler.exists()) {
-        fileHandler.moveTo(targetMoveDir + "/" + fileStruct(fileStruct.size - 1))
+        return fileHandler.moveTo(targetMoveDir + "/" + fileStruct(fileStruct.size - 1))
         //fileCacheRemove(fileHandler.getFullPath)
       } else {
         LOG.warn("SMART FILE CONSUMER File has been deleted " + originalFilePath);
+        return true
       }
     }
     catch{
-      case e : Exception => LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
-      case e : Throwable => LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+      case e : Exception => {
+        LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+        return false
+      }
+      case e : Throwable => {
+        LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+        return  false
+      }
+
     }
   }
   //******************************************************************************************************

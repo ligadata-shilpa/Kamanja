@@ -212,6 +212,13 @@ class PosixChangesMonitor(adapterName : String, modifiedFileCallback:(SmartFileH
     monitoringConf = m
   }
 
+  def markFileAsProcessed(filePath : String) : Unit = {
+    fileCacheLock.synchronized {
+      logger.info("Smart File Consumer (Posix Monitor) - removing file {} from map {} as it is processed", filePath, fileCache)
+      fileCache -= filePath
+    }
+  }
+
   def monitor: Unit ={
 
     logger.info("Posix Changes Monitor - start monitoring")
