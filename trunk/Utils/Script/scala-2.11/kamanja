@@ -79,7 +79,7 @@ fi
 if [ "$INPUT" = "start webservice" ]; then
 echo "Starting web service . . . ."
 
-java -cp $KAMANJA_HOME/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$KAMANJA_HOME/lib/system/metadataapiservice_2.11-1.4.0.jar com.ligadata.metadataapiservice.APIService
+java -Dlog4j.configurationFile=file:$KAMANJA_HOME/config/log4j2.xml -cp $KAMANJA_HOME/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar:$KAMANJA_HOME/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:$KAMANJA_HOME/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:$KAMANJA_HOME/lib/system/metadataapiservice_2.11-1.4.0.jar com.ligadata.metadataapiservice.APIService
 elif [ "$INPUT" = "start -v" ]; then
    $KAMANJA_HOME/bin/StartEngine.sh
 
