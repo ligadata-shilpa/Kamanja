@@ -47,13 +47,17 @@ class MonitorController(adapterConfig : SmartFileAdapterConfiguration,
   def checkConfigDirsAccessibility(): Unit ={
     adapterConfig.monitoringConfig.locations.foreach(dir => {
       val handler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, dir)
-      if(!handler.isAccessible)
-        throw new KamanjaException("Smart File Consumer - Dir to watch " + dir + " is not accessible. It must be readable and writable", null)
+      if(!handler.exists())
+        throw new KamanjaException("Smart File Consumer - Dir to watch (" + dir + ") does not exist", null)
+      else if(!handler.isAccessible)
+        throw new KamanjaException("Smart File Consumer - Dir to watch (" + dir + ") is not accessible. It must be readable and writable", null)
     })
 
     val handler = SmartFileHandlerFactory.createSmartFileHandler(adapterConfig, adapterConfig.monitoringConfig.targetMoveDir)
-    if(!handler.isAccessible)
-      throw new KamanjaException("Smart File Consumer - Target Dir " + adapterConfig.monitoringConfig.targetMoveDir + " is not accessible. It must be readable and writable", null)
+    if(!handler.exists())
+      throw new KamanjaException("Smart File Consumer - Target Dir (" + adapterConfig.monitoringConfig.targetMoveDir + ") does not exist", null)
+    else if(!handler.isAccessible)
+      throw new KamanjaException("Smart File Consumer - Target Dir (" + adapterConfig.monitoringConfig.targetMoveDir + ") is not accessible. It must be readable and writable", null)
   }
 
   def markFileAsProcessed(filePath : String) : Unit = {
