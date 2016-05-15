@@ -671,6 +671,12 @@ object ModelUtils {
       // make sure the version of the model is greater than any of previous models with same FullName
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+      // 1119 Changes begin - checks model existence before add to prevent
+      if (modDef != null || DoesModelAlreadyExist(modDef) == true) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"KPMML model exists, perform update on model")).toString
+
+      }
+      // 1119 Changes end
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
@@ -788,6 +794,12 @@ object ModelUtils {
       // make sure the version of the model is greater than any of previous models with same FullName
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+      // 1119 Changes begin - checks model existence before add to prevent
+      if (modDef != null || DoesModelAlreadyExist(modDef) == true) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"JTM model exists, perform update on model")).toString
+
+      }
+      // 1119 Changes end
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
@@ -1231,6 +1243,7 @@ object ModelUtils {
         } else {
           null
         }
+
         /** look up the message referred to by the inputMsgSets first element... the message only has namespace and name*/
         val nameparts : Array[String] = if (currentMsg.contains(".")) currentMsg.split('.') else Array[String]("system",currentMsg)
         val msgnamespace : String = nameparts.dropRight(1).mkString(".")
@@ -1420,8 +1433,14 @@ object ModelUtils {
         */
 
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
-      val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+      // 1118 Changes begin - checks model existence before update
+      if (modDef == null || DoesModelAlreadyExist(modDef) == false) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "UpdateCustomModel", null, s"$modelType model must exist to perform update")).toString
 
+      }
+      // 1118 Changes end
+      val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+      //if (latestVersion )
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
@@ -1515,6 +1534,12 @@ object ModelUtils {
         */
 
       val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
+      // 1118 Changes begin - checks model existence before update
+      if (modDef == null || DoesModelAlreadyExist(modDef) == false) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "UpdateKPMMLModel", null, s"KPMML model must exist to perform update")).toString
+
+      }
+      // 1118 Changes end
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
@@ -1622,6 +1647,12 @@ object ModelUtils {
         */
 
       val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
+
+      // 1118 Changes begin - checks model existence before update
+      if (modDef == null || DoesModelAlreadyExist(modDef) == false) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "UpdateJTMModel", null, s"JTM model must exist to perform update")).toString
+      }
+      // 1118 Changes end
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)

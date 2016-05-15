@@ -277,6 +277,11 @@ object MessageAndContainerUtils {
             val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, ErrorCodeConstants.Update_Message_Failed + ":" + msg.Name + " Error:Invalid Version")
             apiResult.toString()
           }
+          if (DoesMessageAlreadyExist(msg) == true) {
+            val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddMessage", null, ErrorCodeConstants.Add_Message_Failed + ":" + msg.Name + " Already Exists")
+            apiResult.toString()
+
+          }
 
           if (recompile) {
             // Incase of recompile, Message Compiler is automatically incrementing the previous version
@@ -311,6 +316,10 @@ object MessageAndContainerUtils {
             val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, ErrorCodeConstants.Update_Message_Failed + ":" + cont.Name + " Error:Invalid Version")
             apiResult.toString()
           }
+          if (DoesContainerAlreadyExist(cont) == true) {
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddContainer", null, ErrorCodeConstants.Add_Container_Failed + ":" + cont.Name + " Container exists")
+            apiResult.toString()
+            }
 
           if (recompile) {
             // Incase of recompile, Message Compiler is automatically incrementing the previous version
@@ -451,6 +460,12 @@ object MessageAndContainerUtils {
           if (latestVersion != None) {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
+          // 1118 - Changes begin - Message must exist for update to happen
+          else {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Message/Container must exist to update")).toString
+
+          }
+          // 1118 - Changes end
           if (isValid) {
             // Check to make sure the TenantId is the same
             if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
