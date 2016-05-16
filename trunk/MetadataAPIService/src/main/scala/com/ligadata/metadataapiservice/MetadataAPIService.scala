@@ -39,6 +39,7 @@ trait MetadataAPIService extends HttpService {
 
   APIInit.Init
   val KEY_TOKN = "keys"
+  val ADAPTER_MSG_BINDING = "adaptermessagebinding"
   val AUDIT_LOG_TOKN = "audit_log"
   val LEADER_TOKN = "leader"
   val APIName = "MetadataAPIService"
@@ -67,25 +68,33 @@ trait MetadataAPIService extends HttpService {
                         val toknRoute = str.split("/")
                         logger.debug("GET reqeust : api/" + str)
 
-                        if (!isUrlSuffix(str)) {
-                          requestContext => requestContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Unknown GET route")).toString)
-                        } else if (toknRoute.size == 1) {
-                          if (toknRoute(0).equalsIgnoreCase(AUDIT_LOG_TOKN)) {
-                            requestContext => processGetAuditLogRequest(null, requestContext, user, password, role)
-                          } else if (toknRoute(0).equalsIgnoreCase(LEADER_TOKN)) {
-                            requestContext => processGetLeaderRequest(null, requestContext, user, password, role)
-                          } else {
-                            requestContext => processGetObjectRequest(toknRoute(0), "", requestContext, user, password, role)
-                          }
-                        } else if (toknRoute(0).equalsIgnoreCase(KEY_TOKN)) {
-                          requestContext => processGetKeysRequest(toknRoute(1).toLowerCase, requestContext, user, password, role)
-                        } else if (toknRoute(0).equalsIgnoreCase(AUDIT_LOG_TOKN)) {
-                          // strip the first token and send the rest
-                          val filterParameters = toknRoute.slice(1, toknRoute.size)
-                          requestContext => processGetAuditLogRequest(filterParameters, requestContext, user, password, role)
-                        } else {
-                          requestContext => processGetObjectRequest(toknRoute(0).toLowerCase, toknRoute(1).toLowerCase, requestContext, user, password, role)
-                        }
+		                if (!isUrlSuffix(str)) {
+		                  requestContext => requestContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Unknown GET route")).toString)
+		                } else if (toknRoute.size == 1) {
+		                  if (toknRoute(0).equalsIgnoreCase(AUDIT_LOG_TOKN)) {
+		                    requestContext => processGetAuditLogRequest(null, requestContext, user, password, role)
+		                  }
+		                  else if (toknRoute(0).equalsIgnoreCase(LEADER_TOKN)) {
+		                    requestContext => processGetLeaderRequest(null, requestContext, user, password, role)
+		                  }
+		                  else {
+		                    requestContext => processGetObjectRequest(toknRoute(0), "", requestContext, user, password, role)
+		                  }
+		                }
+		                else if (toknRoute(0).equalsIgnoreCase(KEY_TOKN)) {
+		                  requestContext => processGetKeysRequest(toknRoute(1).toLowerCase, requestContext, user, password, role)
+		                }
+		                else if (toknRoute(0).equalsIgnoreCase(AUDIT_LOG_TOKN)) {
+		                  // strip the first token and send the rest
+		                  val filterParameters = toknRoute.slice(1, toknRoute.size)
+		                  requestContext => processGetAuditLogRequest(filterParameters, requestContext, user, password, role)
+		                }
+		                else if (toknRoute(0).equalsIgnoreCase(ADAPTER_MSG_BINDING)) {
+		                  requestContext => processGetAdapterMessageBindingObjectRequest(toknRoute(1).toLowerCase, toknRoute(2).toLowerCase, requestContext, user, password, role)
+		                }
+		                else {
+		                  requestContext => processGetObjectRequest(toknRoute(0).toLowerCase, toknRoute(1).toLowerCase, requestContext, user, password, role)
+		             	}
                       }
                     }
                   } ~
@@ -211,7 +220,10 @@ trait MetadataAPIService extends HttpService {
   private def processPutRequest(objtype: String, body: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String], modelcompileinfo: Option[String], tid: Option[String]): Unit = {
     val action = "Update" + objtype
     val notes = "Invoked " + action + " API "
-    if (objtype.equalsIgnoreCase("Container")) {
+    if (objtype.equalsIgnoreCase("AdapterMessageBinding")) {
+      // Not Supported yet
+      rContext.complete((new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Operatin not supported")).toString)
+    } else if (objtype.equalsIgnoreCase("Container")) {
       val updateContainerDefsService = actorRefFactory.actorOf(Props(new UpdateContainerService(rContext, userid, password, role, tid)))
       updateContainerDefsService ! UpdateContainerService.Process(body)
     } else if (objtype.equalsIgnoreCase("Model")) {
@@ -290,7 +302,11 @@ trait MetadataAPIService extends HttpService {
   private def processPostRequest(objtype: String, body: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String], modelcompileinfo: Option[String], tenantId: Option[String]): Unit = {
     val action = "Add" + objtype
     val notes = "Invoked " + action + " API "
-    if (objtype.equalsIgnoreCase("Container")) {
+
+    if (objtype.equalsIgnoreCase("AdapterMessageBinding")) {
+      val addAdapterMsgBindingsService = actorRefFactory.actorOf(Props(new AddAdapterMessageBindingsService(rContext, userid, password, role)))
+      addAdapterMsgBindingsService ! AddAdapterMessageBindingsService.Process(body)
+    } else if (objtype.equalsIgnoreCase("Container")) {
       val addContainerDefsService = actorRefFactory.actorOf(Props(new AddContainerService(rContext, userid, password, role, tenantId)))
       addContainerDefsService ! AddContainerService.Process(body)
     } else if (objtype.equalsIgnoreCase("Model")) {
@@ -328,7 +344,7 @@ trait MetadataAPIService extends HttpService {
       // rContext.complete(new ApiResult(ErrorCodeConstants.Success, "AddModelFromScalaSource",body.toString, "Upload of java model successful").toString)
       val addSourceModelService: ActorRef = actorRefFactory.actorOf(Props(new AddSourceModelService(rContext, userid, password, role, modelcompileinfo, tenantId)))
       addSourceModelService ! AddSourceModelService.ProcessScala(body)
-    } else if (objtype.equalsIgnoreCase("modelkpmml")) {
+    else if (objtype.equalsIgnoreCase("modelkpmml")) {
       val addModelService: ActorRef = actorRefFactory.actorOf(Props(new AddModelService(rContext, userid, password, role, None, tenantId)))
       addModelService ! AddModelService.Process(body)
     } else if (objtype.equalsIgnoreCase("modelpmml")) {
@@ -361,7 +377,7 @@ trait MetadataAPIService extends HttpService {
 
   private def processGetKeysRequest(objtype: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
     if (objtype.equalsIgnoreCase("Container") || objtype.equalsIgnoreCase("Model") || objtype.equalsIgnoreCase("Message") || objtype.equalsIgnoreCase("Function") ||
-      objtype.equalsIgnoreCase("Concept") || objtype.equalsIgnoreCase("Type") || objtype.equalsIgnoreCase("OutputMsg")) {
+      objtype.equalsIgnoreCase("Concept") || objtype.equalsIgnoreCase("Type") || objtype.equalsIgnoreCase("OutputMsg") || objtype.equalsIgnoreCase("adaptermessagebinding")) {
       val allObjectKeysService = actorRefFactory.actorOf(Props(new GetAllObjectKeysService(rContext, userid, password, role)))
       allObjectKeysService ! GetAllObjectKeysService.Process(objtype)
     } else {
@@ -370,12 +386,26 @@ trait MetadataAPIService extends HttpService {
   }
 
   /**
-   *
    */
   private def processHBRequest(detailsLevel: DetailsLevel, nodeIds: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
     val heartBeatSerivce = actorRefFactory.actorOf(Props(new GetHeartbeatService(rContext, userid, password, role)))
     heartBeatSerivce ! GetHeartbeatService.Process(nodeIds, detailsLevel)
   }
+
+
+  /**
+    *
+    */
+  private def processGetAdapterMessageBindingObjectRequest(objType: String, objKey: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
+    val action = "Get" + objType
+    val notes = "Invoked " + action + " API "
+    var argParm: String = null
+
+    val allObjectsService = actorRefFactory.actorOf(Props(new GetAdapterMessageBindigsService(rContext, userid, password, role)))
+    allObjectsService ! GetAdapterMessageBindigsService.Process(objType, objKey)
+
+  }
+
 
   /**
    *
@@ -411,10 +441,20 @@ trait MetadataAPIService extends HttpService {
   private def processDeleteRequest(objtype: String, objKey: String, rContext: RequestContext, userid: Option[String], password: Option[String], role: Option[String]): Unit = {
     val action = "Remove" + objtype
     val notes = "Invoked " + action + " API "
-    var argParm: String = verifyInput(objKey, objtype, rContext)
+    var argParm: String = null
+    if (!objtype.equalsIgnoreCase("Config") &&
+        !objtype.equalsIgnoreCase("AdapterMessageBinding"))
+      argParm = verifyInput(objKey, objtype, rContext)
+    else
+      argParm = objKey
+
     if (argParm == null) return
 
-    if (objtype.equalsIgnoreCase("Container") || objtype.equalsIgnoreCase("Model") || objtype.equalsIgnoreCase("Message") ||
+    if (objtype.equalsIgnoreCase("AdapterMessageBinding")) {
+      val removeObjectsService = actorRefFactory.actorOf(Props(new RemoveAdapterMsgBindingsService(rContext, userid, password, role)))
+      removeObjectsService ! RemoveAdapterMsgBindingsService.Process(argParm)
+    }
+    else if (objtype.equalsIgnoreCase("Container") || objtype.equalsIgnoreCase("Model") || objtype.equalsIgnoreCase("Message") ||
       objtype.equalsIgnoreCase("Function") || objtype.equalsIgnoreCase("Concept") || objtype.equalsIgnoreCase("Type") || objtype.equalsIgnoreCase("OutputMsg")) {
       val removeObjectsService = actorRefFactory.actorOf(Props(new RemoveObjectsService(rContext, userid, password, role)))
       removeObjectsService ! RemoveObjectsService.Process(argParm)
