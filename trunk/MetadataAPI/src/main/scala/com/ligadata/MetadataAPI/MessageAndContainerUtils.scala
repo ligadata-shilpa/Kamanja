@@ -1410,6 +1410,8 @@ object MessageAndContainerUtils {
     */
   def DoesAnyMessageExist(msgDef: MessageDef): Boolean = {
     try {
+      var key = msgDef.nameSpace + "." + msgDef.name + "." + msgDef.ver
+      val dispkey = msgDef.nameSpace + "." + msgDef.name + "." + MdMgr.Pad0s2Version(msgDef.ver)
       val o = MdMgr.GetMdMgr.Message(msgDef.nameSpace.toLowerCase,
         msgDef.name.toLowerCase,
         0,
@@ -1569,6 +1571,8 @@ object MessageAndContainerUtils {
     */
   def DoesAnyContainerExist(contDef: ContainerDef): Boolean = {
     try {
+      var key = contDef.nameSpace + "." + contDef.name + "." + contDef.ver
+      val dispkey = contDef.nameSpace + "." + contDef.name + "." + MdMgr.Pad0s2Version(contDef.ver)
       val o = MdMgr.GetMdMgr.Container(contDef.nameSpace.toLowerCase,
         contDef.name.toLowerCase,
         0,
