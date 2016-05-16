@@ -35,7 +35,7 @@ trait LogTrait {
 
 object GenerateMessage extends App with LogTrait{
 
-  def usage: String = {//This method used to tell user how he can use the tool
+  def usage: String = { //This method used to tell user how he can use the tool
     """
 Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/input/SampleApplication/data/file.csv --config $KAMANJA_HOME/config/file.json
     """
@@ -63,7 +63,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
 
     logger.debug("GenerateMessage.main begins")
 
-    if (args.length == 0) {//Check if user did not pass parameters
+    if (args.length == 0) { //Check if user did not pass parameters
       logger.error("Please pass the input file after --inputfile option and config file after --config operation")
       logger.warn(usage)
       sys.exit(1)
@@ -122,38 +122,41 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
 
      //for(item <- headerFields){}
      var feildsString = Map[String, String]()
-     var feildType = ""
      for(itemIndex <- 1 to headerFields.length-1){
-       if(dataTypeObj.isAllDigits(headerFields(itemIndex))){
+       if(dataTypeObj.isAllDigits(headerFields(itemIndex))){ //Check if all character are digits
          logger.error("This %s file does not include header".format(inputFile))
          sys.exit(1)
        }
+       var feildType1 = ""
        if(fileSize >= 2){
          val fieldLines = fileBean.ReadHeaderFile(inputFile, 1)
          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-         feildType = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         feildsString = feildsString + (headerFields(itemIndex) -> feildType)
+         feildType1 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
+         feildsString = feildsString + (headerFields(itemIndex) -> feildType1)
        } else{
          feildsString = feildsString + (headerFields(itemIndex) -> "String")
        }
 
+       var feildType2 = ""
        if(fileSize >= 3){
          val fieldLines = fileBean.ReadHeaderFile(inputFile, 2)
          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-         feildType = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         if(!feildType.equalsIgnoreCase("double") && !feildType.equalsIgnoreCase("boolean"))
-           feildsString = feildsString + (headerFields(itemIndex) -> feildType)
+         feildType2 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
+         if(!feildType1.equalsIgnoreCase("double"))
+           feildsString = feildsString + (headerFields(itemIndex) -> feildType2)
        }
 
        if(fileSize >= 4){
          val fieldLines = fileBean.ReadHeaderFile(inputFile, 3)
          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-         feildType = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         if(!feildType.equalsIgnoreCase("double") && !feildType.equalsIgnoreCase("boolean"))
-           feildsString = feildsString + (headerFields(itemIndex) -> feildType)
+         var feildType3 = ""
+         feildType3 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
+         if(!feildType1.equalsIgnoreCase("double") && !feildType2.equalsIgnoreCase("double"))
+           feildsString = feildsString + (headerFields(itemIndex) -> feildType3)
+       }
        }
 
-       }
+     fileBean.writeToFile(feildsString,configBeanObj)
    }
 }
 

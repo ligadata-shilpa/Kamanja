@@ -1,0 +1,10 @@
+{
+  "delimiter": ",",
+  "outputPath": "C:\Users\Yousef\Desktop\",
+  "saveMessage": "false",
+  "nameSpace": "com.ligadata.kamanja",
+  "partitionKey": "false",
+  "primaryKey": "false",
+  "timePartition": "false",
+  "messageType": "fixed"
+}

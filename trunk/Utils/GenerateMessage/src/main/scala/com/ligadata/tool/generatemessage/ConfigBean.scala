@@ -10,7 +10,7 @@ class ConfigBean {
   private var _delimiter = ","
   private var _outputPath = ""
   private var _saveMessage = false
-  private var _messageType = "fixed"
+  private var _messageType = false  // false -> fixed, true -> mapped
   private var _nameSpace = "com.message"
   private var _partitionKey = false
   private var _primaryKey = false
@@ -25,13 +25,14 @@ class ConfigBean {
   def partitionKey = _partitionKey
   def primaryKey = _primaryKey
   def timePartition = _timePartition
+  def messageType = _messageType
   def feilds = _feilds
 
   // Setter
   def delimiter_= (value:String):Unit = _delimiter = value
   def outputPath_= (value:String):Unit = _outputPath = value
   def saveMessage_= (value:Boolean):Unit = _saveMessage = value
-  def messageType_= (value:String):Unit = _messageType = value
+  def messageType_= (value:Boolean):Unit = _messageType = value
   def nameSpace_= (value:String):Unit = _nameSpace = value
   def partitionKey_= (value:Boolean):Unit = _partitionKey = value
   def primaryKey_= (value:Boolean):Unit = _primaryKey = value
