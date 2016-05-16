@@ -337,14 +337,21 @@ object TypeService {
   }
 
   def getTypeBySchemaId(schemaId: String): String = {
-    var schemId = schemaId.toInt
-    val response: String = MetadataAPIImpl.GetTypeBySchemaId(schemId, userid)
+
+    if (!scala.util.Try(schemaId.toInt).isSuccess) {
+      val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, "Please provide proper schema id :" + schemaId)
+      return apiResult.toString()
+    }
+    val response: String = MetadataAPIImpl.GetTypeBySchemaId(schemaId.toInt, userid)
     response
   }
 
   def getTypeByElementId(elementId: String): String = {
-    var elmId = elementId.toLong
-    val response: String = MetadataAPIImpl.GetTypeByElementId(elmId, userid)
+    if (!scala.util.Try(elementId.toLong).isSuccess) {
+      val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, "Please provide proper element id :" + elementId)
+      return apiResult.toString()
+    }
+    val response: String = MetadataAPIImpl.GetTypeByElementId(elementId.toLong, userid)
     response
   }
 }
