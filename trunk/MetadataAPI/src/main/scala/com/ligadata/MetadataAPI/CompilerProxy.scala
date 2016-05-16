@@ -889,7 +889,8 @@ class CompilerProxy {
     elements.foreach(elem => {
       var eName: Array[String] = elem.PhysicalName.split('.').map(_.trim)
       if ((eName.length - 1) > 0) {
-        typeNamespace = new Array[String](eName.length - 1)
+        //eName has the format com.x.y.V0001.ClassName so to get namespace must exclude last two tokens
+        typeNamespace = new Array[String](eName.length - 2)
         for (i <- 0 until typeNamespace.length) {
           typeNamespace(i) = eName(i)
         }
