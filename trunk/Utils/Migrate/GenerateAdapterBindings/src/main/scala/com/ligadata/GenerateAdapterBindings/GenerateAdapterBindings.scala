@@ -100,7 +100,8 @@ class GenerateAdapterBindings {
 	    }
 	    case "FIELDDELIMITER" => am.Options = am.Options + ("fieldDelimiter" -> adapter(k).asInstanceOf[String])
 	    case "LINEDELIMITER" => am.Options = am.Options + ("lineDelimiter" -> adapter(k).asInstanceOf[String])
-	    case "VALUEDELIMITER" => am.Options = am.Options + ("valueDelimiter" -> adapter(k).asInstanceOf[String])
+	    case "VALUEDELIMITER" => am.Options = am.Options + ("valDelimiter" -> adapter(k).asInstanceOf[String])
+	    case "VALDELIMITER" => am.Options = am.Options + ("valDelimiter" -> adapter(k).asInstanceOf[String])
 	    case _ => logger.info("Ignore the key " + k)
 	  }
 	})
