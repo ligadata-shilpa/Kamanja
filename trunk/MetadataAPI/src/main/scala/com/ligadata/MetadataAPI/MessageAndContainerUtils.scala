@@ -1411,7 +1411,6 @@ object MessageAndContainerUtils {
   def DoesAnyMessageExist(msgDef: MessageDef): Boolean = {
     try {
       var key = msgDef.nameSpace + "." + msgDef.name + "." + msgDef.ver
-      val dispkey = msgDef.nameSpace + "." + msgDef.name + "." + MdMgr.Pad0s2Version(msgDef.ver)
       val o = MdMgr.GetMdMgr.Message(msgDef.nameSpace.toLowerCase,
         msgDef.name.toLowerCase,
         0,
@@ -1446,7 +1445,7 @@ object MessageAndContainerUtils {
     }
 
   /**
-    * Check whether message already exists in metadata manager. Ideally,
+   * Check whether message already exists in metadata manager. Ideally,
     * we should never add the message into metadata manager more than once
     * and there is no need to use this function in main code flow
     * This is just a utility function being during these initial phases
@@ -1571,7 +1570,6 @@ object MessageAndContainerUtils {
     */
   def DoesAnyContainerExist(contDef: ContainerDef): Boolean = {
     try {
-      var key = contDef.nameSpace + "." + contDef.name + "." + contDef.ver
       val dispkey = contDef.nameSpace + "." + contDef.name + "." + MdMgr.Pad0s2Version(contDef.ver)
       val o = MdMgr.GetMdMgr.Container(contDef.nameSpace.toLowerCase,
         contDef.name.toLowerCase,

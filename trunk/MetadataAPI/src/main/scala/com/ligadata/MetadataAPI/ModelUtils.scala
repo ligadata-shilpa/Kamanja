@@ -1932,9 +1932,7 @@ object ModelUtils {
   def DoesAnyModelExist(modDef: ModelDef): Boolean = {
     try {
 
-      var key = modDef.nameSpace + "." + modDef.name + "." + modDef.ver
       val dispkey = modDef.nameSpace + "." + modDef.name + "." + MdMgr.Pad0s2Version(modDef.ver)
-
       val o = MdMgr.GetMdMgr.Model(modDef.nameSpace.toLowerCase,
         modDef.name.toLowerCase,
         0,
