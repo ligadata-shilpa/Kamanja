@@ -896,7 +896,8 @@ class CompilerProxy {
         }
         var typeClassName: String = eName(eName.length - 1)
         // Replace the "import com...ClassName" import statement
-        repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "[.*]" + typeClassName + "\\;*"), "")
+        repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "\\." + typeClassName + "\\;*"), "")
+        repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "\\.[Vv].*\\." + typeClassName + "\\;*"), "")
       }
     })
 
@@ -907,11 +908,14 @@ class CompilerProxy {
     }
 
     //Replace the "import com....*;" statement - JAVA STYLE IMPORT ALL
-    repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "[.*]" + "\\*\\;*"), "")
+    repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "\\." + "\\*\\;*"), "")
+    repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "\\.[Vv].*\\." + "\\*\\;*"), "")
     // Replace the "import com...._;" type of statement  - SCALA STYLE IMPORT ALL
-    repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "[.*]" + "_\\;*"), "")
+    repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "\\." + "_\\;*"), "")
+    repackagedCode = repackagedCode.replaceAll(("\\s*import\\s*" + typeNamespace.mkString(".") + "\\.[Vv].*\\." + "_\\;*"), "")
     // Replace the "import com....{xxx};" type of statement  - SCALA STYLE IMPORT SPECIFIC CLASSES IN BATCH
-    repackagedCode = repackagedCode.replaceAll("\\s*import\\s*" + typeNamespace.mkString(".") + "\\.\\{.*?\\}", "")
+    repackagedCode = repackagedCode.replaceAll("\\s*import\\s*" + typeNamespace.mkString(".") + "\\.\\{.*?\\}\\;*", "")
+    repackagedCode = repackagedCode.replaceAll("\\s*import\\s*" + typeNamespace.mkString(".") + "\\.[Vv].*\\.\\{.*?\\}\\;*", "")
 
     // Add all the needed imports - have to recalculate the beginning of the imports in the original source code, since a bunch of imports were
     // removed.
