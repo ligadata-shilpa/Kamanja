@@ -277,12 +277,6 @@ object MessageAndContainerUtils {
             val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, ErrorCodeConstants.Update_Message_Failed + ":" + msg.Name + " Error:Invalid Version")
             apiResult.toString()
           }
-          if (DoesMessageAlreadyExist(msg) == true) {
-            val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddMessage", null, ErrorCodeConstants.Add_Message_Failed + ":" + msg.Name + " Already Exists")
-            apiResult.toString()
-
-          }
-
           if (recompile) {
             // Incase of recompile, Message Compiler is automatically incrementing the previous version
             // by 1. Before Updating the metadata with the new version, remove the old version
@@ -316,10 +310,6 @@ object MessageAndContainerUtils {
             val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, ErrorCodeConstants.Update_Message_Failed + ":" + cont.Name + " Error:Invalid Version")
             apiResult.toString()
           }
-          if (DoesContainerAlreadyExist(cont) == true) {
-          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddContainer", null, ErrorCodeConstants.Add_Container_Failed + ":" + cont.Name + " Container exists")
-            apiResult.toString()
-            }
 
           if (recompile) {
             // Incase of recompile, Message Compiler is automatically incrementing the previous version

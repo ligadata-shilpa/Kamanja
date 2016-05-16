@@ -671,13 +671,6 @@ object ModelUtils {
       // make sure the version of the model is greater than any of previous models with same FullName
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
-      // 1119 Changes begin - checks model existence before add to prevent
-      if (modDef != null || DoesModelAlreadyExist(modDef) == true) {
-        return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"KPMML model exists, perform update on model")).toString
-
-      }
-      // 1119 Changes end
-
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
 
@@ -794,12 +787,6 @@ object ModelUtils {
       // make sure the version of the model is greater than any of previous models with same FullName
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
-      // 1119 Changes begin - checks model existence before add to prevent
-      if (modDef != null || DoesModelAlreadyExist(modDef) == true) {
-        return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"JTM model exists, perform update on model")).toString
-
-      }
-      // 1119 Changes end
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
