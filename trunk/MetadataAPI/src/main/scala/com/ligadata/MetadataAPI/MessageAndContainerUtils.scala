@@ -452,7 +452,7 @@ object MessageAndContainerUtils {
           }
           // 1118 - Changes begin - Message must exist for update to happen
           else {
-            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Message/Container must exist to update")).toString
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Message must exist to update")).toString
 
           }
           // 1118 - Changes end
@@ -495,6 +495,13 @@ object MessageAndContainerUtils {
           if (latestVersion != None) {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
+          // 1118 - Changes begin - Message must exist for update to happen
+          else {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Container must exist to update")).toString
+
+          }
+          // 1118 - Changes end
+
           if (isValid) {
             // Check to make sure the TenantId is the same
             if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
