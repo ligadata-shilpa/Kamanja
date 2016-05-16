@@ -60,6 +60,7 @@ XIV. Web service
 kamanja start webservice
 XV. Adapter Message Bindings
 kamanja add adaptermessagebinding FROMFILE input
+kamanja add adaptermessagebinding FROMSTRING input
 kamanja remove adaptermessagebinding KEY '<adapter name>,<namespace.msgname>,<namespace.serializername>'
 kamanja list adaptermessagebindings
 kamanja list adaptermessagebindings ADAPTERFILTER <adatper name>
