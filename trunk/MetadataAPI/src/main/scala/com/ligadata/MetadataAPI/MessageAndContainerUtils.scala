@@ -1418,7 +1418,6 @@ object MessageAndContainerUtils {
         false)
       o match {
         case None =>
-          None
           logger.debug("message not in the cache => " + key)
           return false;
         case Some(m) =>
@@ -1580,7 +1579,6 @@ object MessageAndContainerUtils {
         false)
       o match {
         case None =>
-          None
           logger.debug("container not in the cache => " + dispkey)
           return false;
         case Some(m) =>

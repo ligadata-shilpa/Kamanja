@@ -273,6 +273,49 @@ object ModelUtils {
   /**
     * Remove model with Model Name and Version Number
     *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version   Version of the object
+    * @param userid    the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *                  method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def RemoveAllModels(nameSpace: String, name: String, version: Long, userid: Option[String]): String = {
+    var key = nameSpace + "." + name + "." + version
+    if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.DELETEOBJECT, "Model", AuditConstants.SUCCESS, "", key)
+    val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version)
+    var newTranId = PersistenceUtils.GetNewTranId
+    try {
+      val o = MdMgr.GetMdMgr.Model(nameSpace.toLowerCase, name.toLowerCase, version, false)
+      o match {
+        case None =>
+          None
+          logger.debug("model not found => " + dispkey)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveAllModels", null, ErrorCodeConstants.Remove_Model_Failed_Not_Found + ":" + dispkey)
+          apiResult.toString()
+        case Some(m) =>
+          logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].Version))
+          MetadataAPIImpl.DeleteObject(m)
+          var objectsUpdated = new Array[BaseElemDef](0)
+          m.tranId = newTranId
+          objectsUpdated = objectsUpdated :+ m
+          var operations = for (op <- objectsUpdated) yield "Remove"
+          MetadataAPIImpl.NotifyEngine(objectsUpdated, operations)
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "RemoveAllModels", null, ErrorCodeConstants.Remove_Model_Successful + ":" + dispkey)
+          apiResult.toString()
+      }
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "RemoveAllModels", null, "Error :" + e.toString() + ErrorCodeConstants.Remove_Model_Failed + ":" + dispkey)
+        apiResult.toString()
+      }
+    }
+  }
+
+  /**
+    * Remove model with Model Name and Version Number
+    *
     * @param modelName the Namespace.Name of the given model to be removed
     * @param version   Version of the given model.  The version should comply with the Kamanja version format.  For example,
     *                  a value of "000001.000001.000001" shows the digits available for version.  All must be base 10 digits
@@ -1939,7 +1982,6 @@ object ModelUtils {
         false)
       o match {
         case None =>
-          None
           logger.debug("model not in the cache => " + dispkey)
           return false;
         case Some(m) =>
