@@ -169,7 +169,6 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
     }
   }
 
-
   def createAdapterMessageBindings(adapters: List[Map[String, Any]]) : Array[adapterMessageBinding] = {
     try{
       var ambs = Array[adapterMessageBinding]()
@@ -192,7 +191,8 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	      }
 	    }
 	    case "FIELDDELIMITER" => am.Options = am.Options + ("fieldDelimiter" -> adapter(k).asInstanceOf[String])
-	    case "LINEDELIMITER" => am.Options = am.Options + ("lineDelimiter" -> adapter(k).asInstanceOf[String])
+	    case "LINEDELIMITER" => am.Options = am.Options + ("lineDelimiter" -> adapter(k).asInstanceOf[String])	
+	    case "VALUEDELIMITER" => am.Options = am.Options + ("valueDelimiter" -> adapter(k).asInstanceOf[String])
 	    case _ => logger.info("Ignore the key " + k)
 	  }
 	})
@@ -201,33 +201,40 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	  am.Options = am.Options + ("produceHeader" -> "true")
 	  am.Options = am.Options + ("alwaysQuotedFields" -> "false")
 	}
-
-	
-
 	if( typeString != null ){
 	  if( ( typeString.equalsIgnoreCase("Input") || 
 	      typeString.equalsIgnoreCase("Status")) ){
-	    if( am.MessageNames != null && am.MessageNames.length > 0 ){
-	      // for status adapters, message always defults 
-	      // to com.ligadata.KamanjaBase.KamanjaStatusEvent
 	      if( typeString.equalsIgnoreCase("Status") ){
-		am.MessageNames = Array("com.ligadata.KamanjaBase.KamanjaStatusEvent").toList
+		if( am.MessageNames == null || am.MessageNames.length == 0 ){
+		  // for status adapters, message always defults 
+		  // to com.ligadata.KamanjaBase.KamanjaStatusEvent
+		  am.MessageNames = Array("com.ligadata.KamanjaBase.KamanjaStatusEvent").toList
+		}
 		am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
 		if( ! am.Options.contains("fieldDelimiter") ){
 		  am.Options = am.Options + ("fieldDelimiter" -> ",")
 		}
+		ambs = ambs :+ am
 	      }
-	      ambs = ambs :+ am
+	      else{
+		if( am.MessageNames != null && am.MessageNames.length > 0 ){
+		  am.Serializer = "com.ligadata.kamanja.serializer.CsvSerDeser"
+		  if( ! am.Options.contains("fieldDelimiter") ){
+		    am.Options = am.Options + ("fieldDelimiter" -> ",")
+		  }
+		  ambs = ambs :+ am
+		}
+		else{
+		  logger.warn("Associated Message is not defined, A adapter-message binding is not generated for the adapter " + am.AdapterName)
+		}
+	      }
 	    }
 	    else{
-	      logger.info("Associated Message is not defined, A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	      logger.warn("The adapterType is Output type, A adapter-message binding is not generated for the adapter " + am.AdapterName)	
 	    }
-	  }
-	  else{
-	    logger.info("The adapterType is Output type, A adapter-message binding is not generated for the adapter " + am.AdapterName)	  }
 	}
 	else{
-	  logger.info("Unable to determine adapterType(Input/output/status), A adapter-message binding is not generated for the adapter " + am.AdapterName)
+	  logger.warn("Unable to determine adapterType(Input/output/status), A adapter-message binding is not generated for the adapter " + am.AdapterName)
 	}
       })
       ambs
@@ -235,20 +242,31 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
       case e: Exception => throw new Exception("Failed to create adapterMessageBindings", e)
     }
   }
-    
 
   private def parseClusterConfig(cfgStr: String): Array[adapterMessageBinding] = {
-    logger.info("parsing json: " + cfgStr)
+    logger.info("parsing json config: " + cfgStr)
     val cfgmap = parse(cfgStr).values.asInstanceOf[Map[String, Any]]
     logger.info("cfgmap => " + cfgmap)
     var ambs = Array[adapterMessageBinding]()
+
+    var adapters:List[Map[String, Any]] = List[Map[String,Any]]()
     cfgmap.keys.foreach(key => {
       logger.info("key => " + key)
+      if ( key.equalsIgnoreCase("clusters") ){
+	var clusters = cfgmap(key).asInstanceOf[List[Map[String, Any]]]
+	logger.info("Looking for adapters defined within a cluster definition")
+	clusters.foreach( cluster => {
+	  logger.info("cluster => " + cluster)
+	  if ( cluster.contains("Adapters") ){
+	    adapters = cluster.get("Adapters").get.asInstanceOf[List[Map[String, Any]]]
+	  }
+	})
+      }
       if ( key.equalsIgnoreCase("adapters") ){
-	var adapters = cfgmap("Adapters").asInstanceOf[List[Map[String, Any]]]
-	ambs = createAdapterMessageBindings(adapters)
+	adapters = adapters ++ cfgmap("Adapters").asInstanceOf[List[Map[String, Any]]]
       }
     })
+    ambs = createAdapterMessageBindings(adapters)
     ambs
   }
 
@@ -358,6 +376,19 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
       scala.collection.mutable.Map(m.toSeq: _*) 
     }
 
+    def WriteStringToFile(flName: String, str: String): Unit = {
+      val out = new PrintWriter(flName, "UTF-8")
+      try {
+	out.print(str)
+      } catch {
+	case e: Exception => throw e;
+	case e: Throwable => throw e;
+      } finally {
+	out.close
+      }
+    }
+
+
     it("Add Cluster Config") {
       And("Check whether CONFIG_FILES_DIR defined as property")
       dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONFIG_FILES_DIR")
@@ -374,7 +405,7 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
       val cfgFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".json"))
       assert(0 != cfgFiles.length)
 
-      fileList = List("sample_adapters.json")
+      fileList = List("ClusterConfig.json")
       fileList.foreach(f1 => {
 	And("Add the Config From " + f1)
 	And("Make Sure " + f1 + " exist")
@@ -415,11 +446,11 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 
 	And("Check number of the nodes")
 	var nodes = MdMgr.GetMdMgr.Nodes
-	assert(nodes.size == 3)
+	assert(nodes.size == 1)
 
 	And("Check number of the adapters")
 	var adapters = MdMgr.GetMdMgr.Adapters
-	assert(adapters.size == 4)
+	assert(adapters.size == 10)
 
       })
     }
@@ -500,7 +531,7 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
       val cfgFiles = new java.io.File(dirName).listFiles.filter(_.getName.endsWith(".json"))
       assert(0 != cfgFiles.length)
 
-      fileList = List("sample_adapters.json")
+      fileList = List("ClusterConfig.json")
 
       fileList.foreach(f1 => {
 	And("Add the Config From " + f1)
@@ -524,6 +555,7 @@ class MigrateAdapterSpec extends FunSpec with LocalTestFixtures with BeforeAndAf
 	implicit val formats = Serialization.formats(NoTypeHints)
 	val ambsAsJson = writePretty(ambs)
 	logger.info(ambsAsJson)
+	WriteStringToFile("/tmp/adapterBindings.test_output.json",ambsAsJson)
 
 	// parse the json again
 	val ambs1 = parse(ambsAsJson).extract[Array[adapterMessageBinding]]
