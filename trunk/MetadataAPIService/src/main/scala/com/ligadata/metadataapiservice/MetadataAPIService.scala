@@ -344,7 +344,7 @@ trait MetadataAPIService extends HttpService {
       // rContext.complete(new ApiResult(ErrorCodeConstants.Success, "AddModelFromScalaSource",body.toString, "Upload of java model successful").toString)
       val addSourceModelService: ActorRef = actorRefFactory.actorOf(Props(new AddSourceModelService(rContext, userid, password, role, modelcompileinfo, tenantId)))
       addSourceModelService ! AddSourceModelService.ProcessScala(body)
-    else if (objtype.equalsIgnoreCase("modelkpmml")) {
+    }else if (objtype.equalsIgnoreCase("modelkpmml")) {
       val addModelService: ActorRef = actorRefFactory.actorOf(Props(new AddModelService(rContext, userid, password, role, None, tenantId)))
       addModelService ! AddModelService.Process(body)
     } else if (objtype.equalsIgnoreCase("modelpmml")) {
