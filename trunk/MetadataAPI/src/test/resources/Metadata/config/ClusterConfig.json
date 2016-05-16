@@ -3,18 +3,18 @@
     {
       "ClusterId": "ligadata1",
       "SystemCatalog": {
-        "StoreType": "cassandra",
+        "StoreType": "hashmap",
         "SchemaName": "testdata",
-        "Location": "localhost"
+        "Location": "/media/home2/installKamanja140/Kamanja-1.4.0_2.11/storage/syscatalog"
       },
       "Tenants": [
         {
           "TenantId": "tenant1",
           "Description": "tenant1",
           "PrimaryDataStore": {
-            "StoreType": "cassandra",
-            "SchemaName": "tenant1_data",
-            "Location": "localhost"
+            "StoreType": "hashmap",
+            "SchemaName": "testdata",
+            "Location": "/media/home2/installKamanja140/Kamanja-1.4.0_2.11/storage/tenant1_default"
           },
           "CacheConfig": {
             "MaxSizeInMB": 256
@@ -48,109 +48,163 @@
           "NodePort": 6541,
           "NodeIpAddr": "localhost",
           "JarPaths": [
-            "./lib/system",
-            "./lib/application"
+            "/media/home2/installKamanja140/Kamanja-1.4.0_2.11/lib/system",
+            "/media/home2/installKamanja140/Kamanja-1.4.0_2.11/lib/application"
           ],
-          "Scala_home": "{ScalaInstallDirectory}",
-          "Java_home": "{JavaInstallDirectory}",
+          "Scala_home": "/home/vmandava/scala-2.11.7",
+          "Java_home": "/home/vmandava/jdk1.8.0_05",
           "Roles": [
             "RestAPI",
             "ProcessingEngine"
           ],
-          "Classpath": ".:./lib/system/ExtDependencyLibs_2.11-1.4.0.jar:./lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:./lib/system/ExtDependencyLibs2_2.11-1.4.0.jar"
-        },
-        {
-          "NodeId": "2",
-          "NodePort": 6541,
-          "NodeIpAddr": "localhost",
-          "JarPaths": [
-            "./lib/system",
-            "./lib/application"
-          ],
-          "Scala_home": "{ScalaInstallDirectory}",
-          "Java_home": "{JavaInstallDirectory}",
-          "Roles": [
-            "RestAPI",
-            "ProcessingEngine"
-          ],
-          "Classpath": ".:./lib/system/ExtDependencyLibs_2.11-1.4.0.jar:./lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:./lib/system/ExtDependencyLibs2_2.11-1.4.0.jar"
-        },
-        {
-          "NodeId": "3",
-          "NodePort": 6541,
-          "NodeIpAddr": "localhost",
-          "JarPaths": [
-            "./lib/system",
-            "./lib/application"
-          ],
-          "Scala_home": "{ScalaInstallDirectory}",
-          "Java_home": "{JavaInstallDirectory}",
-          "Roles": [
-            "RestAPI",
-            "ProcessingEngine"
-          ],
-          "Classpath": ".:./lib/system/ExtDependencyLibs_2.11-1.4.0.jar:./lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:./lib/system/ExtDependencyLibs2_2.11-1.4.0.jar"
+          "Classpath": ".:/media/home2/installKamanja140/Kamanja-1.4.0_2.11/lib/system/ExtDependencyLibs_2.11-1.4.0.jar:/media/home2/installKamanja140/Kamanja-1.4.0_2.11/lib/system/KamanjaInternalDeps_2.11-1.4.0.jar:/media/home2/installKamanja140/Kamanja-1.4.0_2.11/lib/system/ExtDependencyLibs2_2.11-1.4.0.jar"
         }
       ],
       "Adapters": [
         {
-          "Name": "absa_input",
+          "Name": "Storage_1",
+          "TypeString": "Storage",
+          "TenantId": "tenant1",
+          "StoreType": "hashmap",
+          "SchemaName": "testdata",
+          "Location": "/media/home2/installKamanja140/Kamanja-1.4.0_2.11/storage/tenant1_storage_1"
+        },
+        {
+          "Name": "HelloWorldInput",
           "TypeString": "Input",
           "TenantId": "tenant1",
-          "ClassName": "com.ligadata.InputAdapters.FileConsumer$",
+          "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
           "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
             "ExtDependencyLibs_2.11-1.4.0.jar",
             "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
-            "CompressionString": "",
-            "Files": "./kamanja_input/input_ABSA.CSV"
+            "HostList": "localhost:9092",
+            "TopicName": "helloworldinput"
           }
         },
         {
-          "Name": "absa_input1",
+          "Name": "MedicalInput",
           "TypeString": "Input",
           "TenantId": "tenant1",
-          "ClassName": "com.ligadata.InputAdapters.FileConsumer$",
+          "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
           "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
             "ExtDependencyLibs_2.11-1.4.0.jar",
             "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
-            "CompressionString": "",
-            "Files": "./kamanja_input/input_ABSA.CSV"
+            "HostList": "localhost:9092",
+            "TopicName": "medicalinput"
           }
         },
         {
-          "Name": "absa_output",
-          "TypeString": "Output",
+          "Name": "FinanceInput",
+          "TypeString": "Input",
           "TenantId": "tenant1",
-          "ClassName": "com.ligadata.InputAdapters.FileProducer$",
+          "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
           "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
             "ExtDependencyLibs_2.11-1.4.0.jar",
             "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
-            "CompressionString": "",
-            "Files": "./kamanja_output/output_ABSA.CSV"
+            "HostList": "localhost:9092",
+            "TopicName": "financeinput"
           }
         },
         {
-          "Name": "absa_status",
-          "TypeString": "Output",
+          "Name": "TelecomInput",
+          "TypeString": "Input",
           "TenantId": "tenant1",
-          "ClassName": "com.ligadata.InputAdapters.FileProducer$",
+          "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
           "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
           "DependencyJars": [
             "ExtDependencyLibs_2.11-1.4.0.jar",
             "ExtDependencyLibs2_2.11-1.4.0.jar"
           ],
           "AdapterSpecificCfg": {
-            "CompressionString": "",
-            "Files": "./kamanja_output/status_ABSA.CSV"
+            "HostList": "localhost:9092",
+            "TopicName": "telecominput"
+          }
+        },
+        {
+          "Name": "TestIn_1",
+          "TypeString": "Input",
+          "TenantId": "tenant1",
+          "AssociatedMessage": "com.botanical.json.ordermsg",
+	  "FieldDelimiter" : "|",
+	  "ValueDelimiter" : ",",
+          "ClassName": "com.ligadata.InputAdapters.KafkaSimpleConsumer$",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
+          "DependencyJars": [
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
+          ],
+          "AdapterSpecificCfg": {
+            "HostList": "localhost:9092",
+            "TopicName": "testin_1"
+          }
+        },
+        {
+          "Name": "TestOut_1",
+          "TypeString": "Output",
+          "TenantId": "tenant1",
+          "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
+          "DependencyJars": [
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
+          ],
+          "AdapterSpecificCfg": {
+            "HostList": "localhost:9092",
+            "TopicName": "testout_1"
+          }
+        },
+        {
+          "Name": "TestFailedEvents_1",
+          "TypeString": "Output",
+          "TenantId": "tenant1",
+          "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
+          "DependencyJars": [
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
+          ],
+          "AdapterSpecificCfg": {
+            "HostList": "localhost:9092",
+            "TopicName": "testfailedevents_1"
+          }
+        },
+        {
+          "Name": "TestMessageEvents_1",
+          "TypeString": "Output",
+          "TenantId": "tenant1",
+          "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
+          "DependencyJars": [
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
+          ],
+          "AdapterSpecificCfg": {
+            "HostList": "localhost:9092",
+            "TopicName": "testmessageevents_1"
+          }
+        },
+        {
+          "Name": "TestStatus_1",
+          "TypeString": "Status",
+          "TenantId": "System",
+          "ClassName": "com.ligadata.OutputAdapters.KafkaProducer$",
+          "JarName": "KamanjaInternalDeps_2.11-1.4.0.jar",
+          "DependencyJars": [
+            "ExtDependencyLibs_2.11-1.4.0.jar",
+            "ExtDependencyLibs2_2.11-1.4.0.jar"
+          ],
+          "AdapterSpecificCfg": {
+            "HostList": "localhost:9092",
+            "TopicName": "teststatus_1"
           }
         }
       ]
