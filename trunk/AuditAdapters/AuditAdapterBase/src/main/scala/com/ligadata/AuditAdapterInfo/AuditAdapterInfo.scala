@@ -16,21 +16,20 @@
 
 package com.ligadata.AuditAdapterInfo
 
-import java.util.Properties
-import java.util.Date
+import java.util.{Calendar, Properties, Date}
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
 class AuditRecord {
-  var actionTime: String = _
-  var action: String = _
-  var notes: String = _
-  var objectAccessed: String = _
-  var success: String = _
-  var transactionId: String = _
-  var userOrRole: String = _
-  var userPrivilege: String = _
+  var actionTime: String = Calendar.getInstance().getTime().getTime.toString() // get current time
+  var action: String = ""
+  var notes: String = ""
+  var objectAccessed: String = ""
+  var success: String = ""
+  var transactionId: String = ""
+  var userOrRole: String = ""
+  var userPrivilege: String = ""
 
   override def toString: String =
     "(" + actionTime + "," + action + "," + "," + objectAccessed + "," + success + "," + transactionId + "," + userOrRole + "," + userPrivilege + ")"
