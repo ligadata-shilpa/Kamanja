@@ -66,5 +66,7 @@ kamanja list adaptermessagebindings
 kamanja list adaptermessagebindings ADAPTERFILTER <adatper name>
 kamanja list adaptermessagebindings MESSAGEFILTER <namespace.msgname>
 kamanja list adaptermessagebindings SERIALIZERFILTER <namespace.serializername>
+kamanja get typebyschemaid SCHEMAID <schemaid>
+kamanja get typebyelementid ELEMENTID <elementid>
 XVI. General operations
 kamanja --version
