@@ -193,7 +193,7 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
             while (readlen < minBuf && curReadLen > 0) {
               // Re-reading some more data
               curReadLen = fileHandler.read(byteBuffer, readlen, maxlen - readlen - 1)
-              logger.debug("SMART FILE CONSUMER - reading {} bytes from file {} . got actually {} bytes",
+              logger.debug("SMART FILE CONSUMER - not enough read. reading more {} bytes from file {} . got actually {} bytes",
                 (maxlen - readlen - 1).toString, fileHandler.getFullPath, curReadLen.toString)
               if (curReadLen > 0) {
                 readlen += curReadLen
@@ -216,6 +216,7 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
               return
             }
           }
+          logger.debug("SMART FILE CONSUMER (FileMessageExtractor) - readlen1={}", readlen.toString)
           if (readlen > 0) {
             len += readlen
 
@@ -241,6 +242,7 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
         } while (lastReadLen > 0)
       }
 
+      logger.debug("SMART FILE CONSUMER (FileMessageExtractor) - readlen2={}", readlen.toString)
       //now if readlen>0 means there is one last message.
       //most likely this happens if last message is not followed by the separator
       if(readlen > 0 && !processingInterrupted){
@@ -282,10 +284,14 @@ class FileMessageExtractor(parentExecutor: ExecutorService,
     }
     finally{
       if(finishCallback != null) {
-        if(processingInterrupted)
+        if(processingInterrupted) {
+          logger.debug("SMART FILE CONSUMER (FileMessageExtractor) - sending interrupting flag for file {}", fileName)
           finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_ProcessingInterrupted)
-        else
+        }
+        else {
+          logger.debug("SMART FILE CONSUMER (FileMessageExtractor) - sending finish flag for file {}", fileName)
           finishCallback(fileHandler, consumerContext, SmartFileConsumer.FILE_STATUS_FINISHED)
+        }
       }
 
       shutdownThreads()

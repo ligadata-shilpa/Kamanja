@@ -815,8 +815,13 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
                                              status : Int) : Unit = {
 
     var statusToSendToLeader = ""
-
-    if(status == SmartFileConsumer.FILE_STATUS_FINISHED) {
+    
+    if(isShutdown){
+      LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) finished reading file ({}) with status {}, but adapter already shutdown",
+        context.nodeId, context.partitionId.toString, fileHandler.getFullPath, status.toString)
+      statusToSendToLeader = File_Processing_Status_Interrupted
+    }
+    else if(status == SmartFileConsumer.FILE_STATUS_FINISHED) {
       LOG.info("SMART FILE CONSUMER - participant node ({}), partition ({}) finished reading file ({})",
         context.nodeId, context.partitionId.toString, fileHandler.getFullPath)
       statusToSendToLeader = File_Processing_Status_Finished
