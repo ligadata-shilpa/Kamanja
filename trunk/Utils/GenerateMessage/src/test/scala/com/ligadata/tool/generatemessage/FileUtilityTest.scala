@@ -1,12 +1,11 @@
 package com.ligadata.tool.generatemessage
 
-import org.scalatest.FunSuite
 import org.scalatest._
 import Matchers._
 /**
   * Created by Yousef on 5/16/2016.
   */
-class GenerateMessage$Test extends FeatureSpec with GivenWhenThen {
+class FileUtilityTest extends FeatureSpec with GivenWhenThen {
 
   private def getResourceFullPath(resourcePath : String): String ={
     val os = System.getProperty("os.name")
@@ -16,12 +15,12 @@ class GenerateMessage$Test extends FeatureSpec with GivenWhenThen {
     finalPath
   }
 
-  info("This an example to test GenerateMessage class")
+  info("This an example to test FileUtility class")
   info("I want to be able to create an object")
   info("So i can access the variables")
   info("And get all variables when I need it using functions")
 
-  feature("GenerateMessage object") {
+  feature("FileUtility object") {
     val fileBean: FileUtility = new FileUtility()
     scenario("Unit Tests for all fileUtility function") {
       Given("Initiate variables")
@@ -69,8 +68,8 @@ class GenerateMessage$Test extends FeatureSpec with GivenWhenThen {
       val headerFeilds = fileBean.SplitFile(fileHeader,",")
       Then("The size of array should not be 3")
       headerFeilds.length should be(3)
-     for(item <- headerFeilds)
-       println(item)
+      for(item <- headerFeilds)
+        println(item)
 
       Given("Test CountLines function")
 
@@ -78,6 +77,22 @@ class GenerateMessage$Test extends FeatureSpec with GivenWhenThen {
       val count = fileBean.Countlines(inputFile)
       Then("The number of lines should be 3")
       count should be(3)
+
+      Given("Test Parse and Extract functions")
+
+      When("The file includes data")
+      val configFileContent = fileBean.ReadFile(filePath)
+      val parsedFile = fileBean.ParseFile(configFileContent)
+      val extractedFile = fileBean.extractInfo(parsedFile)
+      Then("The delimiter variable should be set")
+      extractedFile.delimiter should be(",")
+
+      Given("Test CreateConfigObj function")
+
+      When("The file includes data")
+      val configObj = fileBean.createConfigBeanObj(extractedFile)
+      Then("The delimiter variable should be set")
+      configObj.delimiter should be(",")
     }
-    }
+  }
 }

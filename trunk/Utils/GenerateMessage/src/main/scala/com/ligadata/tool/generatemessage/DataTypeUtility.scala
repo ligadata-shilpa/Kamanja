@@ -18,7 +18,7 @@ class DataTypeUtility { // This class created to check the value if it double or
     try{
       if(field.contains('.')) {
         val firstPart = field.substring(0, field.indexOf('.'))
-        val secondPart = field.substring(field.indexOf('.'), field.length)
+        val secondPart = field.substring(field.indexOf('.')+1, field.length)
         var dataType = Integer.parseInt(firstPart)
         dataType = Integer.parseInt(secondPart)
         return true

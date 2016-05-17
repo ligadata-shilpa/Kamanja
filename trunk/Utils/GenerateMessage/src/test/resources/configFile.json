@@ -1,6 +1,6 @@
 {
   "delimiter": ",",
-  "outputPath": "C:\Users\Yousef\Desktop\",
+  "outputPath": "/",
   "saveMessage": "false",
   "nameSpace": "com.ligadata.kamanja",
   "partitionKey": "false",

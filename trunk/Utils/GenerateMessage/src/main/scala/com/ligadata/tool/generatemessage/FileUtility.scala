@@ -8,8 +8,8 @@ import org.apache.commons.io.FilenameUtils
 import org.json4s
 import org.json4s.DefaultFormats
 import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
-//import org.json4s.native.JsonMethods._
+//import org.json4s.jackson.JsonMethods._
+import org.json4s.native.JsonMethods._
 import scala.collection.immutable.Map
 import scala.io.Source._
 //import com.ligadata.tool.generatemessage.ConfigBean
@@ -72,18 +72,18 @@ class FileUtility  extends LogTrait{
   def createConfigBeanObj(configInfo: configFile): ConfigBean={ //This method used to create a configObj
     var configBeanObj:ConfigBean = new ConfigBean()
     val dataTypeObj: DataTypeUtility = new DataTypeUtility()
-    if(configInfo.delimiter == None && configInfo.outputPath == None && configInfo.saveMessage == None && configInfo.nameSpace == None
-    &&configInfo.partitionKey == None && configInfo.primaryKey == None && configInfo.timePartition == None && configInfo.messageType == None){
+    if(configInfo.delimiter.trim == "" && configInfo.outputPath.trim == "" && configInfo.saveMessage.trim == "" && configInfo.nameSpace.trim == ""
+    &&configInfo.partitionKey.trim == "" && configInfo.primaryKey.trim == "" && configInfo.timePartition.trim == "" && configInfo.messageType.trim == ""){
       logger.error("You should pass at least outputpath and delimiter in config file")
       sys.exit(1)
-    } else if(configInfo.outputPath == None || configInfo.delimiter == None){
-      logger.error("You should pass outputpath in config file")
+    } else if(configInfo.outputPath.trim == "" || configInfo.delimiter.trim == ""){
+      logger.error("You should pass at least outputpath and delimiter in config file")
       sys.exit(1)
     } else {
       configBeanObj.outputPath_=(configInfo.outputPath)
       configBeanObj.delimiter_=(configInfo.delimiter)
 
-      if(configInfo.saveMessage != None){
+      if(configInfo.saveMessage.trim != ""){
         if(dataTypeObj.isBoolean(configInfo.saveMessage)){
           configBeanObj.saveMessage_=(configInfo.saveMessage.toBoolean)
         } else{
@@ -92,11 +92,11 @@ class FileUtility  extends LogTrait{
         }
       }
 
-      if(configInfo.nameSpace != None){
+      if(configInfo.nameSpace.trim != ""){
         configBeanObj.nameSpace_=(configInfo.nameSpace.toString)
       }
 
-      if(configInfo.partitionKey != None){
+      if(configInfo.partitionKey.trim != ""){
         if(dataTypeObj.isBoolean(configInfo.partitionKey)){
           configBeanObj.partitionKey_=(configInfo.partitionKey.toBoolean)
         } else{
@@ -105,7 +105,7 @@ class FileUtility  extends LogTrait{
         }
       }
 
-      if(configInfo.primaryKey != None){
+      if(configInfo.primaryKey.trim != ""){
         if(dataTypeObj.isBoolean(configInfo.primaryKey)){
           configBeanObj.primaryKey_=(configInfo.primaryKey.toBoolean)
         } else{
@@ -114,7 +114,7 @@ class FileUtility  extends LogTrait{
         }
       }
 
-      if(configInfo.timePartition != None){
+      if(configInfo.timePartition.trim != ""){
         if(dataTypeObj.isBoolean(configInfo.timePartition)){
           configBeanObj.timePartition_=(configInfo.timePartition.toBoolean)
         } else{
@@ -123,7 +123,7 @@ class FileUtility  extends LogTrait{
         }
       }
 
-      if(configInfo.messageType != None){
+      if(configInfo.messageType.trim != ""){
         if(configInfo.messageType.equalsIgnoreCase("fixed")){
           configBeanObj.messageType_=(true)
         } else if(configInfo.messageType.equalsIgnoreCase("mapped")){
