@@ -382,7 +382,7 @@ object ModelUtils {
       AddOutMsgToModelDef(modDef, ModelType.fromString(sourceLang), optMsgProduced, userid)
 
       // 1119 Changes begin - checks model existence before add to prevent
-      if (modDef != null || DoesAnyModelExist(modDef) == true) {
+      if (DoesAnyModelExist(modDef) == true) {
         return (new ApiResult(ErrorCodeConstants.Failure, "AddModelFromSource", null, s"Java/Scala model exists, perform update on model")).toString
 
       }
@@ -682,8 +682,8 @@ object ModelUtils {
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
       // 1119 Changes begin - checks model existence before add to prevent
-      if (modDef != null || DoesAnyModelExist(modDef) == true) {
-        return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"KPMML model exists, perform update on model")).toString
+      if (DoesAnyModelExist(modDef) == true) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "AddKPMMLModel", null, s"KPMML model exists, perform update on model")).toString
 
       }
       // 1119 Changes end
@@ -806,7 +806,7 @@ object ModelUtils {
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
 
       // 1119 Changes begin - checks model existence before add to prevent
-      if (modDef != null || DoesAnyModelExist(modDef) == true) {
+      if (DoesAnyModelExist(modDef) == true) {
         return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"JTM model exists, perform update on model")).toString
 
       }
@@ -1958,7 +1958,7 @@ object ModelUtils {
         false)
       o match {
         case None =>
-          logger.debug("model not in the cache => " + dispkey)
+          logger.debug("model not in the cache (in module DoesAnyModelExist) => " + dispkey)
           return false;
         case Some(m) =>
           logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].ver))
