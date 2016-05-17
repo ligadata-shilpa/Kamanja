@@ -201,8 +201,9 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
       */
     private def evaluateModel(msg : ContainerInterface): ModelResultBase = {
         val activeFields = modelEvaluator.getActiveFields
-        val preparedFields : Map[FieldName, FieldValue] = prepareFields(activeFields, msg, modelEvaluator)
+        var preparedFields : Map[FieldName, FieldValue] = null
         val scoreResults : Array[(String, Any)] = try {
+            val preparedFields : Map[FieldName, FieldValue] = prepareFields(activeFields, msg, modelEvaluator)
             val evalResultRaw: MutableMap[FieldName, _] = modelEvaluator.evaluate(preparedFields.asJava).asScala
             val evalResults = replaceNull(evalResultRaw)
             val results = EvaluatorUtil.decode(evalResults.asJava).asScala
@@ -210,7 +211,7 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
         } catch {
             case e: Exception =>  {
                 val msgName : String = msg.FullName
-                val inputs : String = fieldNameValuesAtFailure(msgName, activeFields, preparedFields)
+                val inputs : String = fieldNameValuesAtFailure(msg, activeFields, preparedFields)
                 _logger.error(s"Attempting to process \ninputs = '$inputs', \nthe following exception was encountered: ${e.toString}")
                 _logger.error("No score produced.")
                 null
@@ -227,30 +228,51 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
 
     /**
       * Prepare a diagnostic string consisting of the field name, the value that has been associated with it and the value's
-      * known type.
-      * @param msgName the name of the incoming message
+      * known type.  Try to use the values in the preparedFields if they are available.  As default use information from
+      * the incoming message for field name, type, and value.
+      *
+      * @param msg the ContainerInterface of the incoming message
       * @param activeFields the input fields that were filled in with message data
       * @param preparedFields the map of fields and values that was submitted to the evaluator.
       * @return a string rep of the inputs to be logged.
       */
-    private def fieldNameValuesAtFailure(msgName : String, activeFields : JList[FieldName], preparedFields : Map[FieldName, FieldValue] ) : String = {
-        val inputs : Array[(String,String,String)] = activeFields.asScala.map(fld => {
-            val fldValue: FieldValue = preparedFields.getOrElse(fld, null)
-            val valueType: String = if (fldValue != null) fldValue.getDataType.toString else "None"
-            val value: String = if (fldValue != null) fldValue.getValue.toString else "None"
-            (fld.getValue, valueType, value)
+    private def fieldNameValuesAtFailure(msg : ContainerInterface, activeFields : JList[FieldName], preparedFields : Map[FieldName, FieldValue] ) : String = {
+        val inputs : Array[(String,String,String, Boolean)] = activeFields.asScala.map(fld => {
+            val fldValue: FieldValue = if (preparedFields != null) preparedFields.getOrElse(fld, null) else null
+            val name : String = fld.getValue
+            val (valueType, value, wasMapped) : (String, String, Boolean) = if (fldValue != null) {
+                /** use the prepared fields values */
+
+                val typ : String = if (fldValue != null) fldValue.getDataType.toString else "None"
+                val valueAssigned : String = if (fldValue != null) fldValue.getValue.toString else "None"
+                val mappedItWasOrNot : Boolean = (valueAssigned != "None")
+                (typ, valueAssigned, mappedItWasOrNot)
+            } else {
+                /** Use the msg to populate the type, data frpm input msg (and fact map failed) */
+                val typInfo : AttributeTypeInfo = msg.getAttributeType(name)
+                val typStr : String = if (typInfo != null) typInfo.getTypeCategory.toString else s"$name has no type info in msg!"
+                val anyValue: Any = try {
+                    msg.getOrElse(name, null)
+                } catch {
+                    case _ : Throwable => null
+                }
+                val value : String = if (anyValue != null) anyValue.toString else "None"
+                (typStr, value, false)
+            }
+            (name, valueType, value, wasMapped)
         }).toArray
 
         val buffer : mutable.StringBuilder = new StringBuilder
-        buffer.append(s"Message $msgName values: ")
+        buffer.append(s"Message ${msg.FullName} values: ")
         val comma : String = ", "
         var cnt : Int = 0
         var numberOfFields : Int = inputs.length
-        inputs.foreach(triple => {
+        inputs.foreach(quartet => {
             cnt += 1
             val comma : String = if (cnt < numberOfFields) ", " else ""
-            val (name, datatype, value) : (String, String, String) = triple
-            buffer.append(s"$name = $value isA($datatype)$comma")
+            val (name, datatype, value, wasMapped) : (String, String, String, Boolean) = quartet
+            val mapTxt : String = if (wasMapped) "" else "not"
+            buffer.append(s"$name = $value...$mapTxt mapped... isA($datatype)$comma")
         })
         buffer.toString
     }

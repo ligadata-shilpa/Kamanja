@@ -259,7 +259,7 @@ cd $KAMANJA_HOME
 ##**Establish queues**
 $KAMANJA_HOME/bin/CreateQueues.sh --partitions 1
 
-##**Establish cluster configuration**
+##**Establish cluster configuration** rm -Rf storage/*
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties upload cluster config $KAMANJA_HOME/config/ClusterConfig.json
 
 ##**Add the jpmml messages org.kdd99.network.traffic.msg1 and org.kdd99.network.traffic.score1**
@@ -269,7 +269,7 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 ##**Add the jpmml model org.kdd99.rattle.treemodel.IntrusionDetection**
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/metadata/model/Rattle/tree_m1_Rattle_KDDcup99-NormalTF_50kSample_PMML.xml MODELNAME org.kdd99.rattle.treemodel.IntrusionDetection MODELVERSION 000000.000001.000000 MESSAGENAME org.kdd99.network.traffic.msg1  TENANTID tenant1
 
-$KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.properties add model pmml $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/metadata/model/Rattle/tree_m1_Rattle_KDDcup99-NormalTF_50kSample_PMML.xml MODELNAME org.kdd99.rattle.treemodel.IntrusionDetection MODELVERSION 000000.000001.000000 MESSAGENAME org.kdd99.network.traffic.msg1  TENANTID tenant1
+$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '[{"AdapterName": "TestIn_1", "MessageName": "org.kdd99.network.traffic.msg1", "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"alwaysQuoteFields": false, "fieldDelimiter": ","} }, {"AdapterName": "TestOut_1", "MessageNames": ["org.kdd99.network.traffic.score1"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"alwaysQuoteFields": false, "fieldDelimiter": ","} } ]'
 
 ##**Add a binding for the message**
 [
@@ -296,8 +296,7 @@ $KAMANJA_HOME/bin/kamanja debug $KAMANJA_HOME/config/MetadataAPIConfig.propertie
 ]
 
 
-$KAMANJA_HOME/bin/kamanja $apiConfigProperties add adaptermessagebinding FROMSTRING '[{"AdapterName": "TestIn_1", "MessageName": "org.kdd99.network.traffic.msg1", "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"alwaysQuoteFields": false, "fieldDelimiter": ","} }, {"AdapterName": "TestOut_1", "MessageNames": ["org.kdd99.network.traffic.score1"], "Serializer": "com.ligadata.kamanja.serializer.csvserdeser", "Options": {"alwaysQuoteFields": false, "fieldDelimiter": ","} } ]'
 
 ##**Push the data**
-export useCompressed=1
-$KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/bin/JpmmlPushKafka.sh $useCompressed $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/data/kddcup.data_10_percent.gz
+export useCompressed=0
+$KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/bin/JpmmlPushKafka.sh $useCompressed $KAMANJA_SRCDIR/Utils/PmmlTestTool/src/main/resources/data/kddcup.data_200recs.csv
