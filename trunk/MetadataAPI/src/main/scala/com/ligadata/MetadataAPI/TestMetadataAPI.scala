@@ -51,7 +51,7 @@ object TestMetadataAPI {
   var serializer = SerializerManager.GetSerializer("kryo")
 
   def testDbConn {
-    /*
+  /*
     var hostnames = "localhost"
     var keyspace = "default"
     var table = "default"
@@ -142,7 +142,7 @@ object TestMetadataAPI {
       }
 
       val typKey = typKeys(choice - 1)
-      val (typNameSpace, typName, typVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(typKey)
+      val(typNameSpace, typName, typVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(typKey)
       val typOpt = MetadataAPIImpl.GetType(typNameSpace, typName, typVersion, "JSON", userid)
 
       typOpt match {
@@ -155,7 +155,7 @@ object TestMetadataAPI {
     } catch {
       case e: Exception => {
         logger.debug("", e)
-
+        
       }
     }
   }
@@ -192,7 +192,7 @@ object TestMetadataAPI {
       }
 
       val typKey = typKeys(choice - 1)
-      val (typNameSpace, typName, typVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(typKey)
+      val(typNameSpace, typName, typVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(typKey)
       val apiResult = MetadataAPIImpl.RemoveType(typNameSpace, typName, typVersion.toLong, userid)
 
       // val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
@@ -201,7 +201,7 @@ object TestMetadataAPI {
     } catch {
       case e: Exception => {
         logger.debug("", e)
-
+        
       }
     }
   }
@@ -262,7 +262,7 @@ object TestMetadataAPI {
         logger.error("Function already exists in metadata...", e)
       }
       case e: Exception => {
-        logger.debug("", e)
+      logger.debug("", e)
       }
     }
   }
@@ -296,7 +296,7 @@ object TestMetadataAPI {
       }
 
       val fcnKey = fcnKeys(choice - 1)
-      val (fcnNameSpace, fcnName, fcnVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(fcnKey)
+      val(fcnNameSpace, fcnName, fcnVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(fcnKey)
       val apiResult = MetadataAPIImpl.RemoveFunction(fcnNameSpace, fcnName, fcnVersion.toLong, userid)
 
       //val resultData = MetadataAPIImpl.getApiResult(apiResult)
@@ -334,7 +334,7 @@ object TestMetadataAPI {
       }
 
       val fcnKey = fcnKeys(choice - 1)
-      val (fcnNameSpace, fcnName, fcnVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(fcnKey)
+      val(fcnNameSpace, fcnName, fcnVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(fcnKey)
       val apiResult = MetadataAPIImpl.GetFunctionDef(fcnNameSpace, fcnName, "JSON", userid)
 
       //   val (statusCode,resultData) = MetadataAPIImpl.getApiResult(apiResult)
@@ -392,7 +392,7 @@ object TestMetadataAPI {
       while (reading) {
         inStream.read() match {
           case -1 => reading = false
-          case c  => outStream.write(c)
+          case c => outStream.write(c)
         }
       }
       outStream.flush()
@@ -428,7 +428,7 @@ object TestMetadataAPI {
         return
       }
       val msgKey = msgKeys(choice - 1)
-      val (msgNameSpace, msgName, msgVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(msgKey)
+      val(msgNameSpace, msgName, msgVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(msgKey)
       val depModels = MetadataAPIImpl.GetDependentModels(msgNameSpace, msgName, msgVersion.toLong)
       logger.debug("DependentModels => " + depModels)
 
@@ -512,7 +512,7 @@ object TestMetadataAPI {
         return
       }
       val contKey = contKeys(choice - 1)
-      val (contNameSpace, contName, contVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(contKey)
+      val(contNameSpace, contName, contVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(contKey)
       val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace, contName, "JSON", contVersion, userid)
       println("Result as Json String => \n" + apiResult)
 
@@ -681,7 +681,7 @@ object TestMetadataAPI {
   def RemoveMessage {
     try {
       //  logger.setLevel(Level.TRACE); //check again
-      println("Getting Messages")
+println("Getting Messages")
       val msgKeys = MetadataAPIImpl.GetAllMessagesFromCache(true, None)
 
       if (msgKeys.length == 0) {
@@ -702,7 +702,7 @@ object TestMetadataAPI {
       }
 
       val msgKey = msgKeys(choice - 1)
-      val (msgNameSpace, msgName, msgVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(msgKey)
+      val(msgNameSpace, msgName, msgVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(msgKey)
       val apiResult = MetadataAPIImpl.RemoveMessage(msgNameSpace, msgName, msgVersion.toLong, userid)
 
       //  val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
@@ -739,7 +739,7 @@ object TestMetadataAPI {
       }
 
       val modKey = modKeys(choice - 1)
-      val (modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
+      val(modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
       val apiResult = MetadataAPIImpl.RemoveModel(s"$modNameSpace.$modName", modVersion, userid)
 
       //   val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
@@ -752,6 +752,7 @@ object TestMetadataAPI {
     }
   }
 
+ 
   def DeactivateModel {
     try {
       //logger.setLevel(Level.TRACE);  //check again
@@ -776,7 +777,7 @@ object TestMetadataAPI {
       }
 
       val modKey = modKeys(choice - 1)
-      val (modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
+      val(modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
       val apiResult = MetadataAPIImpl.DeactivateModel(modNameSpace, modName, modVersion.toLong, userid)
 
       //   val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
@@ -813,7 +814,7 @@ object TestMetadataAPI {
       }
 
       val modKey = modKeys(choice - 1)
-      val (modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
+      val(modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
       val apiResult = MetadataAPIImpl.ActivateModel(modNameSpace, modName, modVersion.toLong, userid)
 
       //   val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
@@ -850,7 +851,7 @@ object TestMetadataAPI {
       }
 
       val modKey = modKeys(choice - 1)
-      val (modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
+      val(modNameSpace, modName, modVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modKey)
       val apiResult = MetadataAPIImpl.RemoveModel(s"$modNameSpace.$modName", modVersion, userid)
 
       //    val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
@@ -863,6 +864,7 @@ object TestMetadataAPI {
     }
   }
 
+ 
   def GetAllMessagesFromStore {
     try {
       //logger.setLevel(Level.TRACE);  //check again
@@ -947,7 +949,7 @@ object TestMetadataAPI {
       modKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -1022,7 +1024,7 @@ object TestMetadataAPI {
         logger.error("Container Already in the metadata....", e)
       }
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -1180,7 +1182,7 @@ object TestMetadataAPI {
 
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -1304,7 +1306,7 @@ object TestMetadataAPI {
       println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid")))
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -1321,9 +1323,9 @@ object TestMetadataAPI {
           configs = new Properties()
           configs.load(input);
         } catch {
-          case e: Exception => {
-
-            logger.debug("", e)
+          case e: Exception =>{
+            
+        logger.debug("", e)
             throw new Exception("Failed to load configuration.", e)
           }
         } finally {
@@ -1333,8 +1335,8 @@ object TestMetadataAPI {
         throw new Exception("Configuration file not found : " + configFile)
       }
     } catch {
-      case e: Exception => {
-
+      case e: Exception =>{
+        
         logger.debug("", e)
         throw new Exception("Invalid Configuration.", e)
       }
@@ -1348,9 +1350,9 @@ object TestMetadataAPI {
     metaProps
   }
 
-  def AddModelSourceJava(op: String): Unit = {
+  def AddModelSourceJava(op: String):Unit = {
     try {
-
+      
       var dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("MODEL_FILES_DIR")
       if (dirName == null) {
         dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("GIT_ROOT") + "/Kamanja/trunk/MetadataAPI/src/test/SampleTestFiles/Models"
@@ -1390,40 +1392,41 @@ object TestMetadataAPI {
       // Save the model
       // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
 
-      // val metaProps = loadCfgsAndPrepareDeps("/tmp/scalamdlconfig.conf")
+     // val metaProps = loadCfgsAndPrepareDeps("/tmp/scalamdlconfig.conf")
       var modelConfigName = ""
-      var configToChoices: scala.collection.mutable.Map[Int, String] = scala.collection.mutable.Map[Int, String]()
+      var configToChoices: scala.collection.mutable.Map[Int,String] = scala.collection.mutable.Map[Int,String]()
       var configsKeys = MetadataAPIImpl.getModelConfigNames
       var i = 0
-      configsKeys.foreach(configName => {
+      configsKeys.foreach (configName => {
         configToChoices(i) = configName
         i = i + 1
-      })
-
+      }) 
+      
       println("Pick the Model Config from below choices")
       seq = 0
       configsKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
       seq += 1
-      println("[" + seq + "] Main Menu")
+      println("[" + seq + "] Main Menu")      
       print("\nEnter your choice: ")
       val choice2: Int = readInt()
-      println("Entered CHOICE: " + choice2)
+      println("Entered CHOICE: "+choice2)
       if (choice2 == configsKeys.length + 1) {
         return
       }
-      //  if (choice2 < 1 || choice2 > sourceFiles.length + 1) {
-      //    logger.error("Invalid Choice : " + choice)
-      //    return
-      //  }
+    //  if (choice2 < 1 || choice2 > sourceFiles.length + 1) {
+    //    logger.error("Invalid Choice : " + choice)
+    //    return
+    //  }
 
       println("Before modelConfigName")
-      modelConfigName = configToChoices(choice2 - 1)
-      println("CHOSE " + (choice2 - 1) + "  " + modelConfigName)
-
-      if (op.equalsIgnoreCase("add")) {
+      modelConfigName =  configToChoices(choice2 - 1)
+      println("CHOSE " + (choice2-1) + "  "+modelConfigName)
+      
+      if( op.equalsIgnoreCase("add") ){
         println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
-      } else {
-        println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
+      }
+      else{
+	      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
       }
     } catch {
       case e: AlreadyExistsException => {
@@ -1476,93 +1479,50 @@ object TestMetadataAPI {
       // Save the model
       // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
 
-      // val metaProps = loadCfgsAndPrepareDeps("/tmp/scalamdlconfig.conf")
+     // val metaProps = loadCfgsAndPrepareDeps("/tmp/scalamdlconfig.conf")
       var modelConfigName = ""
-      var configToChoices: scala.collection.mutable.Map[Int, String] = scala.collection.mutable.Map[Int, String]()
+      var configToChoices: scala.collection.mutable.Map[Int,String] = scala.collection.mutable.Map[Int,String]()
       var configsKeys = MetadataAPIImpl.getModelConfigNames
-      var i = 0
-      configsKeys.foreach(configName => {
-        println("Addding " + configName + " at location " + i)
+       var i = 0
+      configsKeys.foreach (configName => {
+        println("Addding "+ configName + " at location "+i )
         configToChoices(i) = configName
         i = i + 1
-      })
-
+      }) 
+      
       println("Pick the Model Config from below choices")
       seq = 0
       configsKeys.foreach(key => { seq += 1; println("[" + seq + "] " + key) })
       seq += 1
-      println("[" + seq + "] Main Menu")
+      println("[" + seq + "] Main Menu")      
       print("\nEnter your choice: ")
       val choice2: Int = readInt()
-
+ 
       if (choice2 == configsKeys.length + 1) {
         return
       }
       if (choice2 < 1 || choice2 > configsKeys.length + 1) {
         logger.error("Invalid Choice : " + choice)
         return
+      }    
+      modelConfigName =  configToChoices(choice2 - 1)
+    
+      println("CHOSE " + (choice2-1) + "  "+modelConfigName)
+     
+      if( op.equalsIgnoreCase("add") ){
+	       println("Results as json string => \n" +
+	         MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"),Some(modelConfigName)))
       }
-      modelConfigName = configToChoices(choice2 - 1)
-
-      println("CHOSE " + (choice2 - 1) + "  " + modelConfigName)
-
-      if (op.equalsIgnoreCase("add")) {
-        println("Results as json string => \n" +
-          MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
-      } else {
-        println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
+      else {
+	       println("Results as json string => \n" + MetadataAPIImpl.UpdateModel( ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
       }
-
+	
     } catch {
       case e: AlreadyExistsException => {
         logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
         logger.debug("", e)
-      }
-    }
-  }
-
-  // Get Message/Container by getSchemaId
-  def GetTypeBySchemaId {
-    try {
-      // logger.setLevel(Level.TRACE); //check again
-
-      print("\nEnter the SchemaId : ")
-      val schemaId: Int = readInt()
-
-      if (schemaId < 1) {
-        println("Invalid schemaId " + schemaId + ",start with main menu...")
-        return
-      }
-      val apiResult = MetadataAPIImpl.GetTypeBySchemaId(schemaId, userid) //val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace,contName,"JSON",contVersion,userid)
-      println("Result as Json String => \n" + apiResult)
-
-    } catch {
-      case e: Exception => {
-        e.printStackTrace()
-      }
-    }
-  }
-
-  // Get Message/Container/Model by ElementId
-  def GetTypeByElementId {
-    try {
-      // logger.setLevel(Level.TRACE); //check again
-
-      print("\nEnter the Element Id : ")
-      val elementId: Long = readLong()
-
-      if (elementId < 1) {
-        println("Invalid elementId " + elementId + ",start with main menu...")
-        return
-      }
-      val apiResult = MetadataAPIImpl.GetTypeByElementId(elementId, userid) //val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace,contName,"JSON",contVersion,userid)
-      println("Result as Json String => \n" + apiResult)
-
-    } catch {
-      case e: Exception => {
-        e.printStackTrace()
       }
     }
   }
@@ -1619,7 +1579,7 @@ object TestMetadataAPI {
   }
 
   def UploadCompileConfig {
-    try {
+     try {
       var dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONFIG_FILES_DIR")
       if (dirName == null) {
         dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("GIT_ROOT") + "/Kamanja/trunk/SampleApplication/Medical/Configs"
@@ -1666,9 +1626,9 @@ object TestMetadataAPI {
       case e: Exception => {
         logger.debug("", e)
       }
-    }
+    }   
   }
-
+  
   def UploadEngineConfig {
     try {
       var dirName = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("CONFIG_FILES_DIR")
@@ -1712,7 +1672,7 @@ object TestMetadataAPI {
       println("Results as json string => \n" + MetadataAPIImpl.UploadConfig(cfgStr, userid, "testConf"))
     } catch {
       case e: AlreadyExistsException => {
-
+        
         logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
@@ -1764,7 +1724,7 @@ object TestMetadataAPI {
       println("Results as json string => \n" + MetadataAPIImpl.RemoveConfig(cfgStr, userid, "n/a"))
     } catch {
       case e: AlreadyExistsException => {
-
+       
         logger.error("Object Already in the metadata....", e)
       }
       case e: Exception => {
@@ -1815,7 +1775,7 @@ object TestMetadataAPI {
       println("Results as json string => \n" + MetadataAPIImpl.UploadJar(jarFilePath), userid)
     } catch {
       case e: AlreadyExistsException => {
-
+        
         logger.error("Model Already in the metadata....", e)
       }
       case e: Exception => {
@@ -1869,7 +1829,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: AlreadyExistsException => {
-
+       
         logger.error("Function Already in the metadata....", e)
       }
       case e: Exception => {
@@ -1885,7 +1845,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -1936,7 +1896,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: AlreadyExistsException => {
-
+       
         logger.error("Concept Already in the metadata....", e)
       }
       case e: Exception => {
@@ -1953,7 +1913,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2004,7 +1964,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: AlreadyExistsException => {
-
+       
         logger.error("Type Already in the metadata....", e)
       }
       case e: Exception => {
@@ -2053,7 +2013,7 @@ object TestMetadataAPI {
       println("Result as Json String => " + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2066,7 +2026,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2079,7 +2039,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2092,7 +2052,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2105,7 +2065,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2118,7 +2078,7 @@ object TestMetadataAPI {
       println("Result as Json String => \n" + apiResult)
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2223,7 +2183,7 @@ object TestMetadataAPI {
       zkc.setData().forPath("/ligadata/models", "Activate ModelDef-2".getBytes);
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     } finally {
@@ -2272,7 +2232,7 @@ object TestMetadataAPI {
       MetadataAPIImpl.UpdateObject(key, ba, storeType, "kryo")
     } catch {
       case e: Exception => {
-
+        
         logger.debug("Failed to save the object : " + e.getMessage(), e)
       }
     }
@@ -2295,115 +2255,112 @@ object TestMetadataAPI {
       assert(v == "value3")
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
   }
+  
 
-  def StartTest {
-    try {
-      val dumpMetadata = () => { DumpMetadata }
-      val addModel = () => { AddModel }
-      val getModel = () => { GetModelFromCache }
-      val getAllModels = () => { GetAllModelsFromCache }
-      val removeModel = () => { RemoveModel }
-      val updateModel = () => { UpdateModel }
-      val deactivateModel = () => { DeactivateModel }
-      val activateModel = () => { ActivateModel }
-      val addMessage = () => { AddMessage }
-      val updateMessage = () => { UpdateMessage }
-      val getMessage = () => { GetMessageFromCache }
-      val getAllMessages = () => { GetAllMessagesFromCache }
-      val removeMessage = () => { RemoveMessage }
-      val addContainer = () => { AddContainer }
-      val updateContainer = () => { UpdateContainer }
-      val getContainer = () => { GetContainerFromCache }
-      val getAllContainers = () => { GetAllContainersFromCache }
-      val removeContainer = () => { RemoveContainer }
-      val addType = () => { AddType }
-      val getType = () => { GetType }
-      val getAllTypes = () => { GetAllTypes }
-      val removeType = () => { RemoveType }
-      val addFunction = () => { AddFunction }
-      val getFunction = () => { GetFunction }
-      val removeFunction = () => { RemoveFunction }
-      val updateFunction = () => { UpdateFunction }
-      val addConcept = () => { AddConcept }
-      val removeConcept = () => { RemoveConcept }
-      val updateConcept = () => { UpdateConcept }
-      val dumpAllFunctionsAsJson = () => { DumpAllFunctionsAsJson }
-      val loadFunctionsFromAFile = () => { LoadFunctionsFromAFile }
-      val dumpAllConceptsAsJson = () => { DumpAllConceptsAsJson }
-      val loadConceptsFromAFile = () => { LoadConceptsFromAFile }
-      val dumpAllTypesByObjTypeAsJson = () => { DumpAllTypesByObjTypeAsJson }
-      val loadTypesFromAFile = () => { LoadTypesFromAFile }
-      val uploadJarFile = () => { UploadJarFile }
-      val uploadEngineConfig = () => { UploadEngineConfig }
-      val uploadCompileConfig = () => { UploadCompileConfig }
-      val dumpAllNodes = () => { DumpAllNodesAsJson }
-      val dumpAllClusters = () => { DumpAllClustersAsJson }
-      val dumpAllClusterCfgs = () => { DumpAllClusterCfgsAsJson }
-      val dumpAllAdapters = () => { DumpAllAdaptersAsJson }
-      val dumpAllCfgObjects = () => { DumpAllCfgObjectsAsJson }
-      val removeEngineConfig = () => { RemoveEngineConfig }
-      val addModelSourceJava = () => { AddModelSourceJava("add") }
-      val addModelSourceScala = () => { AddModelSourceScala("add") }
-      val updateModelSourceJava = () => { AddModelSourceJava("update") }
-      val updateModelSourceScala = () => { AddModelSourceScala("update") }
-      val getTypeBySchemaId = () => { GetTypeBySchemaId }
-      val getTypeByElementId = () => { GetTypeByElementId }
+  def StartTest{
+    try{
+      val dumpMetadata = ()               => { DumpMetadata }
+      val addModel = ()                   => { AddModel }
+      val getModel = ()                   => { GetModelFromCache }
+      val getAllModels = ()               => { GetAllModelsFromCache }
+      val removeModel = ()                => { RemoveModel }
+      val updateModel = ()                => { UpdateModel }
+      val deactivateModel = ()            => { DeactivateModel }
+      val activateModel = ()              => { ActivateModel }
+      val addMessage = ()                 => { AddMessage }
+      val updateMessage = ()              => { UpdateMessage }
+      val getMessage = ()                 => { GetMessageFromCache }
+      val getAllMessages = ()             => { GetAllMessagesFromCache }
+      val removeMessage = ()              => { RemoveMessage }
+      val addContainer = ()               => { AddContainer }
+      val updateContainer = ()            => { UpdateContainer}
+      val getContainer = ()               => { GetContainerFromCache }
+      val getAllContainers = ()           => { GetAllContainersFromCache }
+      val removeContainer = ()            => { RemoveContainer }
+      val addType         = ()            => { AddType }
+      val getType         = ()            => { GetType }
+      val getAllTypes     = ()            => { GetAllTypes }
+      val removeType      = ()            => { RemoveType }
+      val addFunction         = ()        => { AddFunction }
+      val getFunction     =()             => { GetFunction }
+      val removeFunction      = ()        => { RemoveFunction }
+      val updateFunction         = ()     => { UpdateFunction }
+      val addConcept         = ()         => { AddConcept }
+      val removeConcept      = ()         => { RemoveConcept }
+      val updateConcept         = ()      => { UpdateConcept }
+      val dumpAllFunctionsAsJson = ()     => { DumpAllFunctionsAsJson }
+      val loadFunctionsFromAFile = ()     => { LoadFunctionsFromAFile }
+      val dumpAllConceptsAsJson = ()      => { DumpAllConceptsAsJson }
+      val loadConceptsFromAFile = ()      => { LoadConceptsFromAFile }
+      val dumpAllTypesByObjTypeAsJson = ()=> { DumpAllTypesByObjTypeAsJson }
+      val loadTypesFromAFile = ()         => { LoadTypesFromAFile }
+      val uploadJarFile = ()              => { UploadJarFile }
+      val uploadEngineConfig = ()         => { UploadEngineConfig }
+      val uploadCompileConfig = ()        => { UploadCompileConfig }
+      val dumpAllNodes = ()               => { DumpAllNodesAsJson }
+      val dumpAllClusters = ()            => { DumpAllClustersAsJson }
+      val dumpAllClusterCfgs = ()         => { DumpAllClusterCfgsAsJson }
+      val dumpAllAdapters = ()            => { DumpAllAdaptersAsJson }
+      val dumpAllCfgObjects = ()          => { DumpAllCfgObjectsAsJson }
+      val removeEngineConfig = ()         => { RemoveEngineConfig }
+      val addModelSourceJava = ()         => { AddModelSourceJava("add") }
+      val addModelSourceScala = ()        => { AddModelSourceScala("add") }
+      val updateModelSourceJava = ()         => { AddModelSourceJava("update") }
+      val updateModelSourceScala = ()        => { AddModelSourceScala("update") }
 
-      val topLevelMenu = List(("Add Model", addModel),
-        ("Add Model - Java", addModelSourceJava),
-        ("Add Model - Scala", addModelSourceScala),
-        ("Get Model", getModel),
-        ("Get All Models", getAllModels),
-        ("Remove Model", removeModel),
-        ("Update Model", updateModel),
-        ("Deactivate Model", deactivateModel),
-        ("Activate Model", activateModel),
-        ("Add Message", addMessage),
-        ("Update Model - Java", updateModelSourceJava),
-        ("Update Model - Scala", updateModelSourceScala),
-        ("Update Message", updateMessage),
-        ("Get Message", getMessage),
-        ("Get All Messages", getAllMessages),
-        ("Remove Message", removeMessage),
-        ("Add Container", addContainer),
-        ("Update Container", updateContainer),
-        ("Get Container", getContainer),
-        ("Get All Containers", getAllContainers),
-        ("Remove Container", removeContainer),
-        ("Add Type", addType),
-        ("Get Type", getType),
-        ("Get All Types", getAllTypes),
-        ("Remove Type", removeType),
-        ("Add Function", addFunction),
-        ("Get Function", getFunction),
-        ("Remove Function", removeFunction),
-        ("Update Function", updateFunction),
-        ("Add Concept", addConcept),
-        ("Remove Concept", removeConcept),
-        ("Update Concept", updateConcept),
-        ("Load Concepts from a file", loadConceptsFromAFile),
-        ("Load Functions from a file", loadFunctionsFromAFile),
-        ("Load Types from a file", loadTypesFromAFile),
-        ("Dump All Metadata Keys", dumpMetadata),
-        ("Dump All Functions", dumpAllFunctionsAsJson),
-        ("Dump All Concepts", dumpAllConceptsAsJson),
-        ("Dump All Types By Object Type", dumpAllTypesByObjTypeAsJson),
-        ("Upload Any Jar", uploadJarFile),
-        ("Upload Engine Config", uploadEngineConfig),
-        ("Upload Compile Config", uploadCompileConfig),
-        ("Dump Node Objects", dumpAllNodes),
-        ("Dump Cluster Objects", dumpAllClusters),
-        ("Dump ClusterCfg Node Objects", dumpAllClusterCfgs),
-        ("Dump Adapter Node Objects", dumpAllAdapters),
-        ("Dump All Config Objects", dumpAllCfgObjects),
-        ("Remove Engine Config", removeEngineConfig),
-        ("Get Type By SchemaId", getTypeBySchemaId),
-        ("Get Type By Element Id", getTypeByElementId))
+      val topLevelMenu = List(("Add Model",addModel),
+            ("Add Model - Java", addModelSourceJava),
+            ("Add Model - Scala", addModelSourceScala),
+			      ("Get Model",getModel),
+			      ("Get All Models",getAllModels),
+			      ("Remove Model",removeModel),
+            ("Update Model",updateModel),
+			      ("Deactivate Model",deactivateModel),
+			      ("Activate Model",activateModel),
+			      ("Add Message",addMessage),
+            ("Update Model - Java", updateModelSourceJava),
+            ("Update Model - Scala", updateModelSourceScala),
+            ("Update Message", updateMessage),
+			      ("Get Message",getMessage),
+			      ("Get All Messages",getAllMessages),
+			      ("Remove Message",removeMessage),
+			      ("Add Container",addContainer),
+            ("Update Container", updateContainer),
+			      ("Get Container",getContainer),
+			      ("Get All Containers",getAllContainers),
+			      ("Remove Container",removeContainer),
+			      ("Add Type",addType),
+			      ("Get Type",getType),
+			      ("Get All Types",getAllTypes),
+			      ("Remove Type",removeType),
+			      ("Add Function",addFunction),
+            ("Get Function", getFunction),
+			      ("Remove Function",removeFunction),
+			      ("Update Function",updateFunction),
+			      ("Add Concept",addConcept),
+			      ("Remove Concept",removeConcept),
+			      ("Update Concept",updateConcept),
+			      ("Load Concepts from a file",loadConceptsFromAFile),
+			      ("Load Functions from a file",loadFunctionsFromAFile),
+			      ("Load Types from a file",loadTypesFromAFile),
+			      ("Dump All Metadata Keys",dumpMetadata),
+			      ("Dump All Functions",dumpAllFunctionsAsJson),
+			      ("Dump All Concepts",dumpAllConceptsAsJson),
+			      ("Dump All Types By Object Type",dumpAllTypesByObjTypeAsJson),
+			      ("Upload Any Jar",uploadJarFile),
+			      ("Upload Engine Config",uploadEngineConfig),
+            ("Upload Compile Config", uploadCompileConfig),
+			      ("Dump Node Objects",dumpAllNodes),
+			      ("Dump Cluster Objects",dumpAllClusters),
+			      ("Dump ClusterCfg Node Objects",dumpAllClusterCfgs),
+			      ("Dump Adapter Node Objects",dumpAllAdapters),
+			      ("Dump All Config Objects",dumpAllCfgObjects),
+			      ("Remove Engine Config",removeEngineConfig))
 
       var done = false
       while (done == false) {
@@ -2422,7 +2379,7 @@ object TestMetadataAPI {
       }
     } catch {
       case e: Exception => {
-
+        
         logger.debug("", e)
       }
     }
@@ -2476,7 +2433,7 @@ object TestMetadataAPI {
     filterParameters(1) = "20150323000000"
     MetadataAPIImpl.getAuditRec(filterParameters)
   }
-  /*
+/*
   def main(args: Array[String]) {
     try {
       var myConfigFile: String = null
