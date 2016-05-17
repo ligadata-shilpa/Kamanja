@@ -44,6 +44,8 @@ import scala.collection.mutable.{HashMap, ArrayBuffer}
 import com.ligadata.kamanja.metadata.ModelCompilationConstants
 import com.ligadata.Exceptions._
 
+import java.util.concurrent.atomic._
+
 case class AdapterUniqueValueDes_1_3(T: Long, V: String, Out: Option[List[List[String]]]) // TransactionId, Value, Queues & Result Strings. Adapter Name, Key and Result Strings
 
 import scala.actors.threadpool.{Executors, ExecutorService, TimeUnit}
@@ -367,6 +369,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
   private var _adapterMessageBindings: Option[String] = None
 
   private val globalExceptions = ArrayBuffer[(String, Throwable)]()
+  private var _uniqueIdGenerator:AtomicInteger = null
 
   private def AddToGlobalException(failedMsg: String, e: Throwable): Unit = {
     globalExceptions += ((failedMsg, e))
@@ -586,6 +589,8 @@ class MigrateTo_V_1_4 extends MigratableTo {
 
     _tenantDsDb = GetDataStoreHandle(toVersionJarPaths, tenantDatastoreInfo)
 
+    _uniqueIdGenerator = new AtomicInteger((System.currentTimeMillis()/1000).toInt)
+
     _bInit = true
   }
 
@@ -704,6 +709,10 @@ class MigrateTo_V_1_4 extends MigratableTo {
     _metaDataStoreDb.CreateMetadataContainer(metadataTables)
   }
 
+
+  private def getUniqueId: Long = {
+    _uniqueIdGenerator.incrementAndGet
+  }
 
   private def addBackupTablesToExecutor(executor: ExecutorService, storeDb: DataStore, tblsToBackedUp: Array[BackupTableInfo], errMsgTemplate: String, force: Boolean): Unit = {
     tblsToBackedUp.foreach(backupTblInfo => {
@@ -1017,7 +1026,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                   val deps = DepJars(mdlInfo.getOrElse(ModelCompilationConstants.DEPENDENCIES, List[String]()).asInstanceOf[List[String]])
                   val typs = mdlInfo.getOrElse(ModelCompilationConstants.TYPES_DEPENDENCIES, List[String]()).asInstanceOf[List[String]]
                   //returns current time as a unique number
-                  val uniqueId = System.currentTimeMillis();
+                  val uniqueId = getUniqueId
                   val cfgnm = "migrationmodelconfig_from_" + _sourceVersion.replace('.', '_') + "_to_1_4_" + uniqueId.toString;
 
                   val mdlConfig = (cfgnm ->
