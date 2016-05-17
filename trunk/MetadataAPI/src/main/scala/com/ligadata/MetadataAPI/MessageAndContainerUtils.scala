@@ -277,7 +277,6 @@ object MessageAndContainerUtils {
             val apiResult = new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, ErrorCodeConstants.Update_Message_Failed + ":" + msg.Name + " Error:Invalid Version")
             apiResult.toString()
           }
-
           // 1119 Changes begin  - prevents addition of an existing message
           if (DoesAnyMessageExist(msg) == true) {
             val apiResult = new ApiResult(ErrorCodeConstants.Failure, "AddContainerOrMessage", null, ErrorCodeConstants.Add_Message_Failed + ":" + msg.Name + " Already Exists, perform update")
@@ -286,7 +285,7 @@ object MessageAndContainerUtils {
           }
           // 1119 Changes end
 
-          if (recompile) {
+         if (recompile) {
             // Incase of recompile, Message Compiler is automatically incrementing the previous version
             // by 1. Before Updating the metadata with the new version, remove the old version
             val latestVersion = GetLatestMessage(msg)
@@ -465,6 +464,12 @@ object MessageAndContainerUtils {
           if (latestVersion != None) {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
+          // 1118 - Changes begin - Message must exist for update to happen
+          else {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Message must exist to update")).toString
+
+          }
+          // 1118 - Changes end
           if (isValid) {
             // Check to make sure the TenantId is the same
             if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
@@ -504,6 +509,13 @@ object MessageAndContainerUtils {
           if (latestVersion != None) {
             isValid = IsValidVersion(latestVersion.get, msg)
           }
+          // 1118 - Changes begin - Message must exist for update to happen
+          else {
+            return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage", null, s"Container must exist to update")).toString
+
+          }
+          // 1118 - Changes end
+
           if (isValid) {
             // Check to make sure the TenantId is the same
             if (!tenantId.get.equalsIgnoreCase(latestVersion.get.tenantId)) {
