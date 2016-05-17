@@ -381,6 +381,15 @@ object ModelUtils {
       // save the outMessage
       AddOutMsgToModelDef(modDef, ModelType.fromString(sourceLang), optMsgProduced, userid)
 
+      // 1119 Changes begin - checks model existence before add to prevent
+      if (modDef != null || DoesAnyModelExist(modDef) == true) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "AddModelFromSource", null, s"Java/Scala model exists, perform update on model")).toString
+
+      }
+      // 1119 Changes end
+
+
+
       logger.info("Begin uploading dependent Jars, please wait.")
       PersistenceUtils.UploadJarsToDB(modDef)
       logger.info("Finished uploading dependent Jars.")
@@ -671,6 +680,14 @@ object ModelUtils {
       // make sure the version of the model is greater than any of previous models with same FullName
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+
+      // 1119 Changes begin - checks model existence before add to prevent
+      if (modDef != null || DoesAnyModelExist(modDef) == true) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"KPMML model exists, perform update on model")).toString
+
+      }
+      // 1119 Changes end
+
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
 
@@ -787,6 +804,13 @@ object ModelUtils {
       // make sure the version of the model is greater than any of previous models with same FullName
       val latestVersion = if (modDef == null) None else GetLatestModel(modDef)
       val isValid: Boolean = if (latestVersion != None) MetadataAPIImpl.IsValidVersion(latestVersion.get, modDef) else true
+
+      // 1119 Changes begin - checks model existence before add to prevent
+      if (modDef != null || DoesAnyModelExist(modDef) == true) {
+        return (new ApiResult(ErrorCodeConstants.Failure, "AddJTMModel", null, s"JTM model exists, perform update on model")).toString
+
+      }
+      // 1119 Changes end
 
       if (isValid && modDef != null) {
         MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
@@ -1914,7 +1938,44 @@ object ModelUtils {
     }
   }
 
+  // 1119 Changes begin
   /**
+    * Check whether model already exists in metadata manager. Ideally,
+    * we should never add the model into metadata manager more than once
+    * and there is no need to use this function in main code flow
+    * This is just a utility function being used during these initial phases
+    *
+    * @param modDef the model def to be tested
+    * @return
+    */
+  def DoesAnyModelExist(modDef: ModelDef): Boolean = {
+    try {
+
+      val dispkey = modDef.nameSpace + "." + modDef.name + "." + MdMgr.Pad0s2Version(modDef.ver)
+      val o = MdMgr.GetMdMgr.Model(modDef.nameSpace.toLowerCase,
+        modDef.name.toLowerCase,
+        0,
+        false)
+      o match {
+        case None =>
+          logger.debug("model not in the cache => " + dispkey)
+          return false;
+        case Some(m) =>
+          logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].ver))
+          return true
+      }
+    } catch {
+      case e: Exception => {
+
+        logger.debug("", e)
+        throw UnexpectedMetadataAPIException(e.getMessage(), e)
+      }
+    }
+  }
+  // 1119 Changes end
+
+
+/**
     * Get the latest model for a given FullName
     *
     * @param modDef
