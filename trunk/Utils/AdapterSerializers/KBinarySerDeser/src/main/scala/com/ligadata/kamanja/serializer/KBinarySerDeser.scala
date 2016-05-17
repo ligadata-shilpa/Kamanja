@@ -206,6 +206,34 @@ class KBinarySerDeser extends SerializeDeserialize {
     Debug(s"KBinarySerDeser:serializeContainer <-, name: $name, typeName:${v.getTypeName}, cnt: $fieldCnt, isFixed: $isFixed, schemaId: $schemaId, dataSize: $dataSize")
   }
 
+  // DataOutputStream - doesn't handle strings greater than 64k, hence these two specialized functions to write and read
+  // strings.
+  // WriteStrVal -
+  //  Write INT length of byte array derived from given string
+  //  Write UTF-8 byte array representation
+  //
+  private def WriteStrVal(dos: DataOutputStream, str: String) = {
+    val bytes = if(str.length > 0) str.getBytes("UTF-8") else Array[Byte]()
+    val len = bytes.length
+    dos.writeInt(len)
+    if(len > 0)
+      dos.write(bytes)
+  }
+
+  // ReadStrVal does exact opposite of WriteStrVal -
+  //  Read integer that represent length of array
+  //  Allocate byte array of that size
+  //  Read UTF-8 byte buffer and convert that into a string
+  private def ReadStrVal(dos: DataInputStream) : String = {
+    val len = dos.readInt
+    val bytes = if(len > 0) new Array[Byte](len) else Array[Byte]()
+    if(len > 0) {
+      dos.readFully(bytes)
+      new String(bytes, "UTF-8")
+    }
+    else ""
+  }
+
   private def WriteVal(dos: DataOutputStream, typeCategory: TypeCategory, v: Any) =
     typeCategory match {
       case BOOLEAN => dos.writeBoolean(v.asInstanceOf[Boolean])
@@ -215,7 +243,7 @@ class KBinarySerDeser extends SerializeDeserialize {
       case INT => dos.writeInt(v.asInstanceOf[Int])
       case FLOAT => dos.writeFloat(v.asInstanceOf[Float])
       case DOUBLE => dos.writeDouble(v.asInstanceOf[Double])
-      case STRING => dos.writeUTF(if (v !=null) v.asInstanceOf[String] else "")
+      case STRING => WriteStrVal(dos, if (v !=null) v.asInstanceOf[String] else "")
       case _ => throw new UnsupportedObjectException(s"KBinary WriteVal got unsupported type, typeId: ${typeCategory.name}", null)
     }
 
@@ -228,7 +256,7 @@ class KBinarySerDeser extends SerializeDeserialize {
       case INT => dis.readInt
       case FLOAT => dis.readFloat
       case DOUBLE => dis.readDouble
-      case STRING => dis.readUTF
+      case STRING => ReadStrVal(dis)
       case _ => throw new UnsupportedObjectException(s"KBinary ReadVal got unsupported type, typeId: ${typeCategory.name}", null)
     }
 
@@ -461,7 +489,7 @@ class KBinarySerDeser extends SerializeDeserialize {
 
   private def ReadMap(dis: DataInputStream): Any = {
     val hdr = ReadMapHeader(dis)
-    Debug(s"ReadArray ->, cnt: ${hdr.cnt}, keyType: ${hdr.keyType.getValue}, valType: ${hdr.valType.getValue}")
+    Debug(s"ReadMap ->, cnt: ${hdr.cnt}, keyType: ${hdr.keyType.getValue}, valType: ${hdr.valType.getValue}")
 
     val map = hdr.valType match {
       case BOOLEAN => ReadMapT(dis, hdr.cnt, { d: DataInputStream => (d.readUTF, d.readBoolean) })
@@ -477,7 +505,7 @@ class KBinarySerDeser extends SerializeDeserialize {
       case ARRAY => ReadMapT(dis, hdr.cnt, { d: DataInputStream => (d.readUTF, ReadArray(d)) })
       case _ => throw new UnsupportedObjectException(s"Unsupported value type while loading array, valType: ${hdr.valType}", null)
     }
-    Debug(s"ReadArray <-, cnt: ${hdr.cnt}, keyType: ${hdr.keyType.getValue}, valType: ${hdr.valType.getValue}")
+    Debug(s"ReadMap <-, cnt: ${hdr.cnt}, keyType: ${hdr.keyType.getValue}, valType: ${hdr.valType.getValue}")
     map
   }
 
