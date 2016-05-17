@@ -16,7 +16,9 @@
 
 package com.ligadata.jpmml
 
+import scala.StringBuilder
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.collection.mutable.{Map => MutableMap}
 
 import com.ligadata.kamanja.metadata.{MdMgr, ModelDef, BaseElem}
@@ -59,6 +61,7 @@ object JpmmlFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory 
     /**
       * As part of the creation of the model instance factory, see to it that there any jars that it needs (either its
       * own or those upon which it depends) are loaded.
+      *
       * @param metadataLoader the engine's custom loader to use if/when instances of the model and the dependent jars are to be loaded
       * @param jarPaths  a Set of Paths that contain the dependency jars required by this factory instance to be created
       * @param elem a BaseElem (actually the ModelDef in this case) with an implementation jar and possible dependent jars
@@ -77,6 +80,7 @@ object JpmmlFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory 
     /**
       * Answer a set of jars that contain the implementation jar and its dependent jars for the supplied BaseElem.
       * The list is checked for valid jar paths before returning.
+      *
       * @param jarPaths where jars are located in the cluster node.
       * @param elem the model definition that has a jar implementation and a list of dependency jars
       * @return an Array[String] containing the valid jar paths for the supplied element.
@@ -103,6 +107,7 @@ object JpmmlFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory 
     /**
       * Instantiate a model instance factory for the supplied ''modelDef''.  The model instance factory can instantiate
       * instances of the model described by the ModelDef.
+      *
       * @param modelDef the metadatata object for which a model factory instance will be created.
       * @param nodeContext the NodeContext that provides access to model state and kamanja engine services.
       * @param loaderInfo the engine's custom loader to use if/when instances of the model and the dependent jars are to be loaded
@@ -172,9 +177,10 @@ object JpmmlFactoryOfModelInstanceFactory extends FactoryOfModelInstanceFactory 
   */
 
 class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluator[_]) extends ModelInstance(factory) {
-
+    val _logger : org.apache.logging.log4j.Logger = GlobalLogger.logger
     /**
       * The engine will call this method to have the model evaluate the input message and produce a ModelResultBase with results.
+      *
       * @param txnCtxt the transaction context (contains message, transaction id, partition key, raw data, et al)
       * @param outputDefault when true, a model result will always be produced with default values.  If false (ordinary case), output is
       *                      emitted only when the model deems this message worthy of report.  If desired the model may return a 'null'
@@ -188,17 +194,65 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
 
     /**
       * Prepare the active fields, call the model evaluator, and emit results.
+      *
       * @param msg the incoming message containing the values of interest to be assigned to the active fields in the
       *            model's data dictionary.
       * @return
       */
     private def evaluateModel(msg : ContainerInterface): ModelResultBase = {
         val activeFields = modelEvaluator.getActiveFields
-        val preparedFields = prepareFields(activeFields, msg, modelEvaluator)
-        val evalResultRaw : MutableMap[FieldName, _] = modelEvaluator.evaluate(preparedFields.asJava).asScala
-        val evalResults = replaceNull(evalResultRaw)
-        val results = EvaluatorUtil.decode(evalResults.asJava).asScala
-        new MappedModelResults().withResults(results.toArray)
+        val preparedFields : Map[FieldName, FieldValue] = prepareFields(activeFields, msg, modelEvaluator)
+        val scoreResults : Array[(String, Any)] = try {
+            val evalResultRaw: MutableMap[FieldName, _] = modelEvaluator.evaluate(preparedFields.asJava).asScala
+            val evalResults = replaceNull(evalResultRaw)
+            val results = EvaluatorUtil.decode(evalResults.asJava).asScala
+            results.toArray
+        } catch {
+            case e: Exception =>  {
+                val msgName : String = msg.FullName
+                val inputs : String = fieldNameValuesAtFailure(msgName, activeFields, preparedFields)
+                _logger.error(s"Attempting to process \ninputs = '$inputs', \nthe following exception was encountered: ${e.toString}")
+                _logger.error("No score produced.")
+                null
+            }
+        }
+        val returnResults : ModelResultBase = if (scoreResults != null) {
+            new MappedModelResults().withResults(scoreResults.toArray)
+        } else {
+            null
+        }
+        returnResults
+
+    }
+
+    /**
+      * Prepare a diagnostic string consisting of the field name, the value that has been associated with it and the value's
+      * known type.
+      * @param msgName the name of the incoming message
+      * @param activeFields the input fields that were filled in with message data
+      * @param preparedFields the map of fields and values that was submitted to the evaluator.
+      * @return a string rep of the inputs to be logged.
+      */
+    private def fieldNameValuesAtFailure(msgName : String, activeFields : JList[FieldName], preparedFields : Map[FieldName, FieldValue] ) : String = {
+        val inputs : Array[(String,String,String)] = activeFields.asScala.map(fld => {
+            val fldValue: FieldValue = preparedFields.getOrElse(fld, null)
+            val valueType: String = if (fldValue != null) fldValue.getDataType.toString else "None"
+            val value: String = if (fldValue != null) fldValue.getValue.toString else "None"
+            (fld.getValue, valueType, value)
+        }).toArray
+
+        val buffer : mutable.StringBuilder = new StringBuilder
+        buffer.append(s"Message $msgName values: ")
+        val comma : String = ", "
+        var cnt : Int = 0
+        var numberOfFields : Int = inputs.length
+        inputs.foreach(triple => {
+            cnt += 1
+            val comma : String = if (cnt < numberOfFields) ", " else ""
+            val (name, datatype, value) : (String, String, String) = triple
+            buffer.append(s"$name = $value isA($datatype)$comma")
+        })
+        buffer.toString
     }
 
 
@@ -229,8 +283,8 @@ class JpmmlAdapter(factory : ModelInstanceFactory, modelEvaluator: ModelEvaluato
       *
       * NOTE: It is possible to have missing inputs in the message.  The model, if written robustly, has accounted
       * for missingValue and other strategies needed to produce results even with imperfect inputs.
-      * @see http://dmg.org/pmml/v4-2-1/MiningSchema.html for a discussion about this.
       *
+      * @see http://dmg.org/pmml/v4-2-1/MiningSchema.html for a discussion about this.
       * @param activeFields a List of the FieldNames
       * @param msg the incoming message instance
       * @param evaluator the PMML evaluator that the factory as arranged for this instance that can process the
@@ -277,6 +331,7 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
 
     /**
       * Answer the model name.
+      *
       * @return the model namespace.name.version
       */
     override def getModelName(): String = {
@@ -292,6 +347,7 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
 
     /**
       * Answer the model version.
+      *
       * @return the model version
       */
     override def getVersion(): String = {
@@ -327,6 +383,7 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
 
     /**
       * Answer a model instance, obtaining a pre-existing one in the cache if possible.
+      *
       * @return - a ModelInstance that can process the message found in the TransactionContext supplied at execution time
       */
     override def createModelInstance(): ModelInstance = {
@@ -370,6 +427,7 @@ class JpmmlAdapterFactory(modelDef: ModelDef, nodeContext: NodeContext) extends 
 
     /**
       * Answer a ModelResultBase from which to give the model results.
+      *
       * @return - a ModelResultBase derivative appropriate for the model
       */
     override def createResultObject(): ModelResultBase = new MappedModelResults
