@@ -959,8 +959,9 @@ object ModelService {
             }
             result
           } else {
-
+              // 205 Change begins
               val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(false, None)
+              // 205 Change ends
 
               if (modelKeys.length == 0) {
                 "Sorry, No models available, in the Metadata, to delete!"
