@@ -116,13 +116,13 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      val parsedConfig = fileBean.ParseFile(configFileContent) //Parse config file
      val extractedInfo = fileBean.extractInfo(parsedConfig) //Extract information from parsed file
      val configBeanObj = fileBean.createConfigBeanObj(extractedInfo)
-     val fileSize = fileBean.Countlines(inputFileContent) // Find number of lines in file
+     val fileSize = fileBean.Countlines(inputFile) // Find number of lines in file
      val headerString = fileBean.ReadHeaderFile(inputFile, 0) //read the header line for inputFile
      val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter) //split the header line based on delimiter
 
      //for(item <- headerFields){}
      var feildsString = Map[String, String]()
-     for(itemIndex <- 1 to headerFields.length-1){
+     for(itemIndex <- 0 to headerFields.length-1){
        if(dataTypeObj.isAllDigits(headerFields(itemIndex))){ //Check if all character are digits
          logger.error("This %s file does not include header".format(inputFile))
          sys.exit(1)
