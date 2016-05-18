@@ -30,7 +30,7 @@ import scala.io._
 import scala.collection.mutable.ArrayBuffer
 
 import scala.collection.mutable._
-import scala.reflect.runtime.{universe => ru}
+import scala.reflect.runtime.{ universe => ru }
 
 import com.ligadata.kamanja.metadata.ObjType._
 import com.ligadata.kamanja.metadata._
@@ -39,12 +39,12 @@ import com.ligadata.kamanja.metadata.MdMgr._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 
 // import com.ligadata.keyvaluestore._
-import com.ligadata.HeartBeat.{MonitoringContext, HeartBeatUtil}
-import com.ligadata.StorageBase.{DataStore, Transaction}
-import com.ligadata.KvBase.{Key, TimeRange}
+import com.ligadata.HeartBeat.{ MonitoringContext, HeartBeatUtil }
+import com.ligadata.StorageBase.{ DataStore, Transaction }
+import com.ligadata.KvBase.{ Key, TimeRange }
 
 import scala.util.parsing.json.JSON
-import scala.util.parsing.json.{JSONObject, JSONArray}
+import scala.util.parsing.json.{ JSONObject, JSONArray }
 import scala.collection.immutable.Map
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.HashMap
@@ -89,12 +89,12 @@ object MessageAndContainerUtils {
   private[this] val lock = new Object
 
   /**
-    * AddContainerDef
-    *
-    * @param contDef
-    * @param recompile
-    * @return
-    */
+   * AddContainerDef
+   *
+   * @param contDef
+   * @param recompile
+   * @return
+   */
   def AddContainerDef(contDef: ContainerDef, recompile: Boolean = false): String = {
     var key = contDef.FullNameWithVer
     val dispkey = contDef.FullName + "." + MdMgr.Pad0s2Version(contDef.Version)
@@ -120,12 +120,12 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * AddMessageDef
-    *
-    * @param msgDef
-    * @param recompile
-    * @return
-    */
+   * AddMessageDef
+   *
+   * @param msgDef
+   * @param recompile
+   * @return
+   */
   def AddMessageDef(msgDef: MessageDef, recompile: Boolean = false): String = {
     val dispkey = msgDef.FullName + "." + MdMgr.Pad0s2Version(msgDef.Version)
     try {
@@ -150,13 +150,13 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * AddMessageTypes
-    *
-    * @param msgDef
-    * @param mdMgr the metadata manager receiver
-    * @param recompile
-    * @return
-    */
+   * AddMessageTypes
+   *
+   * @param msgDef
+   * @param mdMgr the metadata manager receiver
+   * @param recompile
+   * @return
+   */
   def AddMessageTypes(msgDef: BaseElemDef, mdMgr: MdMgr, recompile: Boolean = false): Array[BaseElemDef] = {
     logger.debug("The class name => " + msgDef.getClass().getName())
     try {
@@ -169,62 +169,62 @@ object MessageAndContainerUtils {
       msgType match {
         case "MessageDef" | "ContainerDef" => {
           // ArrayOf<TypeName>
-          var obj: BaseElemDef = mdMgr.MakeArray(msgDef.nameSpace, "arrayof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+          var obj: BaseElemDef = mdMgr.MakeArray(msgDef.nameSpace, "arrayof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */ , msgDef.ver, recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
 
           // MapOf<TypeName>
-          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */ , recompile)
           obj.dependencyJarNames = depJars
           MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
           types = types :+ obj
 
           // ArrayBufferOf<TypeName>
-//          obj = mdMgr.MakeArrayBuffer(msgDef.nameSpace, "arraybufferof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // SortedSetOf<TypeName>
-//          obj = mdMgr.MakeSortedSet(msgDef.nameSpace, "sortedsetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // ImmutableMapOfIntArrayOf<TypeName>
-//          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // ImmutableMapOfString<TypeName>
-//          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // ArrayOfArrayOf<TypeName>
-//          obj = mdMgr.MakeArray(msgDef.nameSpace, "arrayofarrayof" + msgDef.name, msgDef.nameSpace, "arrayof" + msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // MapOfStringArrayOf<TypeName>
-//          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // MapOfIntArrayOf<TypeName>
-//          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // SetOf<TypeName>
-//          obj = mdMgr.MakeSet(msgDef.nameSpace, "setof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
-//          // TreeSetOf<TypeName>
-//          obj = mdMgr.MakeTreeSet(msgDef.nameSpace, "treesetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
-//          obj.dependencyJarNames = depJars
-//          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
-//          types = types :+ obj
+          //          obj = mdMgr.MakeArrayBuffer(msgDef.nameSpace, "arraybufferof" + msgDef.name, msgDef.nameSpace, msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // SortedSetOf<TypeName>
+          //          obj = mdMgr.MakeSortedSet(msgDef.nameSpace, "sortedsetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // ImmutableMapOfIntArrayOf<TypeName>
+          //          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // ImmutableMapOfString<TypeName>
+          //          obj = mdMgr.MakeImmutableMap(msgDef.nameSpace, "immutablemapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // ArrayOfArrayOf<TypeName>
+          //          obj = mdMgr.MakeArray(msgDef.nameSpace, "arrayofarrayof" + msgDef.name, msgDef.nameSpace, "arrayof" + msgDef.name, 1, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, msgDef.ver, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // MapOfStringArrayOf<TypeName>
+          //          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofstringarrayof" + msgDef.name, (sysNS, "String"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // MapOfIntArrayOf<TypeName>
+          //          obj = mdMgr.MakeMap(msgDef.nameSpace, "mapofintarrayof" + msgDef.name, (sysNS, "Int"), (msgDef.nameSpace, "arrayof" + msgDef.name), msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // SetOf<TypeName>
+          //          obj = mdMgr.MakeSet(msgDef.nameSpace, "setof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
+          //          // TreeSetOf<TypeName>
+          //          obj = mdMgr.MakeTreeSet(msgDef.nameSpace, "treesetof" + msgDef.name, msgDef.nameSpace, msgDef.name, msgDef.ver, msgDef.OwnerId, tenantId, MetadataAPIImpl.GetUniqueId, 0L /* FIXME:- Not yet handled this */, recompile)
+          //          obj.dependencyJarNames = depJars
+          //          MetadataAPIImpl.AddObjectToCache(obj, mdMgr)
+          //          types = types :+ obj
           types
         }
         case _ => {
@@ -240,19 +240,19 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * AddContainerOrMessage
-    *
-    * @param contOrMsgText message
-    * @param format        its format
-    * @param userid        the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                      method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @param recompile     a
-    * @return <description please>
-    */
+   * AddContainerOrMessage
+   *
+   * @param contOrMsgText message
+   * @param format        its format
+   * @param userid        the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                      method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @param recompile     a
+   * @return <description please>
+   */
   def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
     var resultStr: String = ""
 
-    if (tenantId == None)    return (new ApiResult(ErrorCodeConstants.Failure, "AddContainer/AddMessage", null, s"Tenant ID is required to perform an ADD CONTAINER or an ADD MESSAGE operation")).toString
+    if (tenantId == None) return (new ApiResult(ErrorCodeConstants.Failure, "AddContainer/AddMessage", null, s"Tenant ID is required to perform an ADD CONTAINER or an ADD MESSAGE operation")).toString
 
     try {
       var compProxy = new CompilerProxy
@@ -371,23 +371,23 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * AddContainer
-    *
-    * @param containerText
-    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * AddContainer
+   *
+   * @param containerText
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def AddContainer(containerText: String, userid: Option[String], tenantId: Option[String]): String = {
     AddContainer(containerText, "JSON", userid, tenantId)
   }
 
   /**
-    * RecompileMessage
-    *
-    * @param msgFullName
-    * @return
-    */
+   * RecompileMessage
+   *
+   * @param msgFullName
+   * @return
+   */
   def RecompileMessage(msgFullName: String): String = {
     var tenantId: String = ""
     var resultStr: String = ""
@@ -426,21 +426,21 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * UpdateMessage
-    *
-    * @param messageText text of the message (as JSON/XML string as defined by next parameter formatType)
-    * @param format
-    * @param userid      the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                    method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
-    *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-    *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-    */
+   * UpdateMessage
+   *
+   * @param messageText text of the message (as JSON/XML string as defined by next parameter formatType)
+   * @param format
+   * @param userid      the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                    method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
+   *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+   *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+   */
   def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tenantId: Option[String]): String = {
     var resultStr: String = ""
     try {
 
-      if (tenantId == None)  return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
+      if (tenantId == None) return (new ApiResult(ErrorCodeConstants.Failure, "UpdateMessage/UpdateContainer", null, s"Tenant ID is required to perform an UPDATE MESSAGE or an UPDATE CONTAINER operation")).toString
 
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -455,10 +455,11 @@ object MessageAndContainerUtils {
         case msg: MessageDef => {
           MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, messageText, AuditConstants.SUCCESS, "", msg.FullNameWithVer)
 
-          /** FIXME: It is incorrect to assume that the latest message is the one being replaced.
-            * It is possible that multiple message versions could be present in the system.  UpdateMessage should explicitly
-            * receive the version to be replaced.  There could be a convenience method that uses this method for the "latest" case.
-            */
+          /**
+           * FIXME: It is incorrect to assume that the latest message is the one being replaced.
+           * It is possible that multiple message versions could be present in the system.  UpdateMessage should explicitly
+           * receive the version to be replaced.  There could be a convenience method that uses this method for the "latest" case.
+           */
           val latestVersion = GetLatestMessage(msg)
           var isValid = true
           if (latestVersion != None) {
@@ -566,55 +567,55 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * UpdateContainer
-    *
-    * @param messageText
-    * @param format
-    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
-    *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-    *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-    */
+   * UpdateContainer
+   *
+   * @param messageText
+   * @param format
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
+   *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+   *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+   */
   //def UpdateContainer(messageText: String, format: String, userid: Option[String] = None): String = {
   //  UpdateMessage(messageText, format, userid)
- // }
+  // }
 
   /**
-    * UpdateContainer
-    *
-    * @param messageText
-    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
- // def UpdateContainer(messageText: String, userid: Option[String]): String = {
- //   UpdateMessage(messageText, "JSON", userid)
- // }
+   * UpdateContainer
+   *
+   * @param messageText
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
+  // def UpdateContainer(messageText: String, userid: Option[String]): String = {
+  //   UpdateMessage(messageText, "JSON", userid)
+  // }
 
   /**
-    * UpdateMessage
-    *
-    * @param messageText
-    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
- // def UpdateMessage(messageText: String, userid: Option[String]): String = {
- //   UpdateMessage(messageText, "JSON", userid)
- // }
+   * UpdateMessage
+   *
+   * @param messageText
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
+  // def UpdateMessage(messageText: String, userid: Option[String]): String = {
+  //   UpdateMessage(messageText, "JSON", userid)
+  // }
 
   /**
-    * Remove container with Container Name and Version Number
-    *
-    * @param nameSpace namespace of the object
-    * @param name
-    * @param version   Version of the object
-    * @param userid    the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                  method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @param zkNotify
-    * @return
-    */
+   * Remove container with Container Name and Version Number
+   *
+   * @param nameSpace namespace of the object
+   * @param name
+   * @param version   Version of the object
+   * @param userid    the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                  method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @param zkNotify
+   * @return
+   */
   def RemoveContainer(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
     var key = nameSpace + "." + name + "." + version
     val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version)
@@ -663,16 +664,16 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Remove message with Message Name and Version Number
-    *
-    * @param nameSpace namespace of the object
-    * @param name
-    * @param version   Version of the object
-    * @param userid    the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                  method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @param zkNotify
-    * @return
-    */
+   * Remove message with Message Name and Version Number
+   *
+   * @param nameSpace namespace of the object
+   * @param name
+   * @param version   Version of the object
+   * @param userid    the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                  method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @param zkNotify
+   * @return
+   */
   def RemoveMessage(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
     var key = nameSpace + "." + name + "." + version
     val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version)
@@ -726,27 +727,27 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * When a message or container is compiled, the MetadataAPIImpl will automatically catalog an array, array buffer,
-    * sorted set, immutable map of int array, array of array, et al where the message or container is a member element.
-    * The type names are of the form <collectiontype>of<message type>.  Currently these container names are created:
-    *
-    * {{{
-    *       arrayof<message type>
-    *       arraybufferof<message type>
-    *       sortedsetof<message type>
-    *       immutablemapofintarrayof<message type>
-    *       immutablemapofstringarrayof<message type>
-    *       arrayofarrayof<message type>
-    *       mapofstringarrayof<message type>
-    *       mapofintarrayof<message type>
-    *       setof<message type>
-    *       treesetof<message type>
-    * }}}
-    *
-    * @param msgDef the name of the msgDef's type is used for the type name formation
-    * @param mdMgr  the metadata manager receiver
-    * @return <description please>
-    */
+   * When a message or container is compiled, the MetadataAPIImpl will automatically catalog an array, array buffer,
+   * sorted set, immutable map of int array, array of array, et al where the message or container is a member element.
+   * The type names are of the form <collectiontype>of<message type>.  Currently these container names are created:
+   *
+   * {{{
+   *       arrayof<message type>
+   *       arraybufferof<message type>
+   *       sortedsetof<message type>
+   *       immutablemapofintarrayof<message type>
+   *       immutablemapofstringarrayof<message type>
+   *       arrayofarrayof<message type>
+   *       mapofstringarrayof<message type>
+   *       mapofintarrayof<message type>
+   *       setof<message type>
+   *       treesetof<message type>
+   * }}}
+   *
+   * @param msgDef the name of the msgDef's type is used for the type name formation
+   * @param mdMgr  the metadata manager receiver
+   * @return <description please>
+   */
   def GetAdditionalTypesAdded(msgDef: BaseElemDef, mdMgr: MdMgr): Array[BaseElemDef] = {
     var types = new Array[BaseElemDef](0)
     logger.debug("The class name => " + msgDef.getClass().getName())
@@ -830,11 +831,11 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Remove message with Message Name and Version Number based upon advice in supplied notification
-    *
-    * @param zkMessage
-    * @return
-    */
+   * Remove message with Message Name and Version Number based upon advice in supplied notification
+   *
+   * @param zkMessage
+   * @return
+   */
   def RemoveMessageFromCache(zkMessage: ZooKeeperNotification) = {
     try {
       var key = zkMessage.NameSpace + "." + zkMessage.Name + "." + zkMessage.Version
@@ -867,11 +868,11 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * RemoveContainerFromCache
-    *
-    * @param zkMessage
-    * @return
-    */
+   * RemoveContainerFromCache
+   *
+   * @param zkMessage
+   * @return
+   */
   def RemoveContainerFromCache(zkMessage: ZooKeeperNotification) = {
     try {
       var key = zkMessage.NameSpace + "." + zkMessage.Name + "." + zkMessage.Version
@@ -902,91 +903,90 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Remove message with Message Name and Version Number
-    *
-    * @param messageName Name of the given message
-    * @param version     Version of the given message
-    * @param userid      the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                    method. If Security and/or Audit are configured, this value should be other than None
-    * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
-    *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-    *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-    */
+   * Remove message with Message Name and Version Number
+   *
+   * @param messageName Name of the given message
+   * @param version     Version of the given message
+   * @param userid      the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                    method. If Security and/or Audit are configured, this value should be other than None
+   * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
+   *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+   *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+   */
   def RemoveMessage(messageName: String, version: Long, userid: Option[String]): String = {
     RemoveMessage(sysNS, messageName, version, userid)
   }
 
   /**
-    * Remove container with Container Name and Version Number
-    *
-    * @param containerName Name of the given container
-    * @param version       Version of the object   Version of the given container
-    * @param userid        the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                      method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
-    *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
-    *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
-    */
+   * Remove container with Container Name and Version Number
+   *
+   * @param containerName Name of the given container
+   * @param version       Version of the object   Version of the given container
+   * @param userid        the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                      method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
+   *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+   *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+   */
   def RemoveContainer(containerName: String, version: Long, userid: Option[String]): String = {
     RemoveContainer(sysNS, containerName, version, userid)
   }
 
-
   /**
-    * getBaseType
-    *
-    * @param typ a type to be determined
-    * @return
-    */
+   * getBaseType
+   *
+   * @param typ a type to be determined
+   * @return
+   */
   private def getBaseType(typ: BaseTypeDef): BaseTypeDef = {
     // Just return the "typ" if "typ" is not supported yet
     if (typ.tType == tMap) {
       val typ1 = typ.asInstanceOf[MapTypeDef].valDef
       return getBaseType(typ1)
     }
-//    if (typ.tType == tHashMap) {
-//      logger.debug("HashMapTypeDef is not yet handled")
-//      return typ
-//    }
-//    if (typ.tType == tSet) {
-//      val typ1 = typ.asInstanceOf[SetTypeDef].keyDef
-//      return getBaseType(typ1)
-//    }
-//    if (typ.tType == tTreeSet) {
-//      val typ1 = typ.asInstanceOf[TreeSetTypeDef].keyDef
-//      return getBaseType(typ1)
-//    }
-//    if (typ.tType == tSortedSet) {
-//      val typ1 = typ.asInstanceOf[SortedSetTypeDef].keyDef
-//      return getBaseType(typ1)
-//    }
-//    if (typ.tType == tList) {
-//      val typ1 = typ.asInstanceOf[ListTypeDef].valDef
-//      return getBaseType(typ1)
-//    }
-//    if (typ.tType == tQueue) {
-//      val typ1 = typ.asInstanceOf[QueueTypeDef].valDef
-//      return getBaseType(typ1)
-//    }
+    //    if (typ.tType == tHashMap) {
+    //      logger.debug("HashMapTypeDef is not yet handled")
+    //      return typ
+    //    }
+    //    if (typ.tType == tSet) {
+    //      val typ1 = typ.asInstanceOf[SetTypeDef].keyDef
+    //      return getBaseType(typ1)
+    //    }
+    //    if (typ.tType == tTreeSet) {
+    //      val typ1 = typ.asInstanceOf[TreeSetTypeDef].keyDef
+    //      return getBaseType(typ1)
+    //    }
+    //    if (typ.tType == tSortedSet) {
+    //      val typ1 = typ.asInstanceOf[SortedSetTypeDef].keyDef
+    //      return getBaseType(typ1)
+    //    }
+    //    if (typ.tType == tList) {
+    //      val typ1 = typ.asInstanceOf[ListTypeDef].valDef
+    //      return getBaseType(typ1)
+    //    }
+    //    if (typ.tType == tQueue) {
+    //      val typ1 = typ.asInstanceOf[QueueTypeDef].valDef
+    //      return getBaseType(typ1)
+    //    }
     if (typ.tType == tArray) {
       val typ1 = typ.asInstanceOf[ArrayTypeDef].elemDef
       return getBaseType(typ1)
     }
-//    if (typ.tType == tArrayBuf) {
-//      val typ1 = typ.asInstanceOf[ArrayBufTypeDef].elemDef
-//      return getBaseType(typ1)
-//    }
+    //    if (typ.tType == tArrayBuf) {
+    //      val typ1 = typ.asInstanceOf[ArrayBufTypeDef].elemDef
+    //      return getBaseType(typ1)
+    //    }
     return typ
   }
 
   /**
-    * GetDependentModels
-    *
-    * @param msgNameSpace
-    * @param msgName
-    * @param msgVer
-    * @return
-    */
+   * GetDependentModels
+   *
+   * @param msgNameSpace
+   * @param msgName
+   * @param msgVer
+   * @return
+   */
   def GetDependentModels(msgNameSpace: String, msgName: String, msgVer: Long): Array[ModelDef] = {
     try {
       val msgObj = Array(msgNameSpace, msgName, msgVer).mkString(".").toLowerCase
@@ -1034,13 +1034,13 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * GetAllMessageDefs - get all available messages(format JSON or XML) as a String
-    *
-    * @param formatType format of the return value, either JSON or XML
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * GetAllMessageDefs - get all available messages(format JSON or XML) as a String
+   *
+   * @param formatType format of the return value, either JSON or XML
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def GetAllMessageDefs(formatType: String, userid: Option[String] = None): String = {
     try {
       val msgDefs = MdMgr.GetMdMgr.Messages(true, true)
@@ -1067,13 +1067,13 @@ object MessageAndContainerUtils {
 
   // All available containers(format JSON or XML) as a String
   /**
-    * GetAllContainerDefs
-    *
-    * @param formatType format of the return value, either JSON or XML
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return result as string
-    */
+   * GetAllContainerDefs
+   *
+   * @param formatType format of the return value, either JSON or XML
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return result as string
+   */
   def GetAllContainerDefs(formatType: String, userid: Option[String] = None): String = {
     try {
       val msgDefs = MdMgr.GetMdMgr.Containers(true, true)
@@ -1099,13 +1099,13 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * GetAllMessagesFromCache
-    *
-    * @param active
-    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * GetAllMessagesFromCache
+   *
+   * @param active
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
     var messageList: Array[String] = new Array[String](0)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.MESSAGE, AuditConstants.SUCCESS, "", AuditConstants.MESSAGE)
@@ -1135,13 +1135,13 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * GetAllContainersFromCache
-    *
-    * @param active
-    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * GetAllContainersFromCache
+   *
+   * @param active
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def GetAllContainersFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
     var containerList: Array[String] = new Array[String](0)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", AuditConstants.CONTAINER)
@@ -1171,16 +1171,16 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Get the specific message (format JSON or XML) as a String using messageName(with version) as the key
-    *
-    * @param nameSpace  namespace of the object
-    * @param name
-    * @param formatType format of the return value, either JSON or XML
-    * @param version    Version of the object
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * Get the specific message (format JSON or XML) as a String using messageName(with version) as the key
+   *
+   * @param nameSpace  namespace of the object
+   * @param name
+   * @param formatType format of the return value, either JSON or XML
+   * @param version    Version of the object
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def GetMessageDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None): String = {
     val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version.toLong)
     var key = nameSpace + "." + name + "." + version.toLong
@@ -1209,16 +1209,16 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Get the specific container (format JSON or XML) as a String using containerName(with version) as the key
-    *
-    * @param nameSpace  namespace of the object
-    * @param name
-    * @param formatType format of the return value, either JSON or XML
-    * @param version    Version of the object
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * Get the specific container (format JSON or XML) as a String using containerName(with version) as the key
+   *
+   * @param nameSpace  namespace of the object
+   * @param name
+   * @param formatType format of the return value, either JSON or XML
+   * @param version    Version of the object
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def GetContainerDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String]): String = {
     var key = nameSpace + "." + name + "." + version.toLong
     val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version.toLong)
@@ -1247,14 +1247,14 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Return Specific messageDef object using messageName(with version) as the key
-    *
-    * @param nameSpace  namespace of the object
-    * @param name
-    * @param formatType format of the return value, either JSON or XML
-    * @param version    Version of the object
-    * @return
-    */
+   * Return Specific messageDef object using messageName(with version) as the key
+   *
+   * @param nameSpace  namespace of the object
+   * @param name
+   * @param formatType format of the return value, either JSON or XML
+   * @param version    Version of the object
+   * @return
+   */
   @throws(classOf[ObjectNotFoundException])
   def GetMessageDefInstanceFromCache(nameSpace: String, name: String, formatType: String, version: String): MessageDef = {
     var key = nameSpace + "." + name + "." + version.toLong
@@ -1280,10 +1280,10 @@ object MessageAndContainerUtils {
 
   // Get the latest message for a given FullName
   /**
-    *
-    * @param msgDef
-    * @return
-    */
+   *
+   * @param msgDef
+   * @return
+   */
   def GetLatestMessage(msgDef: MessageDef): Option[MessageDef] = {
     try {
       var key = msgDef.nameSpace + "." + msgDef.name + "." + msgDef.ver
@@ -1313,11 +1313,11 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Get the latest container for a given FullName
-    *
-    * @param contDef
-    * @return
-    */
+   * Get the latest container for a given FullName
+   *
+   * @param contDef
+   * @return
+   */
   def GetLatestContainer(contDef: ContainerDef): Option[ContainerDef] = {
     try {
       var key = contDef.nameSpace + "." + contDef.name + "." + contDef.ver
@@ -1347,12 +1347,12 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * IsValidVersion
-    *
-    * @param oldObj
-    * @param newObj
-    * @return
-    */
+   * IsValidVersion
+   *
+   * @param oldObj
+   * @param newObj
+   * @return
+   */
   def IsValidVersion(oldObj: BaseElemDef, newObj: BaseElemDef): Boolean = {
     if (newObj.ver > oldObj.ver) {
       return true
@@ -1361,29 +1361,28 @@ object MessageAndContainerUtils {
     }
   }
 
-
   /**
-    * Check whether message already exists in metadata manager. Ideally,
-    * we should never add the message into metadata manager more than once
-    * and there is no need to use this function in main code flow
-    * This is just a utility function being during these initial phases
-    *
-    * @param msgDef
-    * @return
-    */
+   * Check whether message already exists in metadata manager. Ideally,
+   * we should never add the message into metadata manager more than once
+   * and there is no need to use this function in main code flow
+   * This is just a utility function being during these initial phases
+   *
+   * @param msgDef
+   * @return
+   */
   def DoesMessageAlreadyExist(msgDef: MessageDef): Boolean = {
     IsMessageAlreadyExists(msgDef)
   }
 
   /**
-    * Check whether message already exists in metadata manager. Ideally,
-    * we should never add the message into metadata manager more than once
-    * and there is no need to use this function in main code flow
-    * This is just a utility function being during these initial phases
-    *
-    * @param msgDef
-    * @return
-    */
+   * Check whether message already exists in metadata manager. Ideally,
+   * we should never add the message into metadata manager more than once
+   * and there is no need to use this function in main code flow
+   * This is just a utility function being during these initial phases
+   *
+   * @param msgDef
+   * @return
+   */
   def IsMessageAlreadyExists(msgDef: MessageDef): Boolean = {
     try {
       var key = msgDef.nameSpace + "." + msgDef.name + "." + msgDef.ver
@@ -1465,20 +1464,21 @@ object MessageAndContainerUtils {
     * @param objectName
     * @return MessageDef
     */
+
   def IsMessageExists(objectName: String): MessageDef = {
     try {
       val nameNodes: Array[String] = if (objectName != null &&
-	objectName.contains('.')) objectName.split('.')
-				     else Array(MdMgr.sysNS, objectName)
-      var name = nameNodes(nameNodes.size-1)
+        objectName.contains('.')) objectName.split('.')
+      else Array(MdMgr.sysNS, objectName)
+      var name = nameNodes(nameNodes.size - 1)
       val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
       val buffer: StringBuilder = new StringBuilder
       val nameSpace: String = nmspcNodes.addString(buffer, ".").toString
 
       val o = MdMgr.GetMdMgr.Message(nameSpace.toLowerCase,
-				     name.toLowerCase,
-				     -1,
-				     false)
+        name.toLowerCase,
+        -1,
+        false)
       o match {
         case None =>
           None
@@ -1486,7 +1486,7 @@ object MessageAndContainerUtils {
           return null;
         case Some(m) =>
           logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." +
-		       MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].ver))
+            MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].ver))
           return m.asInstanceOf[MessageDef]
       }
     } catch {
@@ -1497,8 +1497,8 @@ object MessageAndContainerUtils {
     }
   }
 
-  def createDefaultOutputMessage(modDef: ModelDef,optUserId: Option[String]): String = {
-    try{
+  def createDefaultOutputMessage(modDef: ModelDef, optUserId: Option[String]): String = {
+    try {
       logger.info("Creating a default output message for the model " + modDef.FullNameWithVer + " if it doesn't already exist ")
       val nameSpace = modDef.NameSpace
       val name = modDef.Name
@@ -1506,23 +1506,22 @@ object MessageAndContainerUtils {
       val msgName = name + "_outputmsg"
       val msgFullName = nameSpace + "." + msgName
 
-      if( IsMessageExists(msgFullName) != null ){
-	logger.info("The message " + msgFullName + " already exist, not recreating it...")
-	return msgFullName
+      if (IsMessageExists(msgFullName) != null) {
+        logger.info("The message " + msgFullName + " already exist, not recreating it...")
+        return msgFullName
+      } else {
+        var msgJson = "{\"Message\":{" +
+          "\"NameSpace\":" + "\"" + nameSpace + "\"" +
+          ",\"Name\":" + "\"" + msgName + "\"" +
+          ",\"Version\":\"00.00.01\"" +
+          ",\"Description\":\"Default Output Message for " + name + "\"" +
+          ",\"Fixed\":\"false\"" +
+          "}}"
+        logger.info("The default output message string => " + msgJson)
+        val resultStr = AddContainerOrMessage(msgJson, "JSON", optUserId, Some(modDef.TenantId), false)
+        return msgFullName
       }
-      else{
-	var msgJson = "{\"Message\":{" +
-	"\"NameSpace\":" + "\"" + nameSpace + "\"" +
-	",\"Name\":" + "\"" + msgName + "\"" +
-	",\"Version\":\"00.00.01\"" +
-	",\"Description\":\"Default Output Message for " + name + "\"" +
-        ",\"Fixed\":\"false\"" +
-	"}}"
-	logger.info("The default output message string => " + msgJson)
-	val resultStr = AddContainerOrMessage(msgJson,"JSON",optUserId, Some(modDef.TenantId), false)
-	return msgFullName
-      }
-    }catch {
+    } catch {
       case e: Exception => {
         logger.debug("", e)
         throw e
@@ -1531,21 +1530,21 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * DoesContainerAlreadyExist
-    *
-    * @param contDef
-    * @return
-    */
+   * DoesContainerAlreadyExist
+   *
+   * @param contDef
+   * @return
+   */
   def DoesContainerAlreadyExist(contDef: ContainerDef): Boolean = {
     IsContainerAlreadyExists(contDef)
   }
 
   /**
-    * IsContainerAlreadyExists
-    *
-    * @param contDef
-    * @return
-    */
+   * IsContainerAlreadyExists
+   *
+   * @param contDef
+   * @return
+   */
   def IsContainerAlreadyExists(contDef: ContainerDef): Boolean = {
     try {
       var key = contDef.nameSpace + "." + contDef.name + "." + contDef.ver
@@ -1571,7 +1570,6 @@ object MessageAndContainerUtils {
       }
     }
   }
-
 
   // 1119 Changes begin - checks for any existence of container
   /**
@@ -1611,7 +1609,7 @@ object MessageAndContainerUtils {
       logger.debug("Fetch the object " + key + " from database ")
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "messages")
       logger.debug("Deserialize the object " + key)
-      val msg: MessageDef =MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[MessageDef] //serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[MessageDef]
+      val msg: MessageDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[MessageDef] //serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[MessageDef]
       logger.debug("Get the jar from database ")
       val msgDef = msg.asInstanceOf[MessageDef]
       MetadataAPIImpl.DownloadJarFromDB(msgDef)
@@ -1625,14 +1623,14 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * LoadContainerIntoCache
-    *
-    * @param key
-    */
+   * LoadContainerIntoCache
+   *
+   * @param key
+   */
   def LoadContainerIntoCache(key: String) {
     try {
       val obj = MetadataAPIImpl.GetObject(key.toLowerCase, "containers")
-      val cont: ContainerDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[ContainerDef]//serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[ContainerDef]
+      val cont: ContainerDef = MetadataAPISerialization.deserializeMetadata(new String(obj._2.asInstanceOf[Array[Byte]])).asInstanceOf[ContainerDef] //serializer.DeserializeObjectFromByteArray(obj._2.asInstanceOf[Array[Byte]]).asInstanceOf[ContainerDef]
       logger.debug("Get the jar from database ")
       val contDef = cont.asInstanceOf[ContainerDef]
       MetadataAPIImpl.DownloadJarFromDB(contDef)
@@ -1646,14 +1644,14 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Get a the most recent mesage def (format JSON or XML) as a String
-    *
-    * @param objectName the name of the message possibly namespace qualified (is simple name, "system" namespace is substituted)
-    * @param formatType format of the return value, either JSON or XML
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * Get a the most recent mesage def (format JSON or XML) as a String
+   *
+   * @param objectName the name of the message possibly namespace qualified (is simple name, "system" namespace is substituted)
+   * @param formatType format of the return value, either JSON or XML
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def GetMessageDef(objectName: String, formatType: String, userid: Option[String] = None): String = {
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
     val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
@@ -1663,16 +1661,16 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Get a specific message (format JSON or XML) as a String using messageName(with version) as the key
-    *
-    * @param objectName Name of the MessageDef, possibly namespace qualified.
-    * @param version    Version of the MessageDef
-    * @param formatType format of the return value, either JSON or XML
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
-    *         the MessageDef either as a JSON or XML string depending on the parameter formatType
-    */
+   * Get a specific message (format JSON or XML) as a String using messageName(with version) as the key
+   *
+   * @param objectName Name of the MessageDef, possibly namespace qualified.
+   * @param version    Version of the MessageDef
+   * @param formatType format of the return value, either JSON or XML
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
+   *         the MessageDef either as a JSON or XML string depending on the parameter formatType
+   */
   def GetMessageDef(objectName: String, version: String, formatType: String, userid: Option[String]): String = {
 
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
@@ -1683,38 +1681,32 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Get a specific message (format JSON or XML) as a String using messageName(with version) as the key
-    *
-    * @param nameSpace  namespace of the object
-    * @param objectName Name of the MessageDef
-    * @param version    Version of the MessageDef
-    * @param formatType format of the return value, either JSON or XML
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
-    *         the MessageDef either as a JSON or XML string depending on the parameter formatType
-    */
+   * Get a specific message (format JSON or XML) as a String using messageName(with version) as the key
+   *
+   * @param nameSpace  namespace of the object
+   * @param objectName Name of the MessageDef
+   * @param version    Version of the MessageDef
+   * @param formatType format of the return value, either JSON or XML
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
+   *         the MessageDef either as a JSON or XML string depending on the parameter formatType
+   */
   def GetMessageDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
-    MetadataAPIImpl.logAuditRec(userid
-      , Some(AuditConstants.READ)
-      , AuditConstants.GETOBJECT
-      , AuditConstants.MESSAGE
-      , AuditConstants.SUCCESS
-      , ""
-      , nameSpace + "." + objectName + "." + version)
+    MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETOBJECT, AuditConstants.MESSAGE, AuditConstants.SUCCESS, "", nameSpace + "." + objectName + "." + version)
     GetMessageDefFromCache(nameSpace, objectName, formatType, version, userid)
   }
 
   /**
-    * Get a specific container (format JSON or XML) as a String using containerName(without version) as the key
-    *
-    * @param objectName Name of the ContainerDef, possibly namespace qualified. When no namespace, "system" substituted
-    * @param formatType
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
-    *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
-    */
+   * Get a specific container (format JSON or XML) as a String using containerName(without version) as the key
+   *
+   * @param objectName Name of the ContainerDef, possibly namespace qualified. When no namespace, "system" substituted
+   * @param formatType
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
+   *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
+   */
   def GetContainerDef(objectName: String, formatType: String, userid: Option[String] = None): String = {
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
     val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
@@ -1724,37 +1716,33 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * Get a specific container (format JSON or XML) as a String using containerName(with version) as the key
-    *
-    * @param nameSpace  namespace of the object
-    * @param objectName Name of the ContainerDef
-    * @param formatType format of the return value, either JSON or XML format of the return value, either JSON or XML
-    * @param version    Version of the ContainerDef
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
-    *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
-    */
-  def GetContainerDef(nameSpace: String
-                      , objectName: String
-                      , formatType: String
-                      , version: String
-                      , userid: Option[String]): String = {
+   * Get a specific container (format JSON or XML) as a String using containerName(with version) as the key
+   *
+   * @param nameSpace  namespace of the object
+   * @param objectName Name of the ContainerDef
+   * @param formatType format of the return value, either JSON or XML format of the return value, either JSON or XML
+   * @param version    Version of the ContainerDef
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
+   *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
+   */
+  def GetContainerDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
     MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETOBJECT, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", nameSpace + "." + objectName + "." + version)
     GetContainerDefFromCache(nameSpace, objectName, formatType, version, None)
   }
 
   /**
-    * Get a specific container (format JSON or XML) as a String using containerName(without version) as the key
-    *
-    * @param objectName Name of the ContainerDef, possibly namespace qualified. When no namespace, "system" substituted
-    * @param version    Version of the object
-    * @param formatType format of the return value, either JSON or XML
-    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
-    *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
-    */
+   * Get a specific container (format JSON or XML) as a String using containerName(without version) as the key
+   *
+   * @param objectName Name of the ContainerDef, possibly namespace qualified. When no namespace, "system" substituted
+   * @param version    Version of the object
+   * @param formatType format of the return value, either JSON or XML
+   * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
+   *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
+   */
   def GetContainerDef(objectName: String, version: String, formatType: String, userid: Option[String]): String = {
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
     val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
@@ -1764,13 +1752,13 @@ object MessageAndContainerUtils {
   }
 
   /**
-    * getModelMessagesContainers
-    *
-    * @param modelConfigName
-    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-    *               method. If Security and/or Audit are configured, this value must be a value other than None.
-    * @return
-    */
+   * getModelMessagesContainers
+   *
+   * @param modelConfigName
+   * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+   *               method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @return
+   */
   def getModelMessagesContainers(modelConfigName: String, userid: Option[String]): List[String] = {
     // if userid is not supplied, it seem to defualt to "_"
     //val u = if( userid != None ) userid.get else "_"
@@ -1809,7 +1797,6 @@ object MessageAndContainerUtils {
     List[String]()
   }
 
-
   def getModelInputTypesSets(modelConfigName: String, userid: Option[String] = None): List[List[String]] = {
     var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName)
     val inputTypDeps = config.getOrElse(ModelCompilationConstants.INPUT_TYPES_SETS, null)
@@ -1841,5 +1828,62 @@ object MessageAndContainerUtils {
     List[String]()
   }
 
+  def GetTypeBySchemaId(schemaId: Int, userid: Option[String]): String = {
+    if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.GETOBJECT), AuditConstants.GETOBJECT, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", schemaId.toString)
+    try {
+      if (schemaId < 0) {
+        val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeBySchemaId", "", "Please provide the proper schema id")
+        return apiResult.toString()
+      }
+      val o = MdMgr.GetMdMgr.ContainerForSchemaId(schemaId)
+      o match {
+        case None =>
+          None
+          logger.debug("message/container not found => " + schemaId)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, ErrorCodeConstants.Get_Type_By_SchemaId_Failed + ":" + schemaId)
+          apiResult.toString()
+        case Some(m) =>
+          logger.debug("message/container found => " + m.asInstanceOf[ContainerDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ContainerDef].Version))
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeBySchemaId", m.asInstanceOf[ContainerDef].MdElementCategory + " - " + m.asInstanceOf[ContainerDef].PhysicalName, ErrorCodeConstants.Get_Type_By_SchemaId_Successful)
+          apiResult.toString()
+      }
+    } catch {
+      case e: Exception => {
+
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeBySchemaId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Type_By_SchemaId_Failed + ":" + schemaId.toString)
+        apiResult.toString()
+      }
+    }
+  }
+
+  def GetTypeByElementId(elementId: Long, userid: Option[String]): String = {
+    if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.GETOBJECT), AuditConstants.GETOBJECT, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", elementId.toString)
+    try {
+      if (elementId < 0) {
+        val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeByElementId", "", "Please provide the proper element id")
+        return apiResult.toString()
+      }
+      val o = MdMgr.GetMdMgr.ElementForElementId(elementId)
+      o match {
+        case None =>
+          None
+          logger.debug("message/container/model not found => " + elementId)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, ErrorCodeConstants.Get_Type_By_ElementId_Failed + ":" + elementId)
+          apiResult.toString()
+        case Some(m) =>
+          logger.debug("message/container/model found => " + m.asInstanceOf[BaseElem].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[BaseElem].Version))
+          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetTypeByElementId",   m.asInstanceOf[BaseElem].MdElementCategory +" - " +m.asInstanceOf[BaseElem].PhysicalName, ErrorCodeConstants.Get_Type_By_ElementId_Successful)
+          apiResult.toString()
+      }
+    } catch {
+      case e: Exception => {
+
+        logger.debug("", e)
+        val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetTypeByElementId", null, "Error :" + e.toString() + ErrorCodeConstants.Get_Type_By_ElementId_Failed + ":" + elementId.toString)
+        apiResult.toString()
+      }
+    }
+  }
 
 }
