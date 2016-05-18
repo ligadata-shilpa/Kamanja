@@ -5,7 +5,7 @@ import sbt._
 name := "KamanjaInternalDeps"
 
 //version := "1.0"
-val kamanjaVersion = "1.4.0"
+val kamanjaVersion = "1.4.1"
 
 assemblyJarName in assembly := {
   s"${name.value}_${scalaBinaryVersion.value}-${kamanjaVersion}.jar"
