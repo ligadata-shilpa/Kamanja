@@ -462,7 +462,7 @@ object ModelService {
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return the result of the operation
      */
-     
+
     def updateModelKPmml(input: String
                       , userid: Option[String] = Some("kamanja")
                       , tid: Option[String] = None): String = {
@@ -915,7 +915,7 @@ object ModelService {
   }
 
     /**
-     * 
+     *
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return
      */
@@ -925,11 +925,9 @@ object ModelService {
         if (modelKeys.length == 0) {
           response="Sorry, No models available in the Metadata"
         }else{
-          var srNo = 0
-          for(modelKey <- modelKeys){
-            srNo += 1
-            response+="[" + srNo + "]" + modelKey+"\n"
-          }
+          // 1165 Change begins - replaced with API return json string
+          response= (new ApiResult(ErrorCodeConstants.Success, "ModelService", modelKeys.mkString(", ") , "Successfully retrieved all the models")).toString
+          // 1165 Change ends
         }
         response
     }
@@ -1147,7 +1145,7 @@ object ModelService {
         return tenants(userOption - 1)
     }
     /**
-     * 
+     *
      * @param models and array of directory file specs
      * @return a list of model defs
      */
