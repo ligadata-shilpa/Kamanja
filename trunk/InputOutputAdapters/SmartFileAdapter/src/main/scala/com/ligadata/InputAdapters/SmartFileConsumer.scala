@@ -212,7 +212,10 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
              try {
                Thread.sleep(statusUpdateInterval)
              }
-             catch{case e : Throwable => }
+             catch{case e : Throwable => {
+               externalizeExceptionEvent(e)
+               LOG.debug("Smart File Consumer - unkown exception " + e)
+             }}
            }
           }
         }
@@ -831,8 +834,14 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       }
     }
     catch{
-      case e : Exception => LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
-      case e : Throwable => LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+      case e : Exception => {
+        externalizeExceptionEvent(e)
+        LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+      }
+      case e : Throwable => {
+        externalizeExceptionEvent(e)
+        LOG.error(s"SMART FILE CONSUMER - Failed to move file ($originalFilePath) into directory ($targetMoveDir)")
+      }
     }
   }
   //******************************************************************************************************
@@ -848,10 +857,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
       key.Deserialize(k)
     } catch {
       case e: Exception => {
+        externalizeExceptionEvent(e)
         LOG.error("Failed to deserialize Key:%s.".format(k), e)
         throw e
       }
       case e: Throwable => {
+        externalizeExceptionEvent(e)
         LOG.error("Failed to deserialize Key:%s.".format(k), e)
         throw e
       }
@@ -867,10 +878,12 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
         vl.Deserialize(v)
       } catch {
         case e: Exception => {
+          externalizeExceptionEvent(e)
           LOG.error("Failed to deserialize Value:%s.".format(v), e)
           throw e
         }
         case e: Throwable => {
+          externalizeExceptionEvent(e)
           LOG.error("Failed to deserialize Value:%s.".format(v), e)
           throw e
         }
