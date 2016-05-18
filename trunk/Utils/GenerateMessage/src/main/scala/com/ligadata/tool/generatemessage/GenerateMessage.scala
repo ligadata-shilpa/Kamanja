@@ -77,7 +77,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
       sys.exit(1)
     }
 
-     val configFile = options.getOrElse('inputfile, null).toString.trim //Raad config value from parsed parameters
+     val configFile = options.getOrElse('config, null).toString.trim //Raad config value from parsed parameters
      if (configFile == null || configFile.toString().trim() == "") { //check if config passed or not
        logger.error("Please pass the config file after --config option")
        logger.warn(usage)
