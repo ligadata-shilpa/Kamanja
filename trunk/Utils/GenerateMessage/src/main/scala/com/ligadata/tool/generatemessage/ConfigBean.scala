@@ -16,6 +16,7 @@ class ConfigBean {
   private var _primaryKey = false
   private var _timePartition = false
   private var _feilds = Map[String, String]()
+  private var _messageName = "Default"
 
   // Getter
   def delimiter = _delimiter
@@ -27,6 +28,7 @@ class ConfigBean {
   def timePartition = _timePartition
   def messageType = _messageType
   def feilds = _feilds
+  def messageName = _messageName
 
   // Setter
   def delimiter_= (value:String):Unit = _delimiter = value
@@ -38,4 +40,5 @@ class ConfigBean {
   def primaryKey_= (value:Boolean):Unit = _primaryKey = value
   def timePartition_= (value:Boolean):Unit = _timePartition = value
   def feilds_= (value:Map[String,String]):Unit = _feilds = value
+  def messageName_= (value:String):Unit = _messageName = value
 }

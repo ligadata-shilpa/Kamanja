@@ -40,14 +40,41 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
       val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter)
       val dataTypeObj: DataTypeUtility = new DataTypeUtility()
       for(itemIndex <- 0 to headerFields.length-1) {
-        var feildType1 = ""
-        if (fileSize >= 2) {
+//        var feildType1 = ""
+//        if (fileSize >= 2) {
+//          val fieldLines = fileBean.ReadHeaderFile(inputFile, 1)
+//          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
+//          feildType1 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
+//          feildsString = feildsString + (headerFields(itemIndex) -> feildType1)
+//        } else {
+//          feildsString = feildsString + (headerFields(itemIndex) -> "String")
+//        }
+var feildType1 = ""
+        if(fileSize >= 2){
           val fieldLines = fileBean.ReadHeaderFile(inputFile, 1)
           val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
           feildType1 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
           feildsString = feildsString + (headerFields(itemIndex) -> feildType1)
-        } else {
+        } else{
           feildsString = feildsString + (headerFields(itemIndex) -> "String")
+        }
+
+        var feildType2 = ""
+        if(fileSize >= 3){
+          val fieldLines = fileBean.ReadHeaderFile(inputFile, 2)
+          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
+          feildType2 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
+          if(!feildType1.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long"))
+            feildsString = feildsString + (headerFields(itemIndex) -> feildType2)
+        }
+
+        if(fileSize >= 4){
+          val fieldLines = fileBean.ReadHeaderFile(inputFile, 3)
+          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
+          var feildType3 = ""
+          feildType3 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
+          if(!feildType1.equalsIgnoreCase("double") && !feildType2.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long") && !feildType2.equalsIgnoreCase("Long"))
+            feildsString = feildsString + (headerFields(itemIndex) -> feildType3)
         }
       }
       Given("Test CreateMainJsonString function")
@@ -61,6 +88,18 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
       configBeanObj.partitionKey_=(true)
       val jsonPatitionKey = jsonObj.CreateJsonString("PartitionKey", configBeanObj)
       json = json merge jsonPatitionKey
+      println("=======================================================")
+      println(pretty(render(json)))
+
+      configBeanObj.primaryKey_=(true)
+      val jsonPrimaryKey = jsonObj.CreateJsonString("PrimaryKey", configBeanObj)
+      json = json merge jsonPrimaryKey
+      println("=======================================================")
+      println(pretty(render(json)))
+
+      configBeanObj.timePartition_=(true)
+      val jsonTimePartition = jsonObj.CreateJsonString("TimePartitionInfo", configBeanObj)
+      json = json merge jsonTimePartition
       println("=======================================================")
       println(pretty(render(json)))
     }

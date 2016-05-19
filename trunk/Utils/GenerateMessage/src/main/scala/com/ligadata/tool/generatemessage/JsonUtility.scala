@@ -15,7 +15,7 @@ class JsonUtility {
     val json =
       ("Meesage" ->
         ("NameSpace" -> configObj.nameSpace) ~
-          ("Name" -> "")~
+          ("Name" -> configObj.messageName)~
           ("Verion" -> "00.01.00")~
           ("Description" -> "")~
           ("Fixed" -> configObj.messageType.toString)~
@@ -32,15 +32,30 @@ class JsonUtility {
   }
 
   def CreateJsonString (feild: String,  configObj: ConfigBean):JsonAST.JValue={
-    val json =  ("Meesage" ->
-      ("NameSpace" -> configObj.nameSpace) ~
-        ("Name" -> "")~
-        ("Verion" -> "00.01.00")~
-        ("Description" -> "")~
-        ("Fixed" -> configObj.messageType.toString)~
-        ("Persist" -> configObj.saveMessage)~
-        (feild -> List.empty[JInt])
-      )
+    var json:JsonAST.JValue = ""
+    if(!feild.equalsIgnoreCase("TimePartitionInfo")) {
+       json = ("Meesage" ->
+        ("NameSpace" -> configObj.nameSpace) ~
+          ("Name" -> configObj.messageName) ~
+          ("Verion" -> "00.01.00") ~
+          ("Description" -> "") ~
+          ("Fixed" -> configObj.messageType.toString) ~
+          ("Persist" -> configObj.saveMessage) ~
+          (feild -> List.empty[JInt])
+        )
+    } else {
+       json = ("Meesage" ->
+        ("NameSpace" -> configObj.nameSpace) ~
+          ("Name" -> configObj.messageName) ~
+          ("Verion" -> "00.01.00") ~
+          ("Description" -> "") ~
+          ("Fixed" -> configObj.messageType.toString) ~
+          ("Persist" -> configObj.saveMessage) ~
+          (feild -> ("Key" -> "") ~
+            ("Format" -> "epochtime") ~
+            ("Type" -> "Daily"))
+        )
+    }
     return json
   }
 }

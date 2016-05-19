@@ -16,7 +16,7 @@ import scala.io.Source._
 /**
   * Created by Yousef on 5/12/2016.
   */
-case class configFile(delimiter: String, outputPath: String, saveMessage: String, nameSpace: String, partitionKey: String, primaryKey: String, timePartition: String, messageType: String)
+case class configFile(delimiter: String, outputPath: String, saveMessage: String, nameSpace: String, partitionKey: String, primaryKey: String, timePartition: String, messageType: String, messageName: String)
 class FileUtility  extends LogTrait{
 
   def FindFileExtension (filePath: String) : Boolean = {//This method used to check if the extension of file is json or not (return true if json and false otherwise)
@@ -73,7 +73,7 @@ class FileUtility  extends LogTrait{
     var configBeanObj:ConfigBean = new ConfigBean()
     val dataTypeObj: DataTypeUtility = new DataTypeUtility()
     if(configInfo.delimiter.trim == "" && configInfo.outputPath.trim == "" && configInfo.saveMessage.trim == "" && configInfo.nameSpace.trim == ""
-    &&configInfo.partitionKey.trim == "" && configInfo.primaryKey.trim == "" && configInfo.timePartition.trim == "" && configInfo.messageType.trim == ""){
+    &&configInfo.partitionKey.trim == "" && configInfo.primaryKey.trim == "" && configInfo.timePartition.trim == "" && configInfo.messageType.trim == "" && configInfo.messageName.trim == ""){
       logger.error("You should pass at least outputpath and delimiter in config file")
       sys.exit(1)
     } else if(configInfo.outputPath.trim == "" || configInfo.delimiter.trim == ""){
@@ -94,6 +94,10 @@ class FileUtility  extends LogTrait{
 
       if(configInfo.nameSpace.trim != ""){
         configBeanObj.nameSpace_=(configInfo.nameSpace.toString)
+      }
+
+      if(configInfo.messageName.trim != ""){
+        configBeanObj.messageName_=(configInfo.messageName.toString)
       }
 
       if(configInfo.partitionKey.trim != ""){

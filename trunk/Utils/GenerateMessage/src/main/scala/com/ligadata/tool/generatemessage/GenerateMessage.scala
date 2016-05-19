@@ -142,7 +142,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
          val fieldLines = fileBean.ReadHeaderFile(inputFile, 2)
          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
          feildType2 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         if(!feildType1.equalsIgnoreCase("double"))
+         if(!feildType1.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long"))
            feildsString = feildsString + (headerFields(itemIndex) -> feildType2)
        }
 
@@ -151,7 +151,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
          var feildType3 = ""
          feildType3 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         if(!feildType1.equalsIgnoreCase("double") && !feildType2.equalsIgnoreCase("double"))
+         if(!feildType1.equalsIgnoreCase("double") && !feildType2.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long") && !feildType2.equalsIgnoreCase("Long"))
            feildsString = feildsString + (headerFields(itemIndex) -> feildType3)
        }
        }

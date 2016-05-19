@@ -6,5 +6,6 @@
   "partitionKey": "false",
   "primaryKey": "false",
   "timePartition": "false",
-  "messageType": "fixed"
+  "messageType": "fixed",
+  "messageName": "testmessage"
 }
