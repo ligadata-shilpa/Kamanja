@@ -1067,13 +1067,12 @@ class KamanjaManager extends Observer {
     LOG.info("** Free Memory:  " + runtime.freeMemory / mb + " MB")
     LOG.info("** Total Memory: " + runtime.totalMemory / mb + " MB")
     LOG.info("** Max Memory:   " + runtime.maxMemory / mb + " MB")
-
     return mem
   }
 
   private def memoryMetricsString(mem: Memory): String = {
-    if (mem == null) return "{\"UsedMemory\":\"0\",\"FreeMomory\":\"0\",\"TotalMemory\":\"0\",\"MaxMemory\":\"0 \"}\", "
-    return "{\"UsedMemory\":\"" + mem.usedMemory + " \",\"FreeMomory\":\"" + mem.freeMemory + "\",\"TotalMemory\":\"" + mem.totalMemory + "\",\"MaxMemory\":\"" + mem.maxMemory + "\"}\", "
+    if (mem == null) return "{\"UsedMemory\":\"0 MB\",\"FreeMomory\":\"0 MB\",\"TotalMemory\":\"0 MB\",\"MaxMemory\":\"0 MB\"}\", "
+    return "{\"UsedMemory\":\"" + mem.usedMemory + " MB\",\"FreeMomory\":\"" + mem.freeMemory + " MB\",\"TotalMemory\":\"" + mem.totalMemory + " MB\",\"MaxMemory\":\"" + mem.maxMemory + " MB\"}\", "
   }
   private class SignalHandler extends Observable with sun.misc.SignalHandler {
     def handleSignal(signalName: String) {
