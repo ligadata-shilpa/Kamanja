@@ -4,10 +4,10 @@ package com.ligadata.KamanjaManager
 import com.ligadata.HeartBeat.MonitoringContext
 import com.ligadata.KamanjaBase._
 import com.ligadata.InputOutputAdapterInfo.{ ExecContext, InputAdapter, OutputAdapter, ExecContextFactory, PartitionUniqueRecordKey, PartitionUniqueRecordValue }
-import com.ligadata.StorageBase.{DataStore}
+import com.ligadata.StorageBase.{ DataStore }
 import com.ligadata.ZooKeeper.CreateClient
 import com.ligadata.kamanja.metadata.MdMgr._
-import com.ligadata.kamanja.metadata.{ContainerDef, MessageDef, AdapterMessageBinding, AdapterInfo}
+import com.ligadata.kamanja.metadata.{ ContainerDef, MessageDef, AdapterMessageBinding, AdapterInfo }
 import org.json4s.jackson.JsonMethods._
 
 import scala.reflect.runtime.{ universe => ru }
@@ -86,24 +86,24 @@ object KamanjaManangerMonitorContext {
 }
 
 case class InitConfigs(val dataDataStoreInfo: String, val jarPaths: collection.immutable.Set[String], val zkConnectString: String,
-                      val zkNodeBasePath: String, val zkSessionTimeoutMs: Int, val zkConnectionTimeoutMs: Int)
+                       val zkNodeBasePath: String, val zkSessionTimeoutMs: Int, val zkConnectionTimeoutMs: Int)
 
 object KamanjaConfiguration {
   var configFile: String = _
   var allConfigs: Properties = _
   //  var metadataDataStoreInfo: String = _
-//  var dataDataStoreInfo: String = _
-//  var jarPaths: collection.immutable.Set[String] = _
+  //  var dataDataStoreInfo: String = _
+  //  var jarPaths: collection.immutable.Set[String] = _
   var nodeId: Int = _
   var clusterId: String = _
   var nodePort: Int = _
-//  var zkConnectString: String = _
-//  var zkNodeBasePath: String = _
-//  var zkSessionTimeoutMs: Int = _
-//  var zkConnectionTimeoutMs: Int = _
+  //  var zkConnectString: String = _
+  //  var zkNodeBasePath: String = _
+  //  var zkSessionTimeoutMs: Int = _
+  //  var zkConnectionTimeoutMs: Int = _
 
-//  var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
-//  var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
+  //  var txnIdsRangeForNode: Int = 100000 // Each time get txnIdsRange of transaction ids for each Node
+  //  var txnIdsRangeForPartition: Int = 10000 // Each time get txnIdsRange of transaction ids for each partition
 
   // Debugging info configs -- Begin
   var waitProcessingSteps = collection.immutable.Set[Int]()
@@ -113,24 +113,24 @@ object KamanjaConfiguration {
   var shutdown = false
   var participentsChangedCntr: Long = 0
   var baseLoader = new KamanjaLoaderInfo
-//  var adaptersAndEnvCtxtLoader = new KamanjaLoaderInfo(baseLoader, true, true)
-//  var metadataLoader = new KamanjaLoaderInfo(baseLoader, true, true)
+  //  var adaptersAndEnvCtxtLoader = new KamanjaLoaderInfo(baseLoader, true, true)
+  //  var metadataLoader = new KamanjaLoaderInfo(baseLoader, true, true)
 
-//  var adapterInfoCommitTime = 5000 // Default 5 secs
+  //  var adapterInfoCommitTime = 5000 // Default 5 secs
 
   def Reset: Unit = {
     configFile = null
     allConfigs = null
     //    metadataDataStoreInfo = null
-//    dataDataStoreInfo = null
-//    jarPaths = null
+    //    dataDataStoreInfo = null
+    //    jarPaths = null
     nodeId = 0
     clusterId = null
     nodePort = 0
-//    zkConnectString = null
-//    zkNodeBasePath = null
-//    zkSessionTimeoutMs = 0
-//    zkConnectionTimeoutMs = 0
+    //    zkConnectString = null
+    //    zkNodeBasePath = null
+    //    zkSessionTimeoutMs = 0
+    //    zkConnectionTimeoutMs = 0
 
     // Debugging info configs -- Begin
     waitProcessingSteps = collection.immutable.Set[Int]()
@@ -181,43 +181,43 @@ object ProcessedAdaptersInfo {
     }
   }
 
-//  def CommitAdapterValues: Boolean = {
-//    LOG.debug("CommitAdapterValues. AdapterCommitTime: " + KamanjaConfiguration.adapterInfoCommitTime)
-//    var committed = false
-//    if (KamanjaMetadata.envCtxt != null) {
-//      // Try to commit now
-//      var changedValues: List[(String, String)] = null
-//      val newValues = getAllValues
-//      if (prevAdapterCommittedValues.size == 0) {
-//        changedValues = newValues.toList
-//      } else {
-//        var changedArr = ArrayBuffer[(String, String)]()
-//        newValues.foreach(v1 => {
-//          val oldVal = prevAdapterCommittedValues.getOrElse(v1._1, null)
-//          if (oldVal == null || v1._2.equals(oldVal) == false) { // It is not found or changed, simple take it
-//            changedArr += v1
-//          }
-//        })
-//        changedValues = changedArr.toList
-//      }
-//      // Commit here
-//      try {
-//        if (changedValues.size > 0)
-//          KamanjaMetadata.envCtxt.setAdapterUniqKeyAndValues(changedValues)
-//        prevAdapterCommittedValues = newValues
-//        committed = true
-//      } catch {
-//        case e: Exception => {
-//          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
-//        }
-//        case e: Throwable => {
-//          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
-//        }
-//      }
-//
-//    }
-//    committed
-//  }
+  //  def CommitAdapterValues: Boolean = {
+  //    LOG.debug("CommitAdapterValues. AdapterCommitTime: " + KamanjaConfiguration.adapterInfoCommitTime)
+  //    var committed = false
+  //    if (KamanjaMetadata.envCtxt != null) {
+  //      // Try to commit now
+  //      var changedValues: List[(String, String)] = null
+  //      val newValues = getAllValues
+  //      if (prevAdapterCommittedValues.size == 0) {
+  //        changedValues = newValues.toList
+  //      } else {
+  //        var changedArr = ArrayBuffer[(String, String)]()
+  //        newValues.foreach(v1 => {
+  //          val oldVal = prevAdapterCommittedValues.getOrElse(v1._1, null)
+  //          if (oldVal == null || v1._2.equals(oldVal) == false) { // It is not found or changed, simple take it
+  //            changedArr += v1
+  //          }
+  //        })
+  //        changedValues = changedArr.toList
+  //      }
+  //      // Commit here
+  //      try {
+  //        if (changedValues.size > 0)
+  //          KamanjaMetadata.envCtxt.setAdapterUniqKeyAndValues(changedValues)
+  //        prevAdapterCommittedValues = newValues
+  //        committed = true
+  //      } catch {
+  //        case e: Exception => {
+  //          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
+  //        }
+  //        case e: Throwable => {
+  //          LOG.error("Failed to commit adapter changes. if we can not save this we will reprocess the information when service restarts.", e)
+  //        }
+  //      }
+  //
+  //    }
+  //    committed
+  //  }
 }
 
 class KamanjaManager extends Observer {
@@ -742,7 +742,7 @@ class KamanjaManager extends Observer {
         statusMsg.statustype = "PD"
         statusMsg.nodeid = KamanjaConfiguration.nodeId.toString
         statusMsg.statusstring = statsStr
-        statusMsg.eventtime =  Utils.GetCurDtTmStrWithTZ // GetCurDtTmStr
+        statusMsg.eventtime = Utils.GetCurDtTmStrWithTZ // GetCurDtTmStr
         KamanjaMetadata.envCtxt.postMessages(Array[ContainerInterface](statusMsg))
       }
     }
@@ -789,7 +789,6 @@ class KamanjaManager extends Observer {
           LOG.info(dispStr)
         } */
 
-
     val metricsCollector = new Runnable {
       def run(): Unit = {
         try {
@@ -807,16 +806,16 @@ class KamanjaManager extends Observer {
     scheduledThreadPool.scheduleWithFixedDelay(statusPrint_PD, 0, 1000, TimeUnit.MILLISECONDS);
 
     /**
-      * print("=> ")
-      * breakable {
-      * for (ln <- io.Source.stdin.getLines) {
-      * val rv = execCmd(ln)
-      * if (rv)
-      * break;
-      * print("=> ")
-      * }
-      * }
-      */
+     * print("=> ")
+     * breakable {
+     * for (ln <- io.Source.stdin.getLines) {
+     * val rv = execCmd(ln)
+     * if (rv)
+     * break;
+     * print("=> ")
+     * }
+     * }
+     */
 
     var timeOutEndTime: Long = 0
     var participentsChangedCntr: Long = 0
@@ -918,10 +917,9 @@ class KamanjaManager extends Observer {
     return Shutdown(0)
   }
 
-
   /**
-    *
-    */
+   *
+   */
   private def validateAndExternalizeMetrics: Unit = {
     val (zkConnectString, zkNodeBasePath, zkSessionTimeoutMs, zkConnectionTimeoutMs) = KamanjaMetadata.envCtxt.getZookeeperInfo
     val zkHeartBeatNodePath = zkNodeBasePath + "/monitor/engine/" + KamanjaConfiguration.nodeId.toString
@@ -957,6 +955,9 @@ class KamanjaManager extends Observer {
       thisEngineInfo.uniqueId = MonitoringContext.monitorCount.incrementAndGet
       CreateClient.CreateNodeIfNotExists(zkConnectString, zkHeartBeatNodePath) // Creating the path if missing
     }
+
+    thisEngineInfo.memory = memoryMetricsString(processmemoryUsage)
+
     thisEngineInfo.lastSeen = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis))
     thisEngineInfo.uniqueId = MonitoringContext.monitorCount.incrementAndGet
 
@@ -982,6 +983,7 @@ class KamanjaManager extends Observer {
       ("Name" -> thisEngineInfo.name) ~
         ("Version" -> (KamanjaVersion.getMajorVersion.toString + "." + KamanjaVersion.getMinorVersion.toString + "." + KamanjaVersion.getMicroVersion + "." + KamanjaVersion.getBuildNumber)) ~
         ("UniqueId" -> thisEngineInfo.uniqueId) ~
+        ("Metrics" -> thisEngineInfo.memory) ~
         ("LastSeen" -> thisEngineInfo.lastSeen) ~
         ("StartTime" -> thisEngineInfo.startTime) ~
         ("Components" -> adapterMetricInfo.map(mci =>
@@ -1001,8 +1003,7 @@ class KamanjaManager extends Observer {
       LOG.debug("KamanjaManager " + KamanjaConfiguration.nodeId.toString + " externalized metrics for UID: " + thisEngineInfo.uniqueId)
   }
 
-
-  private def processConfigChange (objType: String, action: String, objectName: String, adapter: Any): Boolean = {
+  private def processConfigChange(objType: String, action: String, objectName: String, adapter: Any): Boolean = {
     // For now we are only handling adapters.
     if (objType.equalsIgnoreCase("adapterdef")) {
       var cia: InputAdapter = null
@@ -1013,8 +1014,8 @@ class KamanjaManager extends Observer {
       if (action.equalsIgnoreCase("remove")) {
         // SetUpdatePartitionsFlag
         inputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) ad.Shutdown })
-        outputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName))  ad.Shutdown })
-        storageAdapters.foreach(ad => { if (ad != null && ad.adapterInfo != null && ad.adapterInfo.Name.equalsIgnoreCase(objectName))  ad.Shutdown })
+        outputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) ad.Shutdown })
+        storageAdapters.foreach(ad => { if (ad != null && ad.adapterInfo != null && ad.adapterInfo.Name.equalsIgnoreCase(objectName)) ad.Shutdown })
       }
 
       // If this is an add - just call updateAdapter, he will figure out if its input or output
@@ -1030,18 +1031,17 @@ class KamanjaManager extends Observer {
         outputAdapters.foreach(ad => { if (ad.inputConfig.Name.equalsIgnoreCase(objectName)) coa = ad })
         storageAdapters.foreach(ad => { if (ad != null && ad.adapterInfo != null && ad.adapterInfo.Name.equalsIgnoreCase(objectName)) csa = ad })
 
-
         if (cia != null) {
           cia.Shutdown
-          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter(adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         if (coa != null) {
           coa.Shutdown
-          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter(adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         if (csa != null) {
           csa.Shutdown
-          KamanjaMdCfg.updateAdapter (adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
+          KamanjaMdCfg.updateAdapter(adapter.asInstanceOf[AdapterInfo], false, inputAdapters, outputAdapters, storageAdapters)
         }
         return true
       }
@@ -1054,6 +1054,27 @@ class KamanjaManager extends Observer {
     return false
   }
 
+  private def processmemoryUsage(): Memory = {
+    var mem: Memory = new Memory
+    val mb = 1024 * 1024
+    val runtime = Runtime.getRuntime
+    mem.usedMemory = (runtime.totalMemory - runtime.freeMemory) / mb
+    mem.totalMemory = runtime.totalMemory / mb
+    mem.freeMemory = runtime.freeMemory / mb
+    mem.maxMemory = runtime.maxMemory / mb
+
+    LOG.info("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb + " MB")
+    LOG.info("** Free Memory:  " + runtime.freeMemory / mb + " MB")
+    LOG.info("** Total Memory: " + runtime.totalMemory / mb + " MB")
+    LOG.info("** Max Memory:   " + runtime.maxMemory / mb + " MB")
+
+    return mem
+  }
+
+  private def memoryMetricsString(mem: Memory): String = {
+    if (mem == null) return "{\"UsedMemory\":\"0\",\"FreeMomory\":\"0\",\"TotalMemory\":\"0\",\"MaxMemory\":\"0 \"}\", "
+    return "{\"UsedMemory\":\"" + mem.usedMemory + " \",\"FreeMomory\":\"" + mem.freeMemory + "\",\"TotalMemory\":\"" + mem.totalMemory + "\",\"MaxMemory\":\"" + mem.maxMemory + "\"}\", "
+  }
   private class SignalHandler extends Observable with sun.misc.SignalHandler {
     def handleSignal(signalName: String) {
       sun.misc.Signal.handle(new sun.misc.Signal(signalName), this)
@@ -1070,6 +1091,14 @@ class MainInfo {
   var uniqueId: Long = 0
   var lastSeen: String = null
   var startTime: String = null
+  var memory: String = null
+}
+
+class Memory {
+  var usedMemory: Long = 0
+  var freeMemory: Long = 0
+  var maxMemory: Long = 0
+  var totalMemory: Long = 0
 }
 
 class ComponentInfo {
@@ -1087,7 +1116,7 @@ object KamanjaManager {
   private var km: KamanjaManager = _
 
   val instance: KamanjaManager = {
-    if(km == null) {
+    if (km == null) {
       km = new KamanjaManager
     }
     km
@@ -1101,7 +1130,7 @@ object KamanjaManager {
       }
     })
     val kmResult = instance.run(args)
-    if(kmResult != 0) {
+    if (kmResult != 0) {
       LOG.error(s"KAMANJA-MANAGER: Kamanja shutdown with error code $kmResult")
     }
   }
