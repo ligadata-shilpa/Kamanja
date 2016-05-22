@@ -194,12 +194,11 @@ object TypeUtils {
           val cache_type=ts.asInstanceOf[BaseElemDef].getClass().getName().split("\\.").last
           logger.debug("Deleting type "+cache_type)
           //ArrayTypeDef & MapTypeDef cannot be serialized
-          if(!(cache_type=="StructTypeDef" || cache_type=="MappedMsgTypeDef")){
+          //if(!(cache_type=="StructTypeDef" || cache_type=="MappedMsgTypeDef")){
             MetadataAPIImpl.DeleteObject(ts.asInstanceOf[BaseElemDef])
             ts.tranId = MetadataAPIImpl.GetNewTranId
             MetadataAPIImpl.UpdateTranId(Array(ts))
-
-          }
+          //}
           var apiResult=new ApiResult(ErrorCodeConstants.Success, "RemoveType", null, ErrorCodeConstants.Remove_Type_Successful + ":" + dispkey)
           apiResult.toString()
         }
