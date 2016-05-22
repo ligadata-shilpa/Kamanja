@@ -165,17 +165,17 @@ class APIService extends LigadataSSLConfiguration with Runnable{
       logger.debug("MetadataAPIService started, listening on (%s,%s)".format(serviceHost,servicePort))
 
       sys.addShutdownHook({
-        logger.debug("ShutdownHook called")
+        logger.warn("ShutdownHook called")
         Shutdown(0)
       })
 
       Thread.sleep(365*24*60*60*1000L)
     } catch {
       case e: InterruptedException => {
-        logger.debug("Unexpected Interrupt")
+        logger.warn("Unexpected Interrupt", e)
       }
       case e: Exception => {
-              logger.debug("", e)
+              logger.error("", e)
       }
     } finally {
       Shutdown(0)
