@@ -17,6 +17,7 @@
 package com.ligadata.AuditAdapterInfo
 
 import java.util.{Calendar, Properties, Date}
+import com.ligadata.Exceptions.KamanjaException
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
@@ -31,10 +32,64 @@ class AuditRecord {
   var userOrRole: String = ""
   var userPrivilege: String = ""
 
-  override def toString: String =
+  override def toString: String = {
+    if (actionTime == null) {
+      throw new KamanjaException(s"actionTime cannot be null", null)
+    }
+
+    if (action == null) {
+      throw new KamanjaException(s"action cannot be null", null)
+    }
+
+    if (objectAccessed == null) {
+      throw new KamanjaException(s"objectAccessed cannot be null", null)
+    }
+
+    if (success == null) {
+      throw new KamanjaException(s"success cannot be null", null)
+    }
+
+    if (transactionId == null) {
+      throw new KamanjaException(s"transactionId cannot be null", null)
+    }
+
+    if (userOrRole == null) {
+      throw new KamanjaException(s"userOrRole cannot be null", null)
+    }
+
+    if (userPrivilege == null) {
+      throw new KamanjaException(s"userPrivilege cannot be null", null)
+    }
     "(" + actionTime + "," + action + "," + "," + objectAccessed + "," + success + "," + transactionId + "," + userOrRole + "," + userPrivilege + ")"
+  }
+
 
   def toJson: JObject = {
+
+    if (actionTime == null) {
+      throw new KamanjaException(s"actionTime cannot be null", null)
+    }
+
+    if (action == null) {
+      throw new KamanjaException(s"action cannot be null", null)
+    }
+
+    if (userOrRole == null) {
+      throw new KamanjaException(s"userOrRole cannot be null", null)
+    }
+
+    if (success == null) {
+      throw new KamanjaException(s"success cannot be null", null)
+    }
+
+    if (objectAccessed == null) {
+      throw new KamanjaException(s"objectAccessed cannot be null", null)
+    }
+
+    if (notes == null) {
+      throw new KamanjaException(s"notes cannot be null", null)
+    }
+
     val ft = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     val at = new java.util.Date(java.lang.Long.valueOf(actionTime))
     val jsonObj = ("ActionTime" -> ft.format(at)) ~
