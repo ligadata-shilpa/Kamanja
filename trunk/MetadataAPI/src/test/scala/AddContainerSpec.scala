@@ -339,50 +339,6 @@ class AddContainerSpec extends FunSpec with LocalTestFixtures with BeforeAndAfte
 	And("Get the container object from the cache")
 	o = MdMgr.GetMdMgr.Container(ns, objName, version.toLong, true)
 	assert(o != None)
-
-	And("Deactivate container that was just added")
-	MetadataAPIImpl.DeactivateObject(o.get.asInstanceOf[BaseElemDef])
-
-	And("Get the active container object from the cache after deactivating")
-	o = MdMgr.GetMdMgr.Container(ns, objName, version.toLong, true)
-	assert(o == None)
-
-	And("Make sure the container object from the cache nolonger active ")
-	o = MdMgr.GetMdMgr.Container(ns, objName, version.toLong, false)
-	assert(o != None)
-
-	And("Activate container that was just deactivated")
-	MetadataAPIImpl.ActivateObject(o.get.asInstanceOf[BaseElemDef])
-
-	And("Make sure the container object from the cache is active")
-	o = MdMgr.GetMdMgr.Container(ns, objName, version.toLong, true)
-	assert(o != None)
-
-	And("Update the container without changing version number, should fail ")
-	res = MetadataAPIImpl.UpdateContainer(contStr, "JSON",userId,tenantId)
-	logger.info("response => " + res)
-	res should include regex ("\"Status Code\" : -1")
-
-	And("Clone the input json and update the version number to simulate a container for an update operation")
-	contStr = contStr.replaceFirst("01.00", "01.01")
-	assert(contStr.indexOf("\"00.01.01\"") >= 0)
-	res = MetadataAPIImpl.UpdateContainer(contStr, "JSON",userId,tenantId)
-	logger.info("response => " + res)
-	res should include regex ("\"Status Code\" : 0")
-
-	And("GetContainerDef API to fetch the container that was just updated")
-	newVersion = "0000000000001000001"
-	res = MetadataAPIImpl.GetContainerDef(ns, objName, "JSON", newVersion, None)
-	logger.info("response => " + res)
-	res should include regex ("\"Status Code\" : 0")
-
-	And("Get the active container object from the cache after updating")
-	o = MdMgr.GetMdMgr.Container(ns, objName, newVersion.toLong, true)
-	assert(o != None)
-
-	And("Make sure old(pre update version) container object nolonger active after the update")
-	o = MdMgr.GetMdMgr.Container(ns, objName, version.toLong, true)
-	assert(o == None)
       })
     }
   }
