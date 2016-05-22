@@ -32,8 +32,8 @@ public class MainClass {
 		FileNameConfig fileNameConfig = new FileNameConfig();
 
 		// read configuration file
-		// logger.info("Reading config file from " + args[0]);
-		String configFileLocation = "C:/Users/Haitham/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataGenerationConfig.json";
+		logger.info("Reading config file from " + args[0]);
+		String configFileLocation = args[0];//"C:/Users/Haitham/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataGenerationConfig.json";
 
 		// DataGenerationConfig.json file
 		JSONObject configJson = json.ReadJsonFile(configFileLocation);

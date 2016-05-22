@@ -1,0 +1,134 @@
+{
+  "fields": {
+    "field": [
+      {
+        "name": "msg_name",
+        "type": "string",
+        "fixedVal": "com.ligadata.kamanja.samples.messages.InpatientClaim"
+      },
+      {
+        "name": "Desynpuf_Id",
+        "type": "string"
+      },
+      {
+        "name": "Clm_Id",
+        "type": "long",
+        "minVal": "33869116552930",
+		"maxVal": "338091165532548"
+      },
+      {
+        "name": "Segment",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Clm_From_Dt",
+        "type": "date2",
+        "minVal": "20150101",
+		"maxVal": "20151231"
+      },
+      {
+        "name": "Clm_Thru_Dt",
+        "type": "date2",
+        "minVal": "20150101",
+		"maxVal": "20151231"
+      },
+      {
+        "name": "Prvdr_Num",
+        "type": "string"
+      },
+      {
+        "name": "Clm_Pmt_Amt",
+        "type": "double",
+        "minVal": "4000",
+		"maxVal": "7000"
+      },
+      {
+        "name": "Nch_Prmry_Pyr_Clm_Pd_Amt",
+        "type": "double",
+        "fixedVal": "0"
+		},
+      {
+        "name": "At_Physn_Npi",
+        "type": "long",        
+		"minVal": "5333645593",
+        "maxVal": "9833008208"
+      },
+      {
+        "name": "Op_Physn_Npi",
+        "type": "long",
+		"minVal": "1723547751",
+        "maxVal": "5333645593"
+      },
+      {
+        "name": "Ot_Physn_Npi",
+        "type": "empty"
+      },
+      {
+        "name": "Clm_Admsn_Dt",
+        "type": "date2",
+		"minVal": "20150101",
+        "maxVal": "20151231"
+      },
+      {
+        "name": "Admtng_Icd9_Dgns_Cd",
+        "type": "empty"
+		},
+      {
+        "name": "Clm_Pass_Thru_Per_Diem_Amt",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Nch_Bene_Ip_Ddctbl_Amt",
+        "type": "double",
+        "fixedVal": "1024"
+      },
+      {
+        "name": "Nch_Bene_Pta_Coinsrnc_Lblty_Am",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Nch_Bene_Blood_Ddctbl_Lblty_Am",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Clm_Utlztn_Day_Cnt",
+        "type": "int",
+		"minVal": "4",
+        "maxVal": "7"
+      },
+      {
+        "name": "Nch_Bene_Dschrg_Dt",
+        "type": "int",
+		"minVal": "20150101",
+        "maxVal": "20151231"
+      },
+      {
+        "name": "Clm_Drg_Cd",
+        "type": "int",
+		"minVal": "208",
+        "maxVal": "662"
+      },
+      {
+        "name": "Icd9_Dgns_Cds",
+        "type": "string",
+        "fixedVal": "4311~999999~1234566~3051~12345609~V8731~64903"
+      },
+      {
+        "name": "Icd9_Prcdr_Cds",
+        "type": "int",
+		"minVal": "5551",
+        "maxVal": "34590"
+      },
+      {
+        "name": "Hcpcs_Cds",
+        "type": "int",
+		"minVal": "0",
+        "maxVal": "99999"
+      }
+    ]
+  }
+}

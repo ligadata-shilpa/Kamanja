@@ -1,0 +1,181 @@
+{
+  "fields": {
+    "field": [
+      {
+        "name": "msg_name",
+        "type": "string",
+        "fixedVal": "com.ligadata.kamanja.samples.messages.Beneficiary"
+      },
+      {
+        "name": "Desynpuf_Id",
+        "type": "string"
+      },
+      {
+        "name": "Bene_Birth_Dt",
+        "type": "date2",
+        "minVal": "19440701",
+		"maxVal": "19650302"
+      },
+      {
+        "name": "Bene_Death_Dt",
+        "type": "empty"
+      },
+      {
+        "name": "Bene_Sex_Ident_Cd",
+        "type": "int",
+        "minVal": "1",
+		"maxVal": "2"
+      },
+      {
+        "name": "Bene_Race_Cd",
+        "type": "int",
+        "minVal": "1",
+		"maxVal": "2"
+      },
+      {
+        "name": "Bene_Esrd_Ind",
+        "type": "string",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Sp_State_Code",
+        "type": "int",
+        "minVal": "5",
+		"maxVal": "11"
+      },
+      {
+        "name": "Bene_County_Cd",
+        "type": "int",
+        "minVal": "400",
+		"maxVal": "530"
+      },
+      {
+        "name": "Bene_Hi_Cvrage_Tot_Mons",
+        "type": "int",
+        "minVal": "0",
+		"maxVal": "12"
+      },
+      {
+        "name": "Bene_Smi_Cvrage_Tot_Mons",
+        "type": "int",
+        "minVal": "0",
+		"maxVal": "12"
+      },
+      {
+        "name": "Bene_Hmo_Cvrage_Tot_Mons",
+        "type": "int",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Plan_Cvrg_Mos_Num",
+        "type": "int",
+        "minVal": "0",
+		"maxVal": "12"
+      },
+      {
+        "name": "Sp_Alzhdmta",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Chf",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Chrnkidn",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Cncr",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Copd",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Depressn",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Diabetes",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Ischmcht",
+        "type": "int",
+        "minVal": "1",
+		"maxVal": "2"
+      },
+      {
+        "name": "Sp_Osteoprs",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Ra_Oa",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Strketia",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Medreimb_Ip",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Benres_Ip",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Pppymt_Ip",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Medreimb_Op",
+        "type": "double",
+        "minVal": "0",
+		"maxVal": "500"
+      },
+      {
+        "name": "Benres_Op",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Pppymt_Op",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Medreimb_Car",
+        "type": "double",
+        "minVal": "0",
+		"maxVal": "90"
+      },
+      {
+        "name": "Benres_Car",
+        "type": "double",
+        "minVal": "0",
+		"maxVal": "60"
+      },
+      {
+        "name": "Pppymt_Car",
+        "type": "double",
+        "fixedVal": "0"
+      }
+    ]
+  }
+}

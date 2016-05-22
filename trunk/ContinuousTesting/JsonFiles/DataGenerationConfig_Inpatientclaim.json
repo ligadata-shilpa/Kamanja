@@ -1,0 +1,15 @@
+{
+  "DataGenerationRate": "1000",
+  "StartDate": "2015-11-01T13:00:44.000931EET",
+  "EndDate": "2015-11-30T13:00:44.000931EET",
+  "DurationInHours": "168",
+  "DropInFiles": "true",
+  "PushToKafka": "false",
+  "FileSplitPer": "1m",
+  "Delimiter": ",",
+  "CompressFormat": "",
+  "TemplatePath" : "C:/Users/Haitham/Documents/GitHub/Kamanja/trunk/ContinuousTesting/JsonFiles/DataDefenetion_Medical_Inpatientclaim.json",
+  "DestiniationPath" : "C:/Users/Haitham/Desktop/GenereatedData/Inpatientclaim/",
+  "SequenceId" : "0",
+  "MessageType" : "CSV"
+}

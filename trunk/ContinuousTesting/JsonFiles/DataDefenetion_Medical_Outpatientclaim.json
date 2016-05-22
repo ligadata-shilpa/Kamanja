@@ -1,0 +1,101 @@
+{
+  "fields": {
+    "field": [
+      {
+        "name": "msg_name",
+        "type": "string",
+        "fixedVal": "com.ligadata.kamanja.samples.messages.Outpatientclaim"
+      },
+      {
+        "name": "Desynpuf_Id",
+        "type": "string"
+      },
+      {
+        "name": "Clm_Id",
+        "type": "long",
+        "minVal": "338691165529305",
+		"maxVal": "684562269783396"
+      },
+      {
+        "name": "Segment",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Clm_From_Dt",
+        "type": "date2",
+        "minVal": "20150101",
+		"maxVal": "20151231"
+      },
+      {
+        "name": "Clm_Thru_Dt",
+        "type": "date2",
+        "minVal": "20150101",
+		"maxVal": "20151231"
+      },
+      {
+        "name": "Prvdr_Num",
+        "type": "string",
+        "fixedVal": "1100SK"
+      },
+      {
+        "name": "Clm_Pmt_Amt",
+        "type": "double",
+        "minVal": "200",
+		"maxVal": "2000"
+      },
+      {
+        "name": "Nch_Prmry_Pyr_Clm_Pd_Amt",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "At_Physn_Npi",
+        "type": "long",
+        "fixedVal": "1298826910"
+      },
+      {
+        "name": "Op_Physn_Npi",
+        "type": "empty"
+      },
+      {
+        "name": "Ot_Physn_Npi",
+        "type": "empty"
+      },
+      {
+        "name": "Nch_Bene_Blood_Ddctbl_Lblty_Am",
+        "type": "double",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Icd9_Dgns_Cds",
+        "type": "int",
+        "minVal": "2734",
+		"maxVal": "4843"
+      },
+      {
+        "name": "Icd9_Prcdr_Cds",
+        "type": "int",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Nch_Bene_Ptb_Ddctbl_Amt",
+        "type": "double",
+        "fixedVal": "40"
+      },
+      {
+        "name": "Nch_Bene_Ptb_Coinsrnc_Amt",
+        "type": "empty"
+      },
+      {
+        "name": "Admtng_Icd9_Dgns_Cd",
+        "type": "string",
+        "fixedVal": "93303"
+      },
+      {
+        "name": "Hcpcs_Cds",
+        "type": "empty"
+      }
+    ]
+  }
+}

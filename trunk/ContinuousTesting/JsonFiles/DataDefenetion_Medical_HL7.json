@@ -1,0 +1,435 @@
+{
+  "fields": {
+    "field": [
+      {
+        "name": "msg_name",
+        "type": "string",
+        "fixedVal": "com.ligadata.kamanja.samples.messages.HL7"
+      },
+	  {
+        "name": "Desynpuf_Id",
+        "type": "string"
+      },
+      {
+        "name": "Clm_Id",
+        "type": "long",
+        "minVal": "737133358637027",
+		"maxVal": "737783362300937"
+      },
+      {
+        "name": "Clm_From_Dt",
+        "type": "date2",
+        "minVal": "20150101",
+		"maxVal": "20151231"
+      },
+      {
+        "name": "Clm_Thru_Dt",
+        "type": "date2",
+        "minVal": "20150101",
+		"maxVal": "20151231"
+      },
+      {
+        "name": "Bene_Birth_Dt",
+        "type": "date2",
+        "minVal": "19230901",
+		"maxVal": "19650302"
+      },
+      {
+        "name": "Bene_Death_Dt",
+        "type": "empty"
+      },
+      {
+        "name": "Bene_Sex_Ident_Cd",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Bene_Race_Cd",
+        "type": "int",
+        "minVal": "2",
+		"maxVal": "5"
+      },
+      {
+        "name": "Bene_Esrd_Ind",
+        "type": "int",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Sp_State_Code",
+        "type": "int",
+        "fixedVal": "10"
+      },
+      {
+        "name": "Bene_County_Cd",
+        "type": "int",
+        "fixedVal": "260"
+      },
+      {
+        "name": "Bene_Hi_Cvrage_Tot_Mons",
+        "type": "int",
+        "fixedVal": "12"
+      },
+      {
+        "name": "Bene_Smi_Cvrage_Tot_Mons",
+        "type": "int",
+        "fixedVal": "12"
+      },
+      {
+        "name": "Bene_Hmo_Cvrage_Tot_Mons",
+        "type": "int",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Plan_Cvrg_Mos_Num",
+        "type": "int",
+        "fixedVal": "0"
+      },
+      {
+        "name": "Sp_Alzhdmta",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Chf",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Chrnkidn",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Cncr",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Copd",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Depressn",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Diabetes",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Ischmcht",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Osteoprs",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Sp_Ra_Oa",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Sp_Strketia",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Age",
+        "type": "int",
+        "minVal": "55",
+		"maxVal": "110"
+      },
+      {
+        "name": "Infectious_Parasitic_Diseases",
+        "type": "int",
+        "fixedVal": "7"
+      },
+      {
+        "name": "Neoplasms",
+        "type": "int",
+        "fixedVal": "4"
+      },
+      {
+        "name": "Endocrine_Nutritional_Metabolic_Diseases_Immunity_Disorders",
+        "type": "int",
+        "fixedVal": "19"
+      },
+      {
+        "name": "Diseases_Blood_Blood_Forming_Organs",
+        "type": "int",
+        "fixedVal": "12"
+      },
+      {
+        "name": "Mental_Disorders",
+        "type": "int",
+        "fixedVal": "11"
+      },
+      {
+        "name": "Diseases_Nervous_System_Sense_Organs",
+        "type": "int",
+        "fixedVal": "9"
+      },
+      {
+        "name": "Diseases_Circulatory_System",
+        "type": "int",
+        "fixedVal": "63"
+      },
+      {
+        "name": "Diseases_Respiratory_System",
+        "type": "int",
+        "fixedVal": "14"
+      },
+      {
+        "name": "Diseases_Digestive_System",
+        "type": "int",
+        "fixedVal": "11"
+      },
+      {
+        "name": "Diseases_Genitourinary_System",
+        "type": "int",
+        "fixedVal": "17"
+      },
+      {
+        "name": "Complications_Of_Pregnancy_Childbirth_The_Puerperium",
+        "type": "empty"
+      },
+      {
+        "name": "Diseases_Skin_Subcutaneous_Tissue",
+        "type": "int",
+        "fixedVal": "10"
+      },
+      {
+        "name": "Diseases_Musculoskeletal_System_Connective_Tissue",
+        "type": "int",
+        "fixedVal": "23"
+      },
+      {
+        "name": "Congenital_Anomalies",
+        "type": "boolNumric",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Certain_Conditions_Originating_In_The_Perinatal_Period",
+        "type": "empty"
+      },
+      {
+        "name": "Symptoms_Signs_Ill_Defined_Conditions",
+        "type": "int",
+        "fixedVal": "34"
+      },
+      {
+        "name": "Injury_Poisoning",
+        "type": "int",
+        "fixedVal": "10"
+      },
+      {
+        "name": "Factors_Influencing_Health_Status_Contact_With_Health_Services",
+        "type": "int",
+        "fixedVal": "31"
+      },
+      {
+        "name": "External_Causes_Of_Injury_Poisoning",
+        "type": "boolNumric",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Hypothyroidism",
+        "type": "boolNumric",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Infarction",
+        "type": "empty"
+      },
+      {
+        "name": "Alzheimer",
+        "type": "empty"
+      },
+      {
+        "name": "Alzheimer_Related",
+        "type": "int",
+        "fixedVal": "4"
+      },
+      {
+        "name": "Anemia",
+        "type": "empty"
+      },
+      {
+        "name": "Asthma",
+        "type": "empty"
+      },
+      {
+        "name": "Atrial_Fibrillation",
+        "type": "empty"
+      },
+      {
+        "name": "Hyperplasia",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Cataract",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Kidney_Disease",
+        "type": "int",
+        "fixedVal": "8"
+      },
+      {
+        "name": "Pulmonary_Disease",
+        "type": "empty"
+      },
+      {
+        "name": "Depression",
+        "type": "int",
+        "fixedVal": "3"
+      },
+      {
+        "name": "Diabetes",
+        "type": "int",
+        "fixedVal": "9"
+      },
+      {
+        "name": "Glaucoma",
+        "type": "empty"
+      },
+      {
+        "name": "Heart_Failure",
+        "type": "int",
+        "fixedVal": "13"
+      },
+      {
+        "name": "Hip_Pelvic_Fracture",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Hyperlipidemia",
+        "type": "int",
+        "fixedVal": "5"
+      },
+      {
+        "name": "Hypertension",
+        "type": "int",
+        "fixedVal": "16"
+      },
+      {
+        "name": "Ischemic_Heart_Disease",
+        "type": "int",
+        "fixedVal": "18"
+      },
+      {
+        "name": "Osteoporosis",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Ra_Oa",
+        "type": "int",
+        "fixedVal": "2"
+      },
+      {
+        "name": "Stroke",
+        "type": "int",
+        "fixedVal": "4"
+      },
+      {
+        "name": "Breast_Cancer",
+        "type": "int",
+        "fixedVal": "1"
+      },
+      {
+        "name": "Colorectal_Cancer",
+        "type": "empty"
+      },
+      {
+        "name": "Prostate_Cancer",
+        "type": "empty"
+      },
+      {
+        "name": "Lung_Cancer",
+        "type": "empty"
+      },
+      {
+        "name": "Endometrial_Cancer",
+        "type": "empty"
+      },
+      {
+        "name": "Tobacco",
+        "type": "empty"
+      },
+      {
+        "name": "Height",
+        "type": "double",
+        "fixedVal": "173"
+      },
+      {
+        "name": "Weight",
+        "type": "double",
+        "minVal": "55",
+		"maxVal": "110"
+      },
+      {
+        "name": "Systolic",
+        "type": "double",
+        "minVal": "153.6",
+		"maxVal": "159.6"
+      },
+      {
+        "name": "Diastolic",
+        "type": "double",
+        "minVal": "55.4	",
+		"maxVal": "57.6"
+      },
+      {
+        "name": "Totalcholesterol",
+        "type": "double",
+        "minVal": "169.9",
+		"maxVal": "172.3"
+      },
+      {
+        "name": "Ldl",
+        "type": "double",
+        "minVal": "159.4",
+		"maxVal": "161.7"
+      },
+      {
+        "name": "Triglycerides",
+        "type": "double",
+        "minVal": "136",
+		"maxVal": "153.2"
+      },
+      {
+        "name": "Shortnessofbreath",
+        "type": "empty"
+      },
+      {
+        "name": "Chestpain",
+        "type": "empty"
+      },
+      {
+        "name": "AATDeficiency",
+        "type": "boolNumric",
+        "fixedVal": "1"
+      },
+      {
+        "name": "ChronicCough",
+        "type": "boolNumric",
+        "fixedVal": "0"
+      },
+      {
+        "name": "ChronicSputum",
+        "type": "boolNumric",
+        "fixedVal": "0"
+      }
+    ]
+  }
+}

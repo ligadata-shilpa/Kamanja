@@ -1,6 +1,8 @@
 package com.ligadata.dataGenerationTool;
 
 import com.ligadata.dataGenerationTool.bean.ConfigObj;
+import com.ligadata.dataGenerationTool.fields.MedicalFields;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,35 +53,60 @@ public class JsonUtility {
         RandomGenerator random = new RandomGenerator();
         JSONObject locs = req.getJSONObject("fields");
         JSONArray recs = locs.getJSONArray("field");
-        LinkedHashMap<String, String> fields = new LinkedHashMap<String,String>();
-
+        LinkedHashMap<String, String> fields = new LinkedHashMap<String, String>();
+        MedicalFields medicalFields = new MedicalFields();
         try {
             for (int i = 0; i < recs.length(); ++i) {
                 lineAlreadyWritten = false;
                 JSONObject rec = recs.getJSONObject(i);
                 String fieldName = rec.getString("name");
                 String fieldType = rec.getString("type");
-                int fieldLength = rec.getInt("length");
+                double fieldMinVal = 0;
+                double fieldMaxVal = 0;
+                int fieldLength = 0;
 
-//                System.out.println(rec.getString("name"));
-//                System.out.println(rec.getString("type"));
-//                System.out.println(rec.getInt("length"));
+                if (rec.has("minVal") && NumberUtils.isNumber(rec.getString("minVal"))) {
+                    fieldMinVal = rec.getDouble("minVal");
+                }
+                if (rec.has("maxVal") && NumberUtils.isNumber(rec.getString("maxVal"))) {
+                    fieldMaxVal = rec.getDouble("maxVal");
+                }
+                if (rec.has("fieldLength") && NumberUtils.isNumber(rec.getString("fieldLength"))) {
+                    fieldLength = rec.getInt("fieldLength");
+                }
+
+                boolean fixedval = rec.has("fixedVal");
 
                 // before generating random value
-                if (fieldName.equalsIgnoreCase("msgname")) {
-                    value = "com.ligadata.kamanja.samples.messages.SubscriberUsage";
+
+                if (fixedval == true) {
+                    value = rec.getString("fixedVal");
                     lineAlreadyWritten = true;
                 }
 
+                if (fieldName.equalsIgnoreCase("Bene_Esrd_Ind") || fieldName.equalsIgnoreCase("Bene_Esrd_Ind")) {
+                    value = "0";
+                    lineAlreadyWritten = true;
+                }
+
+                if (fieldName.equalsIgnoreCase("Desynpuf_Id")) {
+                    value = String.valueOf(MedicalFields.Desynpuf_Id.randomDesynput_id()).substring(1);
+                    lineAlreadyWritten = true;
+                }
+
+                if (fieldName.equalsIgnoreCase("Prvdr_Num")) {
+                    value = String.valueOf(MedicalFields.Prvdr_Num.randomPrvdr_num()).substring(1);
+                    lineAlreadyWritten = true;
+                }
+
+
                 // generate random value
                 if (lineAlreadyWritten == false) {
-                    value = random.GenerateRandomRecord(fieldType, fieldLength, configObj);
+                    value = random.GenerateRandomRecord(fieldType, fieldLength, fieldMinVal, fieldMaxVal, configObj);
                 }
 
                 // after generating random value
-                if (fieldName.equalsIgnoreCase("msisdn")) {
-                    value = "425111" + value;
-                }
+
                 fields.put(fieldName, value);
             } // end for loop
         } catch (ParseException e) {

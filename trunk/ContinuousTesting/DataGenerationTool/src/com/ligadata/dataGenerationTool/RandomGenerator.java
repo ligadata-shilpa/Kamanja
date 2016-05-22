@@ -8,16 +8,20 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomGenerator {
 
-    public String GenerateRandomRecord(String FieldType, int length, ConfigObj configObj)
+    public String GenerateRandomRecord(String FieldType, int length, double minVal, double maxVal, ConfigObj configObj)
             throws ParseException {
         String randomValue = null;
         switch (FieldType.toLowerCase().trim()) {
             case "hybrid": // this is not used anymore.
                 randomValue = RandomHybrid(length);
+                break;
+            case "empty":
+                randomValue = "";
                 break;
             case "string":
                 randomValue = RandomString(length);
@@ -26,17 +30,16 @@ public class RandomGenerator {
                 randomValue = RandomString(1);
                 break;
             case "double":
-                double min = 0;
-                String tempMax = "999999999999";
-                double max = Double.valueOf(tempMax.substring(0, length));
-                double randomDouble = ThreadLocalRandom.current().nextDouble(min, max);
-                randomValue = randomDouble + "";
+                double randomDouble = ThreadLocalRandom.current().nextDouble(minVal, maxVal);
+                randomValue = (Math.round(randomDouble * 100.0) / 100.0) + "";
                 break;
-            case "integer":
-                randomValue = RandomNumeric(length);
+            case "int":
+                Random rn = new Random();
+                randomValue = String.valueOf(rn.nextInt((int) (maxVal - minVal + 1)) + (int) minVal);
                 break;
             case "long":
-                randomValue = RandomNumeric(length);
+                Random rn1 = new Random();
+                randomValue = String.valueOf(minVal + (long) (rn1.nextDouble() * (maxVal - minVal)));
                 break;
             case "timestamp":
                 String temp = RandomDateBetweenTwoDate(configObj.getStartDate(),
@@ -48,8 +51,8 @@ public class RandomGenerator {
                         configObj.getEndDate(), "yyyy-MM-dd");
                 break;
             case "date2":
-                randomValue = RandomDateBetweenTwoDate(configObj.getStartDate(),
-                        configObj.getEndDate(), "yyyy-MM-dd");
+                randomValue = RandomDateBetweenTwoDate(String.valueOf((long) minVal),
+                        String.valueOf((long) maxVal), "yyyyMMdd");
                 randomValue = randomValue.replaceAll("-", "");
                 break;
             default:

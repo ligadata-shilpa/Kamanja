@@ -25,11 +25,6 @@ public class GenerateRecord {
 
     public String GenerateHitAsCSV(List<String> record, String Delimiter) {
         String hit = "";
-//		Collections.reverse(record);
-
-		for (int j=0 ; j <= record.size()-1 ; j++){
-            System.out.println(record.get(j));
-        }
 
         for (int i = 0; i <= record.size() - 1; i++) {
             hit = hit + record.get(i) + Delimiter;
