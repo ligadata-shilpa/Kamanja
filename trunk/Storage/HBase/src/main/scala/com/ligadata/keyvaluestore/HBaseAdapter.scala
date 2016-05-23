@@ -67,11 +67,19 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   private var msg: String = ""
 
   private val stStrBytes = "serializerType".getBytes()
+  private val stStrBytesLen = stStrBytes.length
   private val siStrBytes = "serializedInfo".getBytes()
+  private val siStrBytesLen = siStrBytes.length
   private val schemaIdStrBytes = "schemaId".getBytes()
+  private val schemaIdStrBytesLen = schemaIdStrBytes.length
   private val baseStrBytes = "base".getBytes()
+  private val baseStrBytesLen = baseStrBytes.length
   private val isMetadataTableStrBytes = "isMetadataTable".getBytes()
+  private val isMetadataTableStrBytesLen = isMetadataTableStrBytes.length
   private val isMetadataTableName = "isMetadata"
+  private val isMetadataTableNameLen = isMetadataTableName.length
+  private var keySize = 0
+  private var columnFamilyNamesLen = schemaIdStrBytesLen + stStrBytesLen + siStrBytesLen + 3 * baseStrBytesLen
 
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
     logger.error(msg, ie)
@@ -678,6 +686,80 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     return null
   }
 
+
+  private def getRowSize(r: Result) : Int = {
+    var keySize     = r.getRow().length
+    var valSize     = 0
+    if( r.containsNonEmptyColumn(stStrBytes, baseStrBytes) ){
+      valSize = valSize + r.getValue(stStrBytes, baseStrBytes).length + stStrBytesLen + baseStrBytesLen
+    }
+    if( r.containsNonEmptyColumn(siStrBytes, baseStrBytes) ){
+      valSize = valSize + r.getValue(siStrBytes, baseStrBytes).length + siStrBytesLen + baseStrBytesLen
+    }
+    if( r.containsNonEmptyColumn(schemaIdStrBytes, baseStrBytes) ){
+      valSize = valSize + 4 + schemaIdStrBytesLen + baseStrBytesLen
+    }
+    keySize + valSize
+  }
+
+  private def getKeySize(k: Key): Int = {
+    var bucketKeySize = 0
+    k.bucketKey.foreach(bk => { bucketKeySize = bucketKeySize + bk.length })
+    8 + bucketKeySize + 8 + 4
+  }
+
+  private def getValueSize(v: Value): Int = {
+    v.serializerType.length + v.serializedInfo.length + 4 + columnFamilyNamesLen
+  }
+
+  private def updateOpStats(operation: String, tableName: String, opCount: Int) : Unit = lock.synchronized{
+    operation match {
+      case "get" => {
+	if( _gets.get(tableName) != None ){
+	  _gets(tableName) = _gets(tableName) + opCount
+	}
+	else{
+	  _gets(tableName) = + opCount
+	}
+      }
+      case "put" => {
+	if( _puts.get(tableName) != None ){
+	  _puts(tableName) = _puts(tableName) + opCount
+	}
+	else{
+	  _puts(tableName) = opCount
+	}	  
+      }
+      case _ => {
+        throw CreateDMLException("Internal Error: Failed to Update Op-stats for " + tableName, new Exception("Invalid operation " + operation))
+      }
+    }
+  }
+
+  private def updateByteStats(operation: String, tableName: String, byteCount: Int) : Unit = lock.synchronized{
+    operation match {
+      case "get" => {
+	if( _getBytes.get(tableName) != None ){
+	  _getBytes(tableName) = _getBytes(tableName) + byteCount
+	}
+	else{
+	  _getBytes(tableName) = byteCount
+	}
+      }
+      case "put" => {
+	if( _putBytes.get(tableName) != None ){
+	  _putBytes(tableName) = _putBytes(tableName) + byteCount
+	}
+	else{
+	  _putBytes(tableName) = byteCount
+	}
+      }
+      case _ => {
+        throw CreateDMLException("Internal Error: Failed to Update Byte Stats for " + tableName, new Exception("Invalid operation " + operation))
+      }
+    }
+  }
+
   override def put(containerName: String, key: Key, value: Value): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
@@ -689,8 +771,10 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var p = new Put(kba)
       p.addColumn(stStrBytes, baseStrBytes, Bytes.toBytes(value.serializerType))
       p.addColumn(siStrBytes, baseStrBytes, value.serializedInfo)
-      p.addColumn(schemaIdStrBytes, baseStrBytes, Bytes.toBytes(value.schemaId))
+      p.addColumn(schemaIdStrBytes, baseStrBytes,Bytes.toBytes(value.schemaId))
       tableHBase.put(p)
+      updateOpStats("put",tableName,1)
+      updateByteStats("put",tableName,getKeySize(key)+getValueSize(value))
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to save an object in table " + tableName, e)
@@ -720,12 +804,14 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           var p = new Put(kba)
           p.addColumn(stStrBytes, baseStrBytes, Bytes.toBytes(value.serializerType))
           p.addColumn(siStrBytes, baseStrBytes, value.serializedInfo)
-          p.addColumn(schemaIdStrBytes, baseStrBytes, Bytes.toBytes(value.schemaId))
+	  p.addColumn(schemaIdStrBytes, baseStrBytes, Bytes.toBytes(value.schemaId))
           puts = puts :+ p
+	  updateByteStats("put",tableName,getKeySize(key)+getValueSize(value))
         })
         try {
           if (puts.length > 0) {
             tableHBase.put(puts.toList)
+	    updateOpStats("put",tableName,1)
           }
         } catch {
           case e: Exception => {
@@ -832,6 +918,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
   }
 
+
   override def del(containerName: String, time: TimeRange, bucketKeys: Array[Array[String]]): Unit = {
     var tableName = toFullTableName(containerName)
     var tableHBase: Table = null
@@ -857,9 +944,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           scan.setStartRow(MakeCompositeKey(new Key(tr.beginTime, bucketKey, 0, 0),isMetadata))
           scan.setStopRow(MakeCompositeKey(new Key(tr.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
           val rs = tableHBase.getScanner(scan);
+	  updateOpStats("get",tableName,1)
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
+	    updateByteStats("get",tableName,getRowSize(r))
             var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
             logger.info("searching for " + key.bucketKey.mkString(","))
             if (bucketKeySet.contains(key.bucketKey)) {
@@ -905,9 +994,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           var scan = new Scan()
         scan.setTimeRange(tr.beginTime,tr.endTime)
           val rs = tableHBase.getScanner(scan);
+	  updateOpStats("get",tableName,1)
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
+	    updateByteStats("get",tableName,getRowSize(r))
             logger.info("searching for data in timerange: " + tr.beginTime +"-"+ tr.endTime)
               dels += new Delete(r.getRow())
             }
@@ -941,10 +1032,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var scan = new Scan();
       scan.setFilter(new FirstKeyOnlyFilter());
       var rs = tableHBase.getScanner(scan);
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       var cnt = 0
       while (it.hasNext()) {
         var r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         cnt = cnt + 1
       }
       return cnt
@@ -1017,10 +1110,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       tableHBase = getTableFromConnection(tableName);
       var scan = new Scan();
       var rs = tableHBase.getScanner(scan);
-
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
         val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
@@ -1047,9 +1141,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var scan = new Scan();
       scan.setFilter(new FirstKeyOnlyFilter());
       var rs = tableHBase.getScanner(scan);
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         processKey(r.getRow(), isMetadata, callbackFunction)
       }
     } catch {
@@ -1082,9 +1178,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val scan = new Scan();
       scan.setFilter(fl);
       val rs = tableHBase.getScanner(scan);
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         processKey(r.getRow(),isMetadata, callbackFunction)
       }
     } catch {
@@ -1117,9 +1215,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val scan = new Scan();
       scan.setFilter(fl);
       val rs = tableHBase.getScanner(scan);
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
         val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
@@ -1151,9 +1251,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         scan.setStartRow(MakeLongSerializedVal(time_range.beginTime))
         scan.setStopRow(MakeLongSerializedVal(time_range.endTime + 1))
         val rs = tableHBase.getScanner(scan);
+	updateOpStats("get",tableName,1)
         val it = rs.iterator()
         while (it.hasNext()) {
           val r = it.next()
+	  updateByteStats("get",tableName,getRowSize(r))
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
           val si = r.getValue(siStrBytes, baseStrBytes)
           val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
@@ -1186,9 +1288,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         scan.setStartRow(MakeLongSerializedVal(time_range.beginTime))
         scan.setStopRow(MakeLongSerializedVal(time_range.endTime + 1))
         val rs = tableHBase.getScanner(scan);
+	updateOpStats("get",tableName,1)
         val it = rs.iterator()
         while (it.hasNext()) {
           val r = it.next()
+	  updateByteStats("get",tableName,getRowSize(r))
           processKey(r.getRow(),isMetadata, callbackFunction)
         }
       })
@@ -1223,9 +1327,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0),isMetadata))
           scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
           val rs = tableHBase.getScanner(scan);
+	  updateOpStats("get",tableName,1)
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
+	    updateByteStats("get",tableName,getRowSize(r))
             var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
             if (bucketKeySet.contains(key.bucketKey)) {
               val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
@@ -1269,9 +1375,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0),isMetadata))
           scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
           val rs = tableHBase.getScanner(scan);
+	  updateOpStats("get",tableName,1)
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
+	    updateByteStats("get",tableName,getRowSize(r))
             var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
             if (bucketKeySet.contains(key.bucketKey)) {
               processKey(key, callbackFunction)
@@ -1305,10 +1413,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       // try scan with beginRow and endRow
       var scan = new Scan()
       val rs = tableHBase.getScanner(scan);
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       var dels = new Array[Delete](0)
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
         if (bucketKeySet.contains(key.bucketKey)) {
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
@@ -1342,9 +1452,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       // scan the whole table
       var scan = new Scan()
       val rs = tableHBase.getScanner(scan);
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
         if (bucketKeySet.contains(key.bucketKey)) {
           processKey(key, callbackFunction)
@@ -1389,9 +1501,11 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var dels = new ArrayBuffer[Delete]()
       var scan = new Scan()
       val rs = tableHBase.getScanner(scan);
+      updateOpStats("get",tableName,1)
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",tableName,getRowSize(r))
         dels += new Delete(r.getRow())
       }
       if (dels.size > 0)
@@ -1487,12 +1601,15 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       scan.setMaxVersions();
       scan.setBatch(1024);
       var rs = tableHBase.getScanner(scan);
+      updateOpStats("get",srcTableName,1)
 
       // Loop through each row and write it into destination table mutator
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
+	updateByteStats("get",srcTableName,getRowSize(r))
         var p = new Put(r.getRow)
+	updateByteStats("put",destTableName,getRowSize(r))
         val rc = r.rawCells()
         if (rc != null) {
           for (kv <- rc) {
