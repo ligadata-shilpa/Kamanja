@@ -411,7 +411,7 @@ object ExtractData extends ObjectResolver {
 
       val nodeInfo = mdMgr.Nodes.getOrElse(nodeId.toString, null)
       if (nodeInfo == null) {
-        LOG.error("Node %d not found in metadata".format(nodeId))
+        LOG.error("Node %d not found in metadata. Please ensure cluster configuration has been uploaded.".format(nodeId))
         sys.exit(1)
       }
 
