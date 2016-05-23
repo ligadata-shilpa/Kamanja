@@ -122,6 +122,8 @@ class ZooKeeperListener {
   }
 
   def Shutdown: Unit = {
+    pathChildCache.close
+    nodeCache.close
     if (zkc != null)
       zkc.close
     zkc = null

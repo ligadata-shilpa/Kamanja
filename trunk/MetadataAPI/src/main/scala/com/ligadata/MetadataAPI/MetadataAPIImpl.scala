@@ -594,6 +594,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     logger.debug("Connect to zookeeper..")
     if (zkc != null) {
       // Zookeeper is already connected
+
+      logger.debug("MetadataAPIImpl: Zookeeper is already connected")
       return
     }
 
@@ -7900,10 +7902,33 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param databaseInfo
      */
   def InitMdMgr(mgr: MdMgr, jarPathsInfo: String, databaseInfo: String) {
-    val startHB=true
+      val startHB = true
+      val mdLoader = new MetadataLoad(mgr, "", "", "", "")
+      mdLoader.initialize
+
+      metadataAPIConfig.setProperty("JAR_PATHS", jarPathsInfo)
+      metadataAPIConfig.setProperty("METADATA_DATASTORE", databaseInfo)
+
+      val tmpJarPaths = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("JAR_PATHS")
+      val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
+      MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
+      MetadataAPIImpl.LoadAllObjectsIntoCache
+      if (startHB){
+      //InitHearbeat
+        MonitorAPIImpl.initMonitorValues(metadataAPIConfig.getProperty("NODE_ID").toString)
+        MonitorAPIImpl.startMetadataHeartbeat
+      }
+        initZkListeners(startHB)
+  }
+
+  def InitMdMgr(mgr: MdMgr, jarPathsInfo: String, databaseInfo: String, zkcExt: CuratorFramework) {
+    logger.info("Initiating Metadata from external zk client")
+    zkc=zkcExt
+    logger.debug("zkc is: "+zkc)
+    zkHeartBeatNodePath = metadataAPIConfig.getProperty("ZNODE_PATH") + "/monitor/metadata/" + metadataAPIConfig.getProperty("NODE_ID").toString
+    val startHB = true
     val mdLoader = new MetadataLoad(mgr, "", "", "", "")
     mdLoader.initialize
-
     metadataAPIConfig.setProperty("JAR_PATHS", jarPathsInfo)
     metadataAPIConfig.setProperty("METADATA_DATASTORE", databaseInfo)
 
@@ -7911,7 +7936,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     val jarPaths = if (tmpJarPaths != null) tmpJarPaths.split(",").toSet else scala.collection.immutable.Set[String]()
     MetadataAPIImpl.OpenDbStore(jarPaths, GetMetadataAPIConfig.getProperty("METADATA_DATASTORE"))
     MetadataAPIImpl.LoadAllObjectsIntoCache
-      if (startHB) InitHearbeat
-      initZkListeners(startHB)
+    if (startHB){
+      //InitHearbeat
+      MonitorAPIImpl.initMonitorValues(metadataAPIConfig.getProperty("NODE_ID").toString)
+      MonitorAPIImpl.startMetadataHeartbeat
+    }
+    initZkListeners(startHB)
+  }
+
+  def shutdownHeartBeat: Unit ={
+    MonitorAPIImpl.shutdownMonitor
   }
 }
