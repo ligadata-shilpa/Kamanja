@@ -115,47 +115,21 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
 
      val parsedConfig = fileBean.ParseFile(configFileContent) //Parse config file
      val extractedInfo = fileBean.extractInfo(parsedConfig) //Extract information from parsed file
-     val configBeanObj = fileBean.createConfigBeanObj(extractedInfo)
+     val configBeanObj = fileBean.createConfigBeanObj(extractedInfo)// create a config object that store the result from extracting config file
      val fileSize = fileBean.Countlines(inputFile) // Find number of lines in file
      val headerString = fileBean.ReadHeaderFile(inputFile, 0) //read the header line for inputFile
      val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter) //split the header line based on delimiter
 
-     //for(item <- headerFields){}
      var feildsString = Map[String, String]()
-     for(itemIndex <- 0 to headerFields.length-1){
-       if(dataTypeObj.isAllDigits(headerFields(itemIndex))){ //Check if all character are digits
+     for(itemIndex <- 0 to headerFields.length-1) {
+       if (dataTypeObj.isAllDigits(headerFields(itemIndex))) {
+         //Check if all character are digits
          logger.error("This %s file does not include header".format(inputFile))
          sys.exit(1)
        }
-       var feildType1 = ""
-       if(fileSize >= 2){
-         val fieldLines = fileBean.ReadHeaderFile(inputFile, 1)
-         val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-         feildType1 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         feildsString = feildsString + (headerFields(itemIndex) -> feildType1)
-       } else{
-         feildsString = feildsString + (headerFields(itemIndex) -> "String")
-       }
-
-       var feildType2 = ""
-       if(fileSize >= 3){
-         val fieldLines = fileBean.ReadHeaderFile(inputFile, 2)
-         val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-         feildType2 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         if(!feildType1.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long"))
-           feildsString = feildsString + (headerFields(itemIndex) -> feildType2)
-       }
-
-       if(fileSize >= 4){
-         val fieldLines = fileBean.ReadHeaderFile(inputFile, 3)
-         val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-         var feildType3 = ""
-         feildType3 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-         if(!feildType1.equalsIgnoreCase("double") && !feildType2.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long") && !feildType2.equalsIgnoreCase("Long"))
-           feildsString = feildsString + (headerFields(itemIndex) -> feildType3)
-       }
-       }
-
+       var previousType = dataTypeObj.FindFinalType(fileSize, itemIndex, inputFile,configBeanObj.delimiter)
+       feildsString = feildsString + (headerFields(itemIndex) -> previousType)
+     }
      val jsonBean: JsonUtility = new JsonUtility()
      val fileName = fileBean.CreateFileName(configBeanObj.outputPath) // create name for output file
      val json = jsonBean.FinalJsonString(feildsString,configBeanObj) // create json string

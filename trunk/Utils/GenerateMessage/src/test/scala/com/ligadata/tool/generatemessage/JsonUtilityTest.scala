@@ -40,42 +40,41 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
       val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter)
       val dataTypeObj: DataTypeUtility = new DataTypeUtility()
       for(itemIndex <- 0 to headerFields.length-1) {
-//        var feildType1 = ""
-//        if (fileSize >= 2) {
-//          val fieldLines = fileBean.ReadHeaderFile(inputFile, 1)
-//          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-//          feildType1 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-//          feildsString = feildsString + (headerFields(itemIndex) -> feildType1)
-//        } else {
-//          feildsString = feildsString + (headerFields(itemIndex) -> "String")
-//        }
-var feildType1 = ""
-        if(fileSize >= 2){
-          val fieldLines = fileBean.ReadHeaderFile(inputFile, 1)
-          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-          feildType1 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-          feildsString = feildsString + (headerFields(itemIndex) -> feildType1)
-        } else{
-          feildsString = feildsString + (headerFields(itemIndex) -> "String")
+        var previousType = ""
+        for(size <- 2 to 4){
+          if(fileSize >= size) {
+            println( "itemindex = "+ itemIndex + " size = " + size+ " previousType = "+ previousType)
+              val fieldLines = fileBean.ReadHeaderFile(inputFile, size - 1)
+              val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
+              val currentType = dataTypeObj.FindFeildType(linesfeild(itemIndex))
+            println( "itemindex = "+ itemIndex + " size = " + size+ " currentType = "+ currentType)
+            if(previousType.equalsIgnoreCase("string") || (previousType.equalsIgnoreCase("boolean") && !currentType.equalsIgnoreCase("boolean"))
+              || (!previousType.equalsIgnoreCase("boolean") && !previousType.equalsIgnoreCase("") && (currentType.equalsIgnoreCase("string") || currentType.equalsIgnoreCase("boolean")))
+              || (previousType.equalsIgnoreCase("Int")&& currentType.equalsIgnoreCase("boolean"))){
+              previousType = "String"
+            } else if (previousType.equalsIgnoreCase("boolean") && currentType.equalsIgnoreCase("boolean")){
+              previousType = "Boolean"
+            } else if((previousType.equalsIgnoreCase("double") && (!currentType.equalsIgnoreCase("string") && !currentType.equalsIgnoreCase("boolean")))
+              || (previousType.equalsIgnoreCase("long") && (currentType.equalsIgnoreCase("double") || currentType.equalsIgnoreCase("float")))
+              || (previousType.equalsIgnoreCase("float") && (currentType.equalsIgnoreCase("long") || currentType.equalsIgnoreCase("double")))){
+              previousType = "Double"
+            } else if(previousType.equalsIgnoreCase("long") && (currentType.equalsIgnoreCase("long") || currentType.equalsIgnoreCase("int"))){
+              previousType = "Long"
+            } else if(previousType.equalsIgnoreCase("float") && (currentType.equalsIgnoreCase("float") || currentType.equalsIgnoreCase("int"))){
+              previousType = "Float"
+            } else if(previousType.equalsIgnoreCase("") ||(previousType.equalsIgnoreCase("int") && !currentType.equalsIgnoreCase("boolean"))){
+              previousType = currentType
+            } else if(previousType.equalsIgnoreCase("int") && currentType.equalsIgnoreCase("boolean")){
+              previousType = "Boolean"
+            }
+//            if (!previousType.equalsIgnoreCase("double") && !previousType.equalsIgnoreCase("Long")) {
+//              feildsString = feildsString + (headerFields(itemIndex) -> previousType)
+//            } else {
+//              feildsString = feildsString + (headerFields(itemIndex) -> previousType)
+//            }
+          }
         }
-
-        var feildType2 = ""
-        if(fileSize >= 3){
-          val fieldLines = fileBean.ReadHeaderFile(inputFile, 2)
-          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-          feildType2 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-          if(!feildType1.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long"))
-            feildsString = feildsString + (headerFields(itemIndex) -> feildType2)
-        }
-
-        if(fileSize >= 4){
-          val fieldLines = fileBean.ReadHeaderFile(inputFile, 3)
-          val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
-          var feildType3 = ""
-          feildType3 = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-          if(!feildType1.equalsIgnoreCase("double") && !feildType2.equalsIgnoreCase("double") && !feildType1.equalsIgnoreCase("Long") && !feildType2.equalsIgnoreCase("Long"))
-            feildsString = feildsString + (headerFields(itemIndex) -> feildType3)
-        }
+        feildsString = feildsString + (headerFields(itemIndex) -> previousType)
       }
       Given("Test CreateMainJsonString function")
 

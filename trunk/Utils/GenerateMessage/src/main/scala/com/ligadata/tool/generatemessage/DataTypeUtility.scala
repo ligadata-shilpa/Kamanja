@@ -6,6 +6,8 @@ package com.ligadata.tool.generatemessage
 
 import java.lang._
 
+import org.dmg.pmml.Delimiter
+
 class DataTypeUtility { // This class created to check the value if it double or int
 
   def isInteger(field: String): Boolean={ //This method used to check if the value is Integer (return true if integer and false otherwise)
@@ -23,10 +25,6 @@ class DataTypeUtility { // This class created to check the value if it double or
     try{
       if(field.contains('.')) {
         val dataType = Double.parseDouble(field)
-//        val firstPart = field.substring(0, field.indexOf('.'))
-//        val secondPart = field.substring(field.indexOf('.')+1, field.length)
-//        var dataType = Integer.parseInt(firstPart)
-//        dataType = Integer.parseInt(secondPart)
         return true
       } else
        return false
@@ -83,5 +81,39 @@ class DataTypeUtility { // This class created to check the value if it double or
     } catch{
       case e: Exception => return false
     }
+  }
+
+  def FindFinalType(fileSize: Int, itemIndex: Int, inputFile: String, delimiter: String): String = {
+    val fileBean: FileUtility = new FileUtility()
+    var previousType = ""
+    for (size <- 2 to 4) {
+      if (fileSize >= size) {
+        println("itemindex = " + itemIndex + " size = " + size + " previousType = " + previousType)
+        val fieldLines = fileBean.ReadHeaderFile(inputFile, size - 1)
+        val linesfeild = fileBean.SplitFile(fieldLines, delimiter)
+        val currentType = FindFeildType(linesfeild(itemIndex))
+        println("itemindex = " + itemIndex + " size = " + size + " currentType = " + currentType)
+        if (previousType.equalsIgnoreCase("string") || (previousType.equalsIgnoreCase("boolean") && !currentType.equalsIgnoreCase("boolean"))
+          || (!previousType.equalsIgnoreCase("boolean") && !previousType.equalsIgnoreCase("") && (currentType.equalsIgnoreCase("string") || currentType.equalsIgnoreCase("boolean")))
+          || (previousType.equalsIgnoreCase("Int") && currentType.equalsIgnoreCase("boolean"))) {
+          previousType = "String"
+        } else if (previousType.equalsIgnoreCase("boolean") && currentType.equalsIgnoreCase("boolean")) {
+          previousType = "Boolean"
+        } else if ((previousType.equalsIgnoreCase("double") && (!currentType.equalsIgnoreCase("string") && !currentType.equalsIgnoreCase("boolean")))
+          || (previousType.equalsIgnoreCase("long") && (currentType.equalsIgnoreCase("double") || currentType.equalsIgnoreCase("float")))
+          || (previousType.equalsIgnoreCase("float") && (currentType.equalsIgnoreCase("long") || currentType.equalsIgnoreCase("double")))) {
+          previousType = "Double"
+        } else if (previousType.equalsIgnoreCase("long") && (currentType.equalsIgnoreCase("long") || currentType.equalsIgnoreCase("int"))) {
+          previousType = "Long"
+        } else if (previousType.equalsIgnoreCase("float") && (currentType.equalsIgnoreCase("float") || currentType.equalsIgnoreCase("int"))) {
+          previousType = "Float"
+        } else if (previousType.equalsIgnoreCase("") || (previousType.equalsIgnoreCase("int") && !currentType.equalsIgnoreCase("boolean"))) {
+          previousType = currentType
+        } else if (previousType.equalsIgnoreCase("int") && currentType.equalsIgnoreCase("boolean")) {
+          previousType = "Boolean"
+        }
+      }
+    }
+    return previousType
   }
 }

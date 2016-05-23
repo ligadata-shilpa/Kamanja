@@ -1,11 +1,11 @@
 {
   "delimiter": ",",
-  "outputPath": "/",
+  "outputPath": "D:\\anashed",
   "saveMessage": "false",
   "nameSpace": "com.ligadata.kamanja",
-  "partitionKey": "false",
-  "primaryKey": "false",
-  "timePartition": "false",
+  "partitionKey": "id",
+  "primaryKey": "id,name",
+  "timePartition": "id",
   "messageType": "fixed",
   "messageName": "testmessage"
 }

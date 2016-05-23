@@ -1,5 +1,6 @@
 package com.ligadata.tool.generatemessage
 
+import org.json4s.native.JsonMethods._
 import org.scalatest._
 import Matchers._
 /**
@@ -85,7 +86,7 @@ class FileUtilityTest extends FeatureSpec with GivenWhenThen {
       val parsedFile = fileBean.ParseFile(configFileContent)
       val extractedFile = fileBean.extractInfo(parsedFile)
       Then("The delimiter variable should be set")
-      extractedFile.delimiter should be(",")
+      extractedFile.delimiter should not be(None)
 
       Given("Test CreateConfigObj function")
 
@@ -93,6 +94,15 @@ class FileUtilityTest extends FeatureSpec with GivenWhenThen {
       val configObj = fileBean.createConfigBeanObj(extractedFile)
       Then("The delimiter variable should be set")
       configObj.delimiter should be(",")
+
+      Given("Test CreateFileName function")
+      val filename = fileBean.CreateFileName(configObj.outputPath)
+      When("The file includes data")
+      println(filename)
+
+//      Given("Test WriteToFile function")
+//      val json = parse(""" { "numbers" : [1, 2, 3, 4] } """)
+//     fileBean.writeToFile(json,filename)
     }
   }
 }

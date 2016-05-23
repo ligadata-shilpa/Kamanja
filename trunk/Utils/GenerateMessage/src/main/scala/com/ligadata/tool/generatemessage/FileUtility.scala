@@ -12,11 +12,13 @@ import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import scala.collection.immutable.Map
 import scala.io.Source._
-//import com.ligadata.tool.generatemessage.ConfigBean
 /**
   * Created by Yousef on 5/12/2016.
   */
-case class configFile(delimiter: String, outputPath: String, saveMessage: String, nameSpace: String, partitionKey: String, primaryKey: String, timePartition: String, messageType: String, messageName: String)
+case class configFile(delimiter: Option[String], outputPath: Option[String], saveMessage: Option[String], nameSpace: Option[String],
+                      partitionKey: Option[String], primaryKey: Option[String], timePartition: Option[String], messageType: Option[String],
+                      messageName: Option[String])
+
 class FileUtility  extends LogTrait{
 
   def FindFileExtension (filePath: String) : Boolean = {//This method used to check if the extension of file is json or not (return true if json and false otherwise)
@@ -72,110 +74,50 @@ class FileUtility  extends LogTrait{
   def createConfigBeanObj(configInfo: configFile): ConfigBean={ //This method used to create a configObj
     var configBeanObj:ConfigBean = new ConfigBean()
     val dataTypeObj: DataTypeUtility = new DataTypeUtility()
-    if(configInfo.delimiter.trim == "" && configInfo.outputPath.trim == "" && configInfo.saveMessage.trim == "" && configInfo.nameSpace.trim == ""
-    &&configInfo.partitionKey.trim == "" && configInfo.primaryKey.trim == "" && configInfo.timePartition.trim == "" && configInfo.messageType.trim == "" && configInfo.messageName.trim == ""){
-      logger.error("outputpath and delimiter cannot be null in config file")
+    if(configInfo.delimiter.get == None && configInfo.outputPath.get == None){
+      logger.error("you should pass at least outputpath and delimiter in config file")
       sys.exit(1)
-    } else if(configInfo.outputPath.trim == "" || configInfo.delimiter.trim == ""){
+    } else if(configInfo.outputPath.get.trim == "" || configInfo.delimiter.get.trim == ""){
       logger.error("outputpath and delimiter cannot be null in config file")
       sys.exit(1)
     } else {
-      configBeanObj.outputPath_=(configInfo.outputPath)
-      configBeanObj.delimiter_=(configInfo.delimiter)
+      configBeanObj.outputPath_=(configInfo.outputPath.get)
+      configBeanObj.delimiter_=(configInfo.delimiter.get)
 
-      if(configInfo.saveMessage.trim != ""){
-        if(dataTypeObj.isBoolean(configInfo.saveMessage)){
-          configBeanObj.saveMessage_=(configInfo.saveMessage.toBoolean)
-        } else{
-          logger.error("the value for saveMessage should be true or false")
-          sys.exit(1)
-        }
+      if(dataTypeObj.isBoolean(configInfo.saveMessage.getOrElse("false"))){
+        configBeanObj.saveMessage_=(configInfo.saveMessage.get.toBoolean)
+      } else{
+        logger.error("the value for saveMessage should be true or false")
+        sys.exit(1)
       }
 
-      if(configInfo.nameSpace.trim != ""){
-        configBeanObj.nameSpace_=(configInfo.nameSpace.toString)
-      }
+      configBeanObj.nameSpace_=(configInfo.nameSpace.getOrElse("com.message"))
 
-      if(configInfo.messageName.trim != ""){
-        configBeanObj.messageName_=(configInfo.messageName.toString)
-      }
+      configBeanObj.messageName_=(configInfo.messageName.getOrElse("testmessage"))
 
-//      if(configInfo.partitionKey.trim != ""){
-//        if(dataTypeObj.isBoolean(configInfo.partitionKey)){
-//          configBeanObj.partitionKey_=(configInfo.partitionKey.toBoolean)
-//        } else{
-//          logger.error("the value for partitionKey should be true or false")
-//          sys.exit(1)
-//        }
-//      }
-//
-//      if(configInfo.primaryKey.trim != ""){
-//        if(dataTypeObj.isBoolean(configInfo.primaryKey)){
-//          configBeanObj.primaryKey_=(configInfo.primaryKey.toBoolean)
-//        } else{
-//          logger.error("the value for primaryKey should be true or false")
-//          sys.exit(1)
-//        }
-//      }
-//
-//      if(configInfo.timePartition.trim != ""){
-//        if(dataTypeObj.isBoolean(configInfo.timePartition)){
-//          configBeanObj.timePartition_=(configInfo.timePartition.toBoolean)
-//        } else{
-//          logger.error("the value for timePartition should be true or false")
-//          sys.exit(1)
-//        }
-//      }
+      configBeanObj.partitionKey_=(configInfo.partitionKey.getOrElse("false"))
+      if(configBeanObj.partitionKey == true) configBeanObj.hasPartitionKey_=(true) else configBeanObj.hasPartitionKey_=(false)
 
-      if(configInfo.partitionKey.trim != ""){
-        configBeanObj.partitionKey_=(configInfo.partitionKey.toString)
-        configBeanObj.hasPartitionKey_=(true)
-      }
+      configBeanObj.primaryKey_=(configInfo.primaryKey.getOrElse("false"))
+      if(configBeanObj.primaryKey == true) configBeanObj.hasPrimaryKey_=(true) else configBeanObj.hasPrimaryKey_=(false)
 
-      if(configInfo.primaryKey.trim != ""){
-        configBeanObj.primaryKey_=(configInfo.primaryKey.toString)
-        configBeanObj.hasPrimaryKey_=(true)
-      }
+      configBeanObj.timePartition_=(configInfo.timePartition.getOrElse("false"))
+      if(configBeanObj.timePartition == true) configBeanObj.hasTimePartition_=(true) else configBeanObj.hasTimePartition_=(false)
 
-      if(configInfo.timePartition.trim != ""){
-        configBeanObj.timePartition_=(configInfo.timePartition.toString)
-        configBeanObj.hasTimePartition_=(true)
-      }
-
-      if(configInfo.messageType.trim != ""){
-        if(configInfo.messageType.equalsIgnoreCase("fixed")){
+        if(configInfo.messageType.get.equalsIgnoreCase("fixed")){
           configBeanObj.messageType_=(true)
-        } else if(configInfo.messageType.equalsIgnoreCase("mapped")){
+        } else if(configInfo.messageType.get.equalsIgnoreCase("mapped")){
           configBeanObj.messageType_=(false)
         } else {
           logger.error("the value of massegeType should be fixed or mapped")
           sys.exit(1)
         }
-      }
+
       return configBeanObj
     }
   }
 
   def writeToFile(json:JsonAST.JValue, filename: String): Unit = {
-//        val json =
-//          ("Meesage" ->
-//            ("NameSpace" -> configObj.nameSpace) ~
-//            ("Name" -> "")~
-//            ("Verion" -> "00.01.00")~
-//              ("Description" -> "")~
-//              ("Fixed" -> configObj.messageType.toString)~
-//              ("Persist" -> configObj.saveMessage)~
-//              ("Feilds" ->
-//                data.keys.map {
-//                  key =>
-//                    (
-//                      ("Name" -> key) ~
-//                        ("Type" -> "System.".concat(data(key))))
-//                })~
-//              ("partitionKey" -> "")~
-//              ("primaryKey" -> "")~
-//              ("TimePartitionInfo" -> "")
-//            )
         new PrintWriter(filename) {
           write(pretty(render(json)));
           close
@@ -191,7 +133,7 @@ class FileUtility  extends LogTrait{
       logger.error("the output path does not exists")
       sys.exit(1)
     } else {
-      val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
+      val dateFormat = new SimpleDateFormat("yyyyMMddhhmmss")
        filename = outputPath + "/message_" + dateFormat.format(new java.util.Date()) + ".json"
     }
     return filename
