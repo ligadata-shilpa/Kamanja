@@ -43,7 +43,9 @@ object KamanjaMdCfg {
   def InitConfigInfo: InitConfigs = {
     val nd = mdMgr.Nodes.getOrElse(KamanjaConfiguration.nodeId.toString, null)
     if (nd == null) {
+      // 660 Change begins - bug fix for proper cluster config upload message
       LOG.error("Node %d not found in metadata. Please ensure cluster configuration has been uploaded.".format(KamanjaConfiguration.nodeId))
+      // 660 Change ends
       throw new KamanjaException("Node %d not found in metadata".format(KamanjaConfiguration.nodeId), null)
     }
 
