@@ -682,7 +682,7 @@ object StartMetadataAPI {
     response
   }
 
-  /**
+  /** NOT USED
    * AltRoute is invoked only if the 'Action.withName(action.trim)' method fails to discern the appropriate
    * MetadataAPI method to invoke.  The command argument array is reconsidered with the AlternateCmdParser
    * If it produces valid command arguments (a command name and Map[String,String] of arg name/values) **and**
@@ -695,7 +695,7 @@ object StartMetadataAPI {
    *         complaint is returned to the caller.
    *
    */
-  def AltRoute(origArgs: Array[String]): String = {
+ /* def AltRoute(origArgs: Array[String]): String = {
 
     /** trim off the config argument and if debugging the "debug" argument as well */
     val argsSansConfig: Array[String] = if (origArgs != null && origArgs.size > 0 && origArgs(0).toLowerCase == "debug") {
@@ -817,5 +817,5 @@ object StartMetadataAPI {
     }
 
     response
-  }
+  } */
 }
