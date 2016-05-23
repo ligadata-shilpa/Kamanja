@@ -156,7 +156,14 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
        }
        }
 
-     fileBean.writeToFile(feildsString,configBeanObj)
+     val jsonBean: JsonUtility = new JsonUtility()
+     val fileName = fileBean.CreateFileName(configBeanObj.outputPath) // create name for output file
+     val json = jsonBean.FinalJsonString(feildsString,configBeanObj) // create json string
+     fileBean.writeToFile(json,fileName) // write json string to output file
+     logger.info("message created successfully")
+     logger.info("you can find the file in this path %s".format(fileName))
+     println("[RESULT] - message created successfully")
+     println("[RESULT] - you can find the file in this path %s".format(fileName))
    }
 }
 

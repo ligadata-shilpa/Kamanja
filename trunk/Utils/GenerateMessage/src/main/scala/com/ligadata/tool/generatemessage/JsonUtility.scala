@@ -10,16 +10,16 @@ import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
 import scala.collection.immutable.Map
 
-class JsonUtility {
-  def CreateMainJsonString(data: Map[String, String], configObj: ConfigBean):JsonAST.JValue={
+class JsonUtility  extends LogTrait {
+  def CreateMainJsonString(data: Map[String, String], configObj: ConfigBean): JsonAST.JValue = {
     val json =
       ("Meesage" ->
         ("NameSpace" -> configObj.nameSpace) ~
-          ("Name" -> configObj.messageName)~
-          ("Verion" -> "00.01.00")~
-          ("Description" -> "")~
-          ("Fixed" -> configObj.messageType.toString)~
-          ("Persist" -> configObj.saveMessage)~
+          ("Name" -> configObj.messageName) ~
+          ("Verion" -> "00.01.00") ~
+          ("Description" -> "") ~
+          ("Fixed" -> configObj.messageType.toString) ~
+          ("Persist" -> configObj.saveMessage) ~
           ("Feilds" ->
             data.keys.map {
               key =>
@@ -31,10 +31,10 @@ class JsonUtility {
     return json
   }
 
-  def CreateJsonString (feild: String,  configObj: ConfigBean):JsonAST.JValue={
-    var json:JsonAST.JValue = ""
-    if(!feild.equalsIgnoreCase("TimePartitionInfo")) {
-       json = ("Meesage" ->
+  def CreateJsonString(feild: String, configObj: ConfigBean): JsonAST.JValue = {
+    var json: JsonAST.JValue = ""
+    if (!feild.equalsIgnoreCase("TimePartitionInfo")) {
+      json = ("Meesage" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
@@ -44,7 +44,7 @@ class JsonUtility {
           (feild -> List.empty[JInt])
         )
     } else {
-       json = ("Meesage" ->
+      json = ("Meesage" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
@@ -55,6 +55,28 @@ class JsonUtility {
             ("Format" -> "epochtime") ~
             ("Type" -> "Daily"))
         )
+    }
+    return json
+  }
+
+  def FinalJsonString(data: Map[String, String], configObj: ConfigBean): JsonAST.JValue = {
+    var json: JsonAST.JValue = ""
+    if (!data.isEmpty) {
+      json = CreateMainJsonString(data, configObj)
+      if (configObj.hasPartitionKey == true) {
+        val jsonPatitionKey = CreateJsonString("PartitionKey", configObj)
+        json = json merge jsonPatitionKey
+      }
+
+      if (configObj.hasPrimaryKey == true) {
+        val jsonPrimaryKey = CreateJsonString("PrimaryKey", configObj)
+        json = json merge jsonPrimaryKey
+      }
+
+      if (configObj.hasTimePartition == true) {
+        val jsonTimePatition = CreateJsonString("TimePartitionInfo", configObj)
+        json = json merge jsonTimePatition
+      }
     }
     return json
   }

@@ -85,19 +85,19 @@ var feildType1 = ""
       //isDigitFlag should be (false)
       println(pretty(render(json)))
 
-      configBeanObj.partitionKey_=(true)
+      configBeanObj.hasPartitionKey_=(true)
       val jsonPatitionKey = jsonObj.CreateJsonString("PartitionKey", configBeanObj)
       json = json merge jsonPatitionKey
       println("=======================================================")
       println(pretty(render(json)))
 
-      configBeanObj.primaryKey_=(true)
+      configBeanObj.hasPrimaryKey_=(true)
       val jsonPrimaryKey = jsonObj.CreateJsonString("PrimaryKey", configBeanObj)
       json = json merge jsonPrimaryKey
       println("=======================================================")
       println(pretty(render(json)))
 
-      configBeanObj.timePartition_=(true)
+      configBeanObj.hasTimePartition_=(true)
       val jsonTimePartition = jsonObj.CreateJsonString("TimePartitionInfo", configBeanObj)
       json = json merge jsonTimePartition
       println("=======================================================")

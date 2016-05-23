@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat
 import com.ligadata.Exceptions.KamanjaException
 import org.apache.commons.io.FilenameUtils
 import org.json4s
-import org.json4s.DefaultFormats
+import org.json4s.{JsonAST, DefaultFormats}
 import org.json4s.JsonDSL._
 //import org.json4s.jackson.JsonMethods._
 import org.json4s.native.JsonMethods._
@@ -74,10 +74,10 @@ class FileUtility  extends LogTrait{
     val dataTypeObj: DataTypeUtility = new DataTypeUtility()
     if(configInfo.delimiter.trim == "" && configInfo.outputPath.trim == "" && configInfo.saveMessage.trim == "" && configInfo.nameSpace.trim == ""
     &&configInfo.partitionKey.trim == "" && configInfo.primaryKey.trim == "" && configInfo.timePartition.trim == "" && configInfo.messageType.trim == "" && configInfo.messageName.trim == ""){
-      logger.error("You should pass at least outputpath and delimiter in config file")
+      logger.error("outputpath and delimiter cannot be null in config file")
       sys.exit(1)
     } else if(configInfo.outputPath.trim == "" || configInfo.delimiter.trim == ""){
-      logger.error("You should pass at least outputpath and delimiter in config file")
+      logger.error("outputpath and delimiter cannot be null in config file")
       sys.exit(1)
     } else {
       configBeanObj.outputPath_=(configInfo.outputPath)
@@ -100,31 +100,46 @@ class FileUtility  extends LogTrait{
         configBeanObj.messageName_=(configInfo.messageName.toString)
       }
 
+//      if(configInfo.partitionKey.trim != ""){
+//        if(dataTypeObj.isBoolean(configInfo.partitionKey)){
+//          configBeanObj.partitionKey_=(configInfo.partitionKey.toBoolean)
+//        } else{
+//          logger.error("the value for partitionKey should be true or false")
+//          sys.exit(1)
+//        }
+//      }
+//
+//      if(configInfo.primaryKey.trim != ""){
+//        if(dataTypeObj.isBoolean(configInfo.primaryKey)){
+//          configBeanObj.primaryKey_=(configInfo.primaryKey.toBoolean)
+//        } else{
+//          logger.error("the value for primaryKey should be true or false")
+//          sys.exit(1)
+//        }
+//      }
+//
+//      if(configInfo.timePartition.trim != ""){
+//        if(dataTypeObj.isBoolean(configInfo.timePartition)){
+//          configBeanObj.timePartition_=(configInfo.timePartition.toBoolean)
+//        } else{
+//          logger.error("the value for timePartition should be true or false")
+//          sys.exit(1)
+//        }
+//      }
+
       if(configInfo.partitionKey.trim != ""){
-        if(dataTypeObj.isBoolean(configInfo.partitionKey)){
-          configBeanObj.partitionKey_=(configInfo.partitionKey.toBoolean)
-        } else{
-          logger.error("the value for partitionKey should be true or false")
-          sys.exit(1)
-        }
+        configBeanObj.partitionKey_=(configInfo.partitionKey.toString)
+        configBeanObj.hasPartitionKey_=(true)
       }
 
       if(configInfo.primaryKey.trim != ""){
-        if(dataTypeObj.isBoolean(configInfo.primaryKey)){
-          configBeanObj.primaryKey_=(configInfo.primaryKey.toBoolean)
-        } else{
-          logger.error("the value for primaryKey should be true or false")
-          sys.exit(1)
-        }
+        configBeanObj.primaryKey_=(configInfo.primaryKey.toString)
+        configBeanObj.hasPrimaryKey_=(true)
       }
 
       if(configInfo.timePartition.trim != ""){
-        if(dataTypeObj.isBoolean(configInfo.timePartition)){
-          configBeanObj.timePartition_=(configInfo.timePartition.toBoolean)
-        } else{
-          logger.error("the value for timePartition should be true or false")
-          sys.exit(1)
-        }
+        configBeanObj.timePartition_=(configInfo.timePartition.toString)
+        configBeanObj.hasTimePartition_=(true)
       }
 
       if(configInfo.messageType.trim != ""){
@@ -141,30 +156,7 @@ class FileUtility  extends LogTrait{
     }
   }
 
-  def writeToFile(data: Map[String, String], configObj: ConfigBean): Unit = {
-    if (configObj.outputPath == null) {
-      logger.error("outputpath should not be null for select operation")
-    } else {
-      if (!data.isEmpty) {
-        val jsonObj: JsonUtility = new JsonUtility()
-        val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
-        val filename = configObj.outputPath + "/message_" + dateFormat.format(new java.util.Date()) + ".json"
-        var json = jsonObj.CreateMainJsonString(data, configObj)
-
-        if(configObj.partitionKey == true){
-          val jsonPatitionKey = jsonObj.CreateJsonString("PartitionKey", configObj)
-          json = json merge jsonPatitionKey
-        }
-
-        if(configObj.primaryKey == true){
-          val jsonPrimaryKey = jsonObj.CreateJsonString("PrimaryKey", configObj)
-          json = json merge jsonPrimaryKey
-        }
-
-        if(configObj.timePartition == true){
-          val jsonTimePatition = jsonObj.CreateJsonString("TimePartitionInfo", configObj)
-          json = json merge jsonTimePatition
-        }
+  def writeToFile(json:JsonAST.JValue, filename: String): Unit = {
 //        val json =
 //          ("Meesage" ->
 //            ("NameSpace" -> configObj.nameSpace) ~
@@ -188,9 +180,20 @@ class FileUtility  extends LogTrait{
           write(pretty(render(json)));
           close
         }
-      } else {
-        logger.error("no data retrieved")
-      }
+  }
+
+  def CreateFileName(outputPath: String): String={
+    var filename = ""
+    if (outputPath == null) {
+      logger.error("output path should not be null")
+      sys.exit(1)
+    } else if(!FileExist(outputPath)) {
+      logger.error("the output path does not exists")
+      sys.exit(1)
+    } else {
+      val dateFormat = new SimpleDateFormat("ddMMyyyyhhmmss")
+       filename = outputPath + "/message_" + dateFormat.format(new java.util.Date()) + ".json"
     }
+    return filename
   }
 }

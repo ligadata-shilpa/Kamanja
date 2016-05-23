@@ -66,8 +66,8 @@ class FileUtilityTest extends FeatureSpec with GivenWhenThen {
 
       When("The file in path")
       val headerFeilds = fileBean.SplitFile(fileHeader,",")
-      Then("The size of array should not be 3")
-      headerFeilds.length should be(3)
+      Then("The size of array should not be 4")
+      headerFeilds.length should be(4)
       for(item <- headerFeilds)
         println(item)
 
@@ -75,8 +75,8 @@ class FileUtilityTest extends FeatureSpec with GivenWhenThen {
 
       When("The file in path")
       val count = fileBean.Countlines(inputFile)
-      Then("The number of lines should be 3")
-      count should be(3)
+      Then("The number of lines should be 4")
+      count should be(4)
 
       Given("Test Parse and Extract functions")
 
