@@ -944,7 +944,7 @@ class TransactionContext(val transId: Long, val nodeCtxt: NodeContext, val msgDa
         //BUGBUG:: Yet to fix -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
         //FIXME:- Fix this -- Same timeRange, Partition Key & PrimaryKeys need to be updated with new ones
         // May be we can create the map of current list and loop thru the list we got tmpList
-        tmpList ++ tmpList
+        tmpList ++ currentList.map(m => m._2)
       } else if (currentList.size > 0) {
         currentList.map(m => m._2)
       } else {
