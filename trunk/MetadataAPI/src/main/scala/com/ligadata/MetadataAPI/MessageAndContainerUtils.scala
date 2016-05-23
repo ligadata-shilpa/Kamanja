@@ -761,56 +761,8 @@ object MessageAndContainerUtils {
           if (typeDef != None) {
             types = types :+ typeDef.get
           }
-          // ArrayBufferOf<TypeName>
-          typeName = "arraybufferof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // SortedSetOf<TypeName>
-          typeName = "sortedsetof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // ImmutableMapOfIntArrayOf<TypeName>
-          typeName = "immutablemapofintarrayof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // ImmutableMapOfString<TypeName>
-          typeName = "immutablemapofstringarrayof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // ArrayOfArrayOf<TypeName>
-          typeName = "arrayofarrayof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // MapOfStringArrayOf<TypeName>
-          typeName = "mapofstringarrayof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // MapOfIntArrayOf<TypeName>
-          typeName = "mapofintarrayof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // SetOf<TypeName>
-          typeName = "setof" + msgDef.name
-          typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
-          if (typeDef != None) {
-            types = types :+ typeDef.get
-          }
-          // TreeSetOf<TypeName>
-          typeName = "treesetof" + msgDef.name
+          // MapOf<TypeName>
+          typeName = "mapof" + msgDef.name
           typeDef = TypeUtils.GetType(msgDef.nameSpace, typeName, msgDef.ver.toString, "JSON", None)
           if (typeDef != None) {
             types = types :+ typeDef.get
