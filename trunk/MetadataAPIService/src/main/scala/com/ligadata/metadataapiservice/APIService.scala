@@ -191,6 +191,16 @@ object APIService {
     val mgr = new APIService
     mgr.StartService(args) 
   }
+
+  private var mgr : APIService = null
+  def startAPISevrice(args: Array[String]): Unit = {
+    mgr = new APIService
+    mgr.StartService(args)
+  }
+  def shutdownAPISevrice(): Unit = {
+    if(mgr != null)
+      mgr.Shutdown(0)
+  }
   
   
   /**
