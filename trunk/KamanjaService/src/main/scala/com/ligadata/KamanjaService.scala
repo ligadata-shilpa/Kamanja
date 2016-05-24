@@ -14,6 +14,7 @@ object KamanjaService {
   private val LOG = LogManager.getLogger(getClass)
   private val executor = Executors.newFixedThreadPool(3)
 
+
   def main(args : Array[String]) : Unit = {
 
     scala.sys.addShutdownHook({
@@ -26,20 +27,25 @@ object KamanjaService {
     })
 
 
+    //run engine
     val kamanjaEngineThread = new Runnable() {
       override def run(): Unit = {
+
+        //TODO : use a better way to wait until cluster config is uploaded
+        Thread.sleep(60 * 1000)
+
         LOG.warn("starting KAMANJA-MANAGER")
 
         //TODO : pass engine config file path (hardcoded temporarily)
-        //TODO : wait until cluster config is uploaded
-
-        KamanjaManager.KamanjaManager.startKamanjaManager(args)
+        val engineCfg = Array[String]("--config", "/opt/Kamanja_1.5.0.Test/Kamanja-1.4.1_2.11/config/Engine1Config.properties")
+        LOG.warn("KamanjaService - main() : engineCfg.length="+engineCfg.length)
+        KamanjaManager.KamanjaManager.startKamanjaManager(engineCfg)
       }
     }
     executor.execute(kamanjaEngineThread)
 
     //run metadata api
-
+    //TODO
 
     //run rest api
     val apiServiceThread = new Runnable() {
@@ -47,8 +53,9 @@ object KamanjaService {
         LOG.warn("starting APIService")
 
         //TODO : pass config file path (hardcoded temporarily)
+        val msgApiCfg = Array[String]("--config", "/opt/Kamanja_1.5.0.Test/Kamanja-1.4.1_2.11/config/MetadataAPIConfig.properties")
 
-        APIService.startAPISevrice(args)
+        APIService.startAPISevrice(msgApiCfg)
       }
     }
     executor.execute(apiServiceThread)

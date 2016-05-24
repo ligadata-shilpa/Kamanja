@@ -6,7 +6,7 @@ shellPrompt := { state => "sbt (%s)> ".format(Project.extract(state).currentProj
 
 
 
-//mainClass in assembly := Some("com.ligadata.MetadataAPI.StartMetadataAPI")
+mainClass in assembly := Some("com.ligadata.KamanjaService")
 
 assemblyOption in assembly ~= {
   _.copy(prependShellScript = Some(defaultShellScript))
@@ -65,7 +65,7 @@ test in assembly := {}
 
 name := "KamanjaService"
 
-version := "1.0"
+version := "1.4.1"
 
 scalacOptions += "-deprecation"
 
