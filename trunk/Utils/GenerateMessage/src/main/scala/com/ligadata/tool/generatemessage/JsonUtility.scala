@@ -31,7 +31,7 @@ class JsonUtility  extends LogTrait {
     return json
   }
 
-  def CreateJsonString(feild: String, configObj: ConfigBean): JsonAST.JValue = {
+  def CreateJsonString(feild: String, configObj: ConfigBean, keys: Array[String]): JsonAST.JValue = {
     var json: JsonAST.JValue = ""
     if (!feild.equalsIgnoreCase("TimePartitionInfo")) {
       json = ("Meesage" ->
@@ -41,7 +41,7 @@ class JsonUtility  extends LogTrait {
           ("Description" -> "") ~
           ("Fixed" -> configObj.messageType.toString) ~
           ("Persist" -> configObj.saveMessage) ~
-          (feild -> List.empty[JInt])
+          (feild -> /*List.empty[JInt]*/ keys.toList)
         )
     } else {
       json = ("Meesage" ->
@@ -51,7 +51,7 @@ class JsonUtility  extends LogTrait {
           ("Description" -> "") ~
           ("Fixed" -> configObj.messageType.toString) ~
           ("Persist" -> configObj.saveMessage) ~
-          (feild -> ("Key" -> "") ~
+          (feild -> ("Key" -> configObj.timePartition) ~
             ("Format" -> "epochtime") ~
             ("Type" -> "Daily"))
         )
@@ -64,17 +64,17 @@ class JsonUtility  extends LogTrait {
     if (!data.isEmpty) {
       json = CreateMainJsonString(data, configObj)
       if (configObj.hasPartitionKey == true) {
-        val jsonPatitionKey = CreateJsonString("PartitionKey", configObj)
+        val jsonPatitionKey = CreateJsonString("PartitionKey", configObj, configObj.partitionKeyArray)
         json = json merge jsonPatitionKey
       }
 
       if (configObj.hasPrimaryKey == true) {
-        val jsonPrimaryKey = CreateJsonString("PrimaryKey", configObj)
+        val jsonPrimaryKey = CreateJsonString("PrimaryKey", configObj, configObj.primaryKeyArray)
         json = json merge jsonPrimaryKey
       }
 
       if (configObj.hasTimePartition == true) {
-        val jsonTimePatition = CreateJsonString("TimePartitionInfo", configObj)
+        val jsonTimePatition = CreateJsonString("TimePartitionInfo", configObj, Array(configObj.timePartition))
         json = json merge jsonTimePatition
       }
     }

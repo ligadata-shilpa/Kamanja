@@ -6,9 +6,7 @@ package com.ligadata.tool.generatemessage
 
 import java.lang._
 
-import org.dmg.pmml.Delimiter
-
-class DataTypeUtility { // This class created to check the value if it double or int
+class DataTypeUtility extends LogTrait{ // This class created to check the value if it double or int
 
   def isInteger(field: String): Boolean={ //This method used to check if the value is Integer (return true if integer and false otherwise)
    try{
@@ -88,11 +86,9 @@ class DataTypeUtility { // This class created to check the value if it double or
     var previousType = ""
     for (size <- 2 to 4) {
       if (fileSize >= size) {
-        println("itemindex = " + itemIndex + " size = " + size + " previousType = " + previousType)
         val fieldLines = fileBean.ReadHeaderFile(inputFile, size - 1)
         val linesfeild = fileBean.SplitFile(fieldLines, delimiter)
         val currentType = FindFeildType(linesfeild(itemIndex))
-        println("itemindex = " + itemIndex + " size = " + size + " currentType = " + currentType)
         if (previousType.equalsIgnoreCase("string") || (previousType.equalsIgnoreCase("boolean") && !currentType.equalsIgnoreCase("boolean"))
           || (!previousType.equalsIgnoreCase("boolean") && !previousType.equalsIgnoreCase("") && (currentType.equalsIgnoreCase("string") || currentType.equalsIgnoreCase("boolean")))
           || (previousType.equalsIgnoreCase("Int") && currentType.equalsIgnoreCase("boolean"))) {
@@ -115,5 +111,20 @@ class DataTypeUtility { // This class created to check the value if it double or
       }
     }
     return previousType
+  }
+
+  def splitToArray(value: String): Array[String]={//this method used to split string to array for PartitionKey,PrimaryKey,TimePartitionInfo
+    return value.split(",")
+  }
+
+  def CheckKeys(messagefields: Array[String], keys: String): Array[String] ={
+    val keysArray = splitToArray(keys)
+    for (key <- keysArray){
+      if(!messagefields.contains(key)){
+        logger.error("%s key from partitioKey/PrimaryKey/TimePartitionInfo does not in message fields. choose another key please".format(key))
+        sys.exit(1)
+      }
+    }
+    return keysArray
   }
 }

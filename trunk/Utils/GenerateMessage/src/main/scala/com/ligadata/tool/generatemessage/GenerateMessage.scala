@@ -119,7 +119,9 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      val fileSize = fileBean.Countlines(inputFile) // Find number of lines in file
      val headerString = fileBean.ReadHeaderFile(inputFile, 0) //read the header line for inputFile
      val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter) //split the header line based on delimiter
-
+     // check if partitionkey,primarykey,timepartioninfo value in file header
+     if (configBeanObj.hasPartitionKey == true) configBeanObj.partitionKeyArray = dataTypeObj.CheckKeys(headerFields,configBeanObj.partitionKey)
+     if (configBeanObj.hasPrimaryKey == true) configBeanObj.primaryKeyArray = dataTypeObj.CheckKeys(headerFields, configBeanObj.primaryKey)
      var feildsString = Map[String, String]()
      for(itemIndex <- 0 to headerFields.length-1) {
        if (dataTypeObj.isAllDigits(headerFields(itemIndex))) {

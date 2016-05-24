@@ -67,11 +67,6 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
             } else if(previousType.equalsIgnoreCase("int") && currentType.equalsIgnoreCase("boolean")){
               previousType = "Boolean"
             }
-//            if (!previousType.equalsIgnoreCase("double") && !previousType.equalsIgnoreCase("Long")) {
-//              feildsString = feildsString + (headerFields(itemIndex) -> previousType)
-//            } else {
-//              feildsString = feildsString + (headerFields(itemIndex) -> previousType)
-//            }
           }
         }
         feildsString = feildsString + (headerFields(itemIndex) -> previousType)
@@ -85,19 +80,22 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
       println(pretty(render(json)))
 
       configBeanObj.hasPartitionKey_=(true)
-      val jsonPatitionKey = jsonObj.CreateJsonString("PartitionKey", configBeanObj)
+      configBeanObj.primaryKeyArray_=(Array("id","name"))
+      configBeanObj.partitionKeyArray_=(Array("id"))
+      println("List ->" + configBeanObj.partitionKeyArray.toList)
+      val jsonPatitionKey = jsonObj.CreateJsonString("PartitionKey", configBeanObj, configBeanObj.partitionKeyArray)
       json = json merge jsonPatitionKey
       println("=======================================================")
       println(pretty(render(json)))
 
       configBeanObj.hasPrimaryKey_=(true)
-      val jsonPrimaryKey = jsonObj.CreateJsonString("PrimaryKey", configBeanObj)
+      val jsonPrimaryKey = jsonObj.CreateJsonString("PrimaryKey", configBeanObj, configBeanObj.primaryKeyArray)
       json = json merge jsonPrimaryKey
       println("=======================================================")
       println(pretty(render(json)))
 
       configBeanObj.hasTimePartition_=(true)
-      val jsonTimePartition = jsonObj.CreateJsonString("TimePartitionInfo", configBeanObj)
+      val jsonTimePartition = jsonObj.CreateJsonString("TimePartitionInfo", configBeanObj, Array(configBeanObj.timePartition))
       json = json merge jsonTimePartition
       println("=======================================================")
       println(pretty(render(json)))

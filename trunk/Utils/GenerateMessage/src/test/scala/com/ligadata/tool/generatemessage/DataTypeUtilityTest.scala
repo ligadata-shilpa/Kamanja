@@ -127,6 +127,13 @@ class DataTypeUtilityTest extends FeatureSpec with GivenWhenThen {
       Then("The feildType value should be Long")
       feildType should be ("Long")
 
+      Given("test CheckKeys function")
+
+      When("pass value in meesgae fields")
+      val messageFields = Array("id","name","company","work")
+      val partitionkeyKeys = "id,name"
+      datatypeBean.CheckKeys(messageFields,partitionkeyKeys)
+      Then("no error shuld be raised")
     }
   }
 }

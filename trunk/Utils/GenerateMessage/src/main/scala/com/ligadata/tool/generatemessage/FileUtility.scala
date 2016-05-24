@@ -95,14 +95,14 @@ class FileUtility  extends LogTrait{
 
       configBeanObj.messageName_=(configInfo.messageName.getOrElse("testmessage"))
 
-      configBeanObj.partitionKey_=(configInfo.partitionKey.getOrElse("false"))
-      if(configBeanObj.partitionKey == true) configBeanObj.hasPartitionKey_=(true) else configBeanObj.hasPartitionKey_=(false)
+      configBeanObj.partitionKey_=(configInfo.partitionKey.getOrElse(""))
+      if(!configBeanObj.partitionKey.trim.equalsIgnoreCase("")) configBeanObj.hasPartitionKey_=(true) else configBeanObj.hasPartitionKey_=(false)
 
-      configBeanObj.primaryKey_=(configInfo.primaryKey.getOrElse("false"))
-      if(configBeanObj.primaryKey == true) configBeanObj.hasPrimaryKey_=(true) else configBeanObj.hasPrimaryKey_=(false)
+      configBeanObj.primaryKey_=(configInfo.primaryKey.getOrElse(""))
+      if(!configBeanObj.primaryKey.trim.equalsIgnoreCase("")) configBeanObj.hasPrimaryKey_=(true) else configBeanObj.hasPrimaryKey_=(false)
 
-      configBeanObj.timePartition_=(configInfo.timePartition.getOrElse("false"))
-      if(configBeanObj.timePartition == true) configBeanObj.hasTimePartition_=(true) else configBeanObj.hasTimePartition_=(false)
+      configBeanObj.timePartition_=(configInfo.timePartition.getOrElse(""))
+      if(!configBeanObj.timePartition.trim.equalsIgnoreCase("")) configBeanObj.hasTimePartition_=(true) else configBeanObj.hasTimePartition_=(false)
 
         if(configInfo.messageType.get.equalsIgnoreCase("fixed")){
           configBeanObj.messageType_=(true)

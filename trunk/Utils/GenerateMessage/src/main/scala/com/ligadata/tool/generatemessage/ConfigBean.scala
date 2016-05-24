@@ -20,6 +20,8 @@ class ConfigBean {
   private var _hasPartitionKey = false
   private var _hasPrimaryKey = false
   private var _hasTimePartition = false
+  private var _partitionKeyArray: Array[String] = Array.empty
+  private var _primaryKeyArray: Array[String] = Array.empty
 
   // Getter
   def delimiter = _delimiter
@@ -35,6 +37,8 @@ class ConfigBean {
   def hasPartitionKey = _hasPartitionKey
   def hasPrimaryKey = _hasPrimaryKey
   def hasTimePartition = _hasTimePartition
+  def partitionKeyArray = _partitionKeyArray
+  def primaryKeyArray = _primaryKeyArray
 
   // Setter
   def delimiter_= (value:String):Unit = _delimiter = value
@@ -50,4 +54,6 @@ class ConfigBean {
   def hasPartitionKey_= (value:Boolean):Unit = _hasPartitionKey = value
   def hasPrimaryKey_= (value:Boolean):Unit = _hasPrimaryKey = value
   def hasTimePartition_= (value:Boolean):Unit = _hasTimePartition = value
+  def partitionKeyArray_= (value: Array[String]):Unit = _partitionKeyArray = value
+  def primaryKeyArray_= (value: Array[String]):Unit = _primaryKeyArray = value
 }
