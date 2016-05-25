@@ -45,7 +45,7 @@ class FileUtility  extends LogTrait{
     return extractedObj
   }
 
-  def ReadFile(filePath: String): String ={//This method used to read a whole file
+  def ReadFile(filePath: String): String ={//This method used to read a whole file (from header && pmml)
     return fromFile(filePath).mkString
   }
 
