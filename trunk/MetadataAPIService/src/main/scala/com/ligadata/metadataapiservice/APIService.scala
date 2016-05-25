@@ -34,7 +34,9 @@ import com.ligadata.Exceptions._
 import com.ligadata.KamanjaVersion.KamanjaVersion
 
 // $COVERAGE-OFF$
+
 class APIService extends LigadataSSLConfiguration with Runnable{
+
 
   private type OptionMap = Map[Symbol, Any]
   var inArgs: Array[String] = null
@@ -59,7 +61,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
    * 
    */
   def run() {
-    StartService(inArgs) 
+    startService(inArgs) 
   }
   
   
@@ -83,12 +85,13 @@ class APIService extends LigadataSSLConfiguration with Runnable{
     }
   }
 
-  private def Shutdown(exitCode: Int): Unit = {
-    APIInit.Shutdown(0)
+   def shutdown(exitCode: Int): Unit = {
+    APIInit.Shutdown(exitCode)
     //System.exit(0)
   }
 
-  private def StartService(args: Array[String]) : Unit = {
+   def startService(args: Array[String]) : Unit = {
+     logger.debug("Args received + "+args.length)
     try{
       var configFile = ""
       if (args.length == 0) {
@@ -126,12 +129,12 @@ class APIService extends LigadataSSLConfiguration with Runnable{
       val (loadConfigs, failStr) = com.ligadata.Utils.Utils.loadConfiguration(configFile.toString, true)
       if (failStr != null && failStr.size > 0) {
         logger.error(failStr)
-        Shutdown(1)
+        shutdown(1)
         return
       }
       
       if (loadConfigs == null) {
-        Shutdown(1)
+        shutdown(1)
         return
       }
 
@@ -163,10 +166,10 @@ class APIService extends LigadataSSLConfiguration with Runnable{
       IO(Http).tell(Http.Bind(service, serviceHost, servicePort), callbackActor)
 
       logger.debug("MetadataAPIService started, listening on (%s,%s)".format(serviceHost,servicePort))
-
+      APIService.setHasDataToProcess(true)
       sys.addShutdownHook({
         logger.debug("ShutdownHook called")
-        Shutdown(0)
+        shutdown(0)
       })
 
       Thread.sleep(365*24*60*60*1000L)
@@ -178,18 +181,33 @@ class APIService extends LigadataSSLConfiguration with Runnable{
               logger.debug("", e)
       }
     } finally {
-      Shutdown(0)
+      shutdown(0)
     }
   }
 }
 
 object APIService {
+
+  protected var isWSRunning: Boolean = false
+
+  def hasDataToProcess(): Boolean = {
+    synchronized {
+      this.isWSRunning
+    }
+  }
+
+  def setHasDataToProcess(hasData: Boolean) {
+    synchronized {
+      this.isWSRunning = hasData
+    }
+  }
+
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
 
   def main(args: Array[String]): Unit = {
     val mgr = new APIService
-    mgr.StartService(args) 
+    mgr.startService(args) 
   }
   
   

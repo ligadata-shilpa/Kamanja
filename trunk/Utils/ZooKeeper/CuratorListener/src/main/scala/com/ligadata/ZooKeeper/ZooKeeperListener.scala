@@ -81,6 +81,7 @@ class ZooKeeperListener {
       // logger.setLevel(Level.TRACE);
     } catch {
       case e: Exception => {
+
         logger.debug("", e)
         throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
@@ -122,6 +123,8 @@ class ZooKeeperListener {
   }
 
   def Shutdown: Unit = {
+    nodeCache.close
+    pathChildCache.close
     if (zkc != null)
       zkc.close
     zkc = null
