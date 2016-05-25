@@ -1106,7 +1106,7 @@ object MessageAndContainerUtils {
    *               method. If Security and/or Audit are configured, this value must be a value other than None.
    * @return
    */
-  def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
+  def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None, tid : Option[String] = None): Array[String] = {
     var messageList: Array[String] = new Array[String](0)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.MESSAGE, AuditConstants.SUCCESS, "", AuditConstants.MESSAGE)
     try {
@@ -1120,8 +1120,12 @@ object MessageAndContainerUtils {
           val msa = ms.toArray
           val msgCount = msa.length
           messageList = new Array[String](msgCount)
+          var j : Int  = 0
           for (i <- 0 to msgCount - 1) {
-            messageList(i) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
+            if (tid == msa(i).tenantId || tid == None) {
+              messageList(j) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
+              j = j + 1
+            }
           }
           messageList
       }
@@ -1181,7 +1185,7 @@ object MessageAndContainerUtils {
    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
    * @return
    */
-  def GetMessageDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None): String = {
+  def GetMessageDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None, tid : Option[String] = None): String = {
     val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version.toLong)
     var key = nameSpace + "." + name + "." + version.toLong
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.GETOBJECT), AuditConstants.GETOBJECT, AuditConstants.MESSAGE, AuditConstants.SUCCESS, "", dispkey)
@@ -1189,14 +1193,20 @@ object MessageAndContainerUtils {
       val o = MdMgr.GetMdMgr.Message(nameSpace.toLowerCase, name.toLowerCase, version.toLong, true)
       o match {
         case None =>
-          None
           logger.debug("message not found => " + dispkey)
           val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetMessageDefFromCache", null, ErrorCodeConstants.Get_Message_From_Cache_Failed + ":" + dispkey)
           apiResult.toString()
         case Some(m) =>
-          logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].Version))
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetMessageDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Message_From_Cache_Successful)
+          if (tid == m.tenantId || tid == None) {
+            logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].Version))
+            val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetMessageDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Message_From_Cache_Successful)
+            apiResult.toString()
+          }
+          else {
+              logger.debug("message not found => " + dispkey + " for tenantId " + tid)
+          val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetMessageDefFromCache", null, ErrorCodeConstants.Get_Message_From_Cache_Failed + ":" + dispkey + ", ")
           apiResult.toString()
+          }
       }
     } catch {
       case e: Exception => {
@@ -1652,12 +1662,12 @@ object MessageAndContainerUtils {
    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
    * @return
    */
-  def GetMessageDef(objectName: String, formatType: String, userid: Option[String] = None): String = {
+  def GetMessageDef(objectName: String, formatType: String, userid: Option[String] = None, tid : Option[String] = None): String = {
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
     val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
     val buffer: StringBuilder = new StringBuilder
     val nameSpace: String = nmspcNodes.addString(buffer, ".").toString
-    GetMessageDef(nameSpace, objectName, formatType, "-1", userid)
+    GetMessageDef(nameSpace, objectName, formatType, "-1", userid, tid)
   }
 
   /**
@@ -1671,13 +1681,13 @@ object MessageAndContainerUtils {
    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
    *         the MessageDef either as a JSON or XML string depending on the parameter formatType
    */
-  def GetMessageDef(objectName: String, version: String, formatType: String, userid: Option[String]): String = {
+  def GetMessageDef(objectName: String, version: String, formatType: String, userid: Option[String], tid : Option[String]): String = {
 
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
     val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
     val buffer: StringBuilder = new StringBuilder
     val nameSpace: String = nmspcNodes.addString(buffer, ".").toString
-    GetMessageDef(nameSpace, objectName, formatType, version, userid)
+    GetMessageDef(nameSpace, objectName, formatType, version, userid, tid)
   }
 
   /**
@@ -1692,9 +1702,9 @@ object MessageAndContainerUtils {
    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
    *         the MessageDef either as a JSON or XML string depending on the parameter formatType
    */
-  def GetMessageDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
+  def GetMessageDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String], tid : Option[String]): String = {
     MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETOBJECT, AuditConstants.MESSAGE, AuditConstants.SUCCESS, "", nameSpace + "." + objectName + "." + version)
-    GetMessageDefFromCache(nameSpace, objectName, formatType, version, userid)
+    GetMessageDefFromCache(nameSpace, objectName, formatType, version, userid, tid)
   }
 
   /**

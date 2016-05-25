@@ -365,13 +365,13 @@ object StartMetadataAPI {
             response = MessageService.removeMessage(msgName)
         }
 
-        case Action.GETALLMESSAGES => response = MessageService.getAllMessages
+        case Action.GETALLMESSAGES => response = MessageService.getAllMessages (tid)
         case Action.GETMESSAGE => {
           val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
           if (msgName.isEmpty)
-            response = MessageService.getMessage()
+            response = MessageService.getMessage("", tid)
           else
-            response = MessageService.getMessage(msgName)
+            response = MessageService.getMessage(msgName, tid)
         }
 
         //model management

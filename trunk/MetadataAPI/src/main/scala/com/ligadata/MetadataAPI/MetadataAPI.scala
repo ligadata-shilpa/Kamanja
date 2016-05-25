@@ -32,11 +32,11 @@ class ApiResult(var statusCode:Int, var functionName: String, var resultData: St
  * Override toString to return ApiResult as a String
  */
   override def toString: String = {
-    
+
     val json = ("APIResults" -> ("Status Code" -> statusCode) ~
-                                ("Function Name" -> functionName) ~ 
-                                ("Result Data"  -> resultData) ~ 
-                                ("Result Description" -> description))    
+                                ("Function Name" -> functionName) ~
+                                ("Result Data"  -> resultData) ~
+                                ("Result Description" -> description))
 
     pretty(render(json))
   }
@@ -306,7 +306,7 @@ trait MetadataAPI {
     */
   def RemoveFunction(nameSpace:String, functionName:String, version:Long, userid: Option[String] = None): String
 
-  /** Add new concepts 
+  /** Add new concepts
     * @param conceptsText an input String of concepts in a format defined by the next parameter formatType
     * @param formatType format of conceptsText ( JSON or XML)
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
@@ -609,10 +609,11 @@ trait MetadataAPI {
     * @param formatType format of the return value, either JSON or XML
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param tid tenantID filter
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the MessageDef(s) either as a JSON or XML string depending on the parameter formatType
     */
-  def GetMessageDef(objectName:String,formatType: String, userid: Option[String] = None) : String
+  def GetMessageDef(objectName:String,formatType: String, userid: Option[String] = None, tid : Option[String] = None) : String
 
   /** Retrieve a specific MessageDef from Metadata Store
     *
@@ -624,7 +625,7 @@ trait MetadataAPI {
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the MessageDef either as a JSON or XML string depending on the parameter formatType
     */
-  def GetMessageDef( objectName:String,version:String, formatType: String, userid: Option[String]) : String
+  def GetMessageDef( objectName:String,version:String, formatType: String, userid: Option[String], tid : Option[String]) : String
 
 
   /** Retrieve a specific MessageDef from Metadata Store
@@ -635,10 +636,11 @@ trait MetadataAPI {
     * @param formatType format of the return value, either JSON or XML
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None
+    * @param tid tenantId filter
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the MessageDef either as a JSON or XML string depending on the parameter formatType
     */
-  def GetMessageDef(objectNameSpace:String,objectName:String,version:String, formatType: String, userid: Option[String]) : String
+  def GetMessageDef(objectNameSpace:String,objectName:String,version:String, formatType: String, userid: Option[String], tid : Option[String]) : String
 
   /** Retrieve specific ContainerDef(s) from Metadata Store
     *
@@ -799,7 +801,7 @@ trait MetadataAPI {
     * the Type object either as a JSON or XML string depending on the parameter formatType
     */
   def GetType(objectName:String, formatType: String, userid: Option[String] = None) : String
-  
+
    /**
     * getHealthCheck - will return all the health-check information for the nodeId specified.
     *

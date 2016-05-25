@@ -93,11 +93,11 @@ object MessageService {
     response
   }
 
-  def getAllMessages: String = {
+  def getAllMessages (tid: Option[String] ) : String = {
     var response = ""
     var messageKeysList =""
     try {
-      val messageKeys: Array[String] = MetadataAPIImpl GetAllMessagesFromCache(true, userid)
+      val messageKeys: Array[String] = MetadataAPIImpl GetAllMessagesFromCache(true, userid, tid)
       if (messageKeys.length == 0) {
        var emptyAlert="Sorry, No messages are available in the Metadata"
         response =  (new ApiResult(ErrorCodeConstants.Success, "MessageService",null, emptyAlert)).toString
@@ -216,13 +216,13 @@ object MessageService {
     response
   }
 
-  def getMessage(param: String= "") : String = {
+  def getMessage(param: String= "", tid : Option[String] = None) : String = {
     try {
       var response=""
       if (param.length > 0) {
         val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
         try {
-          return MetadataAPIImpl.GetMessageDef(ns, name, "JSON", ver,  userid)
+          return MetadataAPIImpl.GetMessageDef(ns, name, "JSON", ver,  userid, tid)
         } catch {
           case e: Exception => logger.error("", e)
         }
@@ -254,7 +254,7 @@ object MessageService {
 
           logger.debug("DependentModels => " + depModels)
 
-          val apiResult = MetadataAPIImpl.GetMessageDef(msgNameSpace, msgName, "JSON", msgVersion, userid)
+          val apiResult = MetadataAPIImpl.GetMessageDef(msgNameSpace, msgName, "JSON", msgVersion, userid, tid)
 
           //     val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
           response=apiResult

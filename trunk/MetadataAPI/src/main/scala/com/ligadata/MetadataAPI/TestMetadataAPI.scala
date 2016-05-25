@@ -434,7 +434,7 @@ object TestMetadataAPI {
 
       logger.debug("DependentModels => " + depModels)
 
-      val apiResult = MetadataAPIImpl.GetMessageDef(msgNameSpace, msgName, "JSON", msgVersion, userid)
+      val apiResult = MetadataAPIImpl.GetMessageDef(msgNameSpace, msgName, "JSON", msgVersion, userid, tenantId)
 
       //     val apiResultStr = MetadataAPIImpl.getApiResult(apiResult)
       println("Result as Json String => \n" + apiResult)
@@ -477,13 +477,14 @@ object TestMetadataAPI {
         })
       }
 
-      val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "JSON", msgVersion, userid)
+
+val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "JSON", msgVersion, userid)
       println("Result as Json String => \n" + apiResult)
 
     } catch {
       case e: Exception => {
         logger.debug("", e)
-        
+
       }
     }
   }

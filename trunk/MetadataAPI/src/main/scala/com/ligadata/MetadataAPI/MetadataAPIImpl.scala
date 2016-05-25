@@ -2402,8 +2402,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
-    MessageAndContainerUtils.GetAllMessagesFromCache(active,userid)
+  def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
+    MessageAndContainerUtils.GetAllMessagesFromCache(active,userid, tid)
   }
 
     /**
@@ -3229,8 +3229,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  def GetMessageDef(objectName: String, formatType: String, userid: Option[String] = None): String = {
-      MessageAndContainerUtils.GetMessageDef(objectName,formatType,userid)
+  def GetMessageDef(objectName: String, formatType: String, userid: Option[String] = None, tid : Option[String] = None): String = {
+      MessageAndContainerUtils.GetMessageDef(objectName,formatType,userid, tid)
   }
 
     /**
@@ -3244,8 +3244,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
      *         the MessageDef either as a JSON or XML string depending on the parameter formatType
      */
-    def GetMessageDef(objectName: String, version: String, formatType: String, userid: Option[String]): String = {
-      MessageAndContainerUtils.GetMessageDef(objectName,version,formatType,userid)
+    def GetMessageDef(objectName: String, version: String, formatType: String, userid: Option[String], tid : Option[String]): String = {
+      MessageAndContainerUtils.GetMessageDef(objectName,version,formatType,userid, tid)
     }
 
     /**
@@ -3260,8 +3260,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
      *         the MessageDef either as a JSON or XML string depending on the parameter formatType
      */
-    def GetMessageDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
-      MessageAndContainerUtils.GetMessageDef(nameSpace,objectName,formatType,version,userid)
+    def GetMessageDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String], tid : Option[String]): String = {
+      MessageAndContainerUtils.GetMessageDef(nameSpace,objectName,formatType,version,userid, tid)
     }
     /**
      * Get a specific container (format JSON or XML) as a String using containerName(without version) as the key
@@ -4368,12 +4368,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MetadataAPIImpl.CreateMetadataTables
     MetadataAPIImpl.LoadAllObjectsIntoCache()
   }
-  
-  
+
+
   /**
    * Get a specific messsage/container using schemaId as the key
    *
-   * @param schemaId 
+   * @param schemaId
    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
    *        method. If Security and/or Audit are configured, this value must be a value other than None.
    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
@@ -4396,5 +4396,5 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MessageAndContainerUtils.GetTypeByElementId(elementId, userid)
   }
 
-  
+
 }
