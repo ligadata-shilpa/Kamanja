@@ -62,6 +62,7 @@ class GetObjectsService(requestContext: RequestContext, userid: Option[String], 
     var name = ""
     var formatType = "JSON"
     var apiResult: String = ""
+    var tenantId : String = ""
 
     // Extract the object name from the args var
     if (arg.NameSpace != null) {
@@ -87,7 +88,7 @@ class GetObjectsService(requestContext: RequestContext, userid: Option[String], 
         apiResult = MetadataAPIImpl.GetModelDef(nameSpace, arg.Name, formatType, version, userid)
       }
       case "message" => {
-        apiResult = MetadataAPIImpl.GetMessageDef(nameSpace, arg.Name, formatType, version, userid)
+        apiResult = MetadataAPIImpl.GetMessageDef(nameSpace, arg.Name, formatType, version, userid, None)
       }
       case "container" => {
         apiResult = MetadataAPIImpl.GetContainerDef(nameSpace, arg.Name, formatType, version, userid)
@@ -101,7 +102,7 @@ class GetObjectsService(requestContext: RequestContext, userid: Option[String], 
       case "type" => {
         apiResult = MetadataAPIImpl.GetTypeDef(nameSpace, arg.Name, formatType, version, userid)
       }
-      
+
     }
     apiResult
   }
