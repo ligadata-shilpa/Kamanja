@@ -391,6 +391,7 @@ object StartMetadataAPI {
                                             , optModelVer
                                             , msgName
                                             , optMsgVer
+                                            , optMsgProduced
                                             , tid)
         }
 

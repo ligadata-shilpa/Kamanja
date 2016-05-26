@@ -347,12 +347,20 @@ object ModelUtils {
     }
   }
 
+    /**
+      * Either add the supplied output message to the model def.  Should an output message not be supplied, an attempt
+      * is made to generate one. FIXME: The one generated has no fields.
+      *
+      * @param modDef a ModelDef that has been created as a result of an AddModel
+      * @param modelType the model type
+      * @param optMsgProduced an output message that has been supplied from input or compile config
+      * @param userid the user taking this action
+      */
   private def AddOutMsgToModelDef(modDef: ModelDef, modelType: ModelType.ModelType, optMsgProduced: Option[String], userid: Option[String]): Unit = {
     // save the outMessage if any
-    if (optMsgProduced != None) {
+    if (optMsgProduced.isDefined) {
       modDef.outputMsgs = modDef.outputMsgs :+ optMsgProduced.get.toLowerCase
-    }
-    else {
+    } else {
       // no need to create a default output message if modelconfig defines an output message as well
       if (modDef.outputMsgs.length == 0) {
         val defaultMessage = MessageAndContainerUtils.createDefaultOutputMessage(modDef, userid)
@@ -443,8 +451,9 @@ object ModelUtils {
     *                       method.
     * @param optModelName   the namespace.name of the PMML model to be added to the Kamanja metadata
     * @param optVersion     the model version to be used to describe this PMML model
-    * @param optMsgConsumed the namespace.name of the message to be consumed by a PMML model
+    * @param optMsgConsumed the namespace.name of the message to be consumed by this PMML model
     * @param optMsgVersion  the version of the message to be consumed. By default Some(-1)
+    * @param optMsgProduced the namespace.name of the message to be produced by this PMML model
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
     *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
@@ -508,13 +517,13 @@ object ModelUtils {
         val msgVer: String = optMsgVersion.getOrElse("-1")
         val result: String = if (modelName != null && version != null && msgConsumed != null) {
           val res: String = AddPMMLModel(modelName
-            , version
-            , msgConsumed
-            , msgVer
-            , input
-            , optUserid
-            , tenantId.get
-            , optMsgProduced)
+                                        , version
+                                        , msgConsumed
+                                        , msgVer
+                                        , input
+                                        , optUserid
+                                        , tenantId.get
+                                        , optMsgProduced)
           res
         } else {
           val inputRep: String = if (input != null && input.size > 200) input.substring(0, 199)
@@ -582,15 +591,15 @@ object ModelUtils {
       val msgNamespace: String = buffer.toString
       val ownerId: String = if (userid == None) "kamanja" else userid.get
       val jpmmlSupport: JpmmlSupport = new JpmmlSupport(mdMgr
-        , modelNmSpace
-        , modelNm
-        , version
-        , msgNamespace
-        , msgName
-        , msgVersion
-        , pmmlText
-        , ownerId
-        , tenantId)
+                                                        , modelNmSpace
+                                                        , modelNm
+                                                        , version
+                                                        , msgNamespace
+                                                        , msgName
+                                                        , msgVersion
+                                                        , pmmlText
+                                                        , ownerId
+                                                        , tenantId)
       val recompile: Boolean = false
       var modDef: ModelDef = jpmmlSupport.CreateModel(recompile)
 

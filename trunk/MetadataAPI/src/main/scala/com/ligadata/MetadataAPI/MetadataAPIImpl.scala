@@ -2259,6 +2259,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       * @param optVersion the model version to be used to describe this PMML model
       * @param optMsgConsumed the namespace.name of the message to be consumed by a PMML model
       * @param optMsgVersion the version of the message to be consumed. By default Some(-1)
+      * @param optMsgProduced the namespace.name of the message to be produced by the supplied PMML model
       * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
       * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
       * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
@@ -2271,7 +2272,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1")
-			                     , optMsgProduced: Option[String] = None
+                           , optMsgProduced: Option[String] = None
 		       ): String  = {
     ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
   }

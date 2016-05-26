@@ -272,6 +272,7 @@ object ModelService {
      * @param optVersion the version to associate with this model (in form 999999.999999.999999)
      * @param optMsgConsumed the full namespace qualified message name this model will consume
      * @param optMsgVersion the version of the message ... by default it is Some(-1) to get the most recent message of this name.
+     * @param optMsgProduced the full namespace qualified message name this model will produce
      * @return result string from engine describing success or failure
      */
     def addModelPmml(modelType: ModelType.ModelType
@@ -281,6 +282,7 @@ object ModelService {
                     , optVersion: Option[String] = None
                     , optMsgConsumed: Option[String] = None
                     , optMsgVersion: Option[String] = Some("-1")
+                    , optMsgProduced: Option[String] = None
                     , tid: Option[String] = None): String = {
 
         //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
@@ -301,7 +303,15 @@ object ModelService {
             val model = new File(input.toString)
             val resp : String = if(model.exists()){
                 val modelDef= Source.fromFile(model).mkString
-                MetadataAPIImpl.AddModel(ModelType.PMML, modelDef, optUserid, finalTid,  optModelName, optVersion, optMsgConsumed,None,optMsgVersion)
+                MetadataAPIImpl.AddModel(ModelType.PMML
+                                        , modelDef
+                                        , optUserid
+                                        , finalTid
+                                        , optModelName
+                                        , optVersion
+                                        , optMsgConsumed
+                                        , optMsgVersion
+                                        , optMsgProduced)
             }else{
                 val userId : String = optUserid.getOrElse("no user id supplied")
                 val modelName : String = optModelName.getOrElse("no model name supplied")
