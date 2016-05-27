@@ -87,6 +87,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
 
    def shutdown(exitCode: Int): Unit = {
     APIInit.Shutdown(exitCode)
+     system.shutdown
     //System.exit(0)
   }
 

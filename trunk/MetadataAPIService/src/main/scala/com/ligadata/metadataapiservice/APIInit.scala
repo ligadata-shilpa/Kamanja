@@ -39,7 +39,7 @@ object APIInit {
 
   def Shutdown(exitCode: Int): Unit = lock.synchronized{
     if( databaseOpen ){
-      MetadataAPIImpl.CloseDbStore
+      MetadataAPIImpl.shutdown
       databaseOpen = false;
     }
     MetadataAPIServiceLeader.Shutdown

@@ -53,13 +53,22 @@ object CreateClient {
           } catch {
             case e: NodeExistsException => {
               // Not already exists. May be somebody else created just before this. Ignore this exception.
+              if (zkc != null) {
+                zkc.close()
+              }
             }
             case e: Exception => {
               // Rethrow exception
+              if (zkc != null) {
+                zkc.close()
+              }
               throw e
             }
             case e: Throwable => {
               // Rethrow exception
+              if (zkc != null) {
+                zkc.close()
+              }
               throw e
             }
           }
@@ -68,6 +77,9 @@ object CreateClient {
     } catch {
       case e: Exception => {
         logger.debug("", e)
+        if (zkc != null) {
+          zkc.close()
+        }
         throw new Exception("Failed to start a zookeeper session with(" + zkcConnectString + ")", e)
       }
     } finally {

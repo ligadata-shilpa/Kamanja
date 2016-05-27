@@ -41,6 +41,7 @@ class ZooKeeperListener {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   var zkc: CuratorFramework = null
+  var zkc1: CuratorFramework = null
   var nodeCache: NodeCache = _
   var pathChildCache: PathChildrenCache = _
 
@@ -94,8 +95,8 @@ class ZooKeeperListener {
   //  - All Childs Paths & Data.
   def CreatePathChildrenCacheListener(zkcConnectString: String, znodePath: String, getAllChildsData:Boolean, ListenCallback: (String, String,  Array[Byte], Array[(String, Array[Byte])]) => Unit, zkSessionTimeoutMs: Int, zkConnectionTimeoutMs: Int) = {
     try {
-      zkc = CreateClient.createSimple(zkcConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs)
-      pathChildCache = new PathChildrenCache(zkc, znodePath, true);
+      zkc1 = CreateClient.createSimple(zkcConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs)
+      pathChildCache = new PathChildrenCache(zkc1, znodePath, true);
 
       pathChildCache.getListenable().addListener(new PathChildrenCacheListener {
         @Override
@@ -127,6 +128,9 @@ class ZooKeeperListener {
     pathChildCache.close
     if (zkc != null)
       zkc.close
+    if (zkc1 != null)
+      zkc1.close
+    zkc1=null
     zkc = null
   }
 }
