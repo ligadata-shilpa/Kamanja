@@ -66,7 +66,7 @@ private class ConnHandler(var socket: Socket) extends Runnable {
 
   socket.setKeepAlive(true)
 
-  LOG.warn("Created a connection to socket. HostAddress:%s, Port:%d".format(socket.getLocalAddress.getHostAddress, socket.getPort))
+  LOG.warn("Created a connection to socket. HostAddress:%s, Port:%d, LocalPort:%d".format(socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
 
   def run() {
     val vt = 0
@@ -76,7 +76,7 @@ private class ConnHandler(var socket: Socket) extends Runnable {
           val strLine = in.readLine()
           if (strLine == null)
             break
-          LOG.warn("Current Command:%s. HostAddress:%s, Port:%d".format(strLine, socket.getLocalAddress.getHostAddress, socket.getPort))
+          LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(strLine, socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
           KamanjaManager.instance.execCmd(strLine)
         }
       }
