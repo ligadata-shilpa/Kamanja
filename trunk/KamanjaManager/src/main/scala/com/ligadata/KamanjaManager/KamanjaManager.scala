@@ -31,26 +31,28 @@ import com.ligadata.KamanjaVersion.KamanjaVersion
 class KamanjaServer(port: Int) extends Runnable {
   private val LOG = LogManager.getLogger(getClass);
   private val serverSocket = new ServerSocket(port)
+  private var exec: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(5)
 
   def run() {
     try {
-      while (true) {
+      while (KamanjaConfiguration.shutdown == false) {
         // This will block until a connection comes in.
         val socket = serverSocket.accept()
-        (new Thread(new ConnHandler(socket))).start()
+        exec.execute(new ConnHandler(socket))
       }
     } catch {
       case e: Exception => {
         LOG.error("Socket Error", e)
       }
     } finally {
-      if (serverSocket.isClosed() == false)
+      exec.shutdownNow()
+      if (serverSocket != null && serverSocket.isClosed() == false)
         serverSocket.close
     }
   }
 
   def shutdown() {
-    if (serverSocket.isClosed() == false)
+    if (serverSocket != null && serverSocket.isClosed() == false)
       serverSocket.close
   }
 }
@@ -60,11 +62,15 @@ private class ConnHandler(var socket: Socket) extends Runnable {
   private val out = new PrintStream(socket.getOutputStream)
   private val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
 
+  socket.setKeepAlive(true)
+
+  LOG.info("Created a connection to socket. HostAddress:%s, Port:%d".format(socket.getLocalAddress.getHostAddress, socket.getPort))
+
   def run() {
     val vt = 0
     try {
       breakable {
-        while (true) {
+        while (KamanjaConfiguration.shutdown == false) {
           val strLine = in.readLine()
           if (strLine == null)
             break
@@ -621,20 +627,17 @@ class KamanjaManager extends Observer {
         KamanjaLeader.Init(KamanjaConfiguration.nodeId.toString, zkConnectString, engineLeaderZkNodePath, engineDistributionZkNodePath, adaptersStatusPath, inputAdapters, outputAdapters, storageAdapters, KamanjaMetadata.envCtxt, zkSessionTimeoutMs, zkConnectionTimeoutMs, dataChangeZkNodePath)
       }
 
-      /*
       if (retval) {
         try {
-          serviceObj = new KamanjaServer(this, KamanjaConfiguration.nodePort)
+          serviceObj = new KamanjaServer(KamanjaConfiguration.nodePort)
           (new Thread(serviceObj)).start()
         } catch {
           case e: Exception => {
-            LOG.error("Failed to create server to accept connection on port:" + nodePort, e)
+            LOG.error("Failed to create server to accept connection on port:" + KamanjaConfiguration.nodePort, e)
             retval = false
           }
         }
       }
-*/
-
     } catch {
       case e: Exception => {
         LOG.error("Failed to initialize.", e)
@@ -650,8 +653,16 @@ class KamanjaManager extends Observer {
   def execCmd(ln: String): Boolean = {
     if (ln.length() > 0) {
       val trmln = ln.trim
-      if (trmln.length() > 0 && (trmln.compareToIgnoreCase("Quit") == 0 || trmln.compareToIgnoreCase("Exit") == 0))
-        return true
+      if (trmln.length() > 0) {
+        if (trmln.compareToIgnoreCase("Quit") == 0 || trmln.compareToIgnoreCase("Exit") == 0)
+          return true
+        if (trmln.compareToIgnoreCase("forceAdapterRebalance") == 0) {
+          KamanjaLeader.forceAdapterRebalance
+        }
+        else if (trmln.compareToIgnoreCase("forceAdapterRebalanceAndSetEndOffsets") == 0) {
+          KamanjaLeader.forceAdapterRebalanceAndSetEndOffsets
+        }
+      }
     }
     return false;
   }

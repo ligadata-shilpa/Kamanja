@@ -82,6 +82,7 @@ object KamanjaLeader {
   private[this] var storageAdapters: ArrayBuffer[DataStore] = _
   private[this] var envCtxt: EnvContext = _
   private[this] var updatePartitionsFlag = false
+  private[this] var saveEndOffsets = false
   private[this] var distributionExecutor = Executors.newFixedThreadPool(1)
 
   private val MAX_ZK_RETRIES = 1
@@ -113,6 +114,7 @@ object KamanjaLeader {
     outputAdapters = null
     envCtxt = null
     updatePartitionsFlag = false
+    saveEndOffsets = false
     distributionExecutor = Executors.newFixedThreadPool(1)
   }
 
@@ -239,7 +241,7 @@ object KamanjaLeader {
               // Got different action. May be re-distribute. For now any non-expected action we will redistribute
               LOG.info("UpdatePartitionsNodeData => eventType: %s, eventPath: %s, eventPathData: %s, Extracted Node:%s. Expected Action:%s, Recieved Action:%s %s.".format(eventType, eventPath, evntPthData, extractedNode, expectedNodesAction, action, redStr))
               if (canRedistribute) {
-                LOG.warn("Got different action (%s) than expected. Going to redistribute the work".format(action, expectedNodesAction))
+                LOG.warn("Got different action (%s) than expected(%s). Going to redistribute the work".format(action, expectedNodesAction))
                 SetUpdatePartitionsFlag
               }
             }
@@ -742,6 +744,38 @@ object KamanjaLeader {
               }
             }
 
+            // Write all adapters end points in case if requested
+            if (saveEndOffsets) {
+              saveEndOffsets = false
+              inputAdapters.foreach(ia => {
+                try {
+                  LOG.warn("Start Writing End Partition Values for adapter " + ia.UniqueName)
+                  val endVals = ia.getAllPartitionEndValues
+                  if (endVals != null) {
+                    endVals.foreach(kv => {
+                      var key: String = null
+                      var value: String = null
+                      if (kv != null && kv._1 != null && kv._2 != null) {
+                        try {
+                          key = kv._1.Serialize
+                          value = kv._2.Serialize
+                          if (key != null && value != null && key.size > 0 && value.size > 0)
+                            envCtxt.setAdapterUniqueKeyValue(key, value)
+                        } catch {
+                          case e: Throwable => {}
+                        }
+                      }
+                    })
+                  }
+                  LOG.warn("Done Writing End Partition Values for adapter " + ia.UniqueName)
+                } catch {
+                  case e: Throwable => {
+                    LOG.error("Input adapter " + ia.UniqueName + "failed to write end partition values", e)
+                  }
+                }
+              })
+            }
+
             if (distributionExecutor.isShutdown == false) {
               // Save the state and Clear the maps
 //              ProcessedAdaptersInfo.CommitAdapterValues
@@ -1125,6 +1159,11 @@ object KamanjaLeader {
     SetUpdatePartitionsFlag
   }
 
+  def forceAdapterRebalanceAndSetEndOffsets: Unit = {
+    saveEndOffsets = true
+    SetUpdatePartitionsFlag
+  }
+
   def Init(nodeId1: String, zkConnectString1: String, engineLeaderZkNodePath1: String, engineDistributionZkNodePath1: String, adaptersStatusPath1: String, inputAdap: ArrayBuffer[InputAdapter], outputAdap: ArrayBuffer[OutputAdapter],
            storageAdap: ArrayBuffer[DataStore], enviCxt: EnvContext, zkSessionTimeoutMs1: Int, zkConnectionTimeoutMs1: Int, dataChangeZkNodePath1: String): Unit = {
     nodeId = nodeId1.toLowerCase
@@ -1230,7 +1269,7 @@ object KamanjaLeader {
                   }
 
                   if (allNodesUp == false) { // If all nodes are not up then wait for long time
-                    envCtxt.getZookeeperInfo()
+                    // (/* zkConnectString, zkSessionTimeoutMs, zkConnectionTimeoutMs */) = envCtxt.getZookeeperInfo()
                     mxTm = if (zkSessionTimeoutMs > zkConnectionTimeoutMs) zkSessionTimeoutMs else zkConnectionTimeoutMs
                     if (mxTm < 5000) // if the value is < 5secs, we are taking 5 secs
                       mxTm = 5000
