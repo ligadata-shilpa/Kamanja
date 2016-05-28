@@ -91,9 +91,11 @@ while True:
 	    # establish a connection
 	    data = conn.recv(1024)
 	    if not data: break # no more data... 
-	    # split the data on the comma, clean up each element, use first as command and rest as arguments
-	    # ... will change to "magic", xid, cmdKey, rest of args.  Multi line args managed with  str.splitlines([keepends])
-	    # ... perhaps multi line commands would then pop the first line that has the xid and command in it
+	    # split the data on the newline, preserving the new lines, cleaning up those
+	    # first elements with strip function.  The first line is the server command. 
+	    # The rest are processed by the server command that is dispatched.
+	    # 
+	    # Adding magic demarcation, xid... those should all be doable.
 	    dataList = data.splitlines(preserveNewLines)
 	    cmdRaw = dataList.pop(0) # obtain the command from first arg
 	    # ... both cmd and dataList changed by pop

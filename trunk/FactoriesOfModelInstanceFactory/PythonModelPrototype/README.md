@@ -34,7 +34,7 @@ The python files are added to a subdirectory of one that is declared in the PYTH
 
 	export PYTHONPATH=$HOME/python
 
-The loading of the modules has been tested separately without problems.  We can add arbitrary models to the same python server dynamically.  Both the server commands and the models use this loading technique.  The functin importName(moduleName, name) on line 32 of the server does the job.
+The loading of the modules has been tested separately without problems.  We can add arbitrary models to the same python server dynamically.  Both the server commands and the models use this loading technique.  The function importName(moduleName, name) on line 32 of the server does the job.
 
 _Notes_
 
@@ -81,12 +81,12 @@ _Notes_
 
 2) The scala script is the client serving as the proxy for the python stub model, python factory, and python factory of factories.
 
-3) The python server program is loated in the python folder.  The python commands that handle command messages sent from the scala client are found in the python commands directory.  They are loaded in pythonserver.py:67
+3) The python server program is located in the python folder.  The python commands that handle command messages sent from the scala client are found in the python commands directory.  They are loaded in pythonserver.py:67
 
 4) The server commands are: 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer'.  Notice that the names of these commands **_EXACTLY_** match the main stem of the python source files in the _commands_ subdirectory.  This is important.  As written the file name is used as the command name when building the function dispatch dictionary in the server.
 
-5) The _modelsToLoad_ directory contain the sample models to test the server.  It is these files that you will add to the server.  Currently there is an add, divide, multiply and subtract "model" available.  They all take a list of numbers as their principal argument and return result only from it.  The _models_ directory is where the model source will land for the addModel command.  The first path in PYTHONPATH's value is assumed writable and used to construct the path for the path/$modelName.py file.
+5) The _modelsToLoad_ directory contain the sample models to test the server.  It is these files that you will add to the server.  Currently there is an add, divide, multiply and subtract "model" available.  They all take a list of numbers as their principal argument and return result only from it.  The _models_ directory is where the model source will land for the addModel command.  The first path in PYTHONPATH's value is assumed writable and used to construct the path for the path/models/$modelName.py file.
 
-6) There is some (but not enough) semantic checking for arguments.  On the server side and in the model implementations, it will be quite easy to cause the python to throw exceptions.  Any demo (if it is your intention to do that) should have prepared and tested with admonishment that this is just a prototype, blah blah.
+6) There are some (but not enough) semantic checking for arguments.  On the server side and in the model implementations, it will be quite easy to cause the python to throw exceptions.  Any demo (if it is your intention to do that) should have prepared and tested commands with admonishment that this is just a prototype, blah blah.  Of special note is that there are no state transition type checks.  If you failed to add a server before trying to add a model... o well.
 
 

@@ -17,7 +17,8 @@ class Handler(object):
 	def handler(self, modelDict, host, port, cmdList):
 		modelName = cmdList.pop().strip()
 		# remaining in the cmdList is the python program
-		# write it to $PYTHONPATH/models
+		# write it to $PYTHONPATH/models.  we could write them one at a time or 
+		# do this and join the list again into one string.
 		modelSrc = str1 = ''.join(cmdList)
 		pypathRaw = os.environ['PYTHONPATH']
 		pypath = pypathRaw.split(':').pop(0).strip()
