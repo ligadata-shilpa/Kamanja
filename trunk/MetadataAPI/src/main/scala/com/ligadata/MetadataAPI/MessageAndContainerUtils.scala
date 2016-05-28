@@ -1106,6 +1106,7 @@ object MessageAndContainerUtils {
    *               method. If Security and/or Audit are configured, this value must be a value other than None.
    * @return
    */
+  // 646 - 672 Changes begin - filter by tenantId
   def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None, tid : Option[String] = None): Array[String] = {
     var messageList: Array[String] = new Array[String](0)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.MESSAGE, AuditConstants.SUCCESS, "", AuditConstants.MESSAGE)
@@ -1144,7 +1145,7 @@ object MessageAndContainerUtils {
       }
     }
   }
-
+// 646 - 672 Changes end
   /**
    * GetAllContainersFromCache
    *
@@ -1153,8 +1154,10 @@ object MessageAndContainerUtils {
    *               method. If Security and/or Audit are configured, this value must be a value other than None.
    * @return
    */
-  def GetAllContainersFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
+  // 646 - 672 Changes begin - filter by tenantId
+  def GetAllContainersFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
     var containerList: Array[String] = new Array[String](0)
+    var newContainerList : List[String] = List[String]() ;
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", AuditConstants.CONTAINER)
     try {
       val contDefs = MdMgr.GetMdMgr.Containers(active, true)
@@ -1166,11 +1169,20 @@ object MessageAndContainerUtils {
         case Some(ms) =>
           val msa = ms.toArray
           val contCount = msa.length
-          containerList = new Array[String](contCount)
+    //      containerList = new Array[String](contCount)
           for (i <- 0 to contCount - 1) {
-            containerList(i) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
+            if (tid.isEmpty || tid.get == msa(i).tenantId) {
+
+              //containerList(i) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
+              newContainerList = newContainerList ::: List(msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version))
+            }
           }
-          containerList
+          if (newContainerList.isEmpty) {
+            containerList
+          }
+          else {
+            (newContainerList map(_.toString)).toArray
+          }
       }
     } catch {
       case e: Exception => {
@@ -1180,7 +1192,7 @@ object MessageAndContainerUtils {
       }
     }
   }
-
+// 646 - 672 Changes end
   /**
    * Get the specific message (format JSON or XML) as a String using messageName(with version) as the key
    *
@@ -1236,7 +1248,7 @@ object MessageAndContainerUtils {
    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
    * @return
    */
-  def GetContainerDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String]): String = {
+  def GetContainerDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String], tid: Option[String]): String = {
     var key = nameSpace + "." + name + "." + version.toLong
     val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version.toLong)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.GETOBJECT), AuditConstants.GETOBJECT, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", dispkey)
@@ -1249,9 +1261,16 @@ object MessageAndContainerUtils {
           val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetContainerDefFromCache", null, ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + dispkey)
           apiResult.toString()
         case Some(m) =>
+          if (tid == m.tenantId || tid == None) {
           logger.debug("container found => " + m.asInstanceOf[ContainerDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ContainerDef].Version))
-          val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetContainerDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Container_From_Cache_Successful)
-          apiResult.toString()
+            val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetContainerDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Container_From_Cache_Successful)
+            apiResult.toString()
+          }
+          else {
+            logger.debug("container not found => " + dispkey)
+            val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetContainerDefFromCache", null, ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + dispkey)
+            apiResult.toString()
+          }
       }
     } catch {
       case e: Exception => {
@@ -1721,15 +1740,16 @@ object MessageAndContainerUtils {
    * @param formatType
    * @param userid     the identity to be used by the security adapter to ascertain if this user has access permissions for this
    *                   method. If Security and/or Audit are configured, this value must be a value other than None.
+   * @param tid tenantID filter
    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
    *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
    */
-  def GetContainerDef(objectName: String, formatType: String, userid: Option[String] = None): String = {
+  def GetContainerDef(objectName: String, formatType: String, userid: Option[String] = None, tid : Option[String] = None): String = {
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
     val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
     val buffer: StringBuilder = new StringBuilder
     val nameSpace: String = nmspcNodes.addString(buffer, ".").toString
-    GetContainerDefFromCache(nameSpace, objectName, formatType, "-1", userid)
+    GetContainerDefFromCache(nameSpace, objectName, formatType, "-1", userid, tid)
   }
 
   /**
@@ -1744,9 +1764,10 @@ object MessageAndContainerUtils {
    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
    *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
    */
-  def GetContainerDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
+  def GetContainerDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String], tid : Option[String]): String = {
     MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETOBJECT, AuditConstants.CONTAINER, AuditConstants.SUCCESS, "", nameSpace + "." + objectName + "." + version)
-    GetContainerDefFromCache(nameSpace, objectName, formatType, version, None)
+
+    GetContainerDefFromCache(nameSpace, objectName, formatType, version, None, tid)
   }
 
   /**
@@ -1760,12 +1781,12 @@ object MessageAndContainerUtils {
    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
    *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
    */
-  def GetContainerDef(objectName: String, version: String, formatType: String, userid: Option[String]): String = {
+  def GetContainerDef(objectName: String, version: String, formatType: String, userid: Option[String], tid : Option[String]): String = {
     val nameNodes: Array[String] = if (objectName != null && objectName.contains('.')) objectName.split('.') else Array(MdMgr.sysNS, objectName)
     val nmspcNodes: Array[String] = nameNodes.splitAt(nameNodes.size - 1)._1
     val buffer: StringBuilder = new StringBuilder
     val nameSpace: String = nmspcNodes.addString(buffer, ".").toString
-    GetContainerDef(nameSpace, objectName, formatType, version, userid)
+    GetContainerDef(nameSpace, objectName, formatType, version, userid, tid)
   }
 
   /**

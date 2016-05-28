@@ -514,7 +514,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
       }
       val contKey = contKeys(choice - 1)
       val (contNameSpace, contName, contVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(contKey)
-      val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace, contName, "JSON", contVersion, userid)
+      val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace, contName, "JSON", contVersion, userid, tenantId)
       println("Result as Json String => \n" + apiResult)
 
     } catch {
@@ -1536,7 +1536,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
         println("Invalid schemaId " + schemaId + ",start with main menu...")
         return
       }
-      val apiResult = MetadataAPIImpl.GetTypeBySchemaId(schemaId, userid) //val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace,contName,"JSON",contVersion,userid)
+      val apiResult = MetadataAPIImpl.GetTypeBySchemaId(schemaId, userid) //val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace,contName,"JSON",contVersion,userid, tenantId)
       println("Result as Json String => \n" + apiResult)
 
     } catch {
@@ -1558,7 +1558,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
         println("Invalid elementId " + elementId + ",start with main menu...")
         return
       }
-      val apiResult = MetadataAPIImpl.GetTypeByElementId(elementId, userid) //val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace,contName,"JSON",contVersion,userid)
+      val apiResult = MetadataAPIImpl.GetTypeByElementId(elementId, userid) //val apiResult = MetadataAPIImpl.GetContainerDefFromCache(contNameSpace,contName,"JSON",contVersion,userid, tenantId)
       println("Result as Json String => \n" + apiResult)
 
     } catch {

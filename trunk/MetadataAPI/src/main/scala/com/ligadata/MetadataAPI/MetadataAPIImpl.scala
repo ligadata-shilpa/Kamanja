@@ -118,6 +118,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   private var heartBeat: HeartBeatUtil = null
   var zkHeartBeatNodePath = ""
 
+  // 646 - 676 Change begins - to replace MatadataAPIImpl call with direct calls
+  def getMetadataAPI : MetadataAPI = this
+
   def getCurrentTranLevel = currentTranLevel
   def setCurrentTranLevel(tranLevel: Long) = {
     currentTranLevel = tranLevel
@@ -1905,7 +1908,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param recompile
      * @return
      */
-  def AddContainerDef(contDef: ContainerDef, recompile: Boolean = false): String = {
+   def AddContainerDef(contDef: ContainerDef, recompile: Boolean = false): String = {
     MessageAndContainerUtils.AddContainerDef(contDef,recompile)
   }
 
@@ -1916,7 +1919,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param recompile
      * @return
      */
-  def AddMessageDef(msgDef: MessageDef, recompile: Boolean = false): String = {
+   def AddMessageDef(msgDef: MessageDef, recompile: Boolean = false): String = {
     MessageAndContainerUtils.AddMessageDef(msgDef,recompile)
   }
 
@@ -2025,7 +2028,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  override def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
+  override  def UpdateMessage
+    (messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
     MessageAndContainerUtils.UpdateMessage(messageText,format,userid, tid)
   }
 
@@ -2040,7 +2044,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  override def UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
+  override  def  UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
     UpdateMessage(messageText, format, userid, tid)
   }
 
@@ -2068,33 +2072,34 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   //  UpdateMessage(messageText, "JSON", userid)
  // }
 
-    /**
-     * Remove container with Container Name and Version Number
-      *
-      * @param nameSpace namespace of the object
-     * @param name
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @param zkNotify
-     * @return
-     */
-  def RemoveContainer(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
+  /**
+    * Remove container with Container Name and Version Number
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param zkNotify
+    * @return
+    */
+   def RemoveContainer(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
     MessageAndContainerUtils.RemoveContainer(nameSpace,name,version,userid,zkNotify)
   }
 
-    /**
-     * Remove message with Message Name and Version Number
-      *
-      * @param nameSpace namespace of the object
-     * @param name
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @param zkNotify
-     * @return
-     */
-  def  RemoveMessage(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String = {
+  /**
+    * Remove message with Message Name and Version Number
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param zkNotify
+    * @return
+    */
+  def  RemoveMessage(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String =
+  {
     MessageAndContainerUtils.RemoveMessage(nameSpace,name,version,userid,zkNotify)
   }
 
@@ -2130,24 +2135,24 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       * @param zkMessage
      * @return
      */
-  def RemoveMessageFromCache(zkMessage: ZooKeeperNotification) = {
+   def RemoveMessageFromCache(zkMessage: ZooKeeperNotification) = {
     MessageAndContainerUtils.RemoveMessageFromCache(zkMessage)
   }
 
-    /**
-     * RemoveContainerFromCache
-      *
-      * @param zkMessage
-     * @return
-     */
-  def RemoveContainerFromCache(zkMessage: ZooKeeperNotification) = {
+  /**
+    * RemoveContainerFromCache
+    *
+    * @param zkMessage
+    * @return
+    */
+   def RemoveContainerFromCache(zkMessage: ZooKeeperNotification) = {
     MessageAndContainerUtils.RemoveContainerFromCache(zkMessage)
   }
 
     /**
      * Remove message with Message Name and Version Number
-      *
-      * @param messageName Name of the given message
+     *
+     * @param messageName Name of the given message
      * @param version  Version of the given message
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value should be other than None
@@ -2155,14 +2160,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  def RemoveMessage(messageName: String, version: Long, userid: Option[String]): String = {
+   def RemoveMessage(messageName: String, version: Long, userid: Option[String]): String = {
     RemoveMessage(sysNS, messageName, version, userid)
   }
 
-   /**
+  /**
     * Remove container with Container Name and Version Number
-     *
-     * @param containerName Name of the given container
+    *
+    * @param containerName Name of the given container
     * @param version  Version of the object   Version of the given container
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
@@ -2170,7 +2175,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
     */
-  def RemoveContainer(containerName: String, version: Long, userid: Option[String]): String = {
+   def RemoveContainer(containerName: String, version: Long, userid: Option[String]): String = {
     RemoveContainer(sysNS, containerName, version, userid)
   }
 
@@ -2342,8 +2347,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MessageAndContainerUtils.GetDependentModels(msgNameSpace,msgName,msgVer)
   }
 
-  def GetContainerDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String]): String = {
-    MessageAndContainerUtils.GetContainerDefFromCache(nameSpace,name,formatType,version,userid)
+   def GetContainerDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String], tid: Option[String]): String = {
+    MessageAndContainerUtils.GetContainerDefFromCache(nameSpace,name,formatType,version,userid, tid)
   }
     /**
      * Get all available models (format JSON or XML) as string.
@@ -2394,29 +2399,32 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ModelUtils.GetAllModelsFromCache(active,userid)
   }
 
-    /**
-     * GetAllMessagesFromCache
-      *
-      * @param active
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
-  def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
+  /**
+    * GetAllMessagesFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+   def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
     MessageAndContainerUtils.GetAllMessagesFromCache(active,userid, tid)
   }
 
-    /**
-     * GetAllContainersFromCache
-      *
-      * @param active
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
-  def GetAllContainersFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
-    MessageAndContainerUtils.GetAllContainersFromCache(active,userid)
+  /**
+    * GetAllContainersFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param tid helps to filter by tenantId
+    * @return
+    */
+  // 646 - 672 Changes begin - filter by tenantId
+   def GetAllContainersFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
+     MessageAndContainerUtils.GetAllContainersFromCache(active,userid, tid)
   }
+  // 646 - 672 Changes end
 
     /**
      * GetAllFunctionsFromCache
@@ -3273,7 +3281,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
      *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
      */
-  def GetContainerDef(objectName: String, formatType: String, userid: Option[String] = None): String = {
+  def GetContainerDef(objectName: String, formatType: String, userid: Option[String] = None, tid: Option[String] = None): String = {
       MessageAndContainerUtils.GetContainerDef(objectName,formatType,userid)
   }
 
@@ -3293,8 +3301,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                       , objectName: String
                       , formatType: String
                       , version: String
-                      , userid: Option[String]): String = {
-      MessageAndContainerUtils.GetContainerDef(nameSpace,objectName,formatType,version,userid)
+                      , userid: Option[String], tid : Option[String]): String = {
+      MessageAndContainerUtils.GetContainerDef(nameSpace,objectName,formatType,version,userid,tid)
   }
 
     /**
@@ -3308,8 +3316,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
      *         the ContainerDef either as a JSON or XML string depending on the parameter formatType
      */
-  def GetContainerDef(objectName: String, version: String, formatType: String, userid: Option[String]): String = {
-    MessageAndContainerUtils.GetContainerDef(objectName,version,formatType,userid)
+  def GetContainerDef(objectName: String, version: String, formatType: String, userid: Option[String], tid : Option[String] ): String = {
+
+    MessageAndContainerUtils.GetContainerDef(objectName,version,formatType,userid,tid)
   }
 
     /**

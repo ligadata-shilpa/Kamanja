@@ -365,6 +365,7 @@ object StartMetadataAPI {
             response = MessageService.removeMessage(msgName)
         }
 
+          // 672 Change beigns, adds an extra argument for tenantID tid to enable filtering by tenantid
         case Action.GETALLMESSAGES => response = MessageService.getAllMessages (tid)
         case Action.GETMESSAGE => {
           val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
@@ -373,6 +374,7 @@ object StartMetadataAPI {
           else
             response = MessageService.getMessage(msgName, tid)
         }
+          // 672 Change ends
 
         //model management
         case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
@@ -470,12 +472,12 @@ object StartMetadataAPI {
         case Action.GETCONTAINER => response = {
           val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
           if (containerName.isEmpty)
-            ContainerService.getContainer()
+            ContainerService.getContainer("", tid)
           else
-            ContainerService.getContainer(containerName)
+            ContainerService.getContainer(containerName, tid)
         }
 
-        case Action.GETALLCONTAINERS => response = ContainerService.getAllContainers
+        case Action.GETALLCONTAINERS => response = ContainerService.getAllContainers (tid)
         case Action.REMOVECONTAINER => {
           val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
           if (containerName.isEmpty)

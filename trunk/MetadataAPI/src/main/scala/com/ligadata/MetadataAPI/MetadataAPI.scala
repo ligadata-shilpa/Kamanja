@@ -16,8 +16,11 @@
 
 package com.ligadata.MetadataAPI
 
+import java.util.Properties
+
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.Serialize._
+import com.ligadata.kamanja.metadata.ModelDef
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
@@ -67,6 +70,7 @@ object MetadataAPI {
           typ
       }
   }
+
 
 }
 
@@ -427,6 +431,22 @@ trait MetadataAPI {
     */
   def RemoveMessage(messageName:String, version:Long, userid: Option[String]): String
 
+  /**
+    * Remove message with Message Name and Version Number
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param zkNotify
+    * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
+    * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
+    * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
+    */
+
+  def  RemoveMessage(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String
+
   /** Add container given containerText
     *
     * @param containerText text of the container (as JSON/XML string as defined by next parameter formatType)
@@ -592,6 +612,15 @@ trait MetadataAPI {
    */
   def GetModelDef( objectName:String,version:String, formatType: String, userid: Option[String]) : String
 
+  /**
+    * GetDependentModels
+    *
+    * @param msgNameSpace
+    * @param msgName
+    * @param msgVer
+    * @return
+    */
+  def GetDependentModels(msgNameSpace: String, msgName: String, msgVer: Long): Array[ModelDef]
 
   /** Retrieve All available MessageDefs from Metadata Store
     *
@@ -602,6 +631,16 @@ trait MetadataAPI {
     * the MessageDef(s) either as a JSON or XML string depending on the parameter formatType
     */
   def GetAllMessageDefs(formatType: String, userid: Option[String] = None) : String
+
+  /**
+    * GetAllMessagesFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetAllMessagesFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String]
 
   /** Retrieve specific MessageDef(s) from Metadata Store
     *
@@ -622,10 +661,11 @@ trait MetadataAPI {
     * @param formatType format of the return value, either JSON or XML
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None
+    * @param tid tenantID filter
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the MessageDef either as a JSON or XML string depending on the parameter formatType
     */
-  def GetMessageDef( objectName:String,version:String, formatType: String, userid: Option[String], tid : Option[String]) : String
+   def GetMessageDef( objectName:String,version:String, formatType: String, userid: Option[String], tid : Option[String]) : String
 
 
   /** Retrieve a specific MessageDef from Metadata Store
@@ -648,10 +688,11 @@ trait MetadataAPI {
     * @param formatType format of the return value, either JSON or XML
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param tenantId helps to filter by tenantId
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the ContainerDef(s) either as a JSON or XML string depending on the parameter formatType
     */
-  def GetContainerDef(objectName:String,formatType: String, userid: Option[String] = None) : String
+  def GetContainerDef(objectName:String,formatType: String, userid: Option[String] = None, tenantId: Option[String] = None) : String
 
   /** Retrieve a specific ContainerDef from Metadata Store
     *
@@ -660,10 +701,11 @@ trait MetadataAPI {
     * @param formatType format of the return value, either JSON or XML
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param tenantId helps to filter by tenantId
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the ContainerDef either as a JSON or XML string depending on the parameter formatType
     */
-  def GetContainerDef( objectName:String,version:String, formatType: String, userid: Option[String]) : String
+  def GetContainerDef( objectName:String,version:String, formatType: String, userid: Option[String], tenantId : Option[String]) : String
 
   /** Retrieve a specific ContainerDef from Metadata Store
     *
@@ -673,10 +715,11 @@ trait MetadataAPI {
     * @param formatType format of the return value, either JSON or XML
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    *  @param tenantId helps to filter by tenantId
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the ContainerDef either as a JSON or XML string depending on the parameter formatType
     */
-  def GetContainerDef(objectNameSpace:String,objectName:String,version:String, formatType: String, userid: Option[String]) : String
+  def GetContainerDef(objectNameSpace:String,objectName:String,version:String, formatType: String, userid: Option[String], tenantId : Option[String]) : String
 
    /** Retrieve All available FunctionDefs from Metadata Store. Answer the count and a string representation
     *  of them.
@@ -687,6 +730,40 @@ trait MetadataAPI {
     * @return the function count and the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the FunctionDef(s) either as a JSON or XML string depending on the parameter formatType as a Tuple2[Int,String]
     */
+
+  /**
+    * GetAllContainersFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param tid helps to filter by tenantId
+    * @return
+    */
+  // 646 - 672 Changes begin - filter by tenantId
+  def GetAllContainersFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String]
+
+  /**
+    * Remove container with Container Name and Version Number
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param zkNotify
+    * @return
+    */
+    def RemoveContainer(nameSpace: String, name: String, version: Long, userid: Option[String], zkNotify: Boolean = true): String
+
+  /**
+    * RemoveContainerFromCache
+    *
+    * @param zkMessage
+    * @return
+    */
+  def RemoveContainerFromCache(zkMessage: ZooKeeperNotification)
+
 
   def GetAllFunctionDefs(formatType: String, userid: Option[String] = None) : (Int,String)
 
@@ -805,7 +882,7 @@ trait MetadataAPI {
    /**
     * getHealthCheck - will return all the health-check information for the nodeId specified.
     *
-    * @parm - nodeId: String - if no parameter specified, return health-check for all nodes
+    * @param - nodeId: String - if no parameter specified, return health-check for all nodes
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return status string
@@ -835,4 +912,17 @@ trait MetadataAPI {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     */
   def getHealthCheckComponentDetailsByNames(componentNames: String = "", userid: Option[String] = None): String
+
+
+  /**
+    * GetMetadataAPIConfig
+    *
+    * @return properties as key value pair from the file.
+    */
+  def GetMetadataAPIConfig: Properties
+
+  def GetAllTenants(uid: Option[String] = None): Array[String]
+
+  def GetContainerDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String], tid: Option[String]): String
+
 }

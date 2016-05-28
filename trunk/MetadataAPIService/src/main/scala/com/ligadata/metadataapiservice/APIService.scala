@@ -46,7 +46,8 @@ class APIService extends LigadataSSLConfiguration with Runnable{
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   var databaseOpen = false
-  
+  val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
+
   /**
    * 
    */
