@@ -75,13 +75,35 @@ class FileUtility  extends LogTrait{
     var configBeanObj:ConfigBean = new ConfigBean()
     val dataTypeObj: DataTypeUtility = new DataTypeUtility()
     if(configInfo.outputPath.get == None){
-      logger.error("you should pass at least outputpath in config file")
+      logger.error("you should pass outputpath in config file")
       sys.exit(1)
     } else if(configInfo.outputPath.get.trim == ""){
       logger.error("outputpath cannot be null in config file")
       sys.exit(1)
     } else {
       configBeanObj.outputPath_=(configInfo.outputPath.get)
+    }
+
+    if(configInfo.createMessageFrom == None){
+      logger.error("you should pass createMessageFrom in config file")
+      sys.exit(1)
+    } else if(configInfo.createMessageFrom.get.equalsIgnoreCase("header")){
+      configBeanObj.createMessageFrom_=("header")
+      if(configInfo.delimiter == None){
+        logger.error("you should pass delimiter in config file when you need to create a message from header")
+        sys.exit(1)
+      } else if(configInfo.delimiter.get.trim.equalsIgnoreCase("")){
+        logger.error("delimiter cannot be null in config file")
+        sys.exit(1)
+      } else{
+        configBeanObj.delimiter_=(configInfo.delimiter.get)
+      }
+    } else if(configInfo.createMessageFrom.get.equalsIgnoreCase("pmml")){
+      configBeanObj.createMessageFrom_=("pmml")
+    } else {
+      logger.error("the value for createMessageFrom should be header or pmml")
+      sys.exit(1)
+    }
 
       if(dataTypeObj.isBoolean(configInfo.saveMessage.getOrElse("false"))){
         configBeanObj.saveMessage_=(configInfo.saveMessage.get.toBoolean)
@@ -107,6 +129,10 @@ class FileUtility  extends LogTrait{
           configBeanObj.messageType_=("input")
         } else if (configInfo.messageType.getOrElse("input").equalsIgnoreCase("output")) {
           configBeanObj.messageType_=("output")
+          if(configInfo.createMessageFrom.get.equalsIgnoreCase("header")){
+            logger.error("creta eoutput message from header file not supported yet")
+            sys.exit(1)
+          }
         } else {
           logger.error("the value of massegeType should be input or output")
           sys.exit(1)
@@ -123,7 +149,6 @@ class FileUtility  extends LogTrait{
 
       return configBeanObj
     }
-  }
 
   def writeToFile(json:JsonAST.JValue, filename: String): Unit = {
         new PrintWriter(filename) {
