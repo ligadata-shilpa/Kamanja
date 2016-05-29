@@ -9,10 +9,11 @@ import subprocess
 import imp
 
  
-sys.path.append("/home/rich/python/models") 
+sys.path.insert(0, "/home/rich/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstanceFactory/PythonModelPrototype/src/main/python") 
+#print "sys.modules = " + str(sys.modules)
 
 parser = argparse.ArgumentParser(description='Kamanja PyServer')
-parser.add_argument('--port', help='port binding', required=True)
+parser.add_argument('--port', help='port binding (default=9999)', default="9999")
 parser.add_argument('--host', help='host name (default=localhost) ', default="localhost")
 args = vars(parser.parse_args())
 #print args
@@ -29,11 +30,14 @@ port = int(args['port'])
 print('Connection parms: ' + host + ", " + args['port'])
 serversocket.bind((host, port))    
 
-def importName(moduleName, name):
+def importPackageByName(moduleName, name):
 	"""
-	Import a named object from a module in the context of this function 
+	Import the class 'name' found in package 'moduleName'.  The moduleName
+	may be a sub-package (e.g., the module is found in the 'commands' 
+	sub-package in the use below).
 	"""
 	try:
+		print "load moduleName = " + moduleName 
 		module = __import__(moduleName, globals(), locals(), [name])
 	except ImportError:
 		return None
@@ -65,7 +69,7 @@ modelDict = {
 
 # Add the system level command to the dispatcher dict
 for extname in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer':
-	HandlerClass = importName("commands." + extname, "Handler")
+	HandlerClass = importPackageByName("commands." + extname, "Handler")
 	handler = HandlerClass()
 	cmdDict[extname] = handler
 
@@ -101,12 +105,12 @@ while True:
 	    # ... both cmd and dataList changed by pop
 	    cmd = cmdRaw.strip()
 	    result = dispatcher(cmd,dataList)
-	    if (result != 'kill-9') # stop command will return 'kill-9' as value
+	    if result != 'kill-9': # stop command will return 'kill-9' as value
 	    	conn.sendall(result) 
 	    conn.close()
     	break
 	
-	if (result == 'kill-9') # stop command stops listener tears down server ...
+	if result == 'kill-9': # stop command stops listener tears down server ...
 		break
 
 print 'server is exiting due to stop command'

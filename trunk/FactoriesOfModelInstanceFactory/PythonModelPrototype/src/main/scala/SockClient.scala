@@ -2,12 +2,14 @@
 exec scala "$0" "$@"
 !#
 
+
+
 import java.net._
 import java.io._
 
 import scala.io._
 import scala.collection.immutable.Map
-import scala.sys.process.Process
+import scala.sys.process._
 
 
 object SockClient {
@@ -29,18 +31,18 @@ object SockClient {
     One of the following must be supplied.
 
   SocketClient.scala <named args...>
-  where named args are:
+  where <named args> are:
 
-    --cmd startServer   --filePath <filePath>
-              [--host <hostname or ip> ... default = localhost]
-              [--port <user port no.> ... default=9999]
+    --cmd startServer  --filePath <filePath>
+                      [--host <hostname or ip> ... default = localhost]
+                      [--port <user port no.> ... default=9999]
     --cmd stopServer  [--host <hostname or ip> ... default = localhost]
-              [--port <user port no.> ... default=9999]
-    --cmd addModel    --filePath <filePath>
-    --cmd removeModel   --modelName '<modelName>'
+                      [--port <user port no.> ... default=9999]
+    --cmd addModel     --filePath <filePath>
+    --cmd removeModel  --modelName '<modelName>'
     --cmd serverStatus
-    --cmd executeModel  --modelName '<modelName>'
-              --msg '<msg data>'
+    --cmd executeModel --modelName '<modelName>'
+                       --msg '<msg data>'
         """
     }
 
@@ -49,7 +51,7 @@ object SockClient {
         val arglist = args.toList
         if (args.isEmpty) {
             println(usage)
-            sys.exit(1)
+            sys.exit(0)
         }
 
         type OptionMap = Map[Symbol, String]
@@ -124,7 +126,7 @@ object SockClient {
 
         if (cmd == "startServer") {
             val startServerCmd : StartServerCmd = cmdObj.asInstanceOf[StartServerCmd]
-            val result : String = startServerCmd.startServer(filePath, user, host)
+            val result : String = startServerCmd.startServer(filePath, user, host, portNo)
             println(s"Server $filePath started? $result")
         } else {
             /** send the command to the server for execution */
@@ -148,7 +150,7 @@ object SockClient {
 /** Abstract class for objects that handle semantic checks and command preparation for
   * the server to execute.
   */
-trait PyCmd {
+abstract class PyCmd (val cmd : String) {
     def semanticCheck(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int) : (Boolean,String)
     def prepareCmdMsg(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int) : String
 }
@@ -174,7 +176,7 @@ trait PyCmd {
   *For now, the server runs on the localhost.
   *
   */
-case class StartServerCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
+class StartServerCmd(cmd : String) extends PyCmd(cmd) {
 
     override def semanticCheck(filePath : String
                                , modelName : String
@@ -205,25 +207,29 @@ case class StartServerCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int) : String = {
-
-        val pyPath : String = try {
-            val path : String = sys.env("PYTHONPATH")
-            path.split(':').head.trim /** take the first one ... assume its writable */
-        } catch {
-            case e: Exception => throw new RuntimeException("PYTHONPATH env variable must be set.  Fix that and try again.")
-        }
-
-        if (pyPath != null) {
-            printf(s"The server will be installed in $pyPath")
-            printf(s"The models that are added will be installed in $pyPath/models")
-            printf(s"The models subdirectory should exist before attempting to add models there.")
-            // NOTE: No attempt is made to prevent the user from copying a file
-            // to itself.
-        }
         ""
     }
 
-    def startServer(filePath : String, user : String, host : String) : String = {
+    /**
+      * FIXME: the pyserver file should be installed as part of the Kamanja installation.  It does not get copied in
+      * total in that it is just the top level of a bunch of command modules (e.g., addModel, serverStatus, et al).
+      * To modify the server on the fly is still possible in that these commands really provide the behavior.
+      *
+      * What we really need to do is treat the py server commands like the models... i.e., make it possible to add
+      * them and/or replace them.  A restart mechanism is needed.  I believe it is possible to cause the modules to be
+      * reloaded... we need to look into that.
+      *
+      * For the near future...
+      * Invoke a script that is part of the installation.  In that script, the PYTHONPATH is set and the location of
+      * the pyserver to run is known.
+      *
+      * @param filePath
+      * @param user
+      * @param host
+      * @param portNo
+      * @return
+      */
+    def startServer(filePath : String, user : String, host : String, portNo : Int) : String = {
 
         val useSSH : Boolean = host != "localhost"
 
@@ -233,25 +239,68 @@ case class StartServerCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
               *on the target machine... then
               *send the following command */
             val userMachine : String = s"$user@$host"
-            val remoteCmd : String = s"python $filePath"
+            val remoteCmd : String = s"python $filePath --port ${portNo.toString}"
             Seq[String]("ssh", userMachine, remoteCmd)
         } else {
-            Seq[String]("python", s"$filePath")
+            val portString : String = " --port "
+            val portStr = s"${portNo.toString} "
+            //Seq[String]("python", filePath, portString, portStr)
+            Seq[String]("python", filePath)
+
         }
 
         val startResult : Int = if (useSSH) {
             Process(cmdSeq).!
         } else {
-            Process(cmdSeq).!
+            val seqList = cmdSeq.toList
+            val seq = seqList.toSeq
+            val seqCmd = cmdSeq.toString
+
+            /** run will launch the server program in the background ... what we want in this case */
+            val pySrvCmd = Process(cmdSeq)
+            pySrvCmd.run
+
+            /** val (rc,stdOut, stdErr) : (Int, String, String) = runCmdCollectOutput(cmdSeq)
+            println(s"seqCmd = $seqCmd")
+            println(s"stdOut = $stdOut")
+            println(s"stdErr = $stdErr")
+            rc
+            */
+            0
         }
 
         val resultStr : String = if (startResult == 0) "Successfully" else "Failed"
         resultStr
     }
+
+    /**
+      * Execute the supplied command sequence. Answer with the rc, the stdOut, and stdErr outputs from
+      * the external command represented in the sequence.
+      *
+      * Warning: you must wait for this process to end.  It is **_not_** to be used to launch a daemon. Use
+      * cmd.run instead. If this application is itself a server, you can run it with the ProcessLogger as done
+      * here ... possibly with a different kind of underlying stream that writes to a log file or in some fashion
+      * consumable with the program.
+      *
+      * @param cmd external command sequence
+      * @return (rc, stdout, stderr)
+      */
+    def runCmdCollectOutput(cmd: Seq[String]): (Int, String, String) = {
+        val stdoutStream = new ByteArrayOutputStream
+        val stderrStream = new ByteArrayOutputStream
+        val stdoutWriter = new PrintWriter(stdoutStream)
+        val stderrWriter = new PrintWriter(stderrStream)
+        val exitValue = cmd.!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
+        stdoutWriter.close()
+        stderrWriter.close()
+        (exitValue, stdoutStream.toString, stderrStream.toString)
+    }
+
+
 }
 
 /** StopServerCmd */
-case class StopServerCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
+class StopServerCmd(cmd : String) extends PyCmd(cmd) {
 
     /** FIXME: do meaningful checks here */
     override def semanticCheck(filePath : String
@@ -259,8 +308,8 @@ case class StopServerCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
                                , msg : String
                                , user : String
                                , host : String
-                               , portNo : Int) : Boolean = {
-        true
+                               , portNo : Int) : (Boolean,String) = {
+        (true,"")
     }
 
     override def prepareCmdMsg(filePath : String
@@ -290,7 +339,7 @@ case class StopServerCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
   *  RuntimeException and command failure.
   *
   */
-case class AddModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
+class AddModelCmd(cmd : String) extends PyCmd(cmd) {
 
     /** FIXME: do meaningful checks here */
     override def semanticCheck(filePath : String
@@ -298,8 +347,8 @@ case class AddModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
                                , msg : String
                                , user : String
                                , host : String
-                               , portNo : Int) : Boolean = {
-        true
+                               , portNo : Int) : (Boolean,String) = {
+        (true,"")
     }
 
     /**
@@ -327,7 +376,7 @@ case class AddModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
 }
 
 /** RemoveModelCmd */
-case class RemoveModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
+class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
 
     /** FIXME: do meaningful checks here */
     override def semanticCheck(filePath: String
@@ -335,8 +384,8 @@ case class RemoveModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
                                , msg: String
                                , user: String
                                , host: String
-                               , portNo: Int): Boolean = {
-        true
+                               , portNo: Int) : (Boolean,String) = {
+        (true,"")
     }
 
     override def prepareCmdMsg(filePath: String
@@ -350,7 +399,7 @@ case class RemoveModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
 }
 
 /** ServerStatusCmd */
-case class ServerStatusCmd[A <: PyCmd](cmd: String) extends PyCmd(cmd) {
+class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
 
     /** FIXME: do meaningful checks here */
     override def semanticCheck(filePath: String
@@ -358,8 +407,8 @@ case class ServerStatusCmd[A <: PyCmd](cmd: String) extends PyCmd(cmd) {
                                , msg: String
                                , user: String
                                , host: String
-                               , portNo: Int): Boolean = {
-        true
+                               , portNo: Int) : (Boolean,String) = {
+        (true,"")
     }
 
     override def prepareCmdMsg(filePath: String
@@ -367,13 +416,13 @@ case class ServerStatusCmd[A <: PyCmd](cmd: String) extends PyCmd(cmd) {
                                , msg: String
                                , user: String
                                , host: String
-                               , portNo: Int): String = {
+                               , portNo: Int) : String = {
         s"$cmd"
     }
 }
 
 /** ExecuteModelCmd */
-case class ExecuteModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
+class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
 
     /** FIXME: do meaningful checks here */
     override def semanticCheck(filePath : String
@@ -381,8 +430,8 @@ case class ExecuteModelCmd[A <: PyCmd](cmd : String) extends PyCmd(cmd) {
                                , msg : String
                                , user : String
                                , host : String
-                               , portNo : Int) : Boolean = {
-        true
+                               , portNo : Int) : (Boolean,String) = {
+        (true,"")
     }
 
     override def prepareCmdMsg(filePath : String

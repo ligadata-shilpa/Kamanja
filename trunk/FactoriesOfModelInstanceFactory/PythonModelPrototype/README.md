@@ -85,8 +85,45 @@ _Notes_
 
 4) The server commands are: 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer'.  Notice that the names of these commands **_EXACTLY_** match the main stem of the python source files in the _commands_ subdirectory.  This is important.  As written the file name is used as the command name when building the function dispatch dictionary in the server.
 
-5) The _modelsToLoad_ directory contain the sample models to test the server.  It is these files that you will add to the server.  Currently there is an add, divide, multiply and subtract "model" available.  They all take a list of numbers as their principal argument and return result only from it.  The _models_ directory is where the model source will land for the addModel command.  The first path in PYTHONPATH's value is assumed writable and used to construct the path for the path/models/$modelName.py file.
+5) The _modelsToLoad_ directory contain the sample models to test the server.  It is these files that you will add to the server.  Currently there is an add, divide, multiply and subtract "model" available.  They all take a list of numbers as their principal argument and return result only from it.  The _models_ directory is where the model source will land for the addModel command.  The first path in PYTHONPATH's value is assumed writable and used to construct the path for the path/_models/$modelName_.py file.
 
 6) There are some (but not enough) semantic checking for arguments.  On the server side and in the model implementations, it will be quite easy to cause the python to throw exceptions.  Any demo (if it is your intention to do that) should have prepared and tested commands with admonishment that this is just a prototype, blah blah.  Of special note is that there are no state transition type checks.  If you failed to add a server before trying to add a model... o well.
 
+7) All server commands share the argument list. For example, here is the executeModel.py command:
 
+	# ExecuteModelCmd message is formatted like this Scala string : s"$cmd\n$modelName\n$msg"
+	class Handler(object): 
+		def handler(self, modelDict, host, port, cmdList):
+			modelName = cmdList.pop(0).strip()
+			# assumption for this revision is that the message is one line of CSV data.
+			msg = cmdList.pop(0).strip().split(',')
+			cmd = modelDict[modelName]
+			results = cmd.handler(msg)
+			return results
+
+The _$cmd_ in the comment is the executeModel key that causes the server command dispatcher to send control here.  The _modelName_ is the one that will execute.  Its name is used to find the appropriate model in the model dispatch map.  The _msg_, for this version at least, assumes just one line to be consumed.  That could be relaxed for real use.  The goal here is simply to demonstrate the patterns of communication.
+
+8) Like the server commands, the models are dispatched by name lookup where the key is the modelName.  Here is an example of one of our test models, add.py:
+
+	class Handler(object): 
+		def handler(self, numbers):
+			sumofTup = int(numbers.pop(0))
+			for v in numbers
+				sumofTup += int(v)
+			return str(sumofTup)
+
+As you can see, there currently is very little in the way of type checking.  The parameter, _numbers_, is a list of strings.  Again, this is to demonstrate the patterns of communication, not provide a robust example that manages malformed inputs and the rest.
+
+9) This version of the python server simply accepts a list of strings as the input to the model.  A kamanja message might be represented differently.  A mapped representation can be easily "serialized" to a list of tuple2 and back again.  This might be the interim solution until full type support, server access to the metadata, etc is completed and integrated.
+
+10) If you don't have an __init__.py file in your package directories, the dynamic loader will __fail__.  Here is a good explanation from [http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#the-missing-init-py-trap]
+
+The missing __init__.py trap
+
+This particular trap applies to 2.x releases, as well as 3.x releases up to and including 3.2.
+
+Prior to Python 3.3, filesystem directories, and directories within zipfiles, had to contain an __init__.py in order to be recognised as Python package directories. Even if there is no initialisation code to run when the package is imported, an empty __init__.py file is still needed for the interpreter to find any modules or subpackages in that directory.
+
+This has changed in Python 3.3: now any directory on sys.path with a name that matches the package name being looked for will be recognised as contributing modules and subpackages to that package.
+
+11) 
