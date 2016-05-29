@@ -759,8 +759,10 @@ object KamanjaLeader {
                         try {
                           key = kv._1.Serialize
                           value = kv._2.Serialize
-                          if (key != null && value != null && key.size > 0 && value.size > 0)
+                          if (key != null && value != null && key.size > 0 && value.size > 0) {
                             envCtxt.setAdapterUniqueKeyValue(key, value)
+                            // LOG.warn("===============> Partition Key:%s, Partition Value:%s".format(key, value))
+                          }
                         } catch {
                           case e: Throwable => {}
                         }

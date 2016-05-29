@@ -43,6 +43,13 @@ class KamanjaServer(port: Int) extends Runnable {
         exec.execute(new ConnHandler(socket))
       }
     } catch {
+
+      case e: java.net.SocketException => {
+        if (serverSocket != null && serverSocket.isClosed())
+          LOG.warn("Socket Error. May be closed", e)
+        else
+          LOG.error("Socket Error", e)
+      }
       case e: Exception => {
         LOG.error("Socket Error", e)
       }
