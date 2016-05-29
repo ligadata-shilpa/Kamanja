@@ -127,4 +127,16 @@ class DataTypeUtility extends LogTrait{ // This class created to check the value
     }
     return keysArray
   }
+
+  def FindPMMLFieldType(field: String): String ={
+    if (field.equalsIgnoreCase("integer"))
+      return "Int"
+    else if (field.equalsIgnoreCase("float"))
+      return "Float"
+    else if (field.equalsIgnoreCase("double"))
+      return "Double"
+    else if(field.equalsIgnoreCase("boolean"))
+      return "Boolean"
+    else return "String"
+  }
 }

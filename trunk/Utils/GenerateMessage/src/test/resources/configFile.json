@@ -6,6 +6,8 @@
   "partitionKey": "id",
   "primaryKey": "id,name",
   "timePartition": "id",
-  "messageType": "fixed",
-  "messageName": "testmessage"
+  "messageType": "input",
+  "messageName": "testmessage",
+  "createMessageFrom": "header",
+  "messageStructure": "fixed"
 }

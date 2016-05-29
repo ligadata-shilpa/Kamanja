@@ -17,7 +17,7 @@ import scala.io.Source._
   */
 case class configFile(delimiter: Option[String], outputPath: Option[String], saveMessage: Option[String], nameSpace: Option[String],
                       partitionKey: Option[String], primaryKey: Option[String], timePartition: Option[String], messageType: Option[String],
-                      messageName: Option[String])
+                      messageName: Option[String], createMessageFrom: Option[String], messageStructure: Option[String])
 
 class FileUtility  extends LogTrait{
 
@@ -74,15 +74,14 @@ class FileUtility  extends LogTrait{
   def createConfigBeanObj(configInfo: configFile): ConfigBean={ //This method used to create a configObj
     var configBeanObj:ConfigBean = new ConfigBean()
     val dataTypeObj: DataTypeUtility = new DataTypeUtility()
-    if(configInfo.delimiter.get == None && configInfo.outputPath.get == None){
-      logger.error("you should pass at least outputpath and delimiter in config file")
+    if(configInfo.outputPath.get == None){
+      logger.error("you should pass at least outputpath in config file")
       sys.exit(1)
-    } else if(configInfo.outputPath.get.trim == "" || configInfo.delimiter.get.trim == ""){
-      logger.error("outputpath and delimiter cannot be null in config file")
+    } else if(configInfo.outputPath.get.trim == ""){
+      logger.error("outputpath cannot be null in config file")
       sys.exit(1)
     } else {
       configBeanObj.outputPath_=(configInfo.outputPath.get)
-      configBeanObj.delimiter_=(configInfo.delimiter.get)
 
       if(dataTypeObj.isBoolean(configInfo.saveMessage.getOrElse("false"))){
         configBeanObj.saveMessage_=(configInfo.saveMessage.get.toBoolean)
@@ -104,14 +103,23 @@ class FileUtility  extends LogTrait{
       configBeanObj.timePartition_=(configInfo.timePartition.getOrElse(""))
       if(!configBeanObj.timePartition.trim.equalsIgnoreCase("")) configBeanObj.hasTimePartition_=(true) else configBeanObj.hasTimePartition_=(false)
 
-        if(configInfo.messageType.get.equalsIgnoreCase("fixed")){
-          configBeanObj.messageType_=(true)
-        } else if(configInfo.messageType.get.equalsIgnoreCase("mapped")){
-          configBeanObj.messageType_=(false)
+        if (configInfo.messageType.getOrElse("input").equalsIgnoreCase("input")) {
+          configBeanObj.messageType_=("input")
+        } else if (configInfo.messageType.getOrElse("input").equalsIgnoreCase("output")) {
+          configBeanObj.messageType_=("output")
         } else {
-          logger.error("the value of massegeType should be fixed or mapped")
+          logger.error("the value of massegeType should be input or output")
           sys.exit(1)
         }
+
+      if(configInfo.messageStructure.getOrElse("fixed").equalsIgnoreCase("fixed")){
+        configBeanObj.messageStructure_=(true)
+      } else if(configInfo.messageStructure.getOrElse("fixed").equalsIgnoreCase("mapped")){
+        configBeanObj.messageStructure_=(false)
+      } else {
+        logger.error("the value of massegeStructure should be fixed or mapped")
+        sys.exit(1)
+      }
 
       return configBeanObj
     }

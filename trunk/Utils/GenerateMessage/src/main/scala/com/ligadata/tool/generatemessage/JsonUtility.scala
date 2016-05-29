@@ -18,7 +18,7 @@ class JsonUtility  extends LogTrait {
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
           ("Description" -> "") ~
-          ("Fixed" -> configObj.messageType.toString) ~
+          ("Fixed" -> configObj.messageStructure.toString) ~
           ("Persist" -> configObj.saveMessage) ~
           ("Feilds" ->
             data.keys.map {
@@ -39,7 +39,7 @@ class JsonUtility  extends LogTrait {
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
           ("Description" -> "") ~
-          ("Fixed" -> configObj.messageType.toString) ~
+          ("Fixed" -> configObj.messageStructure.toString) ~
           ("Persist" -> configObj.saveMessage) ~
           (feild -> /*List.empty[JInt]*/ keys.toList)
         )
@@ -49,7 +49,7 @@ class JsonUtility  extends LogTrait {
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
           ("Description" -> "") ~
-          ("Fixed" -> configObj.messageType.toString) ~
+          ("Fixed" -> configObj.messageStructure.toString) ~
           ("Persist" -> configObj.saveMessage) ~
           (feild -> ("Key" -> configObj.timePartition) ~
             ("Format" -> "epochtime") ~

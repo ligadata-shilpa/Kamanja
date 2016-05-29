@@ -10,7 +10,7 @@ class ConfigBean {
   private var _delimiter = ","
   private var _outputPath = ""
   private var _saveMessage = false
-  private var _messageType = false  // false -> fixed, true -> mapped
+  private var _messageType = ""
   private var _nameSpace = "com.message"
   private var _partitionKey = ""
   private var _primaryKey = ""
@@ -22,7 +22,8 @@ class ConfigBean {
   private var _hasTimePartition = false
   private var _partitionKeyArray: Array[String] = Array.empty
   private var _primaryKeyArray: Array[String] = Array.empty
-
+  private var _createMessageFrom = ""
+  private var _messageStructure = false  // false -> fixed, true -> mapped
   // Getter
   def delimiter = _delimiter
   def outputPath = _outputPath
@@ -39,12 +40,14 @@ class ConfigBean {
   def hasTimePartition = _hasTimePartition
   def partitionKeyArray = _partitionKeyArray
   def primaryKeyArray = _primaryKeyArray
+  def createMessageFrom = _createMessageFrom
+  def messageStructure = _messageStructure
 
   // Setter
   def delimiter_= (value:String):Unit = _delimiter = value
   def outputPath_= (value:String):Unit = _outputPath = value
   def saveMessage_= (value:Boolean):Unit = _saveMessage = value
-  def messageType_= (value:Boolean):Unit = _messageType = value
+  def messageType_= (value:String):Unit = _messageType = value
   def nameSpace_= (value:String):Unit = _nameSpace = value
   def partitionKey_= (value:String):Unit = _partitionKey = value
   def primaryKey_= (value:String):Unit = _primaryKey = value
@@ -56,4 +59,6 @@ class ConfigBean {
   def hasTimePartition_= (value:Boolean):Unit = _hasTimePartition = value
   def partitionKeyArray_= (value: Array[String]):Unit = _partitionKeyArray = value
   def primaryKeyArray_= (value: Array[String]):Unit = _primaryKeyArray = value
+  def createMessageFrom_= (value: String): Unit = _createMessageFrom = value
+  def messageStructure_= (value:Boolean):Unit = _messageStructure = value
 }

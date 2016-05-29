@@ -90,24 +90,28 @@ class PMMLUtility extends LogTrait{
   }
 
   def ActiveFields(modelEvaluator: ModelEvaluator[_ <: Model]): scala.Array[(String,String)] ={
+    val dataTypeBean: DataTypeUtility = new DataTypeUtility
     val activeFieldNames: JList[FieldName] = modelEvaluator.getActiveFields
     val activeFields: scala.Array[DataField] = {
       activeFieldNames.asScala.map(nm => modelEvaluator.getDataField(nm))
     }.toArray
     val activeFieldContent : scala.Array[(String,String)] = activeFields.map(fld => {
-      (fld.getName.getValue, fld.getDataType.value)
+      if(fld.getDataType != null)
+      (fld.getName.getValue, dataTypeBean.FindPMMLFieldType(fld.getDataType.value))
+      else (fld.getName.getValue, "String")
     })
     return activeFieldContent
   }
 
   def OutputFields(modelEvaluator: ModelEvaluator[_ <: Model]): scala.Array[(String,String)] ={
+    val dataTypeBean: DataTypeUtility = new DataTypeUtility
     val outputFieldNames: JList[FieldName] = modelEvaluator.getOutputFields
     val outputFields: scala.Array[OutputField] = {
       outputFieldNames.asScala.filter(nm => modelEvaluator.getOutputField(nm) != null).map(nm => modelEvaluator.getOutputField(nm))
     }.toArray
     val outputFieldContent : scala.Array[(String,String)] = if (outputFields != null && outputFields.size > 0) {
       outputFields.map(fld => { if(fld.getDataType != null) {
-        (fld.getName.getValue, fld.getDataType.value)
+        (fld.getName.getValue, dataTypeBean.FindPMMLFieldType(fld.getDataType.value))
       }else (fld.getName.getValue, "String")
       })
     } else {
@@ -119,6 +123,7 @@ class PMMLUtility extends LogTrait{
   }
 
   def TargetFields(modelEvaluator: ModelEvaluator[_ <: Model]): scala.Array[(String,String)] ={
+    val dataTypeBean: DataTypeUtility = new DataTypeUtility
     val targetFieldNames: JList[FieldName] = modelEvaluator.getTargetFields
     val targetFields: scala.Array[Target] = {
       targetFieldNames.asScala.filter(nm => modelEvaluator.getTarget(nm) != null).map(nm => modelEvaluator.getTarget(nm))
@@ -129,7 +134,7 @@ class PMMLUtility extends LogTrait{
         val name : String = field.getValue
         val datafield : DataField =  modelEvaluator.getDataField(field)
         if(datafield.getDataType != null){
-        (datafield.getName.getValue, datafield.getDataType.value)
+        (datafield.getName.getValue, dataTypeBean.FindPMMLFieldType(datafield.getDataType.value))
         } else (datafield.getName.getValue,"String")
 
       })
