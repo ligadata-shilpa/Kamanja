@@ -925,4 +925,58 @@ trait MetadataAPI {
 
   def GetContainerDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String], tid: Option[String]): String
 
-}
+  /**
+    * Get the model config keys
+    *
+    * @return
+    */
+  def getModelConfigNames(): Array[String]
+
+  /**
+    * Get a specific model (format JSON or XML) as a String using modelName(with version) as the key
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetModelDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None, tid : Option[String] = None): String
+
+  /**
+    * Deactivate the model that presumably is active and waiting for input in the working set of the cluster engines.
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def DeactivateModel(nameSpace: String, name: String, version: Long, userid: Option[String] = None): String
+
+  /**
+    * Activate the model with the supplied keys. The engine is notified and the model factory is loaded.
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def ActivateModel(nameSpace: String, name: String, version: Long, userid: Option[String] = None): String
+
+  /**
+    * GetAllModelsFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String]
+
+  }

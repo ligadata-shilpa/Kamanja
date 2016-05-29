@@ -2179,30 +2179,30 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     RemoveContainer(sysNS, containerName, version, userid)
   }
 
-    /**
-     * Deactivate the model that presumably is active and waiting for input in the working set of the cluster engines.
-      *
-      * @param nameSpace namespace of the object
-     * @param name
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * Deactivate the model that presumably is active and waiting for input in the working set of the cluster engines.
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def DeactivateModel(nameSpace: String, name: String, version: Long, userid: Option[String] = None): String = {
     ModelUtils.DeactivateModel(nameSpace,name,version,userid)
   }
 
-    /**
-     * Activate the model with the supplied keys. The engine is notified and the model factory is loaded.
-      *
-      * @param nameSpace namespace of the object
-     * @param name
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * Activate the model with the supplied keys. The engine is notified and the model factory is loaded.
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def ActivateModel(nameSpace: String, name: String, version: Long, userid: Option[String] = None): String = {
     ModelUtils.ActivateModel(nameSpace,name,version,userid)
   }
@@ -2387,14 +2387,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MessageAndContainerUtils.GetAllContainerDefs(formatType,userid)
   }
 
-    /**
-     * GetAllModelsFromCache
-      *
-      * @param active
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * GetAllModelsFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
     ModelUtils.GetAllModelsFromCache(active,userid, tid)
   }
@@ -2487,17 +2487,17 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     GetModelDef(sysNS, objectName, formatType, userid)
   }
 
-    /**
-     * Get a specific model (format JSON or XML) as a String using modelName(with version) as the key
-      *
-      * @param nameSpace namespace of the object
-     * @param name
-     * @param formatType format of the return value, either JSON or XML
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * Get a specific model (format JSON or XML) as a String using modelName(with version) as the key
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def GetModelDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None, tid : Option[String] = None): String = {
     ModelUtils.GetModelDefFromCache(nameSpace,name,formatType,version,userid, tid)
   }
@@ -3918,10 +3918,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   /**
-     * Get the model config keys
-      *
-      * @return
-     */
+    * Get the model config keys
+    *
+    * @return
+    */
   def getModelConfigNames(): Array[String] = {
     MdMgr.GetMdMgr.GetModelConfigKeys
   }
