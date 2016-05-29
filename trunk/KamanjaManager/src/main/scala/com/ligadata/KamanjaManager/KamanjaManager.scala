@@ -826,7 +826,7 @@ class KamanjaManager extends Observer {
 
     val nodeNameToSetZk = KamanjaConfiguration.nodeId.toString
 
-    var sh: SignalHandler = null
+    /*var sh: SignalHandler = null
     try {
       sh = new SignalHandler()
       sh.addObserver(this)
@@ -837,7 +837,7 @@ class KamanjaManager extends Observer {
       case e: Throwable => {
         LOG.error("Failed to add signal handler.", e)
       }
-    }
+    }*/
 
     //    var nextAdapterValuesCommit = System.currentTimeMillis + KamanjaConfiguration.adapterInfoCommitTime
 
@@ -914,7 +914,7 @@ class KamanjaManager extends Observer {
     }
 
     scheduledThreadPool.shutdownNow()
-    sh = null
+    //sh = null
     return Shutdown(0)
   }
 
