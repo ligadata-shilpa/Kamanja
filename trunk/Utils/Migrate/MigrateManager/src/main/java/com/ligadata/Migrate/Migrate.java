@@ -95,7 +95,8 @@ public class Migrate {
             executor = texecutor;
 
             if (srcVer.equalsIgnoreCase("1.1")
-                    && (dstVer.equalsIgnoreCase("1.3") || dstVer.equalsIgnoreCase("1.4"))) {
+                    && (dstVer.equalsIgnoreCase("1.3") || dstVer.equalsIgnoreCase("1.4")
+			|| dstVer.equalsIgnoreCase("1.4.1"))) {
                 appendData = new byte[8]; // timepartition bytes at the end.
                 for (int i = 0; i < 8; i++)
                     appendData[0] = 0;
@@ -400,9 +401,9 @@ public class Migrate {
                 return retCode;
             }
 
-            if (dstVer.equalsIgnoreCase("1.4") == false) {
-                sendStatus("We support destination version only 1.4 We don't support " + dstVer, "ERROR");
-                logger.error("We support destination version only 1.4 We don't support " + dstVer);
+            if (dstVer.equalsIgnoreCase("1.4.1") == false) {
+                sendStatus("We support destination version only 1.4.1 We don't support " + dstVer, "ERROR");
+                logger.error("We support destination version only 1.4.1 We don't support " + dstVer);
                 usage();
                 return retCode;
             }
@@ -463,6 +464,7 @@ public class Migrate {
             }
 
 
+
             // From Srouce version 1.1 to Destination version 1.3 we do both
             // Metadata Upgrade & Data Upgrade
             // From Source Version 1.2 to Destination version 1.3, we only do
@@ -472,12 +474,12 @@ public class Migrate {
 		  srcVer.equalsIgnoreCase("1.2") ||
 		  srcVer.equalsIgnoreCase("1.3") ||
 		  srcVer.equalsIgnoreCase("1.4")) &&
-		 dstVer.equalsIgnoreCase("1.4"));
+		 dstVer.equalsIgnoreCase("1.4.1"));
 
             boolean canUpgradeData = ((srcVer.equalsIgnoreCase("1.1") ||
                     srcVer.equalsIgnoreCase("1.2") ||
                     srcVer.equalsIgnoreCase("1.3")) &&
-                    dstVer.equalsIgnoreCase("1.4"));
+                    dstVer.equalsIgnoreCase("1.4.1"));
 
 
             if (canUpgradeData && canUpgradeMetadata == false) {
