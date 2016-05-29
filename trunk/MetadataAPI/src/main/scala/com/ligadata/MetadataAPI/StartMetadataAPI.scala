@@ -456,13 +456,13 @@ object StartMetadataAPI {
             response = ModelService.updateModeljava(input, param, userId,tid)
         }
 
-        case Action.GETALLMODELS => response = ModelService.getAllModels(userId)
+        case Action.GETALLMODELS => response = ModelService.getAllModels(userId, tid)
         case Action.GETMODEL => response = {
             val modelName : String = extraCmdArgs.getOrElse(MODELNAME,"")
             if (modelName.isEmpty)
-            ModelService.getModel("", userId)
+            ModelService.getModel("", userId, tid)
           else
-            ModelService.getModel(modelName, userId)
+            ModelService.getModel(modelName, userId, tid)
         }
 
 

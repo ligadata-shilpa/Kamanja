@@ -1120,21 +1120,18 @@ object MessageAndContainerUtils {
         case Some(ms) =>
           val msa = ms.toArray
           val msgCount = msa.length
-          var newList : List[String] = List[String]() ;
-         // messageList = new Array[String](msgCount)
-
-          for (i <- 0 to msgCount - 1) {
+          var newMessageList : List[String] = List[String]() ;
+             for (i <- 0 to msgCount - 1) {
             if (tid.isEmpty || (tid.get == msa(i).tenantId)) {
-              //messageList(j) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
-              newList = newList ::: List(msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version))
+                 newMessageList = newMessageList ::: List(msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version))
 
             }
           }
-          if (newList.isEmpty) {
+          if (newMessageList.isEmpty) {
             messageList
           }
           else {
-            (newList map(_.toString)).toArray
+            (newMessageList map(_.toString)).toArray
           }
       }
     } catch {

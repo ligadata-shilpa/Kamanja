@@ -2395,8 +2395,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
-    ModelUtils.GetAllModelsFromCache(active,userid)
+  def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
+    ModelUtils.GetAllModelsFromCache(active,userid, tid)
   }
 
   /**
@@ -2498,8 +2498,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
      * @return
      */
-  def GetModelDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None): String = {
-    ModelUtils.GetModelDefFromCache(nameSpace,name,formatType,version,userid)
+  def GetModelDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None, tid : Option[String] = None): String = {
+    ModelUtils.GetModelDefFromCache(nameSpace,name,formatType,version,userid, tid)
   }
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key

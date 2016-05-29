@@ -869,19 +869,20 @@ object ModelService {
      * @return the result of the operation - a JSON string representation of the ModelDef
      */
     def getModel(param: String = ""
-               , userid: Option[String] = Some("kamanja")
+               , userid: Option[String] = Some("kamanja"),
+                 tid : Option[String] = None
                ): String ={
         var response=""
         try {
           if (param.length > 0) {
             val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
             try {
-              return MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON" ,ver, userid)
+              return MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON" ,ver, userid, tid)
             } catch {
               case e: Exception => logger.error("", e)
             }
           }
-          val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None)
+          val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, None, tid)
           if (modelKeys.length == 0) {
             val errorMsg="Sorry, No models available, in the Metadata, to display!"
             response=errorMsg
@@ -901,7 +902,7 @@ object ModelService {
             }
             val modelKey = modelKeys(choice - 1)
             val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(modelKey)
-            val apiResult = MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON",ver, userid)
+            val apiResult = MetadataAPIImpl.GetModelDefFromCache(ns, name,"JSON",ver, userid, tid)
             response=apiResult
           }
 
@@ -919,9 +920,9 @@ object ModelService {
      * @param userid the optional userId. If security and auditing in place this parameter is required.
      * @return
      */
-    def getAllModels(userid: Option[String] = Some("kamanja")) : String ={
+    def getAllModels(userid: Option[String] = Some("kamanja"), tid: Option[String] = None) : String ={
         var response=""
-        val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, userid)
+        val modelKeys = MetadataAPIImpl.GetAllModelsFromCache(true, userid, tid)
         if (modelKeys.length == 0) {
           response="Sorry, No models available in the Metadata"
         }else{

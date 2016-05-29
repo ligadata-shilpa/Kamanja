@@ -1769,7 +1769,7 @@ object ModelUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
+  def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String] = {
     var modelList: Array[String] = new Array[String](0)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.READ), AuditConstants.GETKEYS, AuditConstants.MODEL, AuditConstants.SUCCESS, "", AuditConstants.MODEL)
     try {
@@ -1782,11 +1782,18 @@ object ModelUtils {
         case Some(ms) =>
           val msa = ms.toArray
           val modCount = msa.length
-          modelList = new Array[String](modCount)
+          var newModelList : List[String] = List[String]() ;
           for (i <- 0 to modCount - 1) {
-            modelList(i) = msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version)
+            if (tid.isEmpty || (tid.get == msa(i).tenantId)) {
+              newModelList = newModelList ::: List(msa(i).FullName + "." + MdMgr.Pad0s2Version(msa(i).Version))
+            }
           }
-          modelList
+          if (newModelList.isEmpty) {
+            modelList
+          }
+          else {
+            (newModelList map(_.toString)).toArray
+          }
       }
     } catch {
       case e: Exception => {
@@ -1854,7 +1861,7 @@ object ModelUtils {
     *                   method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  def GetModelDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None): String = {
+  def GetModelDefFromCache(nameSpace: String, name: String, formatType: String, version: String, userid: Option[String] = None, tid : Option[String] = None): String = {
     val dispkey = nameSpace + "." + name + "." + MdMgr.Pad0s2Version(version.toLong)
     if (userid != None) MetadataAPIImpl.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.GETOBJECT, AuditConstants.MODEL, AuditConstants.SUCCESS, "", dispkey)
     try {
@@ -1867,9 +1874,16 @@ object ModelUtils {
           val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDefFromCache", null, ErrorCodeConstants.Get_Model_From_Cache_Failed_Not_Active + ":" + dispkey)
           apiResult.toString()
         case Some(m) =>
+          if (tid == m.tenantId || tid == None) {
           logger.debug("model found => " + m.asInstanceOf[ModelDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ModelDef].Version))
           val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetModelDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Model_From_Cache_Successful + ":" + dispkey)
-          apiResult.toString()
+            apiResult.toString()
+          }
+          else {
+            logger.debug("model with tenantid not found => " + dispkey + " tid ")
+            val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetModelDefFromCache", null, ErrorCodeConstants.Get_Model_From_Cache_Failed_Not_Active + ":" + dispkey + " model with tenant id  " + tid)
+            apiResult.toString()
+          }
       }
     } catch {
       case e: Exception => {
