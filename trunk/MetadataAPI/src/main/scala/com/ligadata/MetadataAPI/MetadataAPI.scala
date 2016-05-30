@@ -776,7 +776,7 @@ trait MetadataAPI {
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the FunctionDef(s) either as a JSON or XML string depending on the parameter formatType
     */
-  def GetFunctionDef(objectName:String,formatType: String, userid: Option[String] = None) : String
+  def GetFunctionDef(objectName:String,formatType: String, userid: Option[String]) : String
 
   /** Retrieve a specific FunctionDef from Metadata Store
     *
@@ -798,6 +798,20 @@ trait MetadataAPI {
     * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
     * the Concept(s) either as a JSON or XML string depending on the parameter formatType
     */
+
+  /**
+    * GetFunctionDef
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetFunctionDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String
+
   def GetAllConcepts(formatType: String, userid: Option[String] = None) : String
 
   /** Retrieve specific Concept(s) from Metadata Store
@@ -978,5 +992,169 @@ trait MetadataAPI {
     * @return
     */
   def GetAllModelsFromCache(active: Boolean, userid: Option[String] = None, tid: Option[String] = None): Array[String]
+
+  /**
+    * GetAllFunctionsFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetAllFunctionsFromCache(active: Boolean, userid: Option[String] = None): Array[String]
+
+  /**
+    * RemoveConcept
+    *
+    * @param key
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def RemoveConcept(key: String, userid: Option[String] = None): String
+
+  /**
+    * AddTypes
+    *
+    * @param typesText
+    * @param format
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def AddTypes(typesText: String, format: String, userid: Option[String] = None): String
+
+  /**
+    * GetAllKeys
+    *
+    * @param objectType
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetAllKeys(objectType: String, userid: Option[String] = None): Array[String]
+
+  /**
+    * GetAllTypesByObjType - All available types(format JSON or XML) as a String
+    *
+    * @param formatType format of the return value, either JSON or XML
+    * @param objType
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetAllTypesByObjType(formatType: String, objType: String, userid: Option[String] = None): String
+
+  /**
+    * Get a specific messsage/container using schemaId as the key
+    *
+    * @param schemaId
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *        method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
+    *        the Message/Container either as a JSON or XML string depending on the parameter formatType
+    */
+  def GetTypeBySchemaId(schemaId: Int, userid: Option[String]): String
+
+  /**
+    * Get a specific messsage/container/model using elementId as the key
+    *
+    * @param elementId
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *        method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return the result as a JSON String of object ApiResult where ApiResult.resultData contains
+    *      the ContainerDef/MessageDef/ModelDef either as a JSON or XML string depending on the parameter formatType
+    */
+  def GetTypeByElementId(elementId: Long, userid: Option[String]): String
+
+
+  /**
+    * Accept a config specification (a JSON str)
+    *
+    * @param cfgStr the json file to be interpted
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param objectList note on the objects in the configuration to be logged to audit adapter
+    * @return
+    */
+  def UploadConfig(cfgStr: String, userid: Option[String], objectList: String): String
+
+  /**
+    * Upload a model config.  These are for native models written in Scala or Java
+    *
+    * @param cfgStr
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param objectList
+    * @param isFromNotify
+    * @return
+    */
+  def UploadModelsConfig(cfgStr: String, userid: Option[String], objectList: String, isFromNotify: Boolean = false): String
+
+  /**
+    * All available config objects(format JSON) as a String
+    *
+    * @param formatType format of the return value, either JSON or XML
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
+    *               Supply one.
+    * @return
+    */
+  def GetAllCfgObjects(formatType: String, userid: Option[String] = None): String
+
+  /**
+    * Remove a cluster configuration
+    *
+    * @param cfgStr
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param cobjects
+    * @return results string
+    */
+  def RemoveConfig(cfgStr: String, userid: Option[String], cobjects: String): String
+
+  /**
+    * Get the nodes as json.
+    *
+    * @param formatType format of the return value, either JSON or XML
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
+    *               Supply one.
+    * @return
+    */
+  def GetAllNodes(formatType: String, userid: Option[String] = None): String
+
+  /**
+    * All available clusters(format JSON) as a String
+    *
+    * @param formatType format of the return value, either JSON or XML
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
+    *               Supply one.
+    * @return
+    */
+  def GetAllClusters(formatType: String, userid: Option[String] = None): String
+
+  /**
+    *
+    * @param formatType format of the return value, either JSON or XML
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
+    *               Supply one.
+    * @return
+    */
+  def GetAllClusterCfgs(formatType: String, userid: Option[String] = None): String
+
+  /**
+    * All available adapters(format JSON) as a String
+    *
+    * @param formatType format of the return value, either JSON or XML
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
+    *               Supply one.
+    * @return
+    */
+  def GetAllAdapters(formatType: String, userid: Option[String] = None): String
+
 
   }
