@@ -58,9 +58,9 @@ class CompilerProxy {
   lazy val logger = LogManager.getLogger(loggerName)
   private var userId: Option[String] = _
   lazy val compiler_work_dir = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("COMPILER_WORK_DIR")
-  // 646 - 676 Change begins - replase MetadataAPIImpl
+  // 646 - 676 Change begins - replace MetadataAPIImpl
   val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
-  // 646 - 676 Chagne ends
+  // 646 - 676 Change ends
 
   def setSessionUserId(id: Option[String]): Unit = {
     userId = id

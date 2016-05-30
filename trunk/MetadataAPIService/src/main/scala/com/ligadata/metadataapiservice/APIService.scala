@@ -46,24 +46,26 @@ class APIService extends LigadataSSLConfiguration with Runnable{
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   var databaseOpen = false
+  // 646 - 676 Change begins - replace MetadataAPIImpl with MetadataAPI
   val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
+  // 646 - 676 Change ends
 
   /**
-   * 
+   *
    */
   def this(args: Array[String]) = {
     this
-    inArgs = args  
+    inArgs = args
   }
 
   /**
-   * 
+   *
    */
   def run() {
-    StartService(inArgs) 
+    StartService(inArgs)
   }
-  
-  
+
+
   private def PrintUsage(): Unit = {
     logger.warn("    --config <configfilename>")
     logger.warn("    --version")
@@ -130,7 +132,7 @@ class APIService extends LigadataSSLConfiguration with Runnable{
         Shutdown(1)
         return
       }
-      
+
       if (loadConfigs == null) {
         Shutdown(1)
         return
@@ -139,16 +141,16 @@ class APIService extends LigadataSSLConfiguration with Runnable{
       APIInit.SetConfigFile(configFile.toString)
 
       // Read properties file and Open db connection
-      MetadataAPIImpl.InitMdMgrFromBootStrap(configFile, true)
+      getMetadataAPI.InitMdMgrFromBootStrap(configFile, true)
       // APIInit deals with shutdown activity and it needs to know
       // that database connections were successfully made
       APIInit.SetDbOpen
 
-      logger.debug("API Properties => " + MetadataAPIImpl.GetMetadataAPIConfig)
+      logger.debug("API Properties => " + getMetadataAPI.GetMetadataAPIConfig)
 
-      // We will allow access to this web service from all the servers on the PORT # defined in the config file 
+      // We will allow access to this web service from all the servers on the PORT # defined in the config file
       val serviceHost = "0.0.0.0"
-      val servicePort = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("SERVICE_PORT").toInt
+      val servicePort = getMetadataAPI.GetMetadataAPIConfig.getProperty("SERVICE_PORT").toInt
 
       // create and start our service actor
       val callbackActor = actor(new Act {
@@ -190,17 +192,17 @@ object APIService {
 
   def main(args: Array[String]): Unit = {
     val mgr = new APIService
-    mgr.StartService(args) 
+    mgr.StartService(args)
   }
-  
-  
+
+
   /**
    * extractNameFromJson - applies to a simple Kamanja object
    */
   def extractNameFromJson (jsonObj: String, objType: String): String = {
     var inParm: Map[String,Any] = null
     try {
-      inParm = parse(jsonObj).values.asInstanceOf[Map[String,Any]] 
+      inParm = parse(jsonObj).values.asInstanceOf[Map[String,Any]]
     } catch {
       case e: Exception => {
         logger.warn("Unknown:NameParsingError", e)
@@ -214,7 +216,7 @@ object APIService {
     return vals.getOrElse("NameSpace","system")+"."+vals.getOrElse("Name","")+"."+vals.getOrElse("Version","-1")
   }
 
-  
+
   /**
    * extractNameFromPMML - pull the Application name="xxx" version="xxx.xx.xx" from the PMML doc and construct
    *                       a name  string from it

@@ -390,15 +390,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * checkAuth
-      *
-      * @param usrid a
-     * @param password a
-     * @param role a
-     * @param privilige a
-     * @return <description please>
-     */
+  /**
+    * checkAuth
+    *
+    * @param usrid a
+    * @param password a
+    * @param role a
+    * @param privilige a
+    * @return <description please>
+    */
   def checkAuth(usrid: Option[String], password: Option[String], role: Option[String], privilige: String): Boolean = {
 
     var authParms: java.util.Properties = new Properties
@@ -422,13 +422,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     return authObj.performAuth(authParms)
   }
 
-    /**
-     * getPrivilegeName
-      *
-      * @param op <description please>
-     * @param objName <description please>
-     * @return <description please>
-     */
+  /**
+    * getPrivilegeName
+    *
+    * @param op <description please>
+    * @param objName <description please>
+    * @return <description please>
+    */
   def getPrivilegeName(op: String, objName: String): String = {
     // check if the Auth object exists
     logger.debug("op => " + op)
@@ -1612,9 +1612,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.CreateMetadataTables
   }
 
-    /**
-     * CloseDbStore
-     */
+  /**
+    * CloseDbStore
+    */
   def CloseDbStore: Unit = lock.synchronized {
     PersistenceUtils.CloseDbStore
   }
@@ -4328,9 +4328,9 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   /**
-   * Release various resources including heartbeat, dbstore, zk listener, and audit adapter
-   * FIXME: What about Security adapter? Should there be a 'release' call on the SecurityAdapter trait?
-   */
+    * Release various resources including heartbeat, dbstore, zk listener, and audit adapter
+    * FIXME: What about Security adapter? Should there be a 'release' call on the SecurityAdapter trait?
+    */
   def shutdown: Unit = {
     shutdownHeartbeat
     CloseDbStore
@@ -4356,13 +4356,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MetadataAPIImpl.UpdateMdMgr(zkTransaction)
   }
 
-    /**
-     * InitMdMgr
-     *
-     * @param mgr the metadata manager instance
-     * @param jarPathsInfo
-     * @param databaseInfo
-     */
+  /**
+    * InitMdMgr
+    *
+    * @param mgr the metadata manager instance
+    * @param jarPathsInfo
+    * @param databaseInfo
+    */
   def InitMdMgr(mgr: MdMgr, jarPathsInfo: String, databaseInfo: String) {
 
     val mdLoader = new MetadataLoad(mgr, "", "", "", "")

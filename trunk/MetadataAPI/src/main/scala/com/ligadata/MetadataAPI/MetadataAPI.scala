@@ -1432,4 +1432,55 @@ trait MetadataAPI {
 
   def GetAuditObj: AuditAdapter
 
+  /**
+    * Release various resources including heartbeat, dbstore, zk listener, and audit adapter
+    * FIXME: What about Security adapter? Should there be a 'release' call on the SecurityAdapter trait?
+    */
+  def shutdown: Unit
+
+  /**
+    * InitMdMgr
+    *
+    * @param mgr the metadata manager instance
+    * @param jarPathsInfo
+    * @param databaseInfo
+    */
+  def InitMdMgr(mgr: MdMgr, jarPathsInfo: String, databaseInfo: String)
+
+  /**
+    * Initialize the metadata from the bootstrap, establish zookeeper listeners, load the cached information from
+    * persistent storage, set up heartbeat and authorization implementations.
+    * FIXME: Is there a difference between this function and InitMdMgr?
+    *
+    * @see InitMdMgr(String,Boolean)
+    * @param configFile the MetadataAPI configuration file
+    * @param startHB
+    */
+  def InitMdMgrFromBootStrap(configFile: String, startHB: Boolean)
+
+  /**
+    * CloseDbStore
+    */
+  def CloseDbStore: Unit
+
+  /**
+    * checkAuth
+    *
+    * @param usrid a
+    * @param password a
+    * @param role a
+    * @param privilige a
+    * @return <description please>
+    */
+  def checkAuth(usrid: Option[String], password: Option[String], role: Option[String], privilige: String): Boolean
+
+  /**
+    * getPrivilegeName
+    *
+    * @param op <description please>
+    * @param objName <description please>
+    * @return <description please>
+    */
+  def getPrivilegeName(op: String, objName: String): String
+
   }

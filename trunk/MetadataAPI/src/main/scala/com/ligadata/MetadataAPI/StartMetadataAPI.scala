@@ -98,6 +98,9 @@ object StartMetadataAPI {
   var expectMDep: Boolean = false
   var expectSchemaId = false
   var expectElementId = false
+  // 646 - 676 Change begins - replace MetadataAPIImpl
+  val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
+  // 646 - 676 Change ends
 
   val extraCmdArgs = mutable.Map[String, String]()
 
@@ -283,7 +286,7 @@ object StartMetadataAPI {
         config = defaultConfig
       }
 
-      MetadataAPIImpl.InitMdMgrFromBootStrap(config, false)
+      getMetadataAPI.InitMdMgrFromBootStrap(config, false)
       if (action == "")
         TestMetadataAPI.StartTest
       else {
@@ -332,7 +335,7 @@ object StartMetadataAPI {
         println("Result: " + response)
       }
     } finally {
-      MetadataAPIImpl.shutdown
+      getMetadataAPI.shutdown
     }
   }
 
@@ -580,8 +583,8 @@ object StartMetadataAPI {
                 }
             }
           }
-        
-        
+
+
 
         case Action.LISTADAPTERMESSAGEBINDINGS => {
             val adapterfilter: String = extraCmdArgs.getOrElse(ADAPTERFILTER, "")
