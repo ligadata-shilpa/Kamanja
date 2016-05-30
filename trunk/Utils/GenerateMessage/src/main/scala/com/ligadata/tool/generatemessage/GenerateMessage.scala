@@ -116,21 +116,44 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      val parsedConfig = fileBean.ParseFile(configFileContent) //Parse config file
      val extractedInfo = fileBean.extractInfo(parsedConfig) //Extract information from parsed file
      val configBeanObj = fileBean.createConfigBeanObj(extractedInfo)// create a config object that store the result from extracting config file
-     val fileSize = fileBean.Countlines(inputFile) // Find number of lines in file
-     val headerString = fileBean.ReadHeaderFile(inputFile, 0) //read the header line for inputFile
-     val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter) //split the header line based on delimiter
-     // check if partitionkey,primarykey,timepartioninfo value in file header
-     if (configBeanObj.hasPartitionKey == true) configBeanObj.partitionKeyArray = dataTypeObj.CheckKeys(headerFields,configBeanObj.partitionKey)
-     if (configBeanObj.hasPrimaryKey == true) configBeanObj.primaryKeyArray = dataTypeObj.CheckKeys(headerFields, configBeanObj.primaryKey)
      var feildsString = Map[String, String]()
-     for(itemIndex <- 0 to headerFields.length-1) {
-       if (dataTypeObj.isAllDigits(headerFields(itemIndex))) {
-         //Check if all character are digits
-         logger.error("This %s file does not include header".format(inputFile))
-         sys.exit(1)
+     if(configBeanObj.createMessageFrom.equalsIgnoreCase("header")){
+       val fileSize = fileBean.Countlines(inputFile) // Find number of lines in file
+       val headerString = fileBean.ReadHeaderFile(inputFile, 0) //read the header line for inputFile
+       val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter) //split the header line based on delimiter
+       // check if partitionkey,primarykey,timepartioninfo value in file header
+       if (configBeanObj.hasPartitionKey == true) configBeanObj.partitionKeyArray = dataTypeObj.CheckKeys(headerFields,configBeanObj.partitionKey)
+       if (configBeanObj.hasPrimaryKey == true) configBeanObj.primaryKeyArray = dataTypeObj.CheckKeys(headerFields, configBeanObj.primaryKey)
+       for(itemIndex <- 0 to headerFields.length-1) {
+         if (dataTypeObj.isAllDigits(headerFields(itemIndex))) {
+           //Check if all character are digits
+           logger.error("This %s file does not include header".format(inputFile))
+           sys.exit(1)
+         }
+         var previousType = dataTypeObj.FindFinalType(fileSize, itemIndex, inputFile,configBeanObj.delimiter)
+         feildsString = feildsString + (headerFields(itemIndex) -> previousType)
        }
-       var previousType = dataTypeObj.FindFinalType(fileSize, itemIndex, inputFile,configBeanObj.delimiter)
-       feildsString = feildsString + (headerFields(itemIndex) -> previousType)
+     } else if(configBeanObj.createMessageFrom.equalsIgnoreCase("pmml")){
+       val pmmlObj: PMMLUtility = new PMMLUtility
+       val modelEvaluator = pmmlObj.XMLReader(inputFileContent)
+       if(configBeanObj.messageType.equalsIgnoreCase("input")){
+         val activeFields = pmmlObj.ActiveFields(modelEvaluator)
+       } else if(configBeanObj.messageType.equalsIgnoreCase("output")){
+         val outputFields = pmmlObj.OutputFields(modelEvaluator)
+         val targetFields = pmmlObj.TargetFields(modelEvaluator)
+         feildsString = pmmlObj.OutputMessageFields(outputFields, targetFields)
+         if(feildsString.size == 0){
+           logger.info("no output message produced from file")
+           println("[RESULT] - no output message produced from file")
+           sys.exit(1)
+         }
+       }
+       var keyArray = Array[String]()
+       feildsString.keys.map { key =>
+         keyArray = keyArray :+ key
+       }
+       if (configBeanObj.hasPartitionKey == true) configBeanObj.partitionKeyArray = dataTypeObj.CheckKeys(keyArray,configBeanObj.partitionKey)
+       if (configBeanObj.hasPrimaryKey == true) configBeanObj.primaryKeyArray = dataTypeObj.CheckKeys(keyArray, configBeanObj.primaryKey)
      }
      val jsonBean: JsonUtility = new JsonUtility()
      val fileName = fileBean.CreateFileName(configBeanObj.outputPath) // create name for output file

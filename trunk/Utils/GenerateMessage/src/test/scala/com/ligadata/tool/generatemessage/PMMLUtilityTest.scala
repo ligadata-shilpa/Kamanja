@@ -60,6 +60,15 @@ class PMMLUtilityTest extends FeatureSpec with GivenWhenThen {
       for (item <- targetFieldsArray) {
         println("fields: " + item._1 + ", value: " + item._2)
       }
+      When("try to get output message fields")
+      val outputFieldsmap = pmmlBean.OutputMessageFields(outputFieldsArray, targetFieldsArray)
+      Then("outputFieldsmap array should includes data")
+      println("===================================================")
+      println(outputFieldsmap.size)
+      for (item <- outputFieldsmap) {
+        println("fields: " + item._1 + ", value: " + item._2)
+      }
+      println("===================================================")
     }
   }
 }

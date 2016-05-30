@@ -145,14 +145,15 @@ class PMMLUtility extends LogTrait{
     return targetFieldContent
   }
 
-  def OutputMessageFields(outputFields: scala.Array[(String,String)], targetFields: scala.Array[(String,String)]): scala.Array[(String,String)] ={
+  def OutputMessageFields(outputFields: scala.Array[(String,String)], targetFields: scala.Array[(String,String)]): Map[String, String] ={
     if(outputFields.length == 0 && targetFields.length == 0)
-      return scala.Array[(String,String)]()
+      return  Map[String, String]()
     else if(outputFields.length == 0 && targetFields.length != 0)
-      return targetFields
+      return targetFields.toMap
     else if(outputFields.length != 0 && targetFields.length == 0)
-      return outputFields
-    else return outputFields ++ targetFields
+      return outputFields.toMap
+    else return (outputFields ++ targetFields).toMap
+
   }
 }
 
