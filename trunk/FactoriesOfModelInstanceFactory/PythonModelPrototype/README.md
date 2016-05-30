@@ -81,13 +81,26 @@ _Notes_
 
 2) The scala script is the client serving as the proxy for the python stub model, python factory, and python factory of factories.
 
-3) The python server program is located in the python folder.  The python commands that handle command messages sent from the scala client are found in the python commands directory.  They are loaded in pythonserver.py:67
+3) The python server program is located in the python folder.  The python commands that handle command messages sent from the scala client are found in the python commands directory.  They are loaded by this function called from the pythonserver.py program:
 
-4) The server commands are: 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer'.  Notice that the names of these commands **_EXACTLY_** match the main stem of the python source files in the _commands_ subdirectory.  This is important.  As written the file name is used as the command name when building the function dispatch dictionary in the server.
+	def importPackageByName(moduleName, name):
+		"""
+		Import the class 'name' found in package 'moduleName'.  The moduleName
+		may be a sub-package (e.g., the module is found in the 'commands' 
+		sub-package in the use below).
+		"""
+		try:
+			print "load moduleName = " + moduleName 
+			module = __import__(moduleName, globals(), locals(), [name])
+		except ImportError:
+			return None
+		return getattr(module, name)
+
+4) The server commands are: 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer'.  Notice that the names of these commands _**EXACTLY**_ match the main stem of the python source files in the _commands_ subdirectory.  This is important.  As written the file name is used as the command name when building the function dispatch dictionary in the server.
 
 5) The _modelsToLoad_ directory contain the sample models to test the server.  It is these files that you will add to the server.  Currently there is an add, divide, multiply and subtract "model" available.  They all take a list of numbers as their principal argument and return result only from it.  The _models_ directory is where the model source will land for the addModel command.  The first path in PYTHONPATH's value is assumed writable and used to construct the path for the path/_models/$modelName_.py file.
 
-6) There are some (but not enough) semantic checking for arguments.  On the server side and in the model implementations, it will be quite easy to cause the python to throw exceptions.  Any demo (if it is your intention to do that) should have prepared and tested commands with admonishment that this is just a prototype, blah blah.  Of special note is that there are no state transition type checks.  If you failed to add a server before trying to add a model... o well.
+6) There is _some_ (but not enough) semantic checking for arguments.  On the server side and in the model implementations, it will be quite easy to cause the python to throw exceptions.  Any demo (if it is your intention to do that) should have pre-prepared and tested commands with admonishment that this is just a prototype, blah blah.  Of special note is that there are no state transition type checks.  For example, if you failed to add a server before trying to add a model... o well.
 
 7) All server commands share the argument list. For example, here is the executeModel.py command:
 
@@ -114,9 +127,11 @@ The _$cmd_ in the comment is the executeModel key that causes the server command
 
 As you can see, there currently is very little in the way of type checking.  The parameter, _numbers_, is a list of strings.  Again, this is to demonstrate the patterns of communication, not provide a robust example that manages malformed inputs and the rest.
 
-9) This version of the python server simply accepts a list of strings as the input to the model.  A kamanja message might be represented differently.  A mapped representation can be easily "serialized" to a list of tuple2 and back again.  This might be the interim solution until full type support, server access to the metadata, etc is completed and integrated.
+9) The loading of the models is done in the same way as the server commands are loaded...only from a different package directory, namely _models_ instead of _commands_.  This happens in the _addModel_command.
 
-10) If you don't have an __init__.py file in your package directories, the dynamic loader will __fail__.  Here is a good explanation from [http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#the-missing-init-py-trap]
+10) This version of the python server simply accepts a list of strings as the input to the model.  A kamanja message might be represented differently.  A mapped representation can be easily "serialized" to a list of tuple2 and back again.  This might be the interim solution until full type support, server access to the metadata, etc. is completed and integrated.
+
+11) If you don't have an __init__.py file in your package directories, the dynamic loader will __fail__.  Here is a good explanation from [http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html#the-missing-init-py-trap]
 
 The missing __init__.py trap
 
@@ -126,4 +141,4 @@ Prior to Python 3.3, filesystem directories, and directories within zipfiles, ha
 
 This has changed in Python 3.3: now any directory on sys.path with a name that matches the package name being looked for will be recognised as contributing modules and subpackages to that package.
 
-11) 
+12) 

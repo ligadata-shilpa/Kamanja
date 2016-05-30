@@ -33,8 +33,7 @@ object SockClient {
   SocketClient.scala <named args...>
   where <named args> are:
 
-    --cmd startServer  --filePath <filePath>
-                      [--host <hostname or ip> ... default = localhost]
+    --cmd startServer [--host <hostname or ip> ... default = localhost]
                       [--port <user port no.> ... default=9999]
     --cmd stopServer  [--host <hostname or ip> ... default = localhost]
                       [--port <user port no.> ... default=9999]
@@ -127,7 +126,7 @@ object SockClient {
         if (cmd == "startServer") {
             val startServerCmd : StartServerCmd = cmdObj.asInstanceOf[StartServerCmd]
             val result : String = startServerCmd.startServer(filePath, user, host, portNo)
-            println(s"Server $filePath started? $result")
+            println(s"Server started? $result")
         } else {
             /** send the command to the server for execution */
             val inetbyname = InetAddress.getByName(host)
@@ -238,15 +237,18 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
               *assume that the directory given is in the PYTHONPATH
               *on the target machine... then
               *send the following command */
+              /** hack: assume same location of script on all systems */
+            val scriptLocation : String = sys.env("PYTHONSERVERSCRIPT")
+            val cmd : String = s"$scriptLocation/StartPythonServer.sh $host ${portNo.toString}"
             val userMachine : String = s"$user@$host"
-            val remoteCmd : String = s"python $filePath --port ${portNo.toString}"
+            val remoteCmd : String = s"$scriptLocation/StartPythonServer.sh $host ${portNo.toString}"
             Seq[String]("ssh", userMachine, remoteCmd)
         } else {
-            val portString : String = " --port "
             val portStr = s"${portNo.toString} "
-            //Seq[String]("python", filePath, portString, portStr)
-            Seq[String]("python", filePath)
-
+            val scriptLocation : String = sys.env("PYTHONSERVERSCRIPT")
+            val cmd : String = s"${scriptLocation}/StartPythonServer.sh"
+            println(s"Invoking script $cmd  $host $portStr to start the python server")
+            Seq[String](cmd, host, portStr)
         }
 
         val startResult : Int = if (useSSH) {
@@ -260,12 +262,14 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
             val pySrvCmd = Process(cmdSeq)
             pySrvCmd.run
 
-            /** val (rc,stdOut, stdErr) : (Int, String, String) = runCmdCollectOutput(cmdSeq)
+            /** The script run on the machine does the spawn for us.  Therefore we print
+              the useful information it has with regard to where the server is running 
+              from and the info about where the commands and models are located. 
+            val (rc,stdOut, stdErr) : (Int, String, String) = runCmdCollectOutput(cmdSeq)
             println(s"seqCmd = $seqCmd")
             println(s"stdOut = $stdOut")
             println(s"stdErr = $stdErr")
-            rc
-            */
+            rc*/
             0
         }
 
