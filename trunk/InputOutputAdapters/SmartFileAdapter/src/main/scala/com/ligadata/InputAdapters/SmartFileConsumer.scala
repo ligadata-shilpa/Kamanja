@@ -318,6 +318,9 @@ class SmartFileConsumer(val inputConfig: AdapterConfiguration, val execCtxtObj: 
   private def checkParticipantsStatus(previousStatusMap : scala.collection.mutable.Map[String, (Long, Int)]): scala.collection.mutable.Map[String, (Long, Int)] ={
     //if previousStatusMap==null means this is first run of checking, no errors
 
+  if(isShutdown)
+      return previousStatusMap
+
     LOG.debug("Smart File Consumer - checking participants status")
 
     if(previousStatusMap == null)
