@@ -447,18 +447,18 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   /**
-   * getSSLCertificatePasswd
-   */
+    * getSSLCertificatePasswd
+    */
   def getSSLCertificatePasswd: String = {
     if (passwd != null) return passwd
     ""
   }
 
-    /**
-     * setSSLCertificatePasswd
-      *
-      * @param pw <description please>
-     */
+  /**
+    * setSSLCertificatePasswd
+    *
+    * @param pw <description please>
+    */
   def setSSLCertificatePasswd(pw: String) = {
     passwd = pw
   }
@@ -470,19 +470,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     new Date().getTime().toString()
   }
 
-    /**
-     * logAuditRec - Record an Audit event using the audit adapter
-      *
-      * @param userOrRole the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
-     *               Supply one.
-     * @param userPrivilege <description please>
-     * @param action <description please>
-     * @param objectText <description please>
-     * @param success <description please>
-     * @param transactionId <description please>
-     * @param objName <description please>
-     */
+  /**
+    * logAuditRec - Record an Audit event using the audit adapter
+    *
+    * @param userOrRole the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
+    *               Supply one.
+    * @param userPrivilege <description please>
+    * @param action <description please>
+    * @param objectText <description please>
+    * @param success <description please>
+    * @param transactionId <description please>
+    * @param objName <description please>
+    */
   def logAuditRec(userOrRole: Option[String], userPrivilege: Option[String], action: String, objectText: String, success: String, transactionId: String, objName: String) = {
     if (auditObj != null) {
       val aRec = new AuditRecord
@@ -709,36 +709,36 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     metadataAPIConfig
   }
 
-    /**
-     * GetObject
-      *
-      * @param bucketKeyStr
-     * @param typeName
-     */
+  /**
+    * GetObject
+    *
+    * @param bucketKeyStr
+    * @param typeName
+    */
   def GetObject(bucketKeyStr: String, typeName: String): (String, Any) = {
     PersistenceUtils.GetObject(bucketKeyStr,typeName)
   }
 
-    /**
-     * SaveObject
-      *
-      * @param bucketKeyStr
-     * @param value
-     * @param typeName
-     * @param serializerTyp
-     */
+  /**
+    * SaveObject
+    *
+    * @param bucketKeyStr
+    * @param value
+    * @param typeName
+    * @param serializerTyp
+    */
   def SaveObject(bucketKeyStr: String, value: Array[Byte], typeName: String, serializerTyp: String) {
     PersistenceUtils.SaveObject(bucketKeyStr,value,typeName,serializerTyp)
   }
 
-    /**
-     * SaveObjectList
-      *
-      * @param keyList
-     * @param valueList
-     * @param typeName
-     * @param serializerTyp
-     */
+  /**
+    * SaveObjectList
+    *
+    * @param keyList
+    * @param valueList
+    * @param typeName
+    * @param serializerTyp
+    */
   def SaveObjectList(keyList: Array[String], valueList: Array[Array[Byte]], typeName: String, serializerTyp: String) {
     PersistenceUtils.SaveObjectList(keyList,valueList,typeName,serializerTyp)
   }
@@ -763,27 +763,27 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.getMdElemTypeName(obj)
   }
 
-    /**
-     * getObjectType
-      *
-      * @param obj <description please>
-     * @return <description please>
-     */
+  /**
+    * getObjectType
+    *
+    * @param obj <description please>
+    * @return <description please>
+    */
   def getObjectType(obj: BaseElemDef): String = {
     PersistenceUtils.getObjectType(obj)
   }
 
-    /**
-     * SaveObjectList
-     *
-     * The following batch function is useful when we store data in single table
-     * If we use Storage component library, note that table itself is associated with a single
-     * database connection( which itself can be mean different things depending on the type
-     * of datastore, such as cassandra, hbase, etc..)
-     *
-     * @param objList
-     * @param typeName
-     */
+  /**
+    * SaveObjectList
+    *
+    * The following batch function is useful when we store data in single table
+    * If we use Storage component library, note that table itself is associated with a single
+    * database connection( which itself can be mean different things depending on the type
+    * of datastore, such as cassandra, hbase, etc..)
+    *
+    * @param objList
+    * @param typeName
+    */
   def SaveObjectList(objList: Array[BaseElemDef], typeName: String) {
     PersistenceUtils.SaveObjectList(objList,typeName)
   }
@@ -852,16 +852,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-   def UpdateTranId (objList:Array[BaseElemDef] ): Unit ={
+  def UpdateTranId (objList:Array[BaseElemDef] ): Unit ={
      PersistenceUtils.UpdateTranId(objList)
    }
 
-    /**
-     * NotifyEngine
-      *
-      * @param objList <description please>
-     * @param operations <description please>
-     */
+  /**
+    * NotifyEngine
+    *
+    * @param objList <description please>
+    * @param operations <description please>
+    */
   def NotifyEngine(objList: Array[BaseElemDef], operations: Array[String]) {
     try {
       val notifyEngine = GetMetadataAPIConfig.getProperty("NOTIFY_ENGINE")
@@ -914,11 +914,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.PutMetadataId(key, id)
   }
 
-    /**
-     * GetNewTranId
-      *
-      * @return <description please>
-     */
+  /**
+    * GetNewTranId
+    *
+    * @return <description please>
+    */
   def GetNewTranId: Long = {
     PersistenceUtils.GetNewTranId
   }
@@ -932,22 +932,22 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.GetTranId
   }
 
-    /**
-     * PutTranId
-      *
-      * @param tId <description please>
-     */
+  /**
+    * PutTranId
+    *
+    * @param tId <description please>
+    */
   def PutTranId(tId: Long) = {
     PersistenceUtils.PutTranId(tId)
   }
 
-    /**
-     * SaveObject
-      *
-      * @param obj <description please>
-     * @param mdMgr the metadata manager receiver
-     * @return <description please>
-     */
+  /**
+    * SaveObject
+    *
+    * @param obj <description please>
+    * @param mdMgr the metadata manager receiver
+    * @return <description please>
+    */
   def SaveObject(obj: BaseElemDef, mdMgr: MdMgr): Boolean = {
     try {
       val key = (getObjectType(obj) + "." + obj.FullNameWithVer).toLowerCase
@@ -1095,12 +1095,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * GetJarAsArrayOfBytes
-      *
-      * @param jarName <description please>
-     * @return <description please>
-     */
+  /**
+    * GetJarAsArrayOfBytes
+    *
+    * @param jarName <description please>
+    * @return <description please>
+    */
   def GetJarAsArrayOfBytes(jarName: String): Array[Byte] = {
     try {
       val iFile = new File(jarName)
@@ -1130,12 +1130,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * PutArrayOfBytesToJar
-      *
-      * @param ba <description please>
-     * @param jarName <description please>
-     */
+  /**
+    * PutArrayOfBytesToJar
+    *
+    * @param ba <description please>
+    * @param jarName <description please>
+    */
   def PutArrayOfBytesToJar(ba: Array[Byte], jarName: String) = {
     logger.info("Downloading the jar contents into the file " + jarName)
     try {
@@ -1150,12 +1150,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * UploadJarsToDB
-      *
-      * @param obj <description please>
-     * @param forceUploadMainJar <description please>
-     * @param alreadyCheckedJars <description please>
+  /**
+    * UploadJarsToDB
+    *
+    * @param obj <description please>
+    * @param forceUploadMainJar <description please>
+    * @param alreadyCheckedJars <description please>
     */
   def UploadJarsToDB(obj: BaseElemDef, forceUploadMainJar: Boolean = true, alreadyCheckedJars: scala.collection.mutable.Set[String] = null): Unit = {
     PersistenceUtils.UploadJarsToDB(obj,forceUploadMainJar,alreadyCheckedJars)
@@ -1183,12 +1183,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.UploadJarToDB(jarName,byteArray,userid)
   }
 
-    /**
-     * GetDependantJars of some base element (e.g., model, type, message, container, etc)
-      *
-      * @param obj <description please>
-     * @return <description please>
-     */
+  /**
+    * GetDependantJars of some base element (e.g., model, type, message, container, etc)
+    *
+    * @param obj <description please>
+    * @return <description please>
+    */
   def GetDependantJars(obj: BaseElemDef): Array[String] = {
     try {
       var allJars = new Array[String](0)
@@ -1210,13 +1210,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * IsDownloadNeeded
-      *
-      * @param jar <description please>
-     * @param obj <description please>
-     * @return <description please>
-     */
+  /**
+    * IsDownloadNeeded
+    *
+    * @param jar <description please>
+    * @param obj <description please>
+    * @return <description please>
+    */
   def IsDownloadNeeded(jar: String, obj: BaseElemDef): Boolean = {
     try {
       if (jar == null) {
@@ -1256,11 +1256,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       }
     }
   }
-    /**
-     * DownloadJarFromDB
-      *
-      * @param obj <description please>
-     */
+  /**
+    * DownloadJarFromDB
+    *
+    * @param obj <description please>
+    */
   def DownloadJarFromDB(obj: BaseElemDef) {
     var curJar: String = ""
     try {
@@ -1383,14 +1383,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   // For now only handle the Model COnfig... Engine Configs will come later
-    /**
-     * AddConfigObjToCache
-      *
-      * @param tid <description please>
-     * @param key <description please>
-     * @param mdlConfig <description please>
-     *  @param mdMgr the metadata manager receiver
-     */
+  /**
+    * AddConfigObjToCache
+    *
+    * @param tid <description please>
+    * @param key <description please>
+    * @param mdlConfig <description please>
+    *  @param mdMgr the metadata manager receiver
+    */
   def AddConfigObjToCache(tid: Long, key: String, mdlConfig: Map[String, List[String]], mdMgr: MdMgr) {
     // Update the current transaction level with this object  ???? What if an exception occurs ????
     if (currentTranLevel < tid) currentTranLevel = tid
@@ -1406,12 +1406,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * AddObjectToCache
-      *
-      * @param o <description please>
-     *  @param mdMgr the metadata manager receiver
-     */
+  /**
+    * AddObjectToCache
+    *
+    * @param o <description please>
+    *  @param mdMgr the metadata manager receiver
+    */
   def AddObjectToCache(o: Object, mdMgr: MdMgr, ignoreExistingObjectsOnStartup: Boolean = false) {
     // If the object's Delete flag is set, this is a noop.
     val obj = o.asInstanceOf[BaseElemDef]
@@ -1499,21 +1499,21 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * DeleteObject
-     *
-     * @param bucketKeyStr
-     * @param typeName
-     */
+  /**
+    * DeleteObject
+    *
+    * @param bucketKeyStr
+    * @param typeName
+    */
   def DeleteObject(bucketKeyStr: String, typeName: String) {
     PersistenceUtils.DeleteObject(bucketKeyStr,typeName)
   }
 
-    /**
-     * DeleteObject
-      *
-      * @param obj
-     */
+  /**
+    * DeleteObject
+    *
+    * @param obj
+    */
   def DeleteObject(obj: BaseElemDef) {
     try {
       ModifyObject(obj, "Remove")
@@ -1528,11 +1528,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * ActivateObject
-      *
-      * @param obj
-     */
+  /**
+    * ActivateObject
+    *
+    * @param obj
+    */
   def ActivateObject(obj: BaseElemDef) {
     try {
       ModifyObject(obj, "Activate")
@@ -1547,11 +1547,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * DeactivateObject
-      *
-      * @param obj
-     */
+  /**
+    * DeactivateObject
+    *
+    * @param obj
+    */
   def DeactivateObject(obj: BaseElemDef) {
     try {
       ModifyObject(obj, "Deactivate")
@@ -2281,17 +2281,17 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
   }
 
-    /**
-     * Recompile the supplied model. Optionally the message definition is supplied that was just built.
-     *
-     * @param mod the model definition that possibly needs to be reconstructed.
-     * @param userid the user id that has invoked this command
-     * @param optMsgDef the MessageDef constructed, assuming it was a message def. If a container def has been rebuilt,
-     *               this field will have a value of None.  This is only meaningful at this point when the model to
-     *               be rebuilt is a PMML model.
-     * @return the result string reflecting what happened with this operation.
-     */
-    def RecompileModel(mod: ModelDef, userid : Option[String], optMsgDef : Option[MessageDef]): String = {
+  /**
+    * Recompile the supplied model. Optionally the message definition is supplied that was just built.
+    *
+    * @param mod the model definition that possibly needs to be reconstructed.
+    * @param userid the user id that has invoked this command
+    * @param optMsgDef the MessageDef constructed, assuming it was a message def. If a container def has been rebuilt,
+    *               this field will have a value of None.  This is only meaningful at this point when the model to
+    *               be rebuilt is a PMML model.
+    * @return the result string reflecting what happened with this operation.
+    */
+  def RecompileModel(mod: ModelDef, userid : Option[String], optMsgDef : Option[MessageDef]): String = {
       ModelUtils.RecompileModel(mod,userid, optMsgDef)
     }
 
@@ -2617,14 +2617,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     MessageAndContainerUtils.GetLatestContainer(contDef)
   }
 
-    /**
-     * IsValidVersion
-      *
-      * @param oldObj
-     * @param newObj
-     * @return
-     */
-    def IsValidVersion(oldObj: BaseElemDef, newObj: BaseElemDef): Boolean = {
+  /**
+    * IsValidVersion
+    *
+    * @param oldObj
+    * @param newObj
+    * @return
+    */
+  def IsValidVersion(oldObj: BaseElemDef, newObj: BaseElemDef): Boolean = {
       if (newObj.ver > oldObj.ver) {
         return true
       } else {
@@ -3876,15 +3876,15 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ConfigUtils.RemoveConfig(cfgStr,userid,cobjects)
   }
 
-   /**
-     * Answer the model compilation dependencies
-     * FIXME: Which ones? input or output?
-     *
-     * @param modelConfigName
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * Answer the model compilation dependencies
+    * FIXME: Which ones? input or output?
+    *
+    * @param modelConfigName
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def getModelDependencies(modelConfigName: String, userid: Option[String] = None): List[String] = {
       var config = MdMgr.GetMdMgr.GetModelConfig(modelConfigName.toLowerCase)
       val typDeps = config.getOrElse(ModelCompilationConstants.DEPENDENCIES, null)
@@ -3897,14 +3897,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
       List[String]()
   }
 
-    /**
-     * getModelMessagesContainers
-      *
-      * @param modelConfigName
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * getModelMessagesContainers
+    *
+    * @param modelConfigName
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def getModelMessagesContainers(modelConfigName: String, userid: Option[String] = None): List[String] = {
     MessageAndContainerUtils.getModelMessagesContainers(modelConfigName,userid)
   }

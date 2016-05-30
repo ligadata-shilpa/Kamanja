@@ -18,11 +18,13 @@ package com.ligadata.MetadataAPI
 
 import java.util.Properties
 
+import com.ligadata.AuditAdapterInfo.AuditAdapter
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
 import com.ligadata.Serialize._
-import com.ligadata.kamanja.metadata.ModelDef
+import com.ligadata.kamanja.metadata.{BaseElemDef, MdMgr, MessageDef, ModelDef}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
+import com.ligadata.kamanja.metadata.MdMgr._
 
 /** A class that defines the result any of the API function uniformly
  * @constructor creates a new ApiResult with a statusCode,functionName,statusDescription,resultData
@@ -1156,5 +1158,278 @@ trait MetadataAPI {
     */
   def GetAllAdapters(formatType: String, userid: Option[String] = None): String
 
+
+  /**
+    * NotifyEngine
+    *
+    * @param objList <description please>
+    * @param operations <description please>
+    */
+  def NotifyEngine(objList: Array[BaseElemDef], operations: Array[String])
+
+  /**
+    * SaveObject
+    *
+    * @param obj <description please>
+    * @param mdMgr the metadata manager receiver
+    * @return <description please>
+    */
+  def SaveObject(obj: BaseElemDef, mdMgr: MdMgr): Boolean
+
+  /**
+    * SaveObject
+    *
+    * @param bucketKeyStr
+    * @param value
+    * @param typeName
+    * @param serializerTyp
+    */
+  def SaveObject(bucketKeyStr: String, value: Array[Byte], typeName: String, serializerTyp: String)
+
+  def GetUniqueId: Long
+
+  def GetMdElementId: Long
+
+  /**
+    * getModelMessagesContainers
+    *
+    * @param modelConfigName
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def getModelMessagesContainers(modelConfigName: String, userid: Option[String] = None): List[String]
+
+  def getModelInputTypesSets(modelConfigName: String, userid: Option[String] = None): List[List[String]]
+
+  def getModelOutputTypes(modelConfigName: String, userid: Option[String] = None): List[String]
+
+  /**
+    * Answer the model compilation dependencies
+    * FIXME: Which ones? input or output?
+    *
+    * @param modelConfigName
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def getModelDependencies(modelConfigName: String, userid: Option[String] = None): List[String]
+
+
+  def GetSchemaId: Int
+
+  def UpdateTranId (objList:Array[BaseElemDef] ): Unit
+
+  /**
+    * logAuditRec - Record an Audit event using the audit adapter
+    *
+    * @param userOrRole the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. The default is None, but if Security and/or Audit are configured, this value is of little practical use.
+    *               Supply one.
+    * @param userPrivilege <description please>
+    * @param action <description please>
+    * @param objectText <description please>
+    * @param success <description please>
+    * @param transactionId <description please>
+    * @param objName <description please>
+    */
+  def logAuditRec(userOrRole: Option[String], userPrivilege: Option[String], action: String, objectText: String, success: String, transactionId: String, objName: String)
+
+  /**
+    * GetNewTranId
+    *
+    * @return <description please>
+    */
+  def GetNewTranId: Long
+
+  /**
+    * AddObjectToCache
+    *
+    * @param o <description please>
+    *  @param mdMgr the metadata manager receiver
+    */
+  def AddObjectToCache(o: Object, mdMgr: MdMgr, ignoreExistingObjectsOnStartup: Boolean = false)
+
+  /**
+    * DeleteObject
+    *
+    * @param obj
+    */
+  def DeleteObject(obj: BaseElemDef)
+
+  def setCurrentTranLevel(tranLevel: Long)
+
+  /**
+    * SaveObjectList
+    *
+    * The following batch function is useful when we store data in single table
+    * If we use Storage component library, note that table itself is associated with a single
+    * database connection( which itself can be mean different things depending on the type
+    * of datastore, such as cassandra, hbase, etc..)
+    *
+    * @param objList
+    * @param typeName
+    */
+  def SaveObjectList(objList: Array[BaseElemDef], typeName: String)
+
+  /**
+    * SaveObjectList
+    *
+    * @param keyList
+    * @param valueList
+    * @param typeName
+    * @param serializerTyp
+    */
+  def SaveObjectList(keyList: Array[String], valueList: Array[Array[Byte]], typeName: String, serializerTyp: String)
+
+  /**
+    * DeleteObject
+    *
+    * @param bucketKeyStr
+    * @param typeName
+    */
+  def DeleteObject(bucketKeyStr: String, typeName: String)
+
+  /**
+    * AddConfigObjToCache
+    *
+    * @param tid <description please>
+    * @param key <description please>
+    * @param mdlConfig <description please>
+    *  @param mdMgr the metadata manager receiver
+    */
+  def AddConfigObjToCache(tid: Long, key: String, mdlConfig: Map[String, List[String]], mdMgr: MdMgr)
+
+
+  /**
+    * Remove all of the elements with the supplied keys in the list from the supplied DataStore
+    *
+    * @param keyList
+    * @param typeName
+    */
+  def RemoveObjectList(keyList: Array[String], typeName: String)
+
+  /**
+    * getSSLCertificatePasswd
+    */
+  def getSSLCertificatePasswd: String
+
+  /**
+    * setSSLCertificatePasswd
+    *
+    * @param pw <description please>
+    */
+  def setSSLCertificatePasswd(pw: String)
+
+  /**
+    * GetDependantJars of some base element (e.g., model, type, message, container, etc)
+    *
+    * @param obj <description please>
+    * @return <description please>
+    */
+  def GetDependantJars(obj: BaseElemDef): Array[String]
+
+  /**
+    * UploadJarsToDB
+    *
+    * @param obj <description please>
+    * @param forceUploadMainJar <description please>
+    * @param alreadyCheckedJars <description please>
+    */
+  def UploadJarsToDB(obj: BaseElemDef, forceUploadMainJar: Boolean = true, alreadyCheckedJars: scala.collection.mutable.Set[String] = null): Unit
+
+  /**
+    * PutTranId
+    *
+    * @param tId <description please>
+    */
+  def PutTranId(tId: Long)
+
+  /**
+    * GetObject
+    *
+    * @param bucketKeyStr
+    * @param typeName
+    */
+  def GetObject(bucketKeyStr: String, typeName: String): (String, Any)
+
+  /**
+    * getObjectType
+    *
+    * @param obj <description please>
+    * @return <description please>
+    */
+  def getObjectType(obj: BaseElemDef): String
+
+  /**
+    * Recompile the supplied model. Optionally the message definition is supplied that was just built.
+    *
+    * @param mod the model definition that possibly needs to be reconstructed.
+    * @param userid the user id that has invoked this command
+    * @param optMsgDef the MessageDef constructed, assuming it was a message def. If a container def has been rebuilt,
+    *               this field will have a value of None.  This is only meaningful at this point when the model to
+    *               be rebuilt is a PMML model.
+    * @return the result string reflecting what happened with this operation.
+    */
+  def RecompileModel(mod: ModelDef, userid : Option[String], optMsgDef : Option[MessageDef]): String
+
+  /**
+    * DownloadJarFromDB
+    *
+    * @param obj <description please>
+    */
+  def DownloadJarFromDB(obj: BaseElemDef)
+
+  /**
+    * IsValidVersion
+    *
+    * @param oldObj
+    * @param newObj
+    * @return
+    */
+  def IsValidVersion(oldObj: BaseElemDef, newObj: BaseElemDef): Boolean
+
+  /**
+    * DeactivateObject
+    *
+    * @param obj
+    */
+  def DeactivateObject(obj: BaseElemDef)
+
+  /**
+    * ActivateObject
+    *
+    * @param obj
+    */
+  def ActivateObject(obj: BaseElemDef)
+
+  def getCurrentTranLevel() : Long
+
+  /**
+    * GetJarAsArrayOfBytes
+    *
+    * @param jarName <description please>
+    * @return <description please>
+    */
+  def GetJarAsArrayOfBytes(jarName: String): Array[Byte]
+
+  /**
+    * IsDownloadNeeded
+    *
+    * @param jar <description please>
+    * @param obj <description please>
+    * @return <description please>
+    */
+  def IsDownloadNeeded(jar: String, obj: BaseElemDef): Boolean
+
+  /**
+    * PutArrayOfBytesToJar
+    *
+    * @param ba <description please>
+    * @param jarName <description please>
+    */
+  def PutArrayOfBytesToJar(ba: Array[Byte], jarName: String)
+
+  def GetAuditObj: AuditAdapter
 
   }

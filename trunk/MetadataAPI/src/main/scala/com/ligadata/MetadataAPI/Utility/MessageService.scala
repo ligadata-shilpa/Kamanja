@@ -34,7 +34,7 @@ object MessageService {
   val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   // 646 - 676 Change begins - replase MetadataAPIImpl
-  val metadataAPI = MetadataAPIImpl.getMetadataAPI
+  val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
   // 646 - 676 Chagne ends
 
   def addMessage(input: String, tid: Option[String]): String = {
@@ -54,7 +54,7 @@ object MessageService {
 
 
     if (input == "") {
-      msgFileDir = metadataAPI.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
+      msgFileDir = getMetadataAPI.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
       if (msgFileDir == null) {
         response = "MESSAGE_FILES_DIR property missing in the metadata API configuration"
       } else {
@@ -71,7 +71,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += metadataAPI.AddMessage(messageDef.toString, "JSON", userid, finalTid)
+                  response += getMetadataAPI.AddMessage(messageDef.toString, "JSON", userid, finalTid)
                 }
               }
             }
@@ -87,7 +87,7 @@ object MessageService {
       var message = new File(input.toString)
       if(message.exists()){
         val messageDef = Source.fromFile(message).mkString
-        response = metadataAPI.AddMessage(messageDef, "JSON", userid, finalTid)
+        response = getMetadataAPI.AddMessage(messageDef, "JSON", userid, finalTid)
       }else{
         response="Message defintion file does not exist"
       }
@@ -101,7 +101,7 @@ object MessageService {
     var response = ""
     var messageKeysList =""
     try {
-      val messageKeys: Array[String] = metadataAPI.GetAllMessagesFromCache(true, userid, tid)
+      val messageKeys: Array[String] = getMetadataAPI.GetAllMessagesFromCache(true, userid, tid)
       if (messageKeys.length == 0) {
        var emptyAlert="Sorry, No messages are available in the Metadata"
         response =  (new ApiResult(ErrorCodeConstants.Success, "MessageService",null, emptyAlert)).toString
@@ -134,7 +134,7 @@ object MessageService {
 
 
     if (input == "") {
-      val msgFileDir = metadataAPI.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
+      val msgFileDir = getMetadataAPI.GetMetadataAPIConfig.getProperty("MESSAGE_FILES_DIR")
       if (msgFileDir == null) {
         response = "MESSAGE_FILES_DIR property missing in the metadata API configuration"
       } else {
@@ -151,7 +151,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += metadataAPI.UpdateMessage(messageDef.toString, "JSON", userid, finalTid)
+                  response += getMetadataAPI.UpdateMessage(messageDef.toString, "JSON", userid, finalTid)
                 }
               }
             }
@@ -166,7 +166,7 @@ object MessageService {
       //input provided
       var message = new File(input.toString)
       val messageDef = Source.fromFile(message).mkString
-      response = metadataAPI.UpdateMessage(messageDef, "JSON", userid, finalTid)
+      response = getMetadataAPI.UpdateMessage(messageDef, "JSON", userid, finalTid)
     }
     //Got the message. Now add them
     response
@@ -178,13 +178,13 @@ object MessageService {
       if (parm.length > 0) {
          val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(parm)
          try {
-           return metadataAPI.RemoveMessage(ns, name, ver.toInt, userid)
+           return getMetadataAPI.RemoveMessage(ns, name, ver.toInt, userid)
          } catch {
            case e: Exception => logger.error("", e)
          }
       }
 
-      val messageKeys = metadataAPI.GetAllMessagesFromCache(true, None)
+      val messageKeys = getMetadataAPI.GetAllMessagesFromCache(true, None)
 
       if (messageKeys.length == 0) {
         val errorMsg = "Sorry, No messages available, in the Metadata, to delete!"
@@ -207,7 +207,7 @@ object MessageService {
 
         val msgKey = messageKeys(choice - 1)
         val(msgNameSpace, msgName, msgVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(msgKey)
-        val apiResult = metadataAPI.RemoveMessage(msgNameSpace, msgName, msgVersion.toLong, userid).toString
+        val apiResult = getMetadataAPI.RemoveMessage(msgNameSpace, msgName, msgVersion.toLong, userid).toString
 
         response = apiResult
       }
@@ -226,7 +226,7 @@ object MessageService {
       if (param.length > 0) {
         val(ns, name, ver) = com.ligadata.kamanja.metadata.Utils.parseNameToken(param)
         try {
-          return metadataAPI.GetMessageDef(ns, name, "JSON", ver,  userid, tid)
+          return getMetadataAPI.GetMessageDef(ns, name, "JSON", ver,  userid, tid)
         } catch {
           case e: Exception => logger.error("", e)
         }
@@ -234,8 +234,8 @@ object MessageService {
 
       //    logger.setLevel(Level.TRACE); //check again
 
-      //val msgKeys = metadataAPI.GetAllKeys("MessageDef", None)
-      val msgKeys = metadataAPI.GetAllMessagesFromCache(true, None)
+      //val msgKeys = getMetadataAPI.GetAllKeys("MessageDef", None)
+      val msgKeys = getMetadataAPI.GetAllMessagesFromCache(true, None)
       if (msgKeys.length == 0) {
         response="Sorry, No messages available in the Metadata"
       }else{
@@ -253,14 +253,14 @@ object MessageService {
         else{
           val msgKey = msgKeys(choice - 1)
           val(msgNameSpace, msgName, msgVersion) = com.ligadata.kamanja.metadata.Utils.parseNameToken(msgKey)
-          val depModels = metadataAPI.GetDependentModels(msgNameSpace, msgName, msgVersion.toLong)
+          val depModels = getMetadataAPI.GetDependentModels(msgNameSpace, msgName, msgVersion.toLong)
           logger.debug("DependentModels => " + depModels)
 
           logger.debug("DependentModels => " + depModels)
 
-          val apiResult = metadataAPI.GetMessageDef(msgNameSpace, msgName, "JSON", msgVersion, userid, tid)
+          val apiResult = getMetadataAPI.GetMessageDef(msgNameSpace, msgName, "JSON", msgVersion, userid, tid)
 
-          //     val apiResultStr = metadataAPI.getApiResult(apiResult)
+          //     val apiResultStr = getMetadataAPI.getApiResult(apiResult)
           response=apiResult
         }
       }
@@ -287,7 +287,7 @@ object MessageService {
   }
 
   private def getTenantId: String = {
-    var tenatns = metadataAPI.GetAllTenants(userid)
+    var tenatns = getMetadataAPI.GetAllTenants(userid)
     return getUserInputFromMainMenu(tenatns)
   }
 
