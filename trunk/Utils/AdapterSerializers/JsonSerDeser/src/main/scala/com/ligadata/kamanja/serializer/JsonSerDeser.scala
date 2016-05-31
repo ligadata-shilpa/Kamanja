@@ -589,7 +589,10 @@ class JSONSerDes extends SerializeDeserialize {
           if (value != null && value.isInstanceOf[String] && value.asInstanceOf[String].size > 0) value.asInstanceOf[String].charAt(0) else ' '
         }
         case MAP => value.asInstanceOf[Map[String, Any]]
-        case (CONTAINER | MESSAGE) => deserializeContainerFromJsonMap(value.asInstanceOf[Map[String, Any]])
+        case (CONTAINER | MESSAGE) => {
+          val containerTypeName: String = null //BUGBUG:: Fix this to make the container object properly
+          deserializeContainerFromJsonMap(value.asInstanceOf[Map[String, Any]], containerTypeName)
+        }
         case ARRAY => value.asInstanceOf[List[Any]].toArray
         case _ => throw new ObjectNotFoundException(s"jsonAsMap: invalid value type: ${valType.getValue}, fldName: ${valType.name} could not be resolved", null)
       }
