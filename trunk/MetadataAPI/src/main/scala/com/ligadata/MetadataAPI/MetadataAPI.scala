@@ -16,7 +16,7 @@
 
 package com.ligadata.MetadataAPI
 
-import java.util.Properties
+import java.util.{Date, Properties}
 
 import com.ligadata.AuditAdapterInfo.AuditAdapter
 import com.ligadata.MetadataAPI.MetadataAPI.ModelType
@@ -1016,6 +1016,18 @@ trait MetadataAPI {
   def RemoveConcept(key: String, userid: Option[String] = None): String
 
   /**
+    * RemoveConcept
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def RemoveConcept(nameSpace: String, name: String, version: Long, userid: Option[String]): String
+
+  /**
     * AddTypes
     *
     * @param typesText
@@ -1330,6 +1342,24 @@ trait MetadataAPI {
   def GetDependantJars(obj: BaseElemDef): Array[String]
 
   /**
+    * UploadJarToDB
+    *
+    * @param jarName <description please>
+    */
+  def UploadJarToDB(jarName: String)
+
+  /**
+    * UploadJarToDB
+    *
+    * @param jarName <description please>
+    * @param byteArray <description please>
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return <description please>
+    */
+  def UploadJarToDB(jarName: String, byteArray: Array[Byte], userid: Option[String] = None): String
+
+    /**
     * UploadJarsToDB
     *
     * @param obj <description please>
@@ -1482,5 +1512,98 @@ trait MetadataAPI {
     * @return <description please>
     */
   def getPrivilegeName(op: String, objName: String): String
+
+  /**
+    * GetAllTypesFromCache
+    *
+    * @param active <description please>
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return <description please>
+    */
+  def GetAllTypesFromCache(active: Boolean, userid: Option[String] = None): Array[String]
+
+  /**
+    * GetAllConceptsFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetAllConceptsFromCache(active: Boolean, userid: Option[String] = None): Array[String]
+
+  /**
+    * Get an audit record from the audit adapter.
+    *
+    * @param startTime <description please>
+    * @param endTime <description please>
+    * @param userOrRole the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value should be supplied.
+    * @param action <description please>
+    * @param objectAccessed <description please>
+    * @return <description please>
+    */
+  def getAuditRec(startTime: Date, endTime: Date, userOrRole: String, action: String, objectAccessed: String): String
+
+  /**
+    * getLeaderHost
+    *
+    * @param leaderNode <description please>
+    * @return <description please>
+    */
+  def getLeaderHost(leaderNode: String): String
+
+  /**
+    * getAuditRec
+    *
+    * @param filterParameters <description please>
+    * @return <description please>
+    */
+  def getAuditRec(filterParameters: Array[String]): String
+
+  /**
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetModelDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String
+
+  /**
+    * Get a single concept as a string using name and version as the key
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetConceptDef(nameSpace: String, objectName: String, formatType: String,
+    version: String, userid: Option[String]): String
+
+  /**
+    * GetTypeDef
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
+  def GetTypeDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String] = None): String
+
+  /**
+    * getSSLCertificatePath
+    */
+  def getSSLCertificatePath: String
 
   }

@@ -438,9 +438,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   /**
-   * getSSLCertificatePath
-   */
+    * getSSLCertificatePath
+    */
   def getSSLCertificatePath: String = {
+
     val certPath = metadataAPIConfig.getProperty("SSL_CERTIFICATE")
     if (certPath != null) return certPath
     ""
@@ -518,17 +519,17 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * Get an audit record from the audit adapter.
-      *
-      * @param startTime <description please>
-     * @param endTime <description please>
-      * @param userOrRole the identity to be used by the security adapter to ascertain if this user has access permissions for this
-      *               method. If Security and/or Audit are configured, this value should be supplied.
-     * @param action <description please>
-     * @param objectAccessed <description please>
-     * @return <description please>
-     */
+  /**
+    * Get an audit record from the audit adapter.
+    *
+    * @param startTime <description please>
+    * @param endTime <description please>
+    * @param userOrRole the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value should be supplied.
+    * @param action <description please>
+    * @param objectAccessed <description please>
+    * @return <description please>
+    */
   def getAuditRec(startTime: Date, endTime: Date, userOrRole: String, action: String, objectAccessed: String): String = {
     var apiResultStr = ""
     if (auditObj == null) {
@@ -574,12 +575,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * getLeaderHost
-      *
-      * @param leaderNode <description please>
-     * @return <description please>
-     */
+  /**
+    * getLeaderHost
+    *
+    * @param leaderNode <description please>
+    * @return <description please>
+    */
   def getLeaderHost(leaderNode: String): String = {
     val nodes = MdMgr.GetMdMgr.Nodes.values.toArray
     if (nodes.length == 0) {
@@ -599,12 +600,12 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     }
   }
 
-    /**
-     * getAuditRec
-      *
-      * @param filterParameters <description please>
-     * @return <description please>
-     */
+  /**
+    * getAuditRec
+    *
+    * @param filterParameters <description please>
+    * @return <description please>
+    */
   def getAuditRec(filterParameters: Array[String]): String = {
     var apiResultStr = ""
     if (auditObj == null) {
@@ -1161,24 +1162,24 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.UploadJarsToDB(obj,forceUploadMainJar,alreadyCheckedJars)
   }
 
-    /**
-     * UploadJarToDB
-      *
-      * @param jarName <description please>
-     */
+  /**
+    * UploadJarToDB
+    *
+    * @param jarName <description please>
+    */
   def UploadJarToDB(jarName: String) {
     PersistenceUtils.UploadJarToDB(jarName)
   }
 
-    /**
-     * UploadJarToDB
-      *
-      * @param jarName <description please>
-     * @param byteArray <description please>
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return <description please>
-     */
+  /**
+    * UploadJarToDB
+    *
+    * @param jarName <description please>
+    * @param byteArray <description please>
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return <description please>
+    */
   def UploadJarToDB(jarName: String, byteArray: Array[Byte], userid: Option[String] = None): String = {
     PersistenceUtils.UploadJarToDB(jarName,byteArray,userid)
   }
@@ -1864,16 +1865,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     ConceptUtils.RemoveConcept(key,userid)
   }
 
-    /**
-     * RemoveConcept
-      *
-      * @param nameSpace namespace of the object
-     * @param name
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * RemoveConcept
+    *
+    * @param nameSpace namespace of the object
+    * @param name
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def RemoveConcept(nameSpace: String, name: String, version: Long, userid: Option[String]): String = {
     ConceptUtils.RemoveConcept(nameSpace, name, version, userid)
   }
@@ -2438,42 +2439,42 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     FunctionUtils.GetAllFunctionsFromCache(active,userid)
   }
 
-    /**
-     * GetAllConceptsFromCache
-      *
-      * @param active
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * GetAllConceptsFromCache
+    *
+    * @param active
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def GetAllConceptsFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
     ConceptUtils.GetAllConceptsFromCache(active,userid)
   }
 
-    /**
-     * GetAllTypesFromCache
-      *
-      * @param active <description please>
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return <description please>
-     */
+  /**
+    * GetAllTypesFromCache
+    *
+    * @param active <description please>
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return <description please>
+    */
   def GetAllTypesFromCache(active: Boolean, userid: Option[String] = None): Array[String] = {
     TypeUtils.GetAllTypesFromCache(active,userid)
   }
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
-    /**
-     *
-     * @param nameSpace namespace of the object
-     * @param objectName name of the desired object, possibly namespace qualified
-     * @param formatType format of the return value, either JSON or XML
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def GetModelDef(nameSpace: String, objectName: String, formatType: String, userid : Option[String]): String = {
-    ModelUtils.GetModelDef(nameSpace,objectName,formatType,userid)
+   ModelUtils.GetModelDef(nameSpace,objectName,formatType,userid)
   }
 
     /**
@@ -2503,16 +2504,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   // Specific models (format JSON or XML) as an array of strings using modelName(without version) as the key
-    /**
-     *
-     * @param nameSpace namespace of the object
-     * @param objectName name of the desired object, possibly namespace qualified
-     * @param formatType format of the return value, either JSON or XML
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def GetModelDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String]): String = {
     logAuditRec(userid
         , Some(AuditConstants.READ)
@@ -3529,19 +3530,19 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
 
-    /**
-     * Get a single concept as a string using name and version as the key
-      *
-      * @param nameSpace namespace of the object
-     * @param objectName name of the desired object, possibly namespace qualified
-     * @param formatType format of the return value, either JSON or XML
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * Get a single concept as a string using name and version as the key
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def GetConceptDef(nameSpace: String, objectName: String, formatType: String,
-                    version: String, userid: Option[String]): String = {
+    version: String, userid: Option[String]): String = {
     ConceptUtils.GetConceptDef(nameSpace, objectName, formatType, version, userid)
   }
 
@@ -3636,17 +3637,17 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     TypeUtils.GetType(objectName,formatType)
   }
 
-    /**
-     * GetTypeDef
-      *
-      * @param nameSpace namespace of the object
-     * @param objectName name of the desired object, possibly namespace qualified
-     * @param formatType format of the return value, either JSON or XML
-     * @param version  Version of the object
-     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
-     *               method. If Security and/or Audit are configured, this value must be a value other than None.
-     * @return
-     */
+  /**
+    * GetTypeDef
+    *
+    * @param nameSpace namespace of the object
+    * @param objectName name of the desired object, possibly namespace qualified
+    * @param formatType format of the return value, either JSON or XML
+    * @param version  Version of the object
+    * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
+    *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @return
+    */
   def GetTypeDef(nameSpace: String, objectName: String, formatType: String, version: String, userid: Option[String] = None): String = {
     TypeUtils.GetTypeDef(nameSpace,objectName,formatType,version,userid)
   }
