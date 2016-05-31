@@ -137,12 +137,23 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
     }
 
     WriteLock(_cacheListener_reent_lock)
+    var prevListener: ReturnCacheListenerCallback = null
     try {
       if (_listenerCache != null) {
+        var i = 0
+        while (i < _cacheListeners.size && prevListener == null) {
+          if (_cacheListeners(i).listenPath.compareTo(listenPath) == 0) {
+            prevListener = _cacheListeners.remove(i)
+          }
+          i += 1
+        }
         _cacheListeners += ReturnCacheListenerCallback(listenPath, ListenCallback, childCache)
+        prevListener = null
       }
     } catch {
       case e: Throwable => {
+        if (prevListener != null)
+          _cacheListeners += prevListener
         throw e
       }
     } finally {
