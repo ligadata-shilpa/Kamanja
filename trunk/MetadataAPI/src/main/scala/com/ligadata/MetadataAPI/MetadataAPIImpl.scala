@@ -1596,11 +1596,11 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
   }
 
   /**
-     * OpenDbStore
-      *
-      * @param jarPaths Set of paths where jars are located
-     * @param dataStoreInfo information needed to access the data store (kv store dependent)
-     */
+    * OpenDbStore
+    *
+    * @param jarPaths Set of paths where jars are located
+    * @param dataStoreInfo information needed to access the data store (kv store dependent)
+    */
   def OpenDbStore(jarPaths: collection.immutable.Set[String], dataStoreInfo: String) {
     PersistenceUtils.OpenDbStore(jarPaths,dataStoreInfo)
   }

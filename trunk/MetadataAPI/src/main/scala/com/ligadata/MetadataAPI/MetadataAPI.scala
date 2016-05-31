@@ -1606,4 +1606,19 @@ trait MetadataAPI {
     */
   def getSSLCertificatePath: String
 
-  }
+  /**
+    * Read metadata api configuration properties
+    *
+    * @param configFile the MetadataAPI configuration file
+    */
+  def readMetadataAPIConfigFromPropertiesFile(configFile: String): Unit
+
+  /**
+    * OpenDbStore
+    *
+    * @param jarPaths Set of paths where jars are located
+    * @param dataStoreInfo information needed to access the data store (kv store dependent)
+    */
+  def OpenDbStore(jarPaths: collection.immutable.Set[String], dataStoreInfo: String)
+
+}
