@@ -162,16 +162,16 @@ class APIService extends LigadataSSLConfiguration with Runnable{
           val kspass = MetadataAPIImpl.getSSLCertificatePasswd
 
           if(keyStoreResource == null || keyStoreResource.trim.length==0){
-            logger.warn("SSL is enabled. please provide a value for SSL_CERTIFICATE file path in Metadata Api config ")
+            logger.error("SSL is enabled. please provide a value for SSL_CERTIFICATE file path in Metadata Api config ")
             false
           }
           else if(!new File(keyStoreResource.trim).exists){
-            logger.warn("SSL_CERTIFICATE file ({}) does not exist ", keyStoreResource.trim)
+            logger.error("SSL_CERTIFICATE file ({}) does not exist ", keyStoreResource.trim)
             false
           }
           else if(kspass == null) {
             //TODO : is it allowed to be empty???
-            logger.warn("SSL is enabled. please provide a value for SSL_PASSWD in Metadata Api config ")
+            logger.error("SSL is enabled. please provide a value for SSL_PASSWD in Metadata Api config ")
             false
           }
           else true
