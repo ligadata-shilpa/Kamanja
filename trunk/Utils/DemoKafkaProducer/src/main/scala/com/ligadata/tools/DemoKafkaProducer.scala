@@ -79,7 +79,7 @@ class DemoCustPartitioner(props: VerifiableProperties) extends Partitioner {
     if (key == null) return 0
     try {
       if (key.isInstanceOf[Array[Byte]]) {
-        val hashCode = SimpleKafkaProducer.keyHasher.hashKey(key.asInstanceOf[Array[Byte]]).abs
+        val hashCode = DemoCustPartitioner.keyHasher.hashKey(key.asInstanceOf[Array[Byte]]).abs
         val bucket = (hashCode % a_numPartitions).toInt
         // println("Key : %s, hashCode: %d, Partitions: %d, Bucket : %d".format(new String(key.asInstanceOf[Array[Byte]]), hashCode, a_numPartitions, bucket))
         return bucket
