@@ -130,7 +130,7 @@ class FileUtility  extends LogTrait{
         } else if (configInfo.messageType.getOrElse("input").equalsIgnoreCase("output")) {
           configBeanObj.messageType_=("output")
           if(configInfo.createMessageFrom.get.equalsIgnoreCase("header")){
-            logger.error("creta eoutput message from header file not supported yet")
+            logger.error("create output message from header file not supported yet")
             sys.exit(1)
           }
         } else {
