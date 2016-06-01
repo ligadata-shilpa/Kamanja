@@ -162,7 +162,11 @@ trait BaseElem {
     def CreationTime: Long // Time in milliseconds from 1970-01-01T00:00:00
     def ModTime: Long // Time in milliseconds from 1970-01-01T00:00:00
     def OrigDef: String
-    def Description: String
+  def Description: String
+  // 646 - 675 Change begins - Metadata element addition/changes
+  def Comment: String
+  def Tag : String
+  // 646 - 675 Change ends
     def Author: String
     def NameSpace: String
     def Name: String
