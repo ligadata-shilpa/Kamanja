@@ -71,6 +71,7 @@ object StartMetadataAPI {
   val FROMFILE="FROMFILE"
   val FROMSTRING="FROMSTRING"
   val KEY="KEY"
+
   val ADAPTERMESSAGEBINDING = "ADAPTERMESSAGEBINDING"
 
   /** List AdapterMessageBinding filters */
@@ -98,9 +99,12 @@ object StartMetadataAPI {
   var expectMDep: Boolean = false
   var expectSchemaId = false
   var expectElementId = false
-  // 646 - 676 Change begins - replace MetadataAPIImpl
+
+  // 646 - 675, 676 Change begins - replace MetadataAPIImpl, addition of new meta data
   val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
-  // 646 - 676 Change ends
+  val PROPERTYFILE="pfile"
+  var expectPropFile = false
+  // 646 - 675,676 Change ends
 
   val extraCmdArgs = mutable.Map[String, String]()
 
@@ -168,7 +172,10 @@ object StartMetadataAPI {
             } else if (arg.equalsIgnoreCase(ELEMENTID)) {
               expectElementId = true
               extraCmdArgs(ELEMENTID) = ""
-            } else {
+            } else if (arg.equalsIgnoreCase(PROPERTYFILE)) {
+              expectPropFile = true
+              extraCmdArgs(PROPERTYFILE) = ""
+            }else {
               var argVar = arg
               if (expectTid) {
                 extraCmdArgs(TENANTID) = arg
@@ -239,6 +246,11 @@ object StartMetadataAPI {
                 extraCmdArgs(ELEMENTID) = arg
                 expectElementId = false
                 argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectPropFile) {
+                extraCmdArgs(PROPERTYFILE) = arg
+                expectPropFile = false
+                argVar = ""
               }
 
                       /**
