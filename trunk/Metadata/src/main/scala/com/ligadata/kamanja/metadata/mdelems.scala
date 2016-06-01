@@ -200,7 +200,11 @@ class BaseElemDef extends BaseElem {
     override def CreationTime: Long = creationTime // Time in milliseconds from 1970-01-01T00:00:00
     override def ModTime: Long = modTime // Time in milliseconds from 1970-01-01T00:00:00
     override def OrigDef: String = origDef
-    override def Description: String = description
+  override def Description: String = description
+  // 646 - 675 Changes begin - Metadata additional element support
+  override def Comment : String = comment
+  override def Tag : String = tag
+  // 646 - 675 Changes end
     override def Author: String = author
     override def NameSpace: String = nameSpace // Part of Logical Name
     override def Name: String = name // Part of Logical Name
@@ -241,7 +245,11 @@ class BaseElemDef extends BaseElem {
     var modTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
 
     var origDef: String = _ // string associated with this definition
-    var description: String = _
+  var description: String = _
+  // 646 - 675 Changes begin - Metadata additional element support
+  var comment : String = _
+  var tag: String = _
+  // 646 - 675 Changes end
     var author: String = _
     var nameSpace: String = _ //
     var name: String = _ // simple name - may not be unique across all name spaces (coupled with mNameSpace, it will be unique)
