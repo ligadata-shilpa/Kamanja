@@ -71,6 +71,7 @@ object StartMetadataAPI {
   val FROMFILE="FROMFILE"
   val FROMSTRING="FROMSTRING"
   val KEY="KEY"
+
   val ADAPTERMESSAGEBINDING = "ADAPTERMESSAGEBINDING"
 
   /** List AdapterMessageBinding filters */
@@ -98,6 +99,12 @@ object StartMetadataAPI {
   var expectMDep: Boolean = false
   var expectSchemaId = false
   var expectElementId = false
+
+  // 646 - 675, 676 Change begins - replace MetadataAPIImpl, addition of new meta data
+  val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
+  val PROPERTYFILE="pfile"
+  var expectPropFile = false
+  // 646 - 675,676 Change ends
 
   val extraCmdArgs = mutable.Map[String, String]()
 
@@ -165,7 +172,10 @@ object StartMetadataAPI {
             } else if (arg.equalsIgnoreCase(ELEMENTID)) {
               expectElementId = true
               extraCmdArgs(ELEMENTID) = ""
-            } else {
+            } else if (arg.equalsIgnoreCase(PROPERTYFILE)) {
+              expectPropFile = true
+              extraCmdArgs(PROPERTYFILE) = ""
+            }else {
               var argVar = arg
               if (expectTid) {
                 extraCmdArgs(TENANTID) = arg
@@ -237,6 +247,11 @@ object StartMetadataAPI {
                 expectElementId = false
                 argVar = "" // Make sure we don't add to the routing command
               }
+              if (expectPropFile) {
+                extraCmdArgs(PROPERTYFILE) = arg
+                expectPropFile = false
+                argVar = ""
+              }
 
                       /**
                         * FIXME:
@@ -283,7 +298,7 @@ object StartMetadataAPI {
         config = defaultConfig
       }
 
-      MetadataAPIImpl.InitMdMgrFromBootStrap(config, false)
+      getMetadataAPI.InitMdMgrFromBootStrap(config, false)
       if (action == "")
         TestMetadataAPI.StartTest
       else {
@@ -332,7 +347,7 @@ object StartMetadataAPI {
         println("Result: " + response)
       }
     } finally {
-      MetadataAPIImpl.shutdown
+      getMetadataAPI.shutdown
     }
   }
 
@@ -365,14 +380,16 @@ object StartMetadataAPI {
             response = MessageService.removeMessage(msgName)
         }
 
-        case Action.GETALLMESSAGES => response = MessageService.getAllMessages
+          // 672 Change beigns, adds an extra argument for tenantID tid to enable filtering by tenantid
+        case Action.GETALLMESSAGES => response = MessageService.getAllMessages (tid)
         case Action.GETMESSAGE => {
           val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
           if (msgName.isEmpty)
-            response = MessageService.getMessage()
+            response = MessageService.getMessage("", tid)
           else
-            response = MessageService.getMessage(msgName)
+            response = MessageService.getMessage(msgName, tid)
         }
+          // 672 Change ends
 
         //model management
         case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
@@ -454,13 +471,13 @@ object StartMetadataAPI {
             response = ModelService.updateModeljava(input, param, userId,tid)
         }
 
-        case Action.GETALLMODELS => response = ModelService.getAllModels(userId)
+        case Action.GETALLMODELS => response = ModelService.getAllModels(userId, tid)
         case Action.GETMODEL => response = {
             val modelName : String = extraCmdArgs.getOrElse(MODELNAME,"")
             if (modelName.isEmpty)
-            ModelService.getModel("", userId)
+            ModelService.getModel("", userId, tid)
           else
-            ModelService.getModel(modelName, userId)
+            ModelService.getModel(modelName, userId, tid)
         }
 
 
@@ -470,12 +487,12 @@ object StartMetadataAPI {
         case Action.GETCONTAINER => response = {
           val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
           if (containerName.isEmpty)
-            ContainerService.getContainer()
+            ContainerService.getContainer("", tid)
           else
-            ContainerService.getContainer(containerName)
+            ContainerService.getContainer(containerName, tid)
         }
 
-        case Action.GETALLCONTAINERS => response = ContainerService.getAllContainers
+        case Action.GETALLCONTAINERS => response = ContainerService.getAllContainers (tid)
         case Action.REMOVECONTAINER => {
           val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
           if (containerName.isEmpty)
@@ -578,8 +595,8 @@ object StartMetadataAPI {
                 }
             }
           }
-        
-        
+
+
 
         case Action.LISTADAPTERMESSAGEBINDINGS => {
             val adapterfilter: String = extraCmdArgs.getOrElse(ADAPTERFILTER, "")
