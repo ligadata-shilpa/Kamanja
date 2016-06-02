@@ -351,6 +351,10 @@ object StartMetadataAPI {
     }
   }
 
+  def extraParam (fileName : String) : Map[String, String] = {
+    
+  }
+
   def usage : Unit = {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }

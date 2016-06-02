@@ -284,7 +284,7 @@ Sample uses:
           dstore = null
         }
       }
-      getMetadataAPI.CloseDbStore
+      MetadataAPIImpl.CloseDbStore
 
     } else {
       logger.error("Illegal and/or missing arguments")
