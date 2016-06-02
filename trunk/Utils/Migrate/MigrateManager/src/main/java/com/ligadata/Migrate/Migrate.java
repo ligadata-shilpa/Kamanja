@@ -357,6 +357,7 @@ public class Migrate {
         boolean foundError = false;
         java.util.List<String> msgsAndContainers = null;
         java.util.List<String> catalogTables = new java.util.ArrayList<String>();
+	StringBuilder sb = new StringBuilder();
 
         try {
             catalogTables.add("adapteruniqkvdata");
@@ -600,6 +601,7 @@ public class Migrate {
                     // Just use the original table (backupTblSuffix => "")
                     if (!srcVer.equalsIgnoreCase("1.1")) {
                         // MdCallback fills a structure called allMetadata
+			logger.info("Fetch all metadata from original tables ...");
                         migrateFrom.getAllMetadataObjs("", new MdCallback(), excludeMetadata);
                         logger.debug("Got all metadata");
                         sendStatus("Got all metadata", "DEBUG");
@@ -764,7 +766,7 @@ public class Migrate {
                     }
 
                     // Backup all the tables, if we did not done or finish before
-                    StringBuilder sb = new StringBuilder();
+                    sb = new StringBuilder();
                     sb.append(backupTblsString + "\n");
                     sb.append("\tMetadata Tables:{");
                     for (BackupTableInfo bTbl : metadataBackupTbls) {
@@ -798,31 +800,49 @@ public class Migrate {
                     logger.info("Completed backing up. " + doneTm);
                 }
 
-                {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("Dropping tables:\n");
-                    sb.append("\tMetadata Tables:{");
-                    for (TableName dTbl : metadataDelTbls) {
-                        sb.append("(" + dTbl.namespace + "," + dTbl.name + ")");
-                    }
-                    sb.append("}\n");
+                if (srcVer.equalsIgnoreCase("1.4")) {
+		    if (canUpgradeMetadata) {
+			logger.debug("Ugrade models to new version");
+			sendStatus("Upgrade models to new version", "DEBUG");
+                        MetadataFormat[] metadataArr = allMetadata
+                                .toArray(new MetadataFormat[allMetadata.size()]);
 
-                    sb.append("\tData Tables:{");
-                    for (TableName dTbl : dataDelTbls) {
-                        sb.append("(" + dTbl.namespace + "," + dTbl.name + ")");
-                    }
-                    sb.append("}\n");
+                        for (MetadataFormat mdf : metadataArr) {
+                            logger.info("1.4 to 1.4.1: objType => " + mdf.objType);
+                            logger.info("1.4 to 1.4.1: objDataInJson => " + mdf.objDataInJson);
+                        }
 
-                    sb.append("\tStatus Tables:{");
-                    for (TableName dTbl : statusDelTbls) {
-                        sb.append("(" + dTbl.namespace + "," + dTbl.name + ")");
-                    }
-                    sb.append("}\n");
+			msgsAndContainers = migrateTo.addMetadata(metadataArr, true, excludeMetadata);
+			logger.debug("Done adding metadata to new version");
+			sendStatus("Done adding metadata to new version", "DEBUG");
+		    }
+		    return 0;
+		}
 
-                    String delTblStr = sb.toString();
-                    sendStatus(delTblStr, "INFO");
-                    logger.info(delTblStr);
-                }
+
+		sb = new StringBuilder();
+		sb.append("Dropping tables:\n");
+		sb.append("\tMetadata Tables:{");
+		for (TableName dTbl : metadataDelTbls) {
+		    sb.append("(" + dTbl.namespace + "," + dTbl.name + ")");
+		}
+		sb.append("}\n");
+
+		sb.append("\tData Tables:{");
+		for (TableName dTbl : dataDelTbls) {
+		    sb.append("(" + dTbl.namespace + "," + dTbl.name + ")");
+		}
+		sb.append("}\n");
+
+		sb.append("\tStatus Tables:{");
+		for (TableName dTbl : statusDelTbls) {
+		    sb.append("(" + dTbl.namespace + "," + dTbl.name + ")");
+		}
+		sb.append("}\n");
+		
+		String delTblStr = sb.toString();
+		sendStatus(delTblStr, "INFO");
+		logger.info(delTblStr);
 
                 // Drop all tables after backup
                 migrateTo.dropAllTables(metadataDelTbls.toArray(new TableName[metadataDelTbls.size()]), dataDelTbls.toArray(new TableName[dataDelTbls.size()]), statusDelTbls.toArray(new TableName[statusDelTbls.size()]));
@@ -860,7 +880,7 @@ public class Migrate {
                     sendStatus("Dropped saved messages/container tables if there are any", "DEBUG");
                 }
 
-                msgsAndContainers = null;
+                msgsAndContainers = null; 
                 if (canUpgradeMetadata) {
                     logger.debug("Adding metadata to new version");
                     sendStatus("Adding metadata to new version", "DEBUG");
@@ -868,7 +888,7 @@ public class Migrate {
 
                     FailedMetadataKey[] failedMetadataKeys = migrateTo.getFailedMetadataKeys();
                     if (failedMetadataKeys != null && failedMetadataKeys.length > 0) {
-                        StringBuilder sb = new StringBuilder();
+                        sb = new StringBuilder();
                         sb.append("Failed Metadata Keys:{\n");
                         for (int i = 0; i < failedMetadataKeys.length; i++) {
                             FailedMetadataKey key = failedMetadataKeys[i];
@@ -889,7 +909,7 @@ public class Migrate {
                 if (canUpgradeData) {
 
                     if (msgsAndContainers != null) {
-                        StringBuilder sb = new StringBuilder();
+                        sb = new StringBuilder();
                         sb.append("MessagesAndContainers To create Tables from Data Migration:{\n");
                         for (String cName : msgsAndContainers) {
                             sb.append("\t" + cName + "\n");

@@ -134,14 +134,17 @@ class HBaseTestMetadataFlagSpec extends FunSpec with BeforeAndAfter with BeforeA
 
     // validate property setup
     it("Validate api operations") {
+      val ns = "unit_tests"
       val containerName = "sys.customer1"
-      val metadataContainerName = "sys.meta_customer1"
+      val metadataContainerName = "meta_customer1"
+      val metadataContainerTableName = "meta_customer1"
+      val metadataContainerBackupTableName = "meta_customer1_bak"
 
       hbaseAdapter = adapter.asInstanceOf[HBaseAdapter]
 
       And("create namespace")
       noException should be thrownBy {
-        hbaseAdapter.CreateNameSpace("unit_tests")
+        hbaseAdapter.CreateNameSpace(ns)
       }
 
       And("drop container")
@@ -243,6 +246,16 @@ class HBaseTestMetadataFlagSpec extends FunSpec with BeforeAndAfter with BeforeA
       And("Check the row count after adding a bunch")
       cnt = hbaseAdapter.getRowCount(metadataContainerName)
       assert(cnt == metadataContainerCount)
+
+      And("create a backup table")
+      adapter.copyTable(ns + ":" + metadataContainerTableName,ns + ":" + metadataContainerBackupTableName,true)
+
+      cnt = hbaseAdapter.getRowCount(metadataContainerBackupTableName)
+      assert(cnt == metadataContainerCount)
+
+      noException should be thrownBy {
+        adapter.get(metadataContainerBackupTableName, readCallBack _)
+      }
 
       And("Shutdown hbase session")
       noException should be thrownBy {

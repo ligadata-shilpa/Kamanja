@@ -536,14 +536,19 @@ Try again.
         givenTemplate = true
         migrateTemplate_opt.trim
       } else {
-        s"$clusterInstallerDriversLocation/MigrateConfig_template.json"
+	if( fromKamanja == "1.4" ){
+          s"$clusterInstallerDriversLocation/MigrateConfig_template14.json"
+	}
+	else{
+          s"$clusterInstallerDriversLocation/MigrateConfig_template.json"
+	}
       }
 
       if (!isFileExists(migrateTemplate, true)) {
         if (givenTemplate)
           printAndLogError(s"Given migrateTemplate $migrateTemplate is not valid file", log)
         else
-          printAndLogError(s"MigrateConfig_template.json is not installed in path ${clusterInstallerDriversLocation}", log)
+          printAndLogError(s"$migrateTemplate is not installed in path ${clusterInstallerDriversLocation}", log)
         cnt += 1
       }
 

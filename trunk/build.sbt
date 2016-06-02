@@ -218,7 +218,7 @@ lazy val MigrateFrom_V_1_2 = project.in(file("Utils/Migrate/SourceVersion/Migrat
 
 lazy val MigrateTo_V_1_4 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_4")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(MigrateBase, KamanjaManager)
 
-lazy val MigrateTo_V_1_4_1 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_4_1")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(MigrateBase, KamanjaManager)
+lazy val MigrateTo_V_1_4_1 = project.in(file("Utils/Migrate/DestinationVersion/MigrateTo_V_1_4_1")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(MigrateBase, KamanjaManager, MetadataAPI)
 
 lazy val MigrateFrom_V_1_3 = project.in(file("Utils/Migrate/SourceVersion/MigrateFrom_V_1_3")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(MigrateBase)
 

@@ -41,6 +41,7 @@ import org.apache.hadoop.hbase.client.{ BufferedMutator, BufferedMutatorParams, 
 import org.apache.hadoop.hbase._
 
 import org.apache.logging.log4j._
+import org.apache.logging.log4j.core._
 import java.nio.ByteBuffer
 import java.io.IOException
 import org.json4s._
@@ -61,6 +62,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   val adapterConfig = if (datastoreConfig != null) datastoreConfig.trim else ""
 //  val loggerName = this.getClass.getName
 //  val logger = LogManager.getLogger(loggerName)
+
+//  val ctx = LogManager.getContext(false).asInstanceOf[LoggerContext];
+//  val logConfig = ctx.getConfiguration();
+//  val loggerConfig = logConfig.getLoggerConfig(LogManager.ROOT_LOGGER_NAME); 
+//  loggerConfig.setLevel(Level.INFO);
+//  ctx.updateLoggers();
+
   private[this] val lock = new Object
   private var containerList: scala.collection.mutable.Set[String] = scala.collection.mutable.Set[String]()
   private var isMetadataMap: scala.collection.mutable.Map[String, Boolean] = new scala.collection.mutable.HashMap()
@@ -71,7 +79,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   private val schemaIdStrBytes = "schemaId".getBytes()
   private val baseStrBytes = "base".getBytes()
   private val isMetadataTableStrBytes = "isMetadataTable".getBytes()
-  private val isMetadataTableName = "isMetadata"
+  private val isMetadataTableName = "ismetadata"
 
   private def CreateConnectionException(msg: String, ie: Exception): StorageConnectionException = {
     logger.error(msg, ie)
@@ -317,10 +325,13 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 	val r = tableHBase.get(g);
 	//val kv : r.raw()
 	if( r.isEmpty() ){
+	  logger.debug("The table " + isMetadataTableName + " contains no rows for " + containerName)
 	  return false
 	}
 	else{
+	  logger.debug("The table " + isMetadataTableName + " contains rows for " + containerName)
 	  val v = r.getValue(isMetadataTableStrBytes,baseStrBytes)
+	  logger.debug("The value for " + containerName + " => " + Bytes.toString(v))
 	  val b = if (Bytes.toString(v).equalsIgnoreCase("yes")) true else false
 	  b
 	}
@@ -460,6 +471,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     val t = toTableName(containerName)
     // Remove namespace and send only tableName
     t.stripPrefix(namespace + ":")
+  }
+
+  // accessor used for testing
+  private def stripNameSpace(tableName: String): String = {
+    // Remove namespace and send only tableName
+    tableName.stripPrefix(namespace + ":")
   }
 
   private def CreateContainer(containerName: String,isMetadata: Boolean, apiType: String): Unit = lock.synchronized {
@@ -1435,6 +1452,20 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     })
   }
 
+  private def copyIsMetadataFlag(srcTableName: String, destTableName: String) : Unit = {
+    // srcTableName is prefixed "name_space:". ismetadata table keyed on tableName without prefix
+    var tName = stripNameSpace(srcTableName)
+    val b = getIsMetadataFlag(tName)
+    if( b ){
+      logger.debug("The table " + srcTableName + " is a metadata table ")
+    }
+    else{
+      logger.debug("The table " + srcTableName + " is not a metadata table ")
+    }
+    tName = stripNameSpace(destTableName)
+    putIsMetadataFlag(tName,b)
+  }
+
   def renameTable(srcTableName: String, destTableName: String, forceCopy: Boolean = false): Unit = {
     val listener = new BufferedMutator.ExceptionListener() {
       override def onException(e: RetriesExhaustedWithDetailsException, mutator: BufferedMutator) {
@@ -1446,6 +1477,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
     var tableHBase: Table = null
     var mutator: BufferedMutator = null
+    var rowCount = 0
 
     try {
       relogin
@@ -1491,6 +1523,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       // Loop through each row and write it into destination table mutator
       val it = rs.iterator()
       while (it.hasNext()) {
+	rowCount = rowCount + 1
         val r = it.next()
         var p = new Put(r.getRow)
         val rc = r.rawCells()
@@ -1505,7 +1538,6 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         }
         mutator.mutate(p)
       }
-
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to rename the table " + srcTableName, e)
@@ -1514,6 +1546,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       if (mutator != null) {
         mutator.flush()
         mutator.close()
+	logger.info("rowCount => " + rowCount)
       }
       if (tableHBase != null) {
         tableHBase.close()
@@ -1537,6 +1570,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     try {
       relogin
       renameTable(oldTableName, newTableName, forceCopy)
+      copyIsMetadataFlag(oldTableName,newTableName)
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to copy the container " + srcContainerName, e)
@@ -1551,6 +1585,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     try {
       relogin
       renameTable(oldTableName, newTableName)
+      copyIsMetadataFlag(oldTableName,newTableName)
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to backup the container " + containerName, e)
@@ -1607,6 +1642,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
 
   override def copyTable(srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {
     renameTable(srcTableName, destTableName, forceCopy)
+    copyIsMetadataFlag(srcTableName,destTableName)
   }
 
   override def copyTable(namespace: String, srcTableName: String, destTableName: String, forceCopy: Boolean): Unit = {

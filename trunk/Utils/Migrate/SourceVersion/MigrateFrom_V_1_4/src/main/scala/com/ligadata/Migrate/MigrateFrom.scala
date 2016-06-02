@@ -748,8 +748,8 @@ class MigrateFrom_V_1_4 extends MigratableFrom {
           val objType = strKey.substring(0, i)
           val typeName = strKey.substring(i + 1)
 	  try{
-            val js = MetadataAPISerialization.deserializeMetadata(new String(v.serializedInfo))
-            val (typ, jsonStr) = (typeName,js.asInstanceOf[String])
+            val (typ, jsonStr) = (objType,new String(v.serializedInfo))
+	    logger.info("strKey => " + strKey + ",objType => " + objType + ",typeName => " + typeName + ",object json => " + jsonStr)
             if (excludedMetadataTypes.contains(typ.toLowerCase()) == false) {
               if (callbackFunction != null) {
                 val retVal = callbackFunction.call(new MetadataFormat(typ, jsonStr))
@@ -788,7 +788,8 @@ class MigrateFrom_V_1_4 extends MigratableFrom {
             val i = strKey.indexOf(".")
             val objType = strKey.substring(0, i)
             val typeName = strKey.substring(i + 1)
-            val js = MetadataAPISerialization.deserializeMetadata(new String(v.serializedInfo))
+            val js = new String(v.serializedInfo)
+	    logger.info("strKey => " + strKey + ",objType => " + objType + ",typeName => " + typeName + ",object json => " + js)
             val conf = js.asInstanceOf[Map[String, Any]]
             val (nameSpace, name) = SplitFullName(k.bucketKey(0))
 

@@ -27,6 +27,7 @@ import java.io.{DataInputStream, ByteArrayInputStream, File, PrintWriter}
 import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.MetadataAPI.MetadataAPIImpl
+import com.ligadata.MetadataAPI.MetadataAPISerialization
 import com.ligadata.MetadataAPI.AdapterMessageBindingUtils
 import com.ligadata.MetadataAPI.MetadataAPI
 import com.ligadata.Serialize.JsonSerializer
@@ -1487,9 +1488,88 @@ class MigrateTo_V_1_4_1 extends MigratableTo {
     addedMessagesContainers
   }
 
+
+  private def update140ModelsInPlace(mdObjs: ArrayBuffer[(String,String,Map[String, Any])]): Unit = {
+    try {
+      logger.info("Models to be Updated => " + mdObjs.length)
+      mdObjs.foreach(mdObj => {
+        val objType = mdObj._1
+	val jsonObjMap = mdObj._3
+
+	val mObj = (objType,jsonObjMap)
+
+        val namespace = jsonObjMap.getOrElse("NameSpace", "").toString.trim()
+        val name = jsonObjMap.getOrElse("Name", "").toString.trim()
+        var dispkey = (namespace + "." + name).toLowerCase
+        var ver = jsonObjMap.getOrElse("Version", "0.0.1").toString
+	
+	logger.info("Updating model, dispKey => " + dispkey)
+
+        try {
+	  var mdStrBefore:String = mdObj._2
+	  logger.info("Model Json Before Update => " + mdStrBefore)
+          val md = MetadataAPISerialization.deserializeMetadata(mdStrBefore).asInstanceOf[ModelDef]
+	  val depJars1 = md.DependencyJarNames
+	  val jarsToBeExcluded = List("ExtDependencyLibs_2.11-1.4.0.jar", "KamanjaInternalDeps_2.11-1.4.0.jar", "ExtDependencyLibs2_2.11-1.4.0.jar")
+	  var depJars = (depJars1 diff jarsToBeExcluded)
+	  md.dependencyJarNames = depJars.toArray
+	  var mdStrAfter = MetadataAPISerialization.serializeObjectToJson(md)
+	  mdStrAfter = mdStrAfter.replaceAll("ExtDependencyLibs_2.11-1.4.0.jar","ExtDependencyLibs_2.11-1.4.1.jar")
+	  mdStrAfter = mdStrAfter.replaceAll("ExtDependencyLibs2_2.11-1.4.0.jar","ExtDependencyLibs2_2.11-1.4.1.jar")
+	  mdStrAfter = mdStrAfter.replaceAll("KamanjaInternalDeps_2.11-1.4.0.jar","KamanjaInternalDeps_2.11-1.4.1.jar")
+	  logger.info("Model Json Afer Update => " + mdStrAfter)
+	  // save updated mdStr
+          val md1 = MetadataAPISerialization.deserializeMetadata(mdStrAfter).asInstanceOf[ModelDef]
+	  MetadataAPIImpl.SaveObject(md1, MdMgr.GetMdMgr)
+        } catch {
+          case e: Exception => AddMdObjToGlobalException(mObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
+          case e: Throwable => AddMdObjToGlobalException(mObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
+        }
+      })
+    } catch {
+      case e: Exception => throw e
+      case e: Throwable => throw e
+    }
+  }
+
+  def update140ObjectsInPlace(allMetadataElemsJson: Array[MetadataFormat]): java.util.List[String] = {
+    if (_bInit == false)
+      throw new Exception("Not yet Initialized")
+
+    // Order metadata to add in the given order.
+    // First get all the message & containers And also the excluded types we automatically add when we add messages & containers
+    val models = ArrayBuffer[(String, String,Map[String, Any])]()
+    val addedMessagesContainers: java.util.List[String] = new java.util.ArrayList[String]()
+
+    logger.info("AllMetadataElemJson row count => " + allMetadataElemsJson.length);
+    allMetadataElemsJson.foreach(mdf => {
+      val json = parse(mdf.objDataInJson)
+      val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
+      logger.debug("objType => " + mdf.objType)
+      if (mdf.objType.equalsIgnoreCase("ModelDef")) {
+	logger.debug("Found a model object to be updated")
+        models += ((mdf.objType,mdf.objDataInJson,jsonObjMap))
+      }
+    })
+
+    // Open OpenDbStore
+    MetadataAPIImpl.OpenDbStore(_jarPaths, _metaDataStoreInfo)
+    val cfgStr = Source.fromFile(_clusterConfigFile).mkString
+    logger.info("Uploading configuration:" + cfgStr)
+    MetadataAPIImpl.UploadConfig(cfgStr, defaultUserId, "ClusterConfig")
+    logger.info("Updating Models")
+    update140ModelsInPlace(models)
+    return addedMessagesContainers
+  }
+
   override def addMetadata(allMetadataElemsJson: Array[MetadataFormat], uploadClusterConfig: Boolean, excludeMetadata: Array[String]): java.util.List[String] = {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
+
+    if( _sourceVersion == "1.4" ){
+      var msgs = update140ObjectsInPlace(allMetadataElemsJson)
+      return msgs
+    }
 
     val excludedMetadataTypes = if (excludeMetadata != null && excludeMetadata.length > 0) excludeMetadata.map(t => t.toLowerCase.trim).toSet else Set[String]()
 
@@ -1508,6 +1588,7 @@ class MigrateTo_V_1_4_1 extends MigratableTo {
 
     val addedMessagesContainers: java.util.List[String] = new java.util.ArrayList[String]()
 
+    logger.info("AllMetadataElemJson row count => " + allMetadataElemsJson.length);
     allMetadataElemsJson.foreach(mdf => {
       val json = parse(mdf.objDataInJson)
       val jsonObjMap = json.values.asInstanceOf[Map[String, Any]]
