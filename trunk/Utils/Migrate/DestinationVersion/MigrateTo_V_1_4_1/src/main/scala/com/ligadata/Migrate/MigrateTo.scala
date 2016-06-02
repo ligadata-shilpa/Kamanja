@@ -1566,6 +1566,11 @@ class MigrateTo_V_1_4_1 extends MigratableTo {
     if (_bInit == false)
       throw new Exception("Not yet Initialized")
 
+    // If the source version is 1.4 (1.4.0), then we take a different route here
+    // In this route, we just update model objects and config objects
+    // In case of model objects we remove the dependency of the 1.4.0 fat jars
+    // In case of config objects, make adapters depend on 1.4.1 fat jars
+    // instead of 1.4.0 fat jars.
     if( _sourceVersion == "1.4" ){
       var msgs = update140ObjectsInPlace(allMetadataElemsJson)
       return msgs

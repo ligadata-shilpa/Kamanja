@@ -800,18 +800,16 @@ public class Migrate {
                     logger.info("Completed backing up. " + doneTm);
                 }
 
+		// If the source version is 1.4, we can make the necessary updates to
+		// metadata objects  directly in the database. We let the migrateTo
+		// handle those updates and return immediately. There is no need
+		// to update anything else
                 if (srcVer.equalsIgnoreCase("1.4")) {
 		    if (canUpgradeMetadata) {
 			logger.debug("Ugrade models to new version");
 			sendStatus("Upgrade models to new version", "DEBUG");
                         MetadataFormat[] metadataArr = allMetadata
                                 .toArray(new MetadataFormat[allMetadata.size()]);
-
-                        for (MetadataFormat mdf : metadataArr) {
-                            logger.info("1.4 to 1.4.1: objType => " + mdf.objType);
-                            logger.info("1.4 to 1.4.1: objDataInJson => " + mdf.objDataInJson);
-                        }
-
 			msgsAndContainers = migrateTo.addMetadata(metadataArr, true, excludeMetadata);
 			logger.debug("Done adding metadata to new version");
 			sendStatus("Done adding metadata to new version", "DEBUG");
