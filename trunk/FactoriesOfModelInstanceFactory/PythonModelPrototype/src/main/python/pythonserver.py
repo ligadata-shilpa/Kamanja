@@ -78,6 +78,7 @@ for extname in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopS
 # model dictionary, host, port, and remaining args from 
 # supplying the remaining arguments/lines from the command as its arg.
 def dispatcher(cmdkey, args):
+	print "processing cmd = " + cmdkey
 	cmd = cmdDict[cmdKey]
 	results = cmd.handler(modelDict, host, port, args)
 	return results

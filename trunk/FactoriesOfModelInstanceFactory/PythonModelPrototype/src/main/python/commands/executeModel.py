@@ -6,6 +6,7 @@ class Handler(object):
 		# assumption for this revision is that the message is one line of CSV data.
 		msg = cmdList.pop(0).strip().split(',')
 		cmd = modelDict[modelName]
+		print "processing cmd = " + cmd + " with arguments " + str(msg)
 		results = cmd.handler(msg)
 		return results
 

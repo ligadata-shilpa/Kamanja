@@ -113,9 +113,8 @@ object SockClient {
             sys.exit(1)
         }
 
-        /** Prepare the command message for transport (or in the case of the
-          StartServerCmd instance, issue some messages about where models will
-          be kept by the server when addModel command is invoked) */
+        /** Prepare the command message for transport (except for the case of the
+          StartServerCmd instance... */
         val cmdMsg : String = cmdObj.prepareCmdMsg(filePath
             , modelName
             , msg
@@ -131,7 +130,7 @@ object SockClient {
             /** send the command to the server for execution */
             val inetbyname = InetAddress.getByName(host)
             println("inetbyname = " + inetbyname)
-            val s : Socket = new Socket(inetbyname, 9999)
+            val s : Socket = new Socket(inetbyname, portNo)
             lazy val in = new BufferedSource(s.getInputStream).getLines()
             val out = new PrintStream(s.getOutputStream)
 
@@ -190,15 +189,7 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
     }
 
     /**
-      *Prepare some informational messages about where things will land when
-      *models are added to the server.  Write them to the console.  Complain
-      *if the PYTHONPATH env variable is not set.  This build depends upon it.
-      *No programs are put on the standard python search path with this build.
       *
-      *FIXME:
-      *For the SSH case, it will be currently assumed the PYTHONPATH is the
-      *same as it is on the client system.  This can be fixed
-      *if desired.
       */
     override def prepareCmdMsg(filePath : String
                                , modelName : String
@@ -258,13 +249,13 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
             val seq = seqList.toSeq
             val seqCmd = cmdSeq.toString
 
-            /** run will launch the server program in the background ... what we want in this case */
+            /** run will launch the server program in the background ... what we want in this case... can't use .! which waits for program completion. */
             val pySrvCmd = Process(cmdSeq)
             pySrvCmd.run
 
-            /** The script run on the machine does the spawn for us.  Therefore we print
-              the useful information it has with regard to where the server is running 
-              from and the info about where the commands and models are located. 
+            /** If the script were to finish while we waited, we could use this which can collect the stdout and stderr from the execution as well as return the
+            script return code.
+
             val (rc,stdOut, stdErr) : (Int, String, String) = runCmdCollectOutput(cmdSeq)
             println(s"seqCmd = $seqCmd")
             println(s"stdOut = $stdOut")

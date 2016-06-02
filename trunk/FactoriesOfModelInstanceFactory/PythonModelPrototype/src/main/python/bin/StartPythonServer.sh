@@ -18,7 +18,7 @@ fi
 export PYTHONSERVER_HOME="/home/rich/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstanceFactory/PythonModelPrototype/src/main/python"
 export PYTHONPATH="$PYTHONSERVER_HOME"
 
-nohup python $PYTHONSERVER_HOME/pythonserver.py --host $host --port $port &
+python $PYTHONSERVER_HOME/pythonserver.py --host $host --port $port &
 
 echo "The python server is running on host $host and is listening on port $port"
 echo "The pythonserver.py is being run from the $PYTHONSERVER_HOME directory"

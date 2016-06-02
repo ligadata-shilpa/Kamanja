@@ -1,15 +1,15 @@
-class Handler(object): 
+class Handler(ModelInstance): 
 	import os
 	import imp
 
 	"""
-	AddModelCmd looks formatted like this Scala string : 
-		s"$cmd\n$modelName\n$modelSrc"
+	AddModelCmd inpur ia formatted like this Scala string : 
+		s"$cmd\n$modelName\n$modelInfo\n$modelSrc"
 	"""
 	def handler(self, modelDict, host, port, cmdList):
-		modelName = cmdList.pop().strip()
-		# remaining in the cmdList is the python program
-		# write it to $PYTHONPATH/models.  we could write them one at a time or 
+		modelName = cmdList.pop(0).strip()
+		# The cmdList contains the python program... write it 
+		# to $PYTHONPATH/models.  we could write them one at a time or 
 		# do this and join the list again into one string.
 		modelSrc = str1 = ''.join(cmdList)
 		pypathRaw = os.environ['PYTHONPATH']
