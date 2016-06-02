@@ -42,7 +42,7 @@ object DemoKafkaProducer {
     var curTime: Long = -1
     var lastSentTime: Long = -1
     var curMsgs = ArrayBuffer[ProducerRecord[Array[Byte], Array[Byte]]]()
-    var dataStartProcessing: Long = 0
+    var dataStartProcessing: Long = -1
     var originalTimeInData: Long = 0
   }
 
@@ -142,9 +142,9 @@ object DemoKafkaProducer {
     // Get current time
     val topic = topics(0)
     val tmInMsRoundedToSec = (tmInMs / 1000) * 1000
-    if (curData.curTime == -1)
+    if (tmInMsRoundedToSec != 0 && curData.curTime == -1)
       curData.curTime = tmInMsRoundedToSec
-    if (curData.curTime == tmInMsRoundedToSec) {
+    if (tmInMsRoundedToSec == 0 || curData.curTime == tmInMsRoundedToSec) {
       curData.curMsgs += new ProducerRecord(topic, getPartition(key.getBytes(), topicPartitionsCount), key.getBytes(), sendmsg.getBytes())
     } else {
       if (curData.prevTime != -1) {
@@ -158,8 +158,10 @@ object DemoKafkaProducer {
           }
         }
       }
-      logger.debug("Sending %d messages".format(curData.curMsgs.size))
+
       val sysTm1 = System.currentTimeMillis
+      logger.debug("Sending %d messages".format(curData.curMsgs.size))
+      println("Sending %d messages for time %d at %d".format(curData.curMsgs.size, curData.curTime, sysTm1))
       send(producer, topics(0), curData.curMsgs.toArray) // BUGBUG:: Always using topics(0)
       curData.prevTime = curData.curTime
       curData.curTime = tmInMsRoundedToSec
@@ -183,27 +185,34 @@ object DemoKafkaProducer {
 
     if (timeKeyIdx >= 0) {
       tmVal = str_arr(timeKeyIdx).trim
-      val hasMS = (tmVal.contains("."))
+      try {
+        val hasMS = (tmVal.contains("."))
+        // println("Parsing DateTime:" + tmVal + ", hasMS:" + hasMS)
+        tmInMs = (if (hasMS) dtFormatWithMS.parse(tmVal) else dtFormat.parse(tmVal)).getTime
+        if (curData.dataStartProcessing == -1) {
+          // Rounding these values to sec level roundings
+          curData.dataStartProcessing = (System.currentTimeMillis / 1000) * 1000
+          curData.originalTimeInData = (tmInMs / 1000) * 1000
+        }
 
-      tmInMs = (if (hasMS) dtFormatWithMS.parse(tmVal) else dtFormat.parse(tmVal)).getTime
-      if (curData.dataStartProcessing == -1) {
-        // Rounding these values to sec level roundings
-        curData.dataStartProcessing = (System.currentTimeMillis / 1000) * 1000
-        curData.originalTimeInData = (tmInMs / 1000) * 1000
+        val newTm = curData.dataStartProcessing + (tmInMs - curData.originalTimeInData)
+        val newTmStr = {
+          val str = if (hasMS) dtFormatWithMS.format(new java.util.Date(newTm)) else dtFormat.format(new java.util.Date(newTm))
+          if (tmVal.charAt(tmVal.size - 1) == 'Z')
+            str + "Z"
+          else if (tmVal.charAt(tmVal.size - 1) == 'z')
+            str + "z"
+          else
+            str
+        }
+        str_arr(timeKeyIdx) = newTmStr
+        tmReplacedStr = str_arr.mkString(",")
+        // println("OldStr:%s, NewStr:%s, NewTimeStr:%s".format(inputData,tmReplacedStr, newTmStr))
+      } catch {
+        case e: Throwable => {
+          logger.warn("Failed to parse datetime:" + tmVal, e)
+        }
       }
-
-      val newTm = curData.dataStartProcessing + (tmInMs - curData.originalTimeInData)
-      val newTmStr = {
-        val str = if (hasMS) dtFormatWithMS.format(new java.util.Date(newTm)) else dtFormat.format(new java.util.Date(newTm))
-        if (tmVal.charAt(tmVal.size - 1) == 'Z')
-          str + "Z"
-        else if (tmVal.charAt(tmVal.size - 1) == 'z')
-          str + "z"
-        else
-          str
-      }
-      str_arr(timeKeyIdx) = newTmStr
-      tmReplacedStr = str_arr.mkString(",")
     }
 
     (key, tmVal, tmInMs, tmReplacedStr)
