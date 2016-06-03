@@ -3,11 +3,16 @@
 class Handler(object): 
 	def handler(self, modelDict, host, port, cmdList):
 		modelName = cmdList.pop(0).strip()
-		# assumption for this revision is that the message is one line of CSV data.
-		msg = cmdList.pop(0).strip().split(',')
+		# what is left after popping the model name are messages to process... 1 or more
+		# Process each message left in the list
 		cmd = modelDict[modelName]
-		print "processing cmd = " + cmd + " with arguments " + str(msg)
-		results = cmd.handler(msg)
-		return results
+		results = []
+		for i, rawMsg in enumerate(cmdList):
+			msg = rawMsg.strip().split(',')
+			print "processing cmd = (" + i + ") " + cmd + " with arguments " + str(msg)
+			res = cmd.handler(msg)
+			results.append(res)		
+		resultStr = json.dumps(results)
+		return resultStr
 
 

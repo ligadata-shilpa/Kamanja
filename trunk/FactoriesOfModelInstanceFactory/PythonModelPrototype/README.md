@@ -106,7 +106,7 @@ _Notes_
 
 2) _Scala Test Script_ 
 
-The scala script is the client serving as the proxy for the python stub model, python factory, and python factory of factories is found in the src/main/scala folder.
+The scala script is the client serving as the proxy for the python stub model, python factory, and python factory of factories and is found in the src/main/scala folder.
 
 3) _The Server Loading Mechanism_
 
@@ -131,7 +131,7 @@ The server commands are: 'addModel', 'removeModel', 'serverStatus', 'executeMode
 
 5) _Test Models_
 
-The _modelsToLoad_ directory contain the sample models to test the server.  It is these files that you will add to the server.  Currently there is an add, divide, multiply and subtract "model" available.  They all take a list of numbers as their principal argument and return result only from it.  The _models_ directory is where the model source will land for the addModel command.  The first path in PYTHONPATH's value is assumed writable and used to construct the path for the path/_models/$modelName_.py file.
+The _modelsToLoad_ directory contain the sample models to test the server.  It is these files that you will add to the server.  Currently there is an add, divide, multiply and subtract "model" available.  They all take a list of numbers as their principal argument and return result only from it.  The _models_ directory is where the model source will land from an invocation of the addModel command.  The first path in PYTHONPATH's value is assumed writable and used to construct the path for the path/_models/$modelName_.py file.
 
 6) _Sparse Semantic Checking_
 
@@ -155,7 +155,7 @@ The _$cmd_ in the comment is the executeModel key that causes the server command
 
 8) _Python Models_
 
-Like the server commands, the models are dispatched by name lookup where the key is the modelName.  Here is an example of one of our test models, add.py:
+Like the server commands, the models are dispatched by name lookup where the key is the model file name.  Here is an example of one of our test models, add.py:
 
 	class Handler(object): 
 		def handler(self, numbers):
@@ -169,6 +169,12 @@ As you can see, there currently is very little in the way of type checking.  The
 The current implemementation will try to load the class named _Handler_ from the module file.  In other words, it is the model file name that is loaded that distinguishes one model versus another.  The stem of the file name (the part sans .py) effectively becomes part of the model's namespace with the package directory (in our example, _models_) being the parent namespace part.  
 
 Obviously the fully qualified name of the model could be passed to the server and the appropriate directory in a multi-level tree could be updated with the file and loaded.  Checking for directory existence and creating one if it is not there plus checking if **__init__.py** in that directory would be come part of the procedure for adding/loading new python models.
+
+To verify that the c-python models are compilable, this command can be used
+
+	python -m compileall .
+
+It will compile all of the python files in a given folder, creating the .pyc files from it.
 
 9) _Model loading_
 
@@ -192,7 +198,7 @@ This has changed in Python 3.3: now any directory on sys.path with a name that m
 
 12) _Starting the Server_
 
-When the client script is used to start a server, it invokes the StartPythonServer.sh script that should be on the command path.  It looks like this:
+When the client script is used to start a server, it invokes the StartPythonServer.sh script that should be on the command path (i.e., the PATH env var) where the python server is installed.  It looks like this:
 
 	#!/bin/bash
 
@@ -213,6 +219,9 @@ When the client script is used to start a server, it invokes the StartPythonServ
 		exit 1
 	fi
 
+	# this directory should be set to the "conventional" directory, not rich's
+	# home directory tree.  For example, /var/Kamanja/<homedir>/python places it
+	# in the KAMANJA_HOME tree.
 	export PYTHONSERVER_HOME="/home/rich/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstanceFactory/PythonModelPrototype/src/main/python"
 	export PYTHONPATH="$PYTHONSERVER_HOME"
 

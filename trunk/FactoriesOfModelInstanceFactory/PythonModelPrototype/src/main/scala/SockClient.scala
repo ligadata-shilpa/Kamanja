@@ -42,6 +42,12 @@ object SockClient {
     --cmd serverStatus
     --cmd executeModel --modelName '<modelName>'
                        --msg '<msg data>'
+    --cmd executeModel --modelName '<modelName>'
+                       --filePath '<msg file path>'
+
+
+  It is possible to run multiple servers on same host simply by varying 
+  the port number.
         """
     }
 
@@ -359,7 +365,8 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
                                , portNo : Int) : String = {
 
         val modelName : String = if (filePath != null && filePath.contains('.')) {
-            filePath.split('.').dropRight(1).last
+            val fileName : String = filePath.split('/').last
+            fileName.split('.').dropRight(1).last // drop the .py
         } else {
             printf("the model file path is bogus... things are going to fail.")
             throw new RuntimeException("the model file path doesn't appear to have a legitimate python file path in it... can't determine the model name")
@@ -435,7 +442,15 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int) : String = {
-        s"$cmd\n$modelName\n$msg"
+
+    	val cmdStr : String = if (filePath != null) {
+        	val msgs : String = Source.fromFile(filePath).mkString
+        	s"$cmd\n$modelName\n$msgs"
+
+		} else {
+        	s"$cmd\n$modelName\n$msg"			
+		}
+		cmdStr
     }
 
 }
