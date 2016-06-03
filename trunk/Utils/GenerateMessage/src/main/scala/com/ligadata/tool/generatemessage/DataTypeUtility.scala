@@ -81,12 +81,12 @@ class DataTypeUtility extends LogTrait{ // This class created to check the value
     }
   }
 
-  def FindFinalType(fileSize: Int, itemIndex: Int, inputFile: String, delimiter: String): String = {
+  def FindFinalType(fileSize: Int, itemIndex: Int, inputFile: String, delimiter: String, detectDatatypeFrom: Int): String = {
     val fileBean: FileUtility = new FileUtility()
     var previousType = ""
-    for (size <- 2 to 4) {
+    for (size <- 1 to detectDatatypeFrom) {
       if (fileSize >= size) {
-        val fieldLines = fileBean.ReadHeaderFile(inputFile, size - 1)
+        val fieldLines = fileBean.ReadHeaderFile(inputFile, size)
         val linesfeild = fileBean.SplitFile(fieldLines, delimiter)
         val currentType = FindFeildType(linesfeild(itemIndex))
         if (previousType.equalsIgnoreCase("string") || (previousType.equalsIgnoreCase("boolean") && !currentType.equalsIgnoreCase("boolean"))

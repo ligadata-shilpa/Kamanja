@@ -129,11 +129,11 @@ class DataTypeUtilityTest extends FeatureSpec with GivenWhenThen {
 
       Given("test CheckKeys function")
 
-      When("pass value in meesgae fields")
+      When("pass value in messgae fields")
       val messageFields = Array("id","name","company","work")
       val partitionkeyKeys = "id,name"
       datatypeBean.CheckKeys(messageFields,partitionkeyKeys)
-      Then("no error shuld be raised")
+      Then("no error shuold be raised")
     }
   }
 }

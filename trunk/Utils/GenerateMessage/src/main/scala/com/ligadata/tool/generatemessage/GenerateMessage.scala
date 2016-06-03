@@ -122,6 +122,11 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
        val headerString = fileBean.ReadHeaderFile(inputFile, 0) //read the header line for inputFile
        val headerFields = fileBean.SplitFile(headerString, configBeanObj.delimiter) //split the header line based on delimiter
        // check if partitionkey,primarykey,timepartioninfo value in file header
+       if(configBeanObj.detectDatatypeFrom > fileSize) {
+         logger.error("you pass %d in detectdatatypeFrom and the file size equal to %d records, please pass a number greater than 1 and less than the file size"
+           .format(configBeanObj.detectDatatypeFrom, fileSize))
+         sys.exit(1)
+       }
        if (configBeanObj.hasPartitionKey == true) configBeanObj.partitionKeyArray = dataTypeObj.CheckKeys(headerFields,configBeanObj.partitionKey)
        if (configBeanObj.hasPrimaryKey == true) configBeanObj.primaryKeyArray = dataTypeObj.CheckKeys(headerFields, configBeanObj.primaryKey)
        for(itemIndex <- 0 to headerFields.length-1) {
@@ -130,7 +135,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
            logger.error("This %s file does not include header".format(inputFile))
            sys.exit(1)
          }
-         var previousType = dataTypeObj.FindFinalType(fileSize, itemIndex, inputFile,configBeanObj.delimiter)
+         var previousType = dataTypeObj.FindFinalType(fileSize, itemIndex, inputFile,configBeanObj.delimiter, configBeanObj.detectDatatypeFrom)
          feildsString = feildsString + (headerFields(itemIndex) -> previousType)
        }
      } else if(configBeanObj.createMessageFrom.equalsIgnoreCase("pmml")){

@@ -125,6 +125,10 @@ class PMMLUtility extends LogTrait{
   def TargetFields(modelEvaluator: ModelEvaluator[_ <: Model]): scala.Array[(String,String)] ={
     val dataTypeBean: DataTypeUtility = new DataTypeUtility
     val targetFieldNames: JList[FieldName] = modelEvaluator.getTargetFields
+//    println("target size =>"+targetFieldNames.size())
+//      println("target data =>"+targetFieldNames.get(0))
+//      println("test getTarget =>"+modelEvaluator.getTarget(targetFieldNames.get(0)))
+//    println("test getmining =>"+modelEvaluator.getMiningField(targetFieldNames.get(0)).getName)
     val targetFields: scala.Array[Target] = {
       targetFieldNames.asScala.filter(nm => modelEvaluator.getTarget(nm) != null).map(nm => modelEvaluator.getTarget(nm))
     }.toArray
@@ -132,6 +136,7 @@ class PMMLUtility extends LogTrait{
       targetFields.map(fld => {
         val field : FieldName = fld.getField
         val name : String = field.getValue
+        val miningField: MiningField = modelEvaluator.getMiningField(field)
         val datafield : DataField =  modelEvaluator.getDataField(field)
         if(datafield.getDataType != null){
         (datafield.getName.getValue, dataTypeBean.FindPMMLFieldType(datafield.getDataType.value))
@@ -143,6 +148,14 @@ class PMMLUtility extends LogTrait{
       scala.Array[(String,String)]()
     }
     return targetFieldContent
+//    val targetFields  = EvaluatorUtil.getTargetFields(modelEvaluator)
+// //   for(FieldName  <- targetFields){
+//      targetFields.toArray.map(FieldName =>{
+//      val miningField: MiningField = modelEvaluator.getMiningField(FieldName)
+//      val dataField: DataField = modelEvaluator.getDataField(FieldName)
+//      val target: Target = modelEvaluator.getTarget(FieldName);
+//      val dataType: DataType = dataField.getDataType();
+//      })
   }
 
   def OutputMessageFields(outputFields: scala.Array[(String,String)], targetFields: scala.Array[(String,String)]): Map[String, String] ={

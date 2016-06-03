@@ -49,11 +49,11 @@ class FileUtilityTest extends FeatureSpec with GivenWhenThen {
       Then("The fileExist flag should be true")
       fileExitFlag should be(true)
 
-      When("The file not in path")
-      Then("a NullPointException should be raise")
-      intercept[NullPointerException] {
-        val fileExitFlag = fileBean.FileExist(getResourceFullPath("/Config.json"))
-      }
+//      When("The file not in path")
+//      Then("a NullPointException should be raise")
+//      intercept[NullPointerException] {
+//        val fileExitFlag = fileBean.FileExist(getResourceFullPath("/Config.json"))
+//      }
 
       Given("Test ReadFileHeader function")
 
@@ -95,10 +95,10 @@ class FileUtilityTest extends FeatureSpec with GivenWhenThen {
       Then("The delimiter variable should be set")
       configObj.delimiter should be(",")
 
-      Given("Test CreateFileName function")
-      val filename = fileBean.CreateFileName(configObj.outputPath)
-      When("The file includes data")
-      println(filename)
+//      Given("Test CreateFileName function")
+//      val filename = fileBean.CreateFileName(configObj.outputPath)
+//      When("The file includes data")
+//      println(filename)
 
 //      Given("Test WriteToFile function")
 //      val json = parse(""" { "numbers" : [1, 2, 3, 4] } """)

@@ -24,6 +24,7 @@ class ConfigBean {
   private var _primaryKeyArray: Array[String] = Array.empty
   private var _createMessageFrom = ""
   private var _messageStructure = false  // false -> fixed, true -> mapped
+  private var _detectDatatypeFrom = 4
   // Getter
   def delimiter = _delimiter
   def outputPath = _outputPath
@@ -42,6 +43,7 @@ class ConfigBean {
   def primaryKeyArray = _primaryKeyArray
   def createMessageFrom = _createMessageFrom
   def messageStructure = _messageStructure
+  def detectDatatypeFrom = _detectDatatypeFrom
 
   // Setter
   def delimiter_= (value:String):Unit = _delimiter = value
@@ -61,4 +63,5 @@ class ConfigBean {
   def primaryKeyArray_= (value: Array[String]):Unit = _primaryKeyArray = value
   def createMessageFrom_= (value: String): Unit = _createMessageFrom = value
   def messageStructure_= (value:Boolean):Unit = _messageStructure = value
+  def detecDatatypeFrom_= (value:Int):Unit = _detectDatatypeFrom = value
 }

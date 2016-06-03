@@ -43,11 +43,11 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
         var previousType = ""
         for(size <- 2 to 4){
           if(fileSize >= size) {
-            println( "itemindex = "+ itemIndex + " size = " + size+ " previousType = "+ previousType)
+         //   println( "itemindex = "+ itemIndex + " size = " + size+ " previousType = "+ previousType)
               val fieldLines = fileBean.ReadHeaderFile(inputFile, size - 1)
               val linesfeild = fileBean.SplitFile(fieldLines, configBeanObj.delimiter)
               val currentType = dataTypeObj.FindFeildType(linesfeild(itemIndex))
-            println( "itemindex = "+ itemIndex + " size = " + size+ " currentType = "+ currentType)
+          //  println( "itemindex = "+ itemIndex + " size = " + size+ " currentType = "+ currentType)
             if(previousType.equalsIgnoreCase("string") || (previousType.equalsIgnoreCase("boolean") && !currentType.equalsIgnoreCase("boolean"))
               || (!previousType.equalsIgnoreCase("boolean") && !previousType.equalsIgnoreCase("") && (currentType.equalsIgnoreCase("string") || currentType.equalsIgnoreCase("boolean")))
               || (previousType.equalsIgnoreCase("Int")&& currentType.equalsIgnoreCase("boolean"))){
@@ -82,7 +82,7 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
       configBeanObj.hasPartitionKey_=(true)
       configBeanObj.primaryKeyArray_=(Array("id","name"))
       configBeanObj.partitionKeyArray_=(Array("id"))
-      println("List ->" + configBeanObj.partitionKeyArray.toList)
+     // println("List ->" + configBeanObj.partitionKeyArray.toList)
       val jsonPatitionKey = jsonObj.CreateJsonString("PartitionKey", configBeanObj, configBeanObj.partitionKeyArray)
       json = json merge jsonPatitionKey
       println("=======================================================")

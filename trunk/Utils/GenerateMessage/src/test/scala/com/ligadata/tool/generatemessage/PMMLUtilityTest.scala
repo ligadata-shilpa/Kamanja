@@ -28,7 +28,8 @@ class PMMLUtilityTest extends FeatureSpec with GivenWhenThen {
       Given("Initiate variables")
       val filePath = getResourceFullPath("/configFile.json")
       val filePathEmpty = getResourceFullPath("/configFileEmpty.json")
-      val inputFile = getResourceFullPath("/COPDv1.xml")
+      //val inputFile = getResourceFullPath("/DecisionTreeIris.pmml")
+      val inputFile = getResourceFullPath("/DecisionTreeEnsembleIris.pmml")
       val fileContent = fileBean.ReadFile(inputFile)
 
       When("xml includes data")
@@ -39,36 +40,40 @@ class PMMLUtilityTest extends FeatureSpec with GivenWhenThen {
       When("try to get active fields")
       val ActiveFieldsArray = pmmlBean.ActiveFields(model)
       Then("activeFields array should includes data")
-      println(ActiveFieldsArray.length)
-      for (item <- ActiveFieldsArray) {
-        println("fields: " + item._1 + ", value: " + item._2)
-      }
+//      println("=================Active fields============")
+//      println(ActiveFieldsArray.length)
+//      for (item <- ActiveFieldsArray) {
+//        println("fields: " + item._1 + ", value: " + item._2)
+//      }
 
 
       When("try to get output fields")
       val outputFieldsArray = pmmlBean.OutputFields(model)
       Then("outputFieldsArray array should includes data")
-      println(outputFieldsArray.length)
-      for (item <- outputFieldsArray) {
-        println("fields: " + item._1 + ", value: " + item._2)
-      }
+//      println("=================output fields============")
+//      println(outputFieldsArray.length)
+//      for (item <- outputFieldsArray) {
+//        println("fields: " + item._1 + ", value: " + item._2)
+//      }
 
       When("try to get target fields")
       val targetFieldsArray = pmmlBean.TargetFields(model)
       Then("targetFieldsArray array should includes data")
-      println(targetFieldsArray.length)
-      for (item <- targetFieldsArray) {
-        println("fields: " + item._1 + ", value: " + item._2)
-      }
+//      println("=================Target fields============")
+//      println(targetFieldsArray.length)
+//      for (item <- targetFieldsArray) {
+//        println("fields: " + item._1 + ", value: " + item._2)
+//      }
+//      println("==========================================")
       When("try to get output message fields")
       val outputFieldsmap = pmmlBean.OutputMessageFields(outputFieldsArray, targetFieldsArray)
       Then("outputFieldsmap array should includes data")
-      println("===================================================")
-      println(outputFieldsmap.size)
-      for (item <- outputFieldsmap) {
-        println("fields: " + item._1 + ", value: " + item._2)
-      }
-      println("===================================================")
+//      println("===================================================")
+//      println(outputFieldsmap.size)
+//      for (item <- outputFieldsmap) {
+//        println("fields: " + item._1 + ", value: " + item._2)
+//      }
+//      println("===================================================")
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "delimiter": ",",
-  "outputPath": "D:\\anashed",
+  "outputPath": "/usr",
   "saveMessage": "false",
   "nameSpace": "com.ligadata.kamanja",
   "partitionKey": "id",
@@ -9,5 +9,6 @@
   "messageType": "input",
   "messageName": "testmessage",
   "createMessageFrom": "header",
-  "messageStructure": "fixed"
+  "messageStructure": "fixed",
+  "detectDatatypeFrom": "3"
 }

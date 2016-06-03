@@ -17,7 +17,7 @@ import scala.io.Source._
   */
 case class configFile(delimiter: Option[String], outputPath: Option[String], saveMessage: Option[String], nameSpace: Option[String],
                       partitionKey: Option[String], primaryKey: Option[String], timePartition: Option[String], messageType: Option[String],
-                      messageName: Option[String], createMessageFrom: Option[String], messageStructure: Option[String])
+                      messageName: Option[String], createMessageFrom: Option[String], messageStructure: Option[String], detectDatatypeFrom: Option[Int])
 
 class FileUtility  extends LogTrait{
 
@@ -146,6 +146,8 @@ class FileUtility  extends LogTrait{
         logger.error("the value of massegeStructure should be fixed or mapped")
         sys.exit(1)
       }
+
+    configBeanObj.detecDatatypeFrom_=(configInfo.detectDatatypeFrom.getOrElse(4))
 
       return configBeanObj
     }
