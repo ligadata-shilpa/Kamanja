@@ -13,15 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import sys
-print sys.path
-
 from com.ligadata.KamanjaBase import ModelInstanceFactory
 from com.ligadata.KamanjaBase import ModelInstance
 from com.ligadata.kamanja.metadata import ModelDef
 from com.ligadata.KamanjaBase import ContainerOrConcept
-from com.ligadata.kamanja.Testmsg1 import msg1
-from com.ligadata.kamanja.Testmsg1 import msg2
+from com.ligadata.kamanja.Testmsg import msg1
+from com.ligadata.kamanja.Testmsg import msg2
 
 def jythonmodel():
 
