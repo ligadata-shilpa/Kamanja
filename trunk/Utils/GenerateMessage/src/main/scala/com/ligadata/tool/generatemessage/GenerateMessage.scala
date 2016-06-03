@@ -90,12 +90,12 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      val inputFileExistFlag = fileBean.FileExist(inputFile) // check if inputFile path exists
      val configFileExistFlag = fileBean.FileExist(configFile) // check if config file path exists
      if (inputFileExistFlag == false){
-       logger.error("This file %s does not exists".format(inputFileExistFlag))
+       logger.error("This file %s does not exists".format(inputFile))
        logger.warn(usage)
        sys.exit(1)
      }
      if (configFileExistFlag == false){
-       logger.error("This file %s does not exists".format(configFileExistFlag))
+       logger.error("This file %s does not exists".format(configFile))
        logger.warn(usage)
        sys.exit(1)
      }

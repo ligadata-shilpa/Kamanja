@@ -121,7 +121,7 @@ class DataTypeUtility extends LogTrait{ // This class created to check the value
     val keysArray = splitToArray(keys)
     for (key <- keysArray){
       if(!messagefields.contains(key)){
-        logger.error("%s key from partitioKey/PrimaryKey/TimePartitionInfo does not in message fields. choose another key please".format(key))
+        logger.error("%s key from partitioKey/PrimaryKey/TimePartitionInfo does not exist in message fields. choose another key please".format(key))
         sys.exit(1)
       }
     }
