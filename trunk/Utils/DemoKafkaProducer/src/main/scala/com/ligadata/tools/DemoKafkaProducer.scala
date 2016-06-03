@@ -403,12 +403,10 @@ object DemoKafkaProducer {
 
     val gz = options.getOrElse('gz, "false").toString
 
-    val adjusttimezone = options.getOrElse('adjusttimezone, "").toString.trim
+    val adjusttimezone = options.getOrElse('adjusttimezone, "").toString.trim.toUpperCase
 
     if (adjusttimezone.size > 0) {
-      if (adjusttimezone.startsWith("GMT") == false || adjusttimezone.startsWith("UTC") == false) {
-        logger.error("Supported adjusttimezone are GMT & UTC related ones. Ignoring given adjusttimezone:" + adjusttimezone)
-      } else {
+      if (adjusttimezone.startsWith("GMT") || adjusttimezone.startsWith("UTC")) {
         try {
           val adjTmZn = TimeZone.getTimeZone(adjusttimezone.replace("UTC", "GMT"))
           adjustTime = adjTmZn.getOffset(System.currentTimeMillis)
@@ -417,9 +415,12 @@ object DemoKafkaProducer {
             logger.error("Supported adjusttimezone are GMT & UTC related ones. Ignoring given adjusttimezone:" + adjusttimezone, e)
           }
         }
+      } else {
+        logger.error("Supported adjusttimezone are GMT & UTC related ones. Ignoring given adjusttimezone:" + adjusttimezone)
       }
     }
 
+    println("AdjustmentOffset:" + adjustTime + " for given adjusttimezone String:" + adjusttimezone)
     val threads = options.getOrElse('threads, "0").toString.toInt
 
     if (threads <= 0) {
