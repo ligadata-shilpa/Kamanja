@@ -2182,19 +2182,46 @@ object SimpleEnvContextImpl extends EnvContext with LogTrait {
       results.toArray
     }
   */
-  /*
-    override def ReloadKeys(tempTransId: Long, containerName: String, keys: List[Key]): Unit = {
-      if (containerName == null || keys == null || keys.size == 0) return ;
-      val contName = containerName.toLowerCase
-      var cacheContainer = _cachedContainers.getOrElse(contName, null)
+
+  override def ReloadKeys(tempTransId: Long, tenatId: String, containerName: String, keys: List[Key]): Unit = {
+    if (tenatId == null || tenatId.trim.size == 0 || containerName == null || keys == null || keys.size == 0) return;
+    val contName = containerName.toLowerCase
+
+    val tenantInfo: TenantEnvCtxtInfo = _tenantIdMap.getOrElse(tenatId.toLowerCase(), null)
+    if (tenantInfo == null) return None
+
+    if (tenantInfo.cachedContainers != null) {
+      var cacheContainer = tenantInfo.cachedContainers.getOrElse(containerName, null)
       if (cacheContainer != null) {
-        val buildOne = (k: Key, v: Value) => {
-          collectKeyAndValues(k, v, cacheContainer)
+        val loadedData = ArrayBuffer[(KeyWithBucketIdAndPrimaryKey, ContainerInterface)]()
+
+        val buildOne = (k: Key, v: Any, serType: String, typ: String, ver: Int) => {
+          if (v != null && v.isInstanceOf[ContainerInterface]) {
+            collectKeyAndValues(k, v, loadedData)
+          }
         }
-        callGetData(_sysCatalogDatastore, contName, keys.toArray, buildOne)
+        if (tenantInfo.datastore != null)
+          callGetData(tenantInfo.datastore, containerName, keys.toArray, buildOne)
+
+        if (loadedData.size > 0) {
+          TxnContextCommonFunctions.WriteLockContainer(cacheContainer)
+          try {
+            loadedData.foreach(kv => {
+              cacheContainer.dataByBucketKey.put(kv._1, kv._2)
+              cacheContainer.dataByTmPart.put(kv._1, kv._2)
+            })
+          } catch {
+            case e: Exception => {
+              throw e
+            }
+          } finally {
+            TxnContextCommonFunctions.WriteUnlockContainer(cacheContainer)
+          }
+        }
       }
     }
-  */
+  }
+
   //
   //  private def getLocalRecent(containerName: String, partKey: List[String], tmRange: TimeRange, f: ContainerInterface => Boolean): Option[ContainerInterface] = {
   //    if (TxnContextCommonFunctions.IsEmptyKey(partKey))

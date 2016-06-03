@@ -888,11 +888,11 @@ object KamanjaLeader {
         LOG.error("ActionOnAdaptersDistImpl => Exit. receivedJsonStr: " + receivedJsonStr)
         return
       }
-//
-//      val values = json.values.asInstanceOf[Map[String, Any]]
+
+      val values = json.values.asInstanceOf[Map[String, Any]]
 //      val changedMsgsContainers = values.getOrElse("changeddata", null)
-//      val tmpChngdContainersAndKeys = values.getOrElse("changeddatakeys", null)
-//
+      val tmpChngdContainersAndKeys = values.getOrElse("changeddatakeys", null)
+
 //      if (changedMsgsContainers != null) {
 //        // Expecting List/Array of String here
 //        var changedVals: Array[String] = null
@@ -915,104 +915,204 @@ object KamanjaLeader {
 //        }
 //      }
 //
-//      if (tmpChngdContainersAndKeys != null) {
-//        val changedContainersAndKeys = if (tmpChngdContainersAndKeys.isInstanceOf[List[_]]) tmpChngdContainersAndKeys.asInstanceOf[List[_]] else if (tmpChngdContainersAndKeys.isInstanceOf[Array[_]]) tmpChngdContainersAndKeys.asInstanceOf[Array[_]].toList else null
-//        if (changedContainersAndKeys != null && changedContainersAndKeys.size > 0) {
-//          val txnid = values.getOrElse("txnid", "0").toString.trim.toLong // txnid is 0, if it is not passed
-//          changedContainersAndKeys.foreach(CK => {
-//            if (CK != null && CK.isInstanceOf[Map[_, _]]) {
-//              val contAndKeys = CK.asInstanceOf[Map[String, Any]]
-//              val contName = contAndKeys.getOrElse("C", "").toString.trim
-//              val tmpKeys = contAndKeys.getOrElse("K", null)
-//              if (contName.size > 0 && tmpKeys != null) {
-//                // Expecting List/Array of Keys
-//                var keys: List[Any] = null
-//                if (tmpKeys.isInstanceOf[List[_]]) {
+      if (tmpChngdContainersAndKeys != null) {
+        val changedContainersAndKeys = if (tmpChngdContainersAndKeys.isInstanceOf[List[_]]) tmpChngdContainersAndKeys.asInstanceOf[List[_]] else if (tmpChngdContainersAndKeys.isInstanceOf[Array[_]]) tmpChngdContainersAndKeys.asInstanceOf[Array[_]].toList else null
+        if (changedContainersAndKeys != null && changedContainersAndKeys.size > 0) {
+          val txnid = values.getOrElse("txnid", "0").toString.trim.toLong // txnid is 0, if it is not passed
+          changedContainersAndKeys.foreach(CK => {
+            if (CK != null && CK.isInstanceOf[Map[_, _]]) {
+              val contAndKeys = CK.asInstanceOf[Map[String, Any]]
+              val contName = contAndKeys.getOrElse("C", "").toString.trim
+
+              var tenatId: String = ""
+              val msg = mdMgr.Message(contName, -1, true)
+              if (msg == None) {
+                val container = mdMgr.Container(contName, -1, true)
+                if (container != None)
+                  tenatId = container.get.tenantId
+              } else {
+                tenatId = msg.get.tenantId
+              }
+
+              val tmpKeys = contAndKeys.getOrElse("K", null)
+              if (contName.size > 0 && tmpKeys != null && tenatId != null && tenatId.size > 0) {
+                // Expecting List/Array of Keys
+                var keys: List[Any] = null
+                if (tmpKeys.isInstanceOf[List[_]]) {
+                  try {
+                    keys = tmpKeys.asInstanceOf[List[Any]]
+                  } catch {
+                    case e: Exception => { LOG.warn("", e) }
+                  }
+                } else if (tmpKeys.isInstanceOf[Array[_]]) {
+                  try {
+                    keys = tmpKeys.asInstanceOf[Array[Any]].toList
+                  } catch {
+                    case e: Exception => { LOG.warn("", e) }
+                  }
+                } else if (tmpKeys.isInstanceOf[Map[_, _]]) {
+                  try {
+                    keys = tmpKeys.asInstanceOf[Map[String, Any]].toList
+                  } catch {
+                    case e: Exception => { LOG.warn("", e) }
+                  }
+                } else if (tmpKeys.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
+                  try {
+                    keys = tmpKeys.asInstanceOf[scala.collection.mutable.Map[String, Any]].toList
+                  } catch {
+                    case e: Exception => { LOG.warn("", e) }
+                  }
+                }
+
+                if (keys != null && keys.size > 0) {
+                  var loadableKeys = ArrayBuffer[Key]()
+                  val ks = keys.map(k => {
+                    var oneKey: Map[String, Any] = null
+                    if (k.isInstanceOf[List[_]]) {
+                      try {
+                        oneKey = k.asInstanceOf[List[(String, Any)]].toMap
+                      } catch {
+                        case e: Exception => { LOG.warn("", e) }
+                      }
+                    } else if (k.isInstanceOf[Array[_]]) {
+                      try {
+                        oneKey = k.asInstanceOf[Array[(String, Any)]].toMap
+                      } catch {
+                        case e: Exception => { LOG.warn("", e) }
+                      }
+                    } else if (k.isInstanceOf[Map[_, _]]) {
+                      try {
+                        oneKey = k.asInstanceOf[Map[String, Any]]
+                      } catch {
+                        case e: Exception => { LOG.warn("", e) }
+                      }
+                    } else if (k.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
+                      try {
+                        oneKey = k.asInstanceOf[scala.collection.mutable.Map[String, Any]].toMap
+                      } catch {
+                        case e: Exception => { LOG.warn("", e) }
+                      }
+                    }
+
+                    if (oneKey != null) {
+                      val bk = oneKey.getOrElse("bk", null)
+                      if (bk != null) {
+                        val tm = oneKey.getOrElse("tm", "0").toString().toLong
+                        val tx = oneKey.getOrElse("tx", "0").toString().toLong
+                        val rid = oneKey.getOrElse("rid", "0").toString().toInt
+                        loadableKeys += Key(tm, bk.asInstanceOf[List[String]].toArray, tx, rid)
+                      }
+                    }
+                  })
+
+                  if (loadableKeys.size > 0) {
+                    try {
+                      logger.debug("Loading Keys => Txnid:%d, ContainerName:%s, Keys:%s".format(txnid, contName, loadableKeys.map(k => (k.timePartition, k.bucketKey.mkString("="), k.transactionId, k.rowId)).mkString(",")))
+                      envCtxt.ReloadKeys(txnid, tenatId, contName, loadableKeys.toList)
+                    } catch {
+                      case e: Exception => {
+                        logger.error("Failed to reload keys for container:" + contName, e)
+                      }
+                      case t: Throwable => {
+                        logger.error("Failed to reload keys for container:" + contName, t)
+                      }
+                    }
+                  }
+                }
+              }
+            } // else // not handling              if (contName.size > 0 && tmpKeys != null) {
+            // Expecting List/Array of Keys
+//            var keys: List[Any] = null
+//            if (tmpKeys.isInstanceOf[List[_]]) {
+//              try {
+//                keys = tmpKeys.asInstanceOf[List[Any]]
+//              } catch {
+//                case e: Exception => { LOG.warn("", e) }
+//              }
+//            } else if (tmpKeys.isInstanceOf[Array[_]]) {
+//              try {
+//                keys = tmpKeys.asInstanceOf[Array[Any]].toList
+//              } catch {
+//                case e: Exception => { LOG.warn("", e) }
+//              }
+//            } else if (tmpKeys.isInstanceOf[Map[_, _]]) {
+//              try {
+//                keys = tmpKeys.asInstanceOf[Map[String, Any]].toList
+//              } catch {
+//                case e: Exception => { LOG.warn("", e) }
+//              }
+//            } else if (tmpKeys.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
+//              try {
+//                keys = tmpKeys.asInstanceOf[scala.collection.mutable.Map[String, Any]].toList
+//              } catch {
+//                case e: Exception => { LOG.warn("", e) }
+//              }
+//            }
+//
+//            if (keys != null && keys.size > 0) {
+//              var loadableKeys = ArrayBuffer[Key]()
+//              val ks = keys.map(k => {
+//                var oneKey: Map[String, Any] = null
+//                if (k.isInstanceOf[List[_]]) {
 //                  try {
-//                    keys = tmpKeys.asInstanceOf[List[Any]]
+//                    oneKey = k.asInstanceOf[List[(String, Any)]].toMap
 //                  } catch {
 //                    case e: Exception => { LOG.warn("", e) }
 //                  }
-//                } else if (tmpKeys.isInstanceOf[Array[_]]) {
+//                } else if (k.isInstanceOf[Array[_]]) {
 //                  try {
-//                    keys = tmpKeys.asInstanceOf[Array[Any]].toList
+//                    oneKey = k.asInstanceOf[Array[(String, Any)]].toMap
 //                  } catch {
 //                    case e: Exception => { LOG.warn("", e) }
 //                  }
-//                } else if (tmpKeys.isInstanceOf[Map[_, _]]) {
+//                } else if (k.isInstanceOf[Map[_, _]]) {
 //                  try {
-//                    keys = tmpKeys.asInstanceOf[Map[String, Any]].toList
+//                    oneKey = k.asInstanceOf[Map[String, Any]]
 //                  } catch {
 //                    case e: Exception => { LOG.warn("", e) }
 //                  }
-//                } else if (tmpKeys.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
+//                } else if (k.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
 //                  try {
-//                    keys = tmpKeys.asInstanceOf[scala.collection.mutable.Map[String, Any]].toList
+//                    oneKey = k.asInstanceOf[scala.collection.mutable.Map[String, Any]].toMap
 //                  } catch {
 //                    case e: Exception => { LOG.warn("", e) }
 //                  }
 //                }
 //
-//                if (keys != null && keys.size > 0) {
-//                  var loadableKeys = ArrayBuffer[Key]()
-//                  val ks = keys.map(k => {
-//                    var oneKey: Map[String, Any] = null
-//                    if (k.isInstanceOf[List[_]]) {
-//                      try {
-//                        oneKey = k.asInstanceOf[List[(String, Any)]].toMap
-//                      } catch {
-//                        case e: Exception => { LOG.warn("", e) }
-//                      }
-//                    } else if (k.isInstanceOf[Array[_]]) {
-//                      try {
-//                        oneKey = k.asInstanceOf[Array[(String, Any)]].toMap
-//                      } catch {
-//                        case e: Exception => { LOG.warn("", e) }
-//                      }
-//                    } else if (k.isInstanceOf[Map[_, _]]) {
-//                      try {
-//                        oneKey = k.asInstanceOf[Map[String, Any]]
-//                      } catch {
-//                        case e: Exception => { LOG.warn("", e) }
-//                      }
-//                    } else if (k.isInstanceOf[scala.collection.mutable.Map[_, _]]) {
-//                      try {
-//                        oneKey = k.asInstanceOf[scala.collection.mutable.Map[String, Any]].toMap
-//                      } catch {
-//                        case e: Exception => { LOG.warn("", e) }
-//                      }
-//                    }
+//                if (oneKey != null) {
+//                  val bk = oneKey.getOrElse("bk", null)
+//                  if (bk != null) {
+//                    val tm = oneKey.getOrElse("tm", "0").toString().toLong
+//                    val tx = oneKey.getOrElse("tx", "0").toString().toLong
+//                    val rid = oneKey.getOrElse("rid", "0").toString().toInt
+//                    loadableKeys += Key(tm, bk.asInstanceOf[List[String]].toArray, tx, rid)
+//                  }
+//                }
+//              })
 //
-//                    if (oneKey != null) {
-//                      val bk = oneKey.getOrElse("bk", null)
-//                      if (bk != null) {
-//                        val tm = oneKey.getOrElse("tm", "0").toString().toLong
-//                        val tx = oneKey.getOrElse("tx", "0").toString().toLong
-//                        val rid = oneKey.getOrElse("rid", "0").toString().toInt
-//                        loadableKeys += Key(tm, bk.asInstanceOf[List[String]].toArray, tx, rid)
-//                      }
-//                    }
-//                  })
-//
-//                  if (loadableKeys.size > 0) {
-//                    try {
-//                      logger.debug("Loading Keys => Txnid:%d, ContainerName:%s, Keys:%s".format(txnid, contName, loadableKeys.map(k => (k.timePartition, k.bucketKey.mkString("="), k.transactionId, k.rowId)).mkString(",")))
-//                      envCtxt.ReloadKeys(txnid, contName, loadableKeys.toList)
-//                    } catch {
-//                      case e: Exception => {
-//                        logger.error("Failed to reload keys for container:" + contName, e)
-//                      }
-//                      case t: Throwable => {
-//                        logger.error("Failed to reload keys for container:" + contName, t)
-//                      }
-//                    }
+//              if (loadableKeys.size > 0) {
+//                try {
+//                  logger.debug("Loading Keys => Txnid:%d, ContainerName:%s, Keys:%s".format(txnid, contName, loadableKeys.map(k => (k.timePartition, k.bucketKey.mkString("="), k.transactionId, k.rowId)).mkString(",")))
+//                  envCtxt.ReloadKeys(txnid, contName, loadableKeys.toList)
+//                } catch {
+//                  case e: Exception => {
+//                    logger.error("Failed to reload keys for container:" + contName, e)
+//                  }
+//                  case t: Throwable => {
+//                    logger.error("Failed to reload keys for container:" + contName, t)
 //                  }
 //                }
 //              }
-//            } // else // not handling
-//          })
-//        }
-//      }
+//            }
+//
+//
+//          }
+//        } // else // not handling
+//
+//
+          })
+        }
+      }
 
       // 
     } catch {
