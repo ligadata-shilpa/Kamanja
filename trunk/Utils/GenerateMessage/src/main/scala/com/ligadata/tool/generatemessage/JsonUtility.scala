@@ -13,7 +13,7 @@ import scala.collection.immutable.Map
 class JsonUtility  extends LogTrait {
   def CreateMainJsonString(data: Map[String, String], configObj: ConfigBean): JsonAST.JValue = {
     val json =
-      ("Meesage" ->
+      ("Message" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
@@ -34,7 +34,7 @@ class JsonUtility  extends LogTrait {
   def CreateJsonString(feild: String, configObj: ConfigBean, keys: Array[String]): JsonAST.JValue = {
     var json: JsonAST.JValue = ""
     if (!feild.equalsIgnoreCase("TimePartitionInfo")) {
-      json = ("Meesage" ->
+      json = ("Message" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
@@ -44,7 +44,7 @@ class JsonUtility  extends LogTrait {
           (feild -> /*List.empty[JInt]*/ keys.toList)
         )
     } else {
-      json = ("Meesage" ->
+      json = ("Message" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
           ("Verion" -> "00.01.00") ~
