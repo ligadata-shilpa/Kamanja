@@ -23,7 +23,7 @@ import org.apache.kafka.clients.producer.{RecordMetadata, Callback, ProducerReco
 
 import scala.actors.threadpool.{Executors, TimeUnit}
 import scala.collection.mutable.ArrayBuffer
-import java.util.{Arrays, Properties}
+import java.util.{TimeZone, Arrays, Properties}
 import java.io.{InputStream, ByteArrayInputStream}
 import java.util.zip.GZIPInputStream
 import java.nio.file.{Files, Paths}
@@ -36,6 +36,7 @@ import com.ligadata.KamanjaVersion.KamanjaVersion
 object DemoKafkaProducer {
   private val dtFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
   private val dtFormatWithMS = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+  private var adjustTime: Long = 0
 
   class DataToPush {
     var prevTime: Long = -1
@@ -195,7 +196,7 @@ object DemoKafkaProducer {
           curData.originalTimeInData = (tmInMs / 1000) * 1000
         }
 
-        val newTm = curData.dataStartProcessing + (tmInMs - curData.originalTimeInData)
+        val newTm = curData.dataStartProcessing + (tmInMs - curData.originalTimeInData) + adjustTime
         val newTmStr = {
           val str = if (hasMS) dtFormatWithMS.format(new java.util.Date(newTm)) else dtFormat.format(new java.util.Date(newTm))
           if (tmVal.charAt(tmVal.size - 1) == 'Z')
@@ -328,6 +329,8 @@ object DemoKafkaProducer {
         nextOption(map ++ Map('topics -> value), tail)
       case "--threads" :: value :: tail =>
         nextOption(map ++ Map('threads -> value), tail)
+      case "--adjusttimezone" :: value :: tail =>
+        nextOption(map ++ Map('adjusttimezone -> value), tail)
       case "--partitionkeyidxs" :: value :: tail =>
         nextOption(map ++ Map('partitionkeyidxs -> value), tail)
       case "--format" :: value :: tail =>
@@ -399,6 +402,23 @@ object DemoKafkaProducer {
     }
 
     val gz = options.getOrElse('gz, "false").toString
+
+    val adjusttimezone = options.getOrElse('adjusttimezone, "").toString.trim
+
+    if (adjusttimezone.size > 0) {
+      if (adjusttimezone.startsWith("GMT") == false || adjusttimezone.startsWith("UTC") == false) {
+        logger.error("Supported adjusttimezone are GMT & UTC related ones. Ignoring given adjusttimezone:" + adjusttimezone)
+      } else {
+        try {
+          val adjTmZn = TimeZone.getTimeZone(adjusttimezone.replace("UTC", "GMT"))
+          adjustTime = adjTmZn.getOffset(System.currentTimeMillis)
+        } catch {
+          case e: Throwable => {
+            logger.error("Supported adjusttimezone are GMT & UTC related ones. Ignoring given adjusttimezone:" + adjusttimezone, e)
+          }
+        }
+      }
+    }
 
     val threads = options.getOrElse('threads, "0").toString.toInt
 
