@@ -11,3 +11,5 @@ fork in (run) := true
 net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 parallelExecution in Test := false
+
+libraryDependencies += "org.python" % "jython" % "2.7.0"

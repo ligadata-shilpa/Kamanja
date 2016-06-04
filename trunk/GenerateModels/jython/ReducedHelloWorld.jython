@@ -19,10 +19,9 @@ from com.ligadata.KamanjaBase import ContainerOrConcept
 from com.ligadata.kamanja.Testmsg import msg1
 from com.ligadata.kamanja.Testmsg import msg2
 
-class Model(ModelInstance):
-    def __init__(self, factory):
+class Model():
+    def __init__(self):
         """Constructor for model"""
-        super(ModelInstanceFactory, self).__init__(factory)
 
     def execute(self, txnCtxt, execMsgsSet, matchedInputSetIndex, outputDefault):
         inMsg = execMsgsSet[0]
