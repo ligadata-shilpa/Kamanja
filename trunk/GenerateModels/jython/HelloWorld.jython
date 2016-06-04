@@ -20,43 +20,55 @@ from com.ligadata.KamanjaBase import ContainerOrConcept
 from com.ligadata.kamanja.Testmsg import msg1
 from com.ligadata.kamanja.Testmsg import msg2
 
-def jythonmodel():
+class Model():
+    def __init__(self):
+         """Constructor for model"""
 
-    def testmodel():
+#        class Model(ModelInstance):
+#            def __init__(self, factory):
+#                """Constructor for model"""
+#                super(ModelInstanceFactory, self).__init__(factory)
 
-        class Model(ModelInstance):
-            def __init__(self, factory):
-                """Constructor for model"""
-                super(ModelInstanceFactory, self).__init__(factory)
+    def execute(self, txnCtxt, execMsgsSet, matchedInputSetIndex, outputDefault):
+        inMsg = execMsgsSet[0]
+        if inMsg.in1()!=111:
+            v = inMsg.in1()
+            print "Early exit %d" % (v)
+            return None
 
-            def execute(txnCtxt, execMsgsSet, matchedInputSetIndex, outputDefault):
-                helloWorld = execMsgsSet[0]
-                if helloWorld.score()!=1:
-                    return None
+        output = msg2.createInstance();
+        output.set(0, inMsg.in2())
+        output.set(1, inMsg.in3())
+        output.set(2, 2)
 
-                output = msg2.createInstance();
-                output.set(0, helloWorld.id())
-                output.set(1, helloWorld.name())
+        returnArr = [output];
+        return returnArr;
 
-                returnArr[0] = output;
-                return returnArr;
+class ModelFactory(ModelInstanceFactory):
+    def __init__(self, modelDef, nodeContext):
+        super(ModelInstanceFactory, self).__init__(modelDef, nodeContext)
 
-        class ModelFactory(ModelInstanceFactory):
-            def __init__(self, modelDef, nodeContext):
-                super(ModelInstanceFactory, self).__init__(modelDef, nodeContext)
+    def createModelInstance(self):
+        """Create a model instance"""
+        return Model(self)
 
-            def createModelInstance(self):
-                """Create a model instance"""
-                return Model(self)
+    def ModelName(self):
+        """Answer the model's name."""
+        return "jythonmodel.testmodel.ModelFactory"
 
-            def ModelName(self):
-                """Answer the model's name."""
-                return "jythonmodel.testmodel.ModelFactory"
+    def Version(self):
+        """Answer the model's version."""
+        return "0.0.1"
 
-            def Version(self):
-                """Answer the model's version."""
-                return "0.0.1"
+msg1 = msg1.createInstance()
+msg1.within1(111)
+msg1.within2(212)
+msg1.within3(313)
 
-    testmodel()
+a = [msg1]
 
-jythonmodel()
+m = Model()
+
+o = m.execute(None, a, 1, True)
+
+print "in1=%d in2=%d in3=%d" % (o[0].in1(),  o[0].in2(), o[0].in3())
