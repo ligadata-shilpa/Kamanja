@@ -251,5 +251,3 @@ val root = (project in file(".")).
 */
 
 lazy val jython = project.in(file("GenerateModels/jython")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler, runtime)
-
-lazy val testmsg = project.in(file("GenerateModels/testmsg")).configs(TestConfigs.all: _*).settings(TestSettings.settings: _*).dependsOn(ExtDependencyLibs % "provided", ExtDependencyLibs2 % "provided", Metadata, KamanjaBase, Exceptions, MetadataBootstrap, MessageCompiler, runtime)
