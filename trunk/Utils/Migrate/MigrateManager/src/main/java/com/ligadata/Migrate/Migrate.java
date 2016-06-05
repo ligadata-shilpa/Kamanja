@@ -807,7 +807,7 @@ public class Migrate {
 		    // metadata objects  directly in the database. We let the migrateTo
 		    // handle those updates and return immediately. There is no need
 		    // to update anything else
-		    if (srcVer.equalsIgnoreCase("1.4") || srcVer.equalsIgnoreCase("1.5")) {
+		    if (srcVer.equalsIgnoreCase("1.4") || srcVer.equalsIgnoreCase("1.4.1")) {
 			if (canUpgradeMetadata) {
 			    logger.debug("Ugrade models to new version");
 			    sendStatus("Upgrade models to new version", "DEBUG");
