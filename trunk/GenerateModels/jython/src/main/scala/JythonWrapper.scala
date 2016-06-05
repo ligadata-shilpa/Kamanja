@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package com.ligadata.kamaja.jython
-
+import org.python.core.Py
 import org.python.core.PyObject
 import org.python.core.PyString
 import org.python.util.PythonInterpreter
@@ -43,16 +43,18 @@ class JythonWrapperModel(factory: ModelInstanceFactory) extends ModelInstance(fa
 
   // Create the jython object
   val interpreter = new PythonInterpreter()
+
   interpreter.compile("<string>")
+
   val modelgClass = interpreter.get("Model")
-
   val modelObject: PyObject = modelgClass.__call__()
-  val model = modelObject.__tojava__(modelObject.getClass())
 
-  override def execute(txnCtxt: TransactionContext, outputDefault: Boolean): ModelResultBase = {
+  override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
+    val r: PyObject = modelObject.invoke("Execute", Py.java2py(txnCtxt), Py.java2py(execMsgsSet(0)))
 
-    // model.Execute(txnCtxt, matchedInputSetIndex, outputDefault)
-    null
+    // Convert to output?
+    val r1: ContainerOrConcept  = r.asInstanceOf[ContainerOrConcept]
+    Array(r1)
   }
 
 }
