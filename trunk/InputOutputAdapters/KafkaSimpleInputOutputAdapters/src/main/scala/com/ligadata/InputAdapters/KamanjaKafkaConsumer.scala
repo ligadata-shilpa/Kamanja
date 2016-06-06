@@ -72,17 +72,59 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
   metrics(KafkaSimpleConsumer.PARTITION_DEPTH_KEYS) = partitonDepths
   var localReadOffsets: collection.mutable.Map[Int,Long] = collection.mutable.Map[Int,Long]()
 
+  var props = new Properties()
+  props.put("bootstrap.servers", qc.hosts.mkString(","))
+
+  // We handle offsets ourselves...
+  props.put("enable.auto.commit", "false")
+
+  //auto.offset.reset is always Latest for Kamanja
+  props.put("auto.offset.reset", "latest")
+
+  // Default to somve values..
+  props.put("session.timeout.ms", "30000")
+  props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+  props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+
+  // Verify the Secuirty Paramters...
+  if (qc.security_protocol != null && (qc.security_protocol.trim.equalsIgnoreCase("sasl") || qc.security_protocol.trim.equalsIgnoreCase("ssl"))) {
+    if (qc.security_protocol.trim.equalsIgnoreCase("sasl")) {
+      // Add all the required SASL parameters.
+      if (qc.sasl_mechanism != null) props.put("sasl.mechanism", qc.sasl_mechanism)
+      if (qc.sasl_kerberos_service_name != null)
+        props.put("sasl.kerberos.service.name", qc.sasl_kerberos_service_name)
+      else
+        throw new KamanjaException("KamanjaKafkaCosnumer properties must specify SASL.KERBEROS.SERVICE.NAME if SASL is specified as Security Protocol", null)
+      if (qc.sasl_kerberos_kinit_cmd != null) props.put("sasl.kerberos.kinit.cmd", qc.sasl_kerberos_kinit_cmd)
+      if (qc.sasl_kerberos_min_time_before_relogic != null) props.put("sasl.kerberos.min.time.before.relogin", qc.sasl_kerberos_min_time_before_relogic)
+      if (qc.sasl_kerberos_ticket_renew_jiter != null) props.put("sasl.kerberos.ticket.renew.jitter", qc.sasl_kerberos_ticket_renew_jiter)
+      if (qc.sasl_kerberos_ticket_renew_window_factor != null) props.put("sasl.kerberos.ticket.renew.window.factor", qc.sasl_kerberos_ticket_renew_window_factor)
+    }
+
+    if (qc.security_protocol.trim.equalsIgnoreCase("ssl")) {
+      //All SSL parameters
+      if (qc.ssl_key_password != null) props.put("ssl.key.password", qc.ssl_key_password)
+      if (qc.ssl_keystore_location != null) props.put("ssl.keystore.location", qc.ssl_keystore_location)
+      if (qc.ssl_keystore_password != null) props.put("ssl.keystore.password", qc.ssl_keystore_password)
+      if (qc.ssl_truststore_location != null) props.put("ssl.truststore.location",qc.ssl_truststore_location)
+      if (qc.ssl_truststore_password != null) props.put("ssl.truststore.password", qc.ssl_truststore_password)
+      if (qc.ssl_enabled_protocols != null) props.put("ssl.enabled.protocols", qc.ssl_enabled_protocols)
+      if (qc.ssl_keystore_type != null) props.put("ssl.keystore.type", qc.ssl_keystore_type)
+      if (qc.ssl_protocol != null) props.put("ssl.protocol", qc.ssl_protocol)
+      if (qc.ssl_provider != null) props.put("ssl.provider", qc.ssl_provider)
+      if (qc.ssl_truststore_type != null) props.put("ssl.truststore.type", qc.ssl_truststore_type)
+      if (qc.ssl_cipher_suites != null) props.put("ssl.cipher.suites", qc.ssl_cipher_suites)
+      if (qc.ssl_endpoint_identification_algorithm != null) props.put("ssl.endpoint.identification.algorithm", qc.ssl_endpoint_identification_algorithm)
+      if (qc.ssl_keymanager_algorithm != null) props.put("ssl.keymanager.algorithm", qc.ssl_keymanager_algorithm)
+      if (qc.ssl_trust_manager_algorithm != null) props.put("ssl.trustmanager.algorithm", qc.ssl_trust_manager_algorithm)
+    }
+  }
+
   var isConsumerInitialized: Boolean = false
 
+  // factory for KafkaConsumers.. for now it doesn't do anything, but it may have to in the future.
   private def createConsumerWithInputProperties(): org.apache.kafka.clients.consumer.KafkaConsumer[String,String] = {
-    var props = new Properties()
-    props.put("bootstrap.servers", qc.hosts.mkString(","))
-    props.put("enable.auto.commit", "false")
-    props.put("auto.commit.interval.ms", "1000")
-    props.put("session.timeout.ms", "30000")
-    props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
-    props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
-    props
+    // Create the new consumer Objects
     new org.apache.kafka.clients.consumer.KafkaConsumer[String,String] (props)
   }
 
@@ -98,10 +140,10 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
   override def StartProcessing(partitionIds: Array[StartProcPartInfo], ignoreFirstMsg: Boolean): Unit = lock.synchronized {
 
     LOG.info("Start processing called on KamanjaKafkaAdapter for topic " + qc.topic)
-    println("START PROCESSING ON FOR " + qc.topic)
 
     // This is the number of executors we will run - Heuristic, but will go with it
    // var numberOfThreads = availableThreads
+    var maxPartNumber = -1
     var numberOfThreads = 2
     readExecutor = Executors.newFixedThreadPool(numberOfThreads)
 
@@ -113,6 +155,10 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
     })
 
     qc.instancePartitions = partitionInfo.map(partQuad => { partQuad._1.PartitionId }).toSet
+
+    qc.instancePartitions.foreach(partitionId => {
+      maxPartNumber = scala.math.max(partitionId, maxPartNumber)
+    })
 
     val partitionGroups: scala.collection.mutable.Map[Int, scala.collection.mutable.Set[(KafkaPartitionUniqueRecordKey, KafkaPartitionUniqueRecordValue, KafkaPartitionUniqueRecordValue )]]
                          = scala.collection.mutable.Map[Int, scala.collection.mutable.Set[(KafkaPartitionUniqueRecordKey, KafkaPartitionUniqueRecordValue, KafkaPartitionUniqueRecordValue )]]()
@@ -133,20 +179,20 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
     // So, now that we have our partition buckets, we start a thread for each buckets.  This involves seeking to the desired location for each partition
     // in the bucket, then starting to POLL.
     partitionGroups.foreach(group => {
-      println("Staring Consumers")
 
       readExecutor.execute(new Runnable() {
         var intSleepTimer = KamanjaKafkaConsumer.INITIAL_SLEEP
 
         // One consumer to service this group
-        var kafkaConnection: org.apache.kafka.clients.consumer.KafkaConsumer[String,String] = null
+        var kafkaConsumer: org.apache.kafka.clients.consumer.KafkaConsumer[String,String] = null
 
         // A Map of Execution Contexts to notify.. Assuming that The engine is still going to be running a Learning Engine
         // per partition.
-        var execContexts : ArrayBuffer[ExecContext] = ArrayBuffer[ExecContext]()
-        var uniqueVals : ArrayBuffer[KafkaPartitionUniqueRecordKey] = ArrayBuffer[KafkaPartitionUniqueRecordKey]()
-        var topicPartitions: ArrayBuffer[org.apache.kafka.common.TopicPartition] = ArrayBuffer[org.apache.kafka.common.TopicPartition]()
-        var initialOffsets: ArrayBuffer[Long] = ArrayBuffer[Long]()
+        var execContexts : Array[ExecContext] = new Array[ExecContext](maxPartNumber + 1)
+        var uniqueVals : Array[KafkaPartitionUniqueRecordKey] = new Array[KafkaPartitionUniqueRecordKey](maxPartNumber + 1)
+        var topicPartitions: Array[org.apache.kafka.common.TopicPartition] = new Array[org.apache.kafka.common.TopicPartition](maxPartNumber + 1)
+        var initialOffsets: Array[Long] = new Array[Long](maxPartNumber + 1)
+        var ignoreUntilOffsets: Array[Long] = new Array[Long](maxPartNumber + 1)
 
 
         var isSeekSuccessful = false
@@ -160,11 +206,10 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
           intSleepTimer =  KamanjaKafkaConsumer.INITIAL_SLEEP
         }
 
-        println("SEEKING....")
         // Create the connection for this thread to use and SEEK the appropriate offsets.
         while (!isSeekSuccessful && !isQuiese) {
           try {
-            kafkaConnection = createConsumerWithInputProperties
+            kafkaConsumer = createConsumerWithInputProperties
             var partitionsToMonitor: java.util.List[TopicPartition] = new util.ArrayList[TopicPartition]()
 
             // Initialize the monitoring status - NOTE:  we will not know which partition the exception occurred, so we
@@ -181,9 +226,8 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
               partitonDepths(thisPartitionNumber.toString) = 0
 
               // Create an execution context for this partition
-              if (execContexts.contains(thisPartitionNumber)) {
+              if (execContexts(thisPartitionNumber) != null) {
                 LOG.warn("KamanjaKafkaConsumer is creating a duplicate ExecutionContext for partition " + KamanjaKafkaConsumer)
-                println("ERROR>>>>>>>>>ERRROR>>>>>>>>>>ERROR")
               } else {
                 val uniqueKey = new KafkaPartitionUniqueRecordKey
                 thisTopicPartition = new TopicPartition(qc.topic, thisPartitionNumber)
@@ -191,39 +235,33 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
                 uniqueKey.TopicName = qc.topic
                 uniqueKey.PartitionId = thisPartitionNumber
 
-                uniqueVals.insert(thisPartitionNumber, uniqueKey)
-                execContexts.insert(thisPartitionNumber, execCtxtObj.CreateExecContext(input, uniqueKey, nodeContext))
-                topicPartitions.insert(thisPartitionNumber, thisTopicPartition)
-                initialOffsets.insert(thisPartitionNumber, partitionInfo._2.asInstanceOf[KafkaPartitionUniqueRecordValue].Offset.toLong)
+                uniqueVals(thisPartitionNumber) = uniqueKey
+                execContexts(thisPartitionNumber) = execCtxtObj.CreateExecContext(input, uniqueKey, nodeContext)
+                topicPartitions(thisPartitionNumber) = thisTopicPartition
+                initialOffsets(thisPartitionNumber) = partitionInfo._2.asInstanceOf[KafkaPartitionUniqueRecordValue].Offset.toLong
               }
 
               // Seek to the desired offset for this partition
               if (thisTopicPartition != null) partitionsToMonitor.add(thisTopicPartition)
             })
-            kafkaConnection.assign(partitionsToMonitor)
+            kafkaConsumer.assign(partitionsToMonitor)
 
             // Ok, the partitions have been assigned, seek all the right offsets
-            topicPartitions.foreach(partitionIfno => {
-              println("Testing")
-              // So, initialize local offsets here.
-              localReadOffsets(partitionIfno.partition) = initialOffsets(partitionIfno.partition)
-              if (initialOffsets(partitionIfno.partition) > 0) {
-                localReadOffsets(partitionIfno.partition) = initialOffsets(partitionIfno.partition)
-                // TODO Handle exceptions here
-                try {
-                  kafkaConnection.seek(topicPartitions(partitionIfno.partition), initialOffsets(partitionIfno.partition))
-                  LOG.debug("KamanjaKafkaConsumer Initialization for topic " + qc.topic +" - initial offset is set to " + initialOffsets(partitionIfno.partition) + " for partition " + partitionIfno.partition)
-                } catch {
-                  case e: Throwable => {
-                    LOG.warn("KamanjaKafkaConsumer Initialization - required offset is not available to the system, fast forwarding to the end")
-                    kafkaConnection.seekToEnd(topicPartitions(partitionIfno.partition))
-                  }
-                }
+            partitionsToMonitor.toArray.foreach(thisPartition => {
 
+              var thisPid = thisPartition.asInstanceOf[TopicPartition].partition
+
+              // So, initialize local offsets here.
+              localReadOffsets(thisPid) = initialOffsets(thisPid)
+              if (initialOffsets(thisPid) > 0) {
+                localReadOffsets(thisPid) = initialOffsets(thisPid)
+                ignoreUntilOffsets(thisPid) =  if (ignoreFirstMsg) initialOffsets(thisPid) else initialOffsets(thisPid) - 1
+                kafkaConsumer.seek(topicPartitions(thisPid), initialOffsets(thisPid))
               }
               else {
-                localReadOffsets(partitionIfno.partition) = 0
-                kafkaConnection.seekToBeginning(topicPartitions(partitionIfno.partition))
+                localReadOffsets(thisPid) = 0
+                ignoreUntilOffsets(thisPid) =  if (ignoreFirstMsg) initialOffsets(thisPid) else initialOffsets(thisPid) - 1
+                kafkaConsumer.seekToBeginning(topicPartitions(thisPid))
               }
             })
             isSeekSuccessful = true
@@ -231,16 +269,19 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
           } catch {
             case e: Throwable => {
               LOG.warn("KamanjaKafkaConsumer Exception initializing consumer",e)
-              if (kafkaConnection != null) kafkaConnection.close
-              kafkaConnection = null
+              if (kafkaConsumer != null) kafkaConsumer.close
+              kafkaConsumer = null
               try {
                 Thread.sleep(internalGetSleep)
               } catch {
                 case ie: InterruptedException => {
-                  LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
+                  Shutdown()
+                  LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting down ")
                   throw ie
                 }
                 case t: Throwable => {
+                  LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
+                  Shutdown()
                   throw t
                 }
               }
@@ -249,26 +290,30 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
           }
         }
 
+        // This is teh guy that keeps running processing each group of partitions.
         override def run(): Unit = {
-          println("In the RUN method.. polling until turned off.")
-          var execContextArray = execContexts.toArray[ExecContext]
+          LOG.debug("Starting to POLL ")
           while (!isQuiese) {
             try {
-              var records = (kafkaConnection.poll(KamanjaKafkaConsumer.POLLING_INTERVAL)).iterator
+              var records = (kafkaConsumer.poll(KamanjaKafkaConsumer.POLLING_INTERVAL)).iterator
               while (records.hasNext) {
                 val readTmMs = System.currentTimeMillis
 
                 var record: ConsumerRecord[String, String] = records.next
                 val message: Array[Byte] = record.value.getBytes()
-                val uniqueVal = new KafkaPartitionUniqueRecordValue
-                uniqueVal.Offset = record.offset
 
-                println("MESSAGE-> at @partition " + record.partition+ " @offset "+record.offset +" " +new String(message))
-                msgCount += 1
-                incrementCountForPartition(record.partition)
-                execContextArray(record.partition).execute(message,  uniqueVals(record.partition), uniqueVal, readTmMs)
-                localReadOffsets(record.partition) = (record.offset)
-                resetSleepTimer
+                // The Engine could have told us to ignore the first offsets that we received.
+                if (record.offset() > ignoreUntilOffsets(record.partition())) {
+                  val uniqueVal = new KafkaPartitionUniqueRecordValue
+                  uniqueVal.Offset = record.offset
+
+                  LOG.debug("MESSAGE-> at @partition " + record.partition+ " @offset "+record.offset +" " +new String(message))
+                  msgCount += 1
+                  incrementCountForPartition(record.partition)
+                  execContexts(record.partition).execute(message,  uniqueVals(record.partition), uniqueVal, readTmMs)
+                  localReadOffsets(record.partition) = (record.offset)
+                  resetSleepTimer
+                }
               }
             } catch {
               case e: Throwable => {
@@ -280,9 +325,12 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
                 } catch {
                   case ie: InterruptedException => {
                     LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
+                    Shutdown()
                     throw ie
                   }
                   case t: Throwable => {
+                    LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
+                    Shutdown()
                     throw t
                   }
                 }
@@ -292,8 +340,8 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
 
           // Clean up all the existing connections
           try {
-            kafkaConnection.close
-            kafkaConnection = null
+            if (kafkaConsumer != null) kafkaConsumer.close
+            kafkaConsumer = null
           } catch {
             case e: Throwable => {
               LOG.warn("KamanjaKafkaConsumer Exception trying to close kafka connections ", e)
@@ -314,17 +362,17 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
     LOG.debug("Getting all partionas for " + qc.Name)
     var results: java.util.List[PartitionInfo] = null
     var partitionNames: scala.collection.mutable.ListBuffer[KafkaPartitionUniqueRecordKey] = scala.collection.mutable.ListBuffer()
-    var kafkaConnection: org.apache.kafka.clients.consumer.KafkaConsumer[String,String] = null
+    var kafkaConsumer: org.apache.kafka.clients.consumer.KafkaConsumer[String,String] = null
     var isSuccessfulConnection = false
 
     // Create Consumer object and issue a request for known partitions.
     // per Kamanja design, we will continue trying until we success.  The retry will throttle back to 60 sec
     while (!isSuccessfulConnection && !isQuiese) {
       try {
-        kafkaConnection = createConsumerWithInputProperties()
-        results = kafkaConnection.partitionsFor(qc.topic)
+        kafkaConsumer = createConsumerWithInputProperties()
+        results = kafkaConsumer.partitionsFor(qc.topic)
         isSuccessfulConnection = true
-        kafkaConnection.close()
+        kafkaConsumer.close()
       } catch {
         case e: Throwable => {
           LOG.error ("Exception processing PARTITIONSFOR request..  Retrying ",e)
@@ -333,9 +381,12 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
           } catch {
             case ie: InterruptedException => {
               LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
+              Shutdown()
               throw ie
             }
             case t: Throwable => {
+              LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
+              Shutdown()
               throw t
             }
           }

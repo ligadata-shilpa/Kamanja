@@ -51,7 +51,7 @@ class KafkaQueueAdapterConfiguration extends AdapterConfiguration {
   var sasl_kerberos_service_name : String = _
   var sasl_mechanism : String = _
   var sasl_kerberos_kinit_cmd : String = _
-  var sasl_min_time_before_relogic: String = _
+  var sasl_kerberos_min_time_before_relogic: String = _
   var sasl_kerberos_ticket_renew_jiter: String = _
   var sasl_kerberos_ticket_renew_window_factor : String = _
 
@@ -125,14 +125,14 @@ object KafkaQueueAdapterConfiguration {
         qc.ssl_keymanager_algorithm = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("ssl.trust.manager.algorithm") == 0) {
         qc.ssl_trust_manager_algorithm = kv._2.trim
-      } else if (kv._1.compareToIgnoreCase("sasl.kerberos.service_name") == 0) {
+      } else if (kv._1.compareToIgnoreCase("sasl.kerberos.service.name") == 0) {
         qc.sasl_kerberos_service_name = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("sasl.mechanism") == 0) {
         qc.sasl_mechanism = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("sasl.kerberos.kinit.cmd") == 0) {
         qc.sasl_kerberos_kinit_cmd = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("sasl.min.time.before.relogic") == 0) {
-        qc.sasl_min_time_before_relogic = kv._2.trim
+        qc.sasl_kerberos_min_time_before_relogic = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("sasl.kerberos.ticket.renew.jiter") == 0) {
         qc.sasl_kerberos_ticket_renew_jiter = kv._2.trim
       } else if (kv._1.compareToIgnoreCase("sasl.kerberos.ticket.renew.window.factor") == 0) {
