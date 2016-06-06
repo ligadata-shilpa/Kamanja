@@ -4,6 +4,8 @@ import org.json4s.native.JsonMethods._
 import org.scalatest._
 import Matchers._
 
+import scala.collection.mutable
+
 /**
   * Created by Yousef on 5/18/2016.
   */
@@ -31,8 +33,9 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
       val configFileContent = fileBean.ReadFile(filePath)
       val parsedFile = fileBean.ParseFile(configFileContent)
       val extractedFile = fileBean.extractInfo(parsedFile)
-      var feildsString = Map[String, String]()
-      val inputFile = getResourceFullPath("/inputFile.txt")
+      var feildsString =  mutable.LinkedHashMap[String, String]()
+      //val inputFile = getResourceFullPath("/inputFile.txt")
+      val inputFile = getResourceFullPath("/SubscriberInfo_Telecom.dat")
       val inputFileContent = fileBean.ReadFile(inputFile)
       val fileSize = fileBean.Countlines(inputFile)
       val configBeanObj = fileBean.createConfigBeanObj(extractedFile)
@@ -69,7 +72,7 @@ class JsonUtilityTest extends FeatureSpec with GivenWhenThen {
             }
           }
         }
-        feildsString = feildsString + (headerFields(itemIndex) -> previousType)
+        feildsString += (headerFields(itemIndex) -> previousType)
       }
       Given("Test CreateMainJsonString function")
 
