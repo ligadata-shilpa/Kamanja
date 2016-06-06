@@ -8,10 +8,11 @@ import org.json4s.JsonAST
 import org.json4s.JsonAST.JInt
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
-import scala.collection.immutable.Map
+import scala.collection.immutable.{TreeMap, Map}
+import scala.collection.mutable
 
 class JsonUtility  extends LogTrait {
-  def CreateMainJsonString(data: Map[String, String], configObj: ConfigBean): JsonAST.JValue = {
+  def CreateMainJsonString(data: mutable.LinkedHashMap[String, String], configObj: ConfigBean): JsonAST.JValue = {
     val json =
       ("Message" ->
         ("NameSpace" -> configObj.nameSpace) ~
@@ -21,13 +22,16 @@ class JsonUtility  extends LogTrait {
           ("Fixed" -> configObj.messageStructure.toString) ~
           ("Persist" -> configObj.saveMessage.toString) ~
           ("Feilds" ->
-            data.keys.map {
+            data.map {
               key =>
                 (
-                  ("Name" -> key) ~
-                    ("Type" -> "System.".concat(data(key))))
-            })
+                  ("Name" -> key._1) ~
+                    ("Type" -> "System.".concat(key._2)))
+            }
+            )
         )
+
+
     return json
   }
 
@@ -59,7 +63,7 @@ class JsonUtility  extends LogTrait {
     return json
   }
 
-  def FinalJsonString(data: Map[String, String], configObj: ConfigBean): JsonAST.JValue = {
+  def FinalJsonString(data: mutable.LinkedHashMap[String, String], configObj: ConfigBean): JsonAST.JValue = {
     var json: JsonAST.JValue = ""
     if (!data.isEmpty) {
       json = CreateMainJsonString(data, configObj)

@@ -25,6 +25,7 @@ import scala.collection.immutable.HashMap
 import java.io.File
 import java.io.PrintWriter
 import org.apache.logging.log4j._
+import scala.collection.mutable
 import scala.io.Source.fromFile
 
 trait LogTrait {
@@ -116,7 +117,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      val parsedConfig = fileBean.ParseFile(configFileContent) //Parse config file
      val extractedInfo = fileBean.extractInfo(parsedConfig) //Extract information from parsed file
      val configBeanObj = fileBean.createConfigBeanObj(extractedInfo)// create a config object that store the result from extracting config file
-     var feildsString = Map[String, String]()
+     var feildsString = mutable.LinkedHashMap[String, String]()
      if(configBeanObj.createMessageFrom.equalsIgnoreCase("header")){
        val fileSize = fileBean.Countlines(inputFile) // Find number of lines in file
        val headerString = fileBean.ReadHeaderFile(inputFile, 0) //read the header line for inputFile
@@ -136,7 +137,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
            sys.exit(1)
          }
          var previousType = dataTypeObj.FindFinalType(fileSize, itemIndex, inputFile,configBeanObj.delimiter, configBeanObj.detectDatatypeFrom)
-         feildsString = feildsString + (headerFields(itemIndex) -> previousType)
+         feildsString += (headerFields(itemIndex) -> previousType)
        }
      } else if(configBeanObj.createMessageFrom.equalsIgnoreCase("pmml")){
        val pmmlObj: PMMLUtility = new PMMLUtility

@@ -8,10 +8,12 @@ package com.ligadata.tool.generatemessage
 //import com.ligadata.kamanja.metadata.MiningModelType._
 
 //import com.ligadata.Serialize._
+import java.util
+
 import org.dmg.pmml._
 
 import scala.collection.JavaConverters._
-
+import scala.collection.mutable
 import java.io.{ByteArrayInputStream, PushbackInputStream, InputStream}
 import java.nio.charset.StandardCharsets
 import javax.xml.bind.{ValidationEvent, ValidationEventHandler}
@@ -158,14 +160,27 @@ class PMMLUtility extends LogTrait{
 //      })
   }
 
-  def OutputMessageFields(outputFields: scala.Array[(String,String)], targetFields: scala.Array[(String,String)]): Map[String, String] ={
+  def OutputMessageFields(outputFields: scala.Array[(String,String)], targetFields: scala.Array[(String,String)]): mutable.LinkedHashMap[String, String] ={
+    var outputMap =  mutable.LinkedHashMap[String, String]()
     if(outputFields.length == 0 && targetFields.length == 0)
-      return  Map[String, String]()
-    else if(outputFields.length == 0 && targetFields.length != 0)
-      return targetFields.toMap
-    else if(outputFields.length != 0 && targetFields.length == 0)
-      return outputFields.toMap
-    else return (outputFields ++ targetFields).toMap
+      return  outputMap
+    else if(outputFields.length == 0 && targetFields.length != 0){
+      for(target <- targetFields)
+        outputMap += (target._1 -> target._2)
+      return outputMap
+    }
+    else if(outputFields.length != 0 && targetFields.length == 0){
+      for(output <- outputFields)
+        outputMap += (output._1 -> output._2)
+      return outputMap
+    }
+    else {
+      for(output <- outputFields)
+        outputMap += (output._1 -> output._2)
+      for(target <- targetFields)
+        outputMap += (target._1 -> target._2)
+      return outputMap
+    }
 
   }
 }
