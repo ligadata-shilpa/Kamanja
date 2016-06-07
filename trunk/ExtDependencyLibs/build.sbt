@@ -104,6 +104,8 @@ libraryDependencies ++= Seq(
 //////////////////////  jtm
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" //% "test->default"
 
+//////////////////////  jython
+libraryDependencies += "org.python" % "jython" % "2.7.0"
 
 ////////////////////// Metadata
 libraryDependencies += "com.novocode" % "junit-interface" % "0.11-RC1" % "test"
