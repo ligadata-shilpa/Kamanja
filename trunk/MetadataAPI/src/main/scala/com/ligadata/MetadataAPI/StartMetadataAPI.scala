@@ -26,6 +26,7 @@ import com.ligadata.kamanja.metadata.MdMgr
 import scala.collection.mutable
 import scala.collection.immutable
 import com.ligadata.KamanjaVersion.KamanjaVersion
+import scala.io.Source
 
 /**
  * Created by dhaval Kolapkar on 7/24/15.
@@ -128,7 +129,7 @@ object StartMetadataAPI {
           || arg.endsWith(".scala")
           || arg.endsWith(".java")
           || arg.endsWith(".jar")) {
-          extraCmdArgs(INPUTLOC) = arg
+         extraCmdArgs(INPUTLOC) = arg
           if (expectBindingFromFile) {
             /** the json test above can prevent the ordinary catch of the name below */
             extraCmdArgs(FROMFILE) = extraCmdArgs.getOrElse(INPUTLOC, null)
@@ -173,6 +174,7 @@ object StartMetadataAPI {
               expectElementId = true
               extraCmdArgs(ELEMENTID) = ""
             } else if (arg.equalsIgnoreCase(PROPERTYFILE)) {
+              logger.warn ("getting pfile " + arg)
               expectPropFile = true
               extraCmdArgs(PROPERTYFILE) = ""
             }else {
@@ -246,8 +248,10 @@ object StartMetadataAPI {
                 extraCmdArgs(ELEMENTID) = arg
                 expectElementId = false
                 argVar = "" // Make sure we don't add to the routing command
+
               }
               if (expectPropFile) {
+                logger.warn ("Expecting prop file name is " + arg)
                 extraCmdArgs(PROPERTYFILE) = arg
                 expectPropFile = false
                 argVar = ""
@@ -298,6 +302,22 @@ object StartMetadataAPI {
         config = defaultConfig
       }
 
+    logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file")
+    //              var paramValues : scala.collection.mutable.Map [String, Any]
+    var paramJsonStr : String = ""
+    val paramConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~")) + "/config/" + extraCmdArgs(PROPERTYFILE)
+    try {
+
+      paramJsonStr =  Source.fromFile(paramConfig).getLines.mkString
+
+    }
+    catch {
+      case e: Exception => {
+        paramJsonStr = ""
+      }
+    }
+
+    logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file contents " + paramJsonStr)
       getMetadataAPI.InitMdMgrFromBootStrap(config, false)
       if (action == "")
         TestMetadataAPI.StartTest
@@ -351,9 +371,9 @@ object StartMetadataAPI {
     }
   }
 
-  def extraParam (fileName : String) : Map[String, String] = {
-    
-  }
+//  def extraParam (fileName : String) : Map[String, String] = {
+
+//  }
 
   def usage : Unit = {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
