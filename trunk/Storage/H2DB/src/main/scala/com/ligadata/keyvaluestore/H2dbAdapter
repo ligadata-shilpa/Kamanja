@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright 2015 ligaDATA
  *
@@ -13,26 +15,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.ligadata.keyvaluestore
 
 import java.io.File
-import java.net.URLClassLoader
-import java.nio.ByteBuffer
+import java.net.{URL, URLClassLoader}
 import java.sql.{Connection, PreparedStatement, ResultSet, Statement, ResultSet => _, Statement => _, _}
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Date, TimeZone}
+import java.util.{Calendar, Date, Properties, TimeZone}
 
-import com.datastax.driver.core._
-import com.ligadata.Exceptions.{StorageConnectionException, StorageDDLException, StorageDMLException}
-import com.ligadata.KamanjaBase.NodeContext
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
+import org.apache.logging.log4j._
+import com.ligadata.Exceptions.ConnectionFailedException
 import com.ligadata.KvBase.{Key, TimeRange, Value}
 import com.ligadata.StorageBase.{DataStore, StorageAdapterFactory, Transaction}
 import com.ligadata.Utils.KamanjaLoaderInfo
-import com.ligadata.kamanja.metadata.AdapterInfo
+import org.apache.commons.dbcp2.BasicDataSource
 import org.json4s.jackson.JsonMethods._
 
 import scala.collection.mutable.TreeSet
+
+
+class JdbcClassLoader(urls: Array[URL], parent: ClassLoader) extends URLClassLoader(urls, parent) {
+  override def addURL(url: URL) {
+    super.addURL(url)
+  }
+}
+
+class DriverShim(d: Driver) extends Driver {
+  private var driver: Driver = d
+
+  def connect(u: String, p: Properties): Connection = this.driver.connect(u, p)
+
+  def acceptsURL(u: String): Boolean = this.driver.acceptsURL(u)
+
+  def getPropertyInfo(u: String, p: Properties): Array[DriverPropertyInfo] = this.driver.getPropertyInfo(u, p)
+
+  def getMajorVersion(): Int = this.driver.getMajorVersion
+
+  def getMinorVersion(): Int = this.driver.getMinorVersion
+
+  def jdbcCompliant(): Boolean = this.driver.jdbcCompliant()
+
+  def getParentLogger(): java.util.logging.Logger = this.driver.getParentLogger()
+}
+
+
 
 
 class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: String) extends DataStore {
