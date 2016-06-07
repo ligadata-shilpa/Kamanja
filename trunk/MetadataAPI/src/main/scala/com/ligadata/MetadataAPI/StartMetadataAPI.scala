@@ -107,6 +107,12 @@ object StartMetadataAPI {
 
   var isShutdown = false
 
+
+  //split on the comma only if that comma has zero, or an even number of quotes ahead of it.
+  def split(str : String, separator : String) : Array[String] = {
+    val tokens = str.split(separator + "(?=([^\"]*\"[^\"]*\")*[^\"]*$)", -1)
+    tokens.filter(token => token.length > 0).toList.toArray
+  }
   def execCmd(args : Array[String]): Unit ={
     println("calling StartMetadataApi.execCmd with args: " + args)
     main(args)
@@ -849,7 +855,7 @@ object StartMetadataAPI {
             if (strLine == null)
               break
             LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(strLine, socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
-            StartMetadataAPI.execCmd(Array(strLine)) // TODO: see how to get strLine as array without need to
+            StartMetadataAPI.execCmd(StartMetadataAPI.split(strLine, " "))
           }
         }
       } catch {
