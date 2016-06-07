@@ -129,14 +129,17 @@ class DataTypeUtility extends LogTrait{ // This class created to check the value
   }
 
   def FindPMMLFieldType(field: String): String ={
-    if (field.equalsIgnoreCase("integer"))
+    if (field.equalsIgnoreCase("integer") || field.equalsIgnoreCase("int-number") || field.equalsIgnoreCase("byte") || field.equalsIgnoreCase("int") || field.equalsIgnoreCase("negativeinteger") || field.equalsIgnoreCase("nonnegativeinteger")
+      || field.equalsIgnoreCase("nonpositiveinteger") || field.equalsIgnoreCase("positiveinteger") || field.equalsIgnoreCase("short") || field.equalsIgnoreCase("unsignedshort") || field.equalsIgnoreCase("unsignedinteger") || field.equalsIgnoreCase("unsignedbyte"))
       return "Int"
-    else if (field.equalsIgnoreCase("float"))
+    else if (field.equalsIgnoreCase("float") || field.equalsIgnoreCase("prob-number") || field.equalsIgnoreCase("percentage-number"))
       return "Float"
-    else if (field.equalsIgnoreCase("double"))
+    else if (field.equalsIgnoreCase("double") || field.equalsIgnoreCase("number") || field.equalsIgnoreCase("real-number") || field.equalsIgnoreCase("decimal"))
       return "Double"
     else if(field.equalsIgnoreCase("boolean"))
       return "Boolean"
+    else if(field.equalsIgnoreCase("long") || field.equalsIgnoreCase("unsignedlong"))
+      return "Long"
     else return "String"
   }
 }

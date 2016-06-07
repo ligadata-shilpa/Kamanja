@@ -50,45 +50,6 @@ class PMMLUtility extends LogTrait{
     }
 
     return modelEvaluator
-    //if (modelEvaluator != null) {
-    //  val activeFieldNames: JList[FieldName] = modelEvaluator.getActiveFields
-    //  val outputFieldNames: JList[FieldName] = modelEvaluator.getOutputFields
-//      val targetFieldNames: JList[FieldName] = modelEvaluator.getTargetFields
-//
-//      val activeFields: scala.Array[DataField] = {
-//        activeFieldNames.asScala.map(nm => modelEvaluator.getDataField(nm))
-//      }.toArray
-//      val targetFields: scala.Array[Target] = {
-//        targetFieldNames.asScala.filter(nm => modelEvaluator.getTarget(nm) != null).map(nm => modelEvaluator.getTarget(nm))
-//      }.toArray
-//      val outputFields: scala.Array[OutputField] = {
-//        outputFieldNames.asScala.filter(nm => modelEvaluator.getOutputField(nm) != null).map(nm => modelEvaluator.getOutputField(nm))
-//      }.toArray
-
-//      val activeFieldContent : scala.Array[(String,String)] = activeFields.map(fld => {
-//        (fld.getName.getValue, fld.getDataType.value)
-//      })
-
-//      val targetFieldContent : scala.Array[(String,String)] = if (targetFields != null && targetFields.size > 0) {
-//        targetFields.map(fld => {
-//          val field : FieldName = fld.getField
-//          val name : String = field.getValue
-//          val datafield : DataField =  modelEvaluator.getDataField(field)
-//          (datafield.getName.getValue, datafield.getDataType.value)
-//
-//        })
-//      } else {
-//        scala.Array[(String,String)](("no","targetFields"))
-//      }
-
-//      val outputFieldContent : scala.Array[(String,String)] = if (outputFields != null && outputFields.size > 0) {
-//        outputFields.map(fld => {
-//          (fld.getName.getValue, fld.getDataType.value)
-//        })
-//      } else {
-//        scala.Array[(String,String)](("no","outputFields"))
-//      }
-//    }
   }
 
   def ActiveFields(modelEvaluator: ModelEvaluator[_ <: Model]): scala.Array[(String,String)] ={
@@ -98,7 +59,12 @@ class PMMLUtility extends LogTrait{
       activeFieldNames.asScala.map(nm => modelEvaluator.getDataField(nm))
     }.toArray
     val activeFieldContent : scala.Array[(String,String)] = activeFields.map(fld => {
-      if(fld.getDataType != null)
+      if(fld.getDataType == null && fld.getOpType != null){
+        if(fld.getOpType.toString.equalsIgnoreCase("continuous"))
+          (fld.getName.getValue, "Double")
+        else (fld.getOpType.toString.equalsIgnoreCase("categorical") || fld.getOpType.toString.equalsIgnoreCase("ordinary"))
+        (fld.getName.getValue, "String")
+      } else if(fld.getDataType != null)
       (fld.getName.getValue, dataTypeBean.FindPMMLFieldType(fld.getDataType.value))
       else (fld.getName.getValue, "String")
     })
@@ -112,7 +78,13 @@ class PMMLUtility extends LogTrait{
       outputFieldNames.asScala.filter(nm => modelEvaluator.getOutputField(nm) != null).map(nm => modelEvaluator.getOutputField(nm))
     }.toArray
     val outputFieldContent : scala.Array[(String,String)] = if (outputFields != null && outputFields.size > 0) {
-      outputFields.map(fld => { if(fld.getDataType != null) {
+      outputFields.map(fld => {
+        if(fld.getDataType == null && fld.getOpType != null){
+          if(fld.getOpType.toString.equalsIgnoreCase("continuous"))
+            (fld.getName.getValue, "Double")
+          else (fld.getOpType.toString.equalsIgnoreCase("categorical") || fld.getOpType.toString.equalsIgnoreCase("ordinary"))
+          (fld.getName.getValue, "String")
+        } else if(fld.getDataType != null) {
         (fld.getName.getValue, dataTypeBean.FindPMMLFieldType(fld.getDataType.value))
       }else (fld.getName.getValue, "String")
       })
@@ -127,10 +99,6 @@ class PMMLUtility extends LogTrait{
   def TargetFields(modelEvaluator: ModelEvaluator[_ <: Model]): scala.Array[(String,String)] ={
     val dataTypeBean: DataTypeUtility = new DataTypeUtility
     val targetFieldNames: JList[FieldName] = modelEvaluator.getTargetFields
-//    println("target size =>"+targetFieldNames.size())
-//      println("target data =>"+targetFieldNames.get(0))
-//      println("test getTarget =>"+modelEvaluator.getTarget(targetFieldNames.get(0)))
-//    println("test getmining =>"+modelEvaluator.getMiningField(targetFieldNames.get(0)).getName)
     val targetFields: scala.Array[Target] = {
       targetFieldNames.asScala.filter(nm => modelEvaluator.getTarget(nm) != null).map(nm => modelEvaluator.getTarget(nm))
     }.toArray
@@ -150,14 +118,6 @@ class PMMLUtility extends LogTrait{
       scala.Array[(String,String)]()
     }
     return targetFieldContent
-//    val targetFields  = EvaluatorUtil.getTargetFields(modelEvaluator)
-// //   for(FieldName  <- targetFields){
-//      targetFields.toArray.map(FieldName =>{
-//      val miningField: MiningField = modelEvaluator.getMiningField(FieldName)
-//      val dataField: DataField = modelEvaluator.getDataField(FieldName)
-//      val target: Target = modelEvaluator.getTarget(FieldName);
-//      val dataType: DataType = dataField.getDataType();
-//      })
   }
 
   def OutputMessageFields(outputFields: scala.Array[(String,String)], targetFields: scala.Array[(String,String)]): mutable.LinkedHashMap[String, String] ={
