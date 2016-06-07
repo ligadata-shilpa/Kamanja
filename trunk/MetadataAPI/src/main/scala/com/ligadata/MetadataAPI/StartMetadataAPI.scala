@@ -26,6 +26,10 @@ import com.ligadata.kamanja.metadata.MdMgr
 import scala.collection.mutable
 import scala.collection.immutable
 import com.ligadata.KamanjaVersion.KamanjaVersion
+import java.net.{Socket, ServerSocket}
+import java.io.{PrintWriter, File, PrintStream, BufferedReader, InputStreamReader}
+import scala.util.control.Breaks._
+import scala.actors.threadpool.{ExecutorService}
 
 /**
  * Created by dhaval Kolapkar on 7/24/15.
@@ -100,6 +104,13 @@ object StartMetadataAPI {
   var expectElementId = false
 
   val extraCmdArgs = mutable.Map[String, String]()
+
+  var isShutdown = false
+
+  def execCmd(args : Array[String]): Unit ={
+    println("calling StartMetadataApi.execCmd with args: " + args)
+    main(args)
+  }
 
   def main(args: Array[String]) {
     if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
@@ -817,5 +828,94 @@ object StartMetadataAPI {
     }
 
     response
+  }
+
+
+  class MetadataAPIConnHandler(var socket: Socket) extends Runnable {
+    private val LOG = LogManager.getLogger(getClass)
+    private val out = new PrintStream(socket.getOutputStream)
+    private val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
+
+    socket.setKeepAlive(true)
+
+    LOG.warn("Created a connection to socket. HostAddress:%s, Port:%d, LocalPort:%d".format(socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
+
+    def run() {
+      val vt = 0
+      try {
+        breakable {
+          while (!StartMetadataAPI.isShutdown) {
+            val strLine = in.readLine()
+            if (strLine == null)
+              break
+            LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(strLine, socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
+            StartMetadataAPI.execCmd(Array(strLine)) // TODO: see how to get strLine as array without need to
+          }
+        }
+      } catch {
+        case e: Exception => {
+          LOG.error("", e)
+        }
+      } finally {
+        socket.close()
+      }
+    }
+  }
+
+  class MetadataAPIServer(port: Int) extends Runnable {
+    private val LOG = LogManager.getLogger(getClass)
+    private val serverSocket = new ServerSocket(port)
+    private val exec: ExecutorService = scala.actors.threadpool.Executors.newFixedThreadPool(5)
+
+    LOG.warn("MetadataAPIServer started for port:" + port)
+
+    def run() {
+      try {
+        while (!StartMetadataAPI.isShutdown) {
+          // This will block until a connection comes in.
+          val socket = serverSocket.accept()
+          exec.execute(new MetadataAPIConnHandler(socket))
+        }
+      } catch {
+
+        case e: java.net.SocketException => {
+          if (serverSocket != null && serverSocket.isClosed)
+            LOG.warn("Metadata api - Socket Error. May be closed", e)
+          else
+            LOG.error("Metadata api - Socket Error", e)
+        }
+        case e: Exception => {
+          LOG.error("Metadata api - Socket Error", e)
+        }
+      } finally {
+        exec.shutdownNow()
+        if (serverSocket != null && !serverSocket.isClosed)
+          serverSocket.close()
+      }
+    }
+
+    def shutdown() {
+      if (serverSocket != null && !serverSocket.isClosed)
+        serverSocket.close()
+    }
+  }
+
+  object MetadataAPIManager {
+    private val LOG = LogManager.getLogger(getClass)
+
+    def start(args: Array[String], port : Int): Unit = {
+
+      val kmResult = new MetadataAPIServer(port).run()//TODO : maybe better to use a singleton
+      if (kmResult != 0) {
+        LOG.error(s"MetadataAPIManager: Kamanja shutdown with error code $kmResult")
+      }
+    }
+
+    def shutdown(): Unit ={
+      if (!StartMetadataAPI.isShutdown) {
+        LOG.warn("MetadataAPIManager: Received shutdown request")
+        StartMetadataAPI.isShutdown = true // Setting the global shutdown
+      }
+    }
   }
 }
