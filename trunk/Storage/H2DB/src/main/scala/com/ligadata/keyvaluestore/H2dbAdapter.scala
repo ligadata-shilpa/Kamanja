@@ -17,24 +17,29 @@
  */
 package com.ligadata.keyvaluestore
 
-import java.io.File
-import java.net.{URL, URLClassLoader}
-import java.sql.{Connection, PreparedStatement, ResultSet, Statement, ResultSet => _, Statement => _, _}
-import java.text.SimpleDateFormat
-import java.util.{Calendar, Date, Properties, TimeZone}
-
+import java.sql.DriverManager
+import java.sql.{ Statement, PreparedStatement, CallableStatement, DatabaseMetaData, ResultSet }
+import java.sql.Connection
+import com.ligadata.KvBase.{ Key, Value, TimeRange }
+import com.ligadata.StorageBase.{ DataStore, Transaction, StorageAdapterFactory }
+import java.nio.ByteBuffer
+import org.apache.logging.log4j._
+import com.ligadata.Exceptions._
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import org.apache.logging.log4j._
-import com.ligadata.Exceptions.ConnectionFailedException
-import com.ligadata.KvBase.{Key, TimeRange, Value}
-import com.ligadata.StorageBase.{DataStore, StorageAdapterFactory, Transaction}
-import com.ligadata.Utils.KamanjaLoaderInfo
-import org.apache.commons.dbcp2.BasicDataSource
-import org.json4s.jackson.JsonMethods._
-
+import com.ligadata.Utils.{ KamanjaLoaderInfo }
+import java.util.{ Date, Calendar, TimeZone }
+import java.text.SimpleDateFormat
+import java.io.File
+import java.net.{ URL, URLClassLoader }
 import scala.collection.mutable.TreeSet
+import java.sql.{ Driver, DriverPropertyInfo }
+import java.sql.Timestamp
+import java.util.Properties
+import org.apache.commons.dbcp.BasicDataSource
+
+//import org.apache.commons.dbcp2.BasicDataSource
 
 
 class JdbcClassLoader(urls: Array[URL], parent: ClassLoader) extends URLClassLoader(urls, parent) {
