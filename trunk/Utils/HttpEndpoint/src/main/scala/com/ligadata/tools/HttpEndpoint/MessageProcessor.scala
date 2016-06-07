@@ -134,14 +134,15 @@ class MessageProcessor(service: Service) {
   private def validate(kvdata: Map[String, String]): Boolean = {
     service.schema.foreach(field => {
       val value: String = kvdata.getOrElse(field.name, "").trim
-      if (field.required && value.isEmpty)
-        throw new DataException(1, "Data error: Required field " + field.name + " is missing.")
-      else {
+      if (value.isEmpty) {
+        if(field.required)
+          throw new DataException(1, "Required field " + field.name + " is missing.")
+      } else {
         field.typeId match {
           case 1 => try { value.toDouble }
-            catch { case e: Exception => throw new DataException(2, "Data error: " + field.name + " should be a number.") }
+            catch { case e: Exception => throw new DataException(2, field.name + " should be a number.") }
           case 3 => try { new SimpleDateFormat(field.format).parse(value) }
-            catch { case e: Exception => throw new DataException(3, "Data error: " + field.name + " should be a " + field.datatype + " with format " + field.format) }
+            catch { case e: Exception => throw new DataException(3, field.name + " should be a " + field.datatype + " with format " + field.format) }
           case _ =>
         }
       }
