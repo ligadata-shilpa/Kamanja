@@ -1,18 +1,20 @@
 
 import abc
-from common import ModelBase
+from common.ModelBase import ModelBase
 import json
 
 class ModelInstance(ModelBase): 
+    """ initialize the model instance (the super class for 
+    all the python models) with the supplied model info JSON
+    popped off the front of supplied addModel inputs """
+
     def __init__(self, modelInfo):
-        """ initialize the model instance (the super class for 
-        all the python models) with the supplied model info JSON
-        popped off the front of supplied addModel inputs """
         self.jsonModelInfo = modelInfo #string rep 
-        self.modelInfo = json.loads(modelInfo) #json => dictionary
+        self.modelInfo = [] #json.loads(modelInfo) #json => dictionary
         partitionHash = modelInfo["partitionHash"]
         init(partitionHash)
 
+    #def ModelName(self):
     def ModelName(self):
         """Answer the model's name."""
         nm = modelInfo["ModelName"]

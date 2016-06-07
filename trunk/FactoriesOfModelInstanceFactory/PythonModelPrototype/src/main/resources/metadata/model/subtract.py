@@ -1,5 +1,5 @@
 import abc
-from common import ModelInstance
+from common.ModelInstance import ModelInstance
 import json
 
 class Handler(ModelInstance): 

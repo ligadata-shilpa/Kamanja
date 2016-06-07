@@ -10,7 +10,7 @@ The server starts without issue.  Multiple servers can be run on each machine by
 
 _Description_
 
-Server related commands found in the Scala client script include _startServer_, _stopServer_, and _serverStatus_.  The model related command are _addModel_, _removeModel_, and _executeModel_. The commands one can use from the Scala client are:
+Server related commands found in the Scala client script include _startServer_, _stopServer_, and _serverStatus_.  The model related command are _addModel_, _removeModel_, and _executeModel_. The commands one can use from the Scala client are: 
 
 	  SocketClient.scala <named args...> 
 	  where named args are:
@@ -29,6 +29,10 @@ Server related commands found in the Scala client script include _startServer_, 
 	    --cmd executeModel  
 	    			--modelName '<modelName>' 
 	              	--msg '<msg data>'
+	    --cmd executeModel 
+	    			--modelName '<modelName>'
+	                --filePath '<msg file path>'
+
 
 Multiple servers can be run concurrently on the same machine by listening on a different port.  Provisions for starting the server on another machine have been coded (not tested). 
 

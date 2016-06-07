@@ -1,4 +1,4 @@
-class Handler(ModelInstance): 
+class Handler(object): 
 	import os
 	import imp
 

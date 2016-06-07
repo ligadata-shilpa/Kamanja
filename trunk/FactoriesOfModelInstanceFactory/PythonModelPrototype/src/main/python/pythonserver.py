@@ -8,15 +8,19 @@ import sys
 import subprocess
 import imp
 
- 
-sys.path.insert(0, "/home/rich/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstanceFactory/PythonModelPrototype/src/main/python") 
+#sys.path.insert(0, "/home/rich/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstanceFactory/PythonModelPrototype/src/main/python") 
 #print "sys.modules = " + str(sys.modules)
 
 parser = argparse.ArgumentParser(description='Kamanja PyServer')
-parser.add_argument('--port', help='port binding (default=9999)', default="9999")
-parser.add_argument('--host', help='host name (default=localhost) ', default="localhost")
+parser.add_argument('--host', help='host name (default=localhost) ', default="localhost", type=str)
+parser.add_argument('--port', help='port binding (default=9999)', default="9999",type=int)
+parser.add_argument('--pythonpath', required=True, type=str)
 args = vars(parser.parse_args())
-#print args
+
+print 'starting pythonserver ...\nhost = ' + args['host'] + '\nport = ' + str(args['port']) + '\npythonpath = ' + args['pythonpath']
+
+# set the sys.path s.t. the first path searched is our path 
+sys.path.insert(0, args['pythonpath']) 
 
 # create a socket object
 serversocket = socket.socket(
@@ -27,7 +31,7 @@ host = socket.gethostname()
 port = int(args['port'])
 
 # bind to the port
-print('Connection parms: ' + host + ", " + args['port'])
+print('Connection parms: ' + host + ", " + str(args['port']))
 serversocket.bind((host, port))    
 
 def importPackageByName(moduleName, name):
@@ -67,6 +71,11 @@ modelDict = {
 # created from content, however, that has been sent to the server on an open
 # connection to the server.
 
+# import the base model classes that are in the common subdirectory
+#from abc import ABCMeta
+
+importPackageByName("common.ModelBase", "ModelBase")
+importPackageByName("common.ModelInstance", "ModelInstance")
 # Add the system level command to the dispatcher dict
 for extname in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer':
 	HandlerClass = importPackageByName("commands." + extname, "Handler")
@@ -114,4 +123,4 @@ while True:
 	if result == 'kill-9': # stop command stops listener tears down server ...
 		break
 
-print 'server is exiting due to stop command'
+print 'server stopped by admin command'

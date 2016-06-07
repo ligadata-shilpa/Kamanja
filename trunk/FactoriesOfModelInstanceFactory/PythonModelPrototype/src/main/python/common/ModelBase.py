@@ -1,7 +1,8 @@
+import abc
 from abc import ABCMeta
 
 class ModelBase:
-    __metaclass__ = ABCMeta
+    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def ModelName(self):

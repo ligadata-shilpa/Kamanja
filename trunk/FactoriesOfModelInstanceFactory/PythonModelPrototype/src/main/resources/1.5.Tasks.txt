@@ -1,0 +1,72 @@
+ 
+Here are the list of tasks for Python. Forgot to send them since after noon.
+
+Advanced stuff we will handle in next version.
+
+I.  Connection
+
+    1.  Only one connection per thread and hold the process object
+    2.  Each partition should have its own state (if we have any)
+    3.  Starting Py server using below arguments
+
+        i.  Host
+        ii. Port
+        iii.PythonPath
+        iv. UniqStringForEachProcess -- Should be associated to thread & PORT
+
+    4. Invoke .Py server Script instead of Shell Script?
+     
+    5. Reconnect if old connection is bad. If the Py server goes down, restart it and then establish new connection.
+
+    6. While shutting down Kamanja, we need to close all Py connections & servers
+
+ 
+II. Protocol
+
+    1. We should have some protocol in communicating between Kamanja Scala model & Py connection. The following is the protocol. We always use JSON data transfer.
+
+        i.    <StartMarker>
+        ii.   <DataLen>
+        iii.  <JsonData>
+        iv.   <EndMarker>
+
+    2. If we Pass big data, it will be written into local file in kamanaja scala model and then read data in Py server from file
+
+    3.  Serialization & Deserialization
+
+        i.  From Scala to Py => Serialize Message to Dictionary json at Scala model and Deserialize it into Map in Py model.
+
+        ii. From Py to Scala => Serialize Map into Json and deseirialize it into Msg from JSON in scala.
+
+    4. Model are Stateless. For now we are handling all Py models are stateless. We can not maintain the state if the Py server goes down for now.
+
+III. Metadata Commands
+
+    1.  Add Model
+        a.  Kamanja scala model writes in PythonPath (when Model Factory is initialized) and give that file path to add command argument (Assuming same path can be shared between all instances)
+        b.  Load model into Py server.
+
+    2.  Remove Model 
+        a.  Pass model name to remvoe to Py server
+        b.  Unload Py model from Py server
+
+    3.  Update Model.  For now either we support update model or we support remove & add.
+
+    4.  Model Runtime commands:
+        a. Init (Advanced)
+
+            i.       Initialize model with Model metadata (Ex: Training Output - Model). This data can be written into local file and send the file to Py to load the data.
+            ii.      Parameters required here are Model Name & Data File
+        b. Execute
+            i.       Executing Model with the given message (only one message) and also returns a message. Need to have some special communication if model does not return anything.
+            ii.      Parameters required here are Model Name & Message Dictiory. And return value is Dictory of output Message, which will be deserialized into
+
+    5.Communication From Py Model (server) to Kamanja (Advanced):
+        a. Need to add some communication from Py model to Kamanja for the following
+        b. Models can request additional data when needed
+        c. Models can cache state if needed.
+        d. Implement shared cache between Py & Kamanja.
+
+ 
+
+ 

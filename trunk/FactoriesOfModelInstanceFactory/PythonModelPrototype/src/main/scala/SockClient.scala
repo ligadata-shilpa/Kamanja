@@ -6,9 +6,14 @@ exec scala "$0" "$@"
 
 import java.net._
 import java.io._
+import java.nio.ByteBuffer
+import java.security.MessageDigest
+
+import scala.collection.JavaConverters._
 
 import scala.io._
 import scala.collection.immutable.Map
+import scala.collection.mutable.ArrayBuffer
 import scala.sys.process._
 
 
@@ -119,35 +124,99 @@ object SockClient {
             sys.exit(1)
         }
 
-        /** Prepare the command message for transport (except for the case of the
-          StartServerCmd instance... */
-        val cmdMsg : String = cmdObj.prepareCmdMsg(filePath
-            , modelName
-            , msg
-            , user
-            , host
-            , portNo)
 
         if (cmd == "startServer") {
             val startServerCmd : StartServerCmd = cmdObj.asInstanceOf[StartServerCmd]
             val result : String = startServerCmd.startServer(filePath, user, host, portNo)
             println(s"Server started? $result")
         } else {
+	        /** Prepare the command message for transport (except for the case of the
+	          StartServerCmd instance... */
+	        val cmdMsg : Array[Byte] = cmdObj.prepareCmdMsg(filePath
+	            , modelName
+	            , msg
+	            , user
+	            , host
+	            , portNo)
             /** send the command to the server for execution */
             val inetbyname = InetAddress.getByName(host)
             println("inetbyname = " + inetbyname)
             val s : Socket = new Socket(inetbyname, portNo)
-            lazy val in = new BufferedSource(s.getInputStream).getLines()
-            val out = new PrintStream(s.getOutputStream)
+            lazy val in = new DataInputStream(s.getInputStream)
+            //lazy val in = new BufferedSource(s.getInputStream).getLines()
+            val out = new DataOutputStream(s.getOutputStream)
+            //val out = new PrintStream(s.getOutputStream)
 
-            out.println(cmdMsg)
+            //out.println(cmdMsg)
+            val cmdLen : Int = cmdMsg.length
+            out.write(cmdMsg, 0, cmdLen)
             out.flush()
-            val resp : String = in.next
-            println(resp)
+            
+            //val resp : String = in.next
+            val buffer : Array[Byte] = new Array[Byte](2^16) // 64k
+            val answeredBytes : ArrayBuffer[Byte] = ArrayBuffer[Byte]()
+            var bytesReceived = in.read(buffer)
+            while (bytesReceived > 0) {
+        		answeredBytes ++= buffer
+            }
+            
+            val response : String = unpack(answeredBytes)
+            println(response)
 
             s.close()
         }
         sys.exit(0)
+    }
+
+    /** 
+    Peel off the md5 hash from front and back of the answered bytes, verifying
+    they are a) the same value and b) reflect the md5 hash of the payload string.
+    If satisfactory, reconstitute the json string value from the payload portion.
+
+	@param answeredBytes an ArrayBuffer containing the reply from the py server
+	@return the string result if successfully transmitted.  When result integrity
+		an issue, issue error message as the result revealing the finding.
+
+    */
+    def unpack(answeredBytes : ArrayBuffer[Byte]) : String = {
+    	val lenOfMd5Digest : Int = 16
+    	val lenOfSha256Digest : Int = 32
+    	val lenOfDigest : Int = lenOfMd5Digest
+    	val lenOfInt : Int = 4
+
+    	val reasonable : Boolean = answeredBytes != null && answeredBytes.length > 2 * lenOfDigest + lenOfInt
+    	val answer : String = if (reasonable) {
+    		val byteBuffer :  ByteBuffer = ByteBuffer.wrap(answeredBytes.toArray)
+    		val startDigest : scala.Array[Byte] = new scala.Array[Byte](lenOfMd5Digest)
+    		val endDigest : scala.Array[Byte] = new scala.Array[Byte](lenOfMd5Digest)
+    		/** unpack the byte array into md5 digest, payload len, payload, md5 digest */
+			byteBuffer.get(startDigest,byteBuffer.arrayOffset(),lenOfMd5Digest)
+    		val payloadLen : Int = byteBuffer.getInt()
+    		var payloadArray : scala.Array[Byte] = new scala.Array[Byte](payloadLen)
+			byteBuffer.get(payloadArray,byteBuffer.arrayOffset(),payloadLen)
+			byteBuffer.get(endDigest,byteBuffer.arrayOffset(),lenOfMd5Digest)
+
+			val digestsMatch : Boolean = startDigest.sameElements(endDigest)
+			val digestedMsg : String = if (digestsMatch) {
+				/** test the payload to see if the same digest can be obtained from it */
+				val md : MessageDigest = MessageDigest.getInstance("MD5");
+				md.update(payloadArray)
+				val mddigest : Array[Byte] = md.digest()
+				val integrityVerified : Boolean = mddigest.sameElements(endDigest)
+				val verifiedMsg : String = if (integrityVerified) {
+					payloadArray.toString
+				} else {
+					"while begin and end digests match, they don't reflect md5 digest of the bytes answered."
+				} 
+				verifiedMsg
+			} else {
+				"the beginning and ending digests do not match... results are bogus"
+			}
+			digestedMsg
+    	} else {
+    		"unreasonable bytes returned... either null or 0 bytes"
+    	}
+ 		answer
     }
 }
 
@@ -156,7 +225,7 @@ object SockClient {
   */
 abstract class PyCmd (val cmd : String) {
     def semanticCheck(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int) : (Boolean,String)
-    def prepareCmdMsg(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int) : String
+    def prepareCmdMsg(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int) : scala.Array[Byte]
 }
 /** Commands:
   * StartServerCmd, StopServerCmd, AddModelCmd, RemoveModelCmd,
@@ -202,8 +271,8 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
                                , msg : String
                                , user : String
                                , host : String
-                               , portNo : Int) : String = {
-        ""
+                               , portNo : Int) : scala.Array[Byte] = {
+        new scala.Array[Byte](0)
     }
 
     /**
@@ -318,8 +387,24 @@ class StopServerCmd(cmd : String) extends PyCmd(cmd) {
                                , msg : String
                                , user : String
                                , host : String
-                               , portNo : Int) : String = {
-        cmd
+                               , portNo : Int) : scala.Array[Byte] = {
+
+
+		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
+		val md : MessageDigest = MessageDigest.getInstance("MD5");
+		md.update(cmd.getBytes)
+		val mddigest : scala.Array[Byte] = md.digest()
+		val payload : scala.Array[Byte] = cmd.getBytes
+		val sizeOfInt : Int = 4
+		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
+		lenBytes.putInt(payload.length)
+		val payloadLenAsBytes : scala.Array[Byte] = lenBytes.array()
+		val cmdBytes : scala.Array[Byte] = mddigest ++
+									payloadLenAsBytes ++
+									payload ++
+                                    mddigest
+		cmdBytes
+        
     }
 }
 
@@ -362,7 +447,7 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
                                , msg : String
                                , user : String
                                , host : String
-                               , portNo : Int) : String = {
+                               , portNo : Int) : Array[Byte] = {
 
         val modelName : String = if (filePath != null && filePath.contains('.')) {
             val fileName : String = filePath.split('/').last
@@ -372,8 +457,22 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
             throw new RuntimeException("the model file path doesn't appear to have a legitimate python file path in it... can't determine the model name")
         }
 
-        val modelSrc = Source.fromFile(filePath).mkString
-        s"$cmd\n$modelName\n$modelSrc"
+        val modelSrcPath : String = Source.fromFile(filePath).mkString
+        val payloadStr : String = s"$cmd\n$modelName$modelSrcPath"
+		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
+		val md : MessageDigest = MessageDigest.getInstance("MD5");
+		md.update(payloadStr.getBytes)
+		val mddigest : Array[Byte] = md.digest()
+		val payload : Array[Byte] = payloadStr.getBytes
+		val sizeOfInt : Int = 4
+		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
+		lenBytes.putInt(payload.length)
+		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+		val cmdBytes : Array[Byte] = mddigest ++
+									 payloadLenAsBytes ++ 
+									 payload ++ 
+									 mddigest
+		cmdBytes
     }
 }
 
@@ -395,8 +494,23 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
                                , msg: String
                                , user: String
                                , host: String
-                               , portNo: Int): String = {
-        s"$cmd\n$modelName"
+                               , portNo: Int): Array[Byte] = {
+
+        val payloadStr : String = s"$cmd\n$modelName"
+		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
+		val md : MessageDigest = MessageDigest.getInstance("MD5");
+		md.update(payloadStr.getBytes)
+		val mddigest : Array[Byte] = md.digest()
+		val payload : Array[Byte] = payloadStr.getBytes
+		val sizeOfInt : Int = 4
+		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
+		lenBytes.putInt(payload.length)
+		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+		val cmdBytes : Array[Byte] = mddigest ++
+									 payloadLenAsBytes ++ 
+									 payload ++ 
+									 mddigest
+		cmdBytes
     }
 }
 
@@ -418,8 +532,22 @@ class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
                                , msg: String
                                , user: String
                                , host: String
-                               , portNo: Int) : String = {
-        s"$cmd"
+                               , portNo: Int) : Array[Byte] = {
+        val payloadStr : String = cmd
+		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
+		val md : MessageDigest = MessageDigest.getInstance("MD5");
+		md.update(payloadStr.getBytes)
+		val mddigest : Array[Byte] = md.digest()
+		val payload : Array[Byte] = payloadStr.getBytes
+		val sizeOfInt : Int = 4
+		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
+		lenBytes.putInt(payload.length)
+		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+		val cmdBytes : Array[Byte] = mddigest ++
+									 payloadLenAsBytes ++ 
+									 payload ++ 
+									 mddigest
+		cmdBytes
     }
 }
 
@@ -441,7 +569,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
                                , msg : String
                                , user : String
                                , host : String
-                               , portNo : Int) : String = {
+                               , portNo : Int) : Array[Byte] = {
 
     	val cmdStr : String = if (filePath != null) {
         	val msgs : String = Source.fromFile(filePath).mkString
@@ -450,7 +578,21 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
 		} else {
         	s"$cmd\n$modelName\n$msg"			
 		}
-		cmdStr
+        val payloadStr : String = cmdStr
+		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
+		val md : MessageDigest = MessageDigest.getInstance("MD5");
+		md.update(payloadStr.getBytes)
+		val mddigest : Array[Byte] = md.digest()
+		val payload : Array[Byte] = payloadStr.getBytes
+		val sizeOfInt : Int = 4
+		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
+		lenBytes.putInt(payload.length)
+		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+		val cmdBytes : Array[Byte] = mddigest ++
+									 payloadLenAsBytes ++ 
+									 payload ++ 
+									 mddigest
+		cmdBytes
     }
 
 }
