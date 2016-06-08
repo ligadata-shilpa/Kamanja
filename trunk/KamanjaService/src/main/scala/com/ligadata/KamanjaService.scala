@@ -1,9 +1,9 @@
 package com.ligadata
 
+import com.ligadata.MetadataAPI.StartMetadataAPI.MetadataAPIManager
 import com.ligadata.metadataapiservice.APIService
 import com.ligadata.KamanjaManager._
 import org.apache.logging.log4j.LogManager
-
 import scala.actors.threadpool.{TimeUnit, Executors}
 
 /**
@@ -45,12 +45,22 @@ object KamanjaService {
     executor.execute(kamanjaEngineThread)
 
     //run metadata api
-    //TODO
+    val metadataApiThread = new Runnable() {
+      override def run(): Unit = {
+        LOG.warn("starting Metadata API")
+
+        //TODO : pass config file path, and port (hardcoded temporarily)
+        val msgApiCfg = Array[String]("--config", "/opt/Kamanja_1.5.0.Test/Kamanja-1.4.1_2.11/config/MetadataAPIConfig.properties",
+        "--port", "444")
+        MetadataAPIManager.start(msgApiCfg)
+      }
+    }
+    executor.execute(metadataApiThread)
 
     //run rest api
     val apiServiceThread = new Runnable() {
       override def run(): Unit = {
-        LOG.warn("starting APIService")
+        LOG.warn("starting Rest APIService")
 
         //TODO : pass config file path (hardcoded temporarily)
         val msgApiCfg = Array[String]("--config", "/opt/Kamanja_1.5.0.Test/Kamanja-1.4.1_2.11/config/MetadataAPIConfig.properties")
@@ -64,6 +74,7 @@ object KamanjaService {
   def shutdown(): Unit ={
 
     APIService.shutdownAPISevrice()
+    MetadataAPIManager.shutdown()
 
     executor.shutdown()
     try {

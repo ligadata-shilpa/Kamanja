@@ -8,11 +8,13 @@ import org.apache.logging.log4j.LogManager
 /**
   * Created by Yasser on 6/7/2016.
   */
-class MetadataAPIClient {
+object MetadataAPIClient {
 
   private val logger = LogManager.getLogger(getClass)
 
   def main(args : Array[String]): Unit ={
+
+    //TODO : pas params as arguments for now, better use a cofnig file
     val hostName = args(0)
     val portNumber = args(1).toInt
 
