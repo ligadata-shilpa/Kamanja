@@ -29,7 +29,8 @@ class PMMLUtilityTest extends FeatureSpec with GivenWhenThen {
       val filePath = getResourceFullPath("/configFile.json")
       val filePathEmpty = getResourceFullPath("/configFileEmpty.json")
       //val inputFile = getResourceFullPath("/DecisionTreeIris.pmml")
-      val inputFile = getResourceFullPath("/DecisionTreeEnsembleIris.pmml")
+      //val inputFile = getResourceFullPath("/DecisionTreeEnsembleIris.pmml")
+      val inputFile = getResourceFullPath("/SupportVectorMachineIris.pmml")
       val fileContent = fileBean.ReadFile(inputFile)
 
       When("xml includes data")
