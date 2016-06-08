@@ -47,8 +47,11 @@ object MetadataAPIClient {
     * @param portNumber
     */
   def connectToLocal(hostName : String, portNumber : Int): Unit ={
+    val endOfResultMark = "<<<end>>>"
+
+    var socket : Socket = null
     try {
-      val socket = new Socket(hostName, portNumber)
+      socket = new Socket(hostName, portNumber)
       val out : PrintWriter = new PrintWriter(socket.getOutputStream, true)
       val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
       val stdIn = new BufferedReader(new InputStreamReader(System.in))
@@ -57,10 +60,21 @@ object MetadataAPIClient {
       print("kamanja>")
       userInput = stdIn.readLine
       while ( userInput != null) {
-        logger.info("MetadataAPIClient - got command {}", userInput)
-        out.println(userInput)
-        print("kamanja>")
+        if(userInput.trim.length > 0) {
+          logger.info("MetadataAPIClient - got command {}", userInput)
+          out.println(userInput)
 
+          //print the result
+          System.out.println("Result: ")
+          var resultLine = in.readLine()
+          while (resultLine != null && !resultLine.equals(endOfResultMark)) {
+            System.out.println(resultLine)
+            resultLine = in.readLine()
+          }
+
+        }
+
+        print("kamanja>")
         userInput = stdIn.readLine
       }
     } catch {
@@ -74,6 +88,9 @@ object MetadataAPIClient {
       case e: Throwable =>
         logger.error("Throwable: ", e)
         System.exit(1)
+    }
+    finally{
+      socket.close()
     }
   }
 }

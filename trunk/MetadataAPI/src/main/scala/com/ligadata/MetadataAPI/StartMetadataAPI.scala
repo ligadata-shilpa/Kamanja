@@ -113,11 +113,256 @@ object StartMetadataAPI {
     val tokens = str.split(separator + "(?=([^\"]*\"[^\"]*\")*[^\"]*$)", -1)
     tokens.filter(token => token.length > 0).toList.toArray
   }
-  def execCmd(args : Array[String]): Unit ={
-    println("calling StartMetadataApi.execCmd with args: " + args)
-    main(args)
+
+
+  def clearVariables(): Unit ={
+    extraCmdArgs.clear()
+    action = ""
   }
 
+  def execCmd(args : Array[String]): String ={
+    println("calling StartMetadataApi.execCmd with args: " + args.mkString("\n"))
+
+    clearVariables
+
+    if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
+      return KamanjaVersion.getVersionString
+    }
+
+    /** FIXME: the user id should be discovered in the parse of the args array */
+    val userId: Option[String] = Some("kamanja")
+    try {
+      val jsonBuffer: StringBuilder = new StringBuilder
+
+      args.foreach(arg => {
+
+        if (arg.endsWith(".json")
+          || arg.endsWith(".jtm")
+          || arg.endsWith(".xml")
+          || arg.endsWith(".pmml")
+          || arg.endsWith(".scala")
+          || arg.endsWith(".java")
+          || arg.endsWith(".jar")) {
+          extraCmdArgs(INPUTLOC) = arg
+          if (expectBindingFromFile) {
+            /** the json test above can prevent the ordinary catch of the name below */
+            extraCmdArgs(FROMFILE) = extraCmdArgs.getOrElse(INPUTLOC, null)
+            expectBindingFromFile = false
+          }
+
+        } else if (arg.endsWith(".properties")) {
+          config = arg
+        } else {
+          if (arg != "debug") {
+            /** ignore the debug tag */
+            if (arg.equalsIgnoreCase(TENANTID)) {
+              expectTid = true
+              extraCmdArgs(TENANTID) = ""
+            } else if (arg.equalsIgnoreCase(WITHDEP)) {
+              expectDep = true
+              extraCmdArgs(WITHDEP) = ""
+            } else if (arg.equalsIgnoreCase(MODELNAME)) {
+              expectModelName = true
+            } else if (arg.equalsIgnoreCase(MODELVERSION)) {
+              expectModelVer = true
+            } else if (arg.equalsIgnoreCase(MESSAGENAME)) {
+              expectMessageName = true
+            } else if (arg.equalsIgnoreCase(OUTPUTMSG)) {
+              expectOutputMsg = true
+            } else if (arg.equalsIgnoreCase(KEY)) {
+              expectRemoveBindingKey = true
+            } else if (arg.equalsIgnoreCase(FROMFILE)) {
+              expectBindingFromFile = true
+            } else if (arg.equalsIgnoreCase(FROMSTRING)) {
+              expectBindingFromString = true
+            } else if (arg.equalsIgnoreCase(ADAPTERFILTER)) {
+              expectAdapterFilter = true
+            } else if (arg.equalsIgnoreCase(MESSAGEFILTER)) {
+              expectMessageFilter = true
+            } else if (arg.equalsIgnoreCase(SERIALIZERFILTER)) {
+              expectSerializerFilter = true
+            } else if (arg.equalsIgnoreCase(SCHEMAID)) {
+              expectSchemaId = true
+              extraCmdArgs(SCHEMAID) = ""
+            } else if (arg.equalsIgnoreCase(ELEMENTID)) {
+              expectElementId = true
+              extraCmdArgs(ELEMENTID) = ""
+            } else {
+              var argVar = arg
+              if (expectTid) {
+                extraCmdArgs(TENANTID) = arg
+                expectTid = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectDep) {
+                extraCmdArgs(WITHDEP) = arg
+                expectDep = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectModelName) {
+                extraCmdArgs(MODELNAME) = arg
+                expectModelName = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectModelVer) {
+                extraCmdArgs(MODELVERSION) = arg
+                expectModelVer = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectMessageName) {
+                extraCmdArgs(MESSAGENAME) = arg
+                expectMessageName = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectOutputMsg) {
+                extraCmdArgs(OUTPUTMSG) = arg
+                expectOutputMsg = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectRemoveBindingKey) {
+                expectRemoveBindingKey = false
+                extraCmdArgs(Action.REMOVEADAPTERMESSAGEBINDING.toString) = arg
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectBindingFromString) {
+                extraCmdArgs(FROMSTRING) = arg
+                expectBindingFromString = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectBindingFromFile) {
+                extraCmdArgs(FROMFILE) = arg
+                expectBindingFromFile = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectAdapterFilter) {
+                extraCmdArgs(ADAPTERFILTER) = arg
+                expectAdapterFilter = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectMessageFilter) {
+                extraCmdArgs(MESSAGEFILTER) = arg
+                expectMessageFilter = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectSerializerFilter) {
+                extraCmdArgs(SERIALIZERFILTER) = arg
+                expectSerializerFilter = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectSchemaId) {
+                extraCmdArgs(SCHEMAID) = arg
+                expectSchemaId = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (expectElementId) {
+                extraCmdArgs(ELEMENTID) = arg
+                expectElementId = false
+                argVar = "" // Make sure we don't add to the routing command
+              }
+
+              /**
+                * FIXME:
+                * FIXME: The removes have positional keys... right after the command.  Downside is that
+                * the tenant id collection uses a named style, which means that it MUST follow the
+                * object name to be removed.  When this thing gets reworked, the object key should also
+                * have a name like "key" as is used with the REMOVEADAPTERMESSAGEBINDING. The name/value pairs can
+                * then be expressed in any order to the liking of the user.
+                */
+              if (action.equalsIgnoreCase("getmodel") || action.equalsIgnoreCase("removemodel")) {
+                /** only take the first one */
+                if (! extraCmdArgs.contains(MODELNAME)) extraCmdArgs(MODELNAME) = arg
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (action.equalsIgnoreCase("getmessage") || action.equalsIgnoreCase("removemessage")) {
+                /** only take the first one */
+                if (! extraCmdArgs.contains(MESSAGENAME)) extraCmdArgs(MESSAGENAME) = arg
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (action.equalsIgnoreCase("removecontainer") || action.equalsIgnoreCase("getcontainer")) {
+                /** only take the first one */
+                if (! extraCmdArgs.contains(CONTAINERNAME)) extraCmdArgs(CONTAINERNAME) = arg
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (action.equalsIgnoreCase("removetype") || action.equalsIgnoreCase("gettype")) {
+                /** only take the first one */
+                if (! extraCmdArgs.contains(TYPENAME)) extraCmdArgs(TYPENAME) = arg
+                argVar = "" // Make sure we don't add to the routing command
+              }
+              if (action.equalsIgnoreCase("removefunction") || action.equalsIgnoreCase("getfunction")) {
+                /** only take the first one */
+                if (! extraCmdArgs.contains(FUNCTIONNAME)) extraCmdArgs(FUNCTIONNAME) = arg
+                argVar = "" // Make sure we don't add to the routing command
+              }
+
+              action += argVar
+            }
+          }
+        }
+      })
+      //add configuration
+      if (config == "") {
+        println("Using default configuration " + defaultConfig)
+        config = defaultConfig
+      }
+
+      MetadataAPIImpl.InitMdMgrFromBootStrap(config, false)
+      if (action == "") {
+        TestMetadataAPI.StartTest
+        return "StartTest"
+      }
+      else {
+        response = route(Action.withName(action.trim),  extraCmdArgs.getOrElse(INPUTLOC,""),
+          extraCmdArgs.getOrElse(WITHDEP,""), extraCmdArgs.getOrElse(TENANTID,""), args, userId ,extraCmdArgs.toMap)
+        println("Result: " + response)
+      }
+    }
+    catch {
+      case e: NoSuchElementException => {
+        println("action trim"+action.trim());
+        logger.error("Route not found",e.getMessage)
+        /** preserve the original response ... */
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+        /** one more try ... going the alternate route */  // do we still need this ??
+        /* val altResponse: String = AltRoute(args)
+         if (altResponse != null) {
+           //response = altResponse
+           println(response)
+           usage
+         } else {
+           /* if the AltRoute doesn't produce a valid result, we will complain with the original failure */
+           println(response)
+           usage
+         }*/
+      }
+      case e: java.io.FileNotFoundException => {
+        logger.error("Unable to read a file, the file either does not exist or is inaccessible ", e.getMessage)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: Throwable => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: Exception => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+      case e: RuntimeException => {
+        logger.error("Error, due to an unknown exception", e)
+        response =   new ApiResult(-1, "StartMetadataAPI", null, e.getMessage).toString
+        println("Result: " + response)
+      }
+    } finally {
+      MetadataAPIImpl.shutdown
+    }
+
+    return response
+  }
+
+  //TODO : keep main for now, but to be deleted later
   def main(args: Array[String]) {
     if (args.length > 0 && args(0).equalsIgnoreCase("--version")) {
       KamanjaVersion.print
@@ -855,7 +1100,12 @@ object StartMetadataAPI {
             if (strLine == null)
               break
             LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(strLine, socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
-            StartMetadataAPI.execCmd(StartMetadataAPI.split(strLine, " "))
+            val result = StartMetadataAPI.execCmd(StartMetadataAPI.split(strLine, " "))
+
+            //LOG.warn("Result to be sent to client: "+result)
+            out.println(result)
+            val endOfResultMark = "<<<end>>>" //TODO: BUG - find a better way
+            out.println(endOfResultMark)
           }
         }
       } catch {
