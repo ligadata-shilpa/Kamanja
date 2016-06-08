@@ -141,7 +141,11 @@ class MessageProcessor(service: Service) {
         field.typeId match {
           case 1 => try { value.toDouble }
             catch { case e: Exception => throw new DataException(2, field.name + " should be a number.") }
-          case 3 => try { new SimpleDateFormat(field.format).parse(value) }
+          case 3 => try { 
+              val df = new SimpleDateFormat(field.format)
+              df.setLenient(false)
+              df.parse(value) 
+            }
             catch { case e: Exception => throw new DataException(3, field.name + " should be a " + field.datatype + " with format " + field.format) }
           case _ =>
         }
