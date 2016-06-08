@@ -1005,7 +1005,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
           //logger.setLevel(Level.TRACE);  //check again
           val contStr = Source.fromFile(contDefFile).mkString
           //  MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-          val res: String = MetadataAPIImpl.UpdateContainer(contStr, "JSON", userid)
+          val res: String = MetadataAPIImpl.UpdateContainer(contStr, "JSON", userid, tenantId, None)
           results += Tuple3(choice.toString, contDefFile, res)
         })
       } else {
@@ -1080,7 +1080,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
           //logger.setLevel(Level.TRACE);  //check again
           val contStr = Source.fromFile(contDefFile).mkString
           // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-          val res: String = MetadataAPIImpl.AddContainer(contStr, "JSON", userid)
+          val res: String = MetadataAPIImpl.AddContainer(contStr, "JSON", userid, tenantId, None)
           results += Tuple3(choice.toString, contDefFile, res)
         })
       } else {
@@ -1166,7 +1166,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
           //logger.setLevel(Level.TRACE);  //check again
           val msgStr = Source.fromFile(msgDefFile).mkString
           //   MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-          val res: String = MetadataAPIImpl.UpdateMessage(msgStr, "JSON", userid)
+          val res: String = MetadataAPIImpl.UpdateMessage(msgStr, "JSON", userid, tenantId, None)
           results += Tuple3(choice.toString, msgDefFile, res)
         })
       } else {
@@ -1238,7 +1238,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
           //logger.setLevel(Level.TRACE);  //check again
           val msgStr = Source.fromFile(msgDefFile).mkString
           //   MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-          val res: String = MetadataAPIImpl.AddContainer(msgStr, "JSON", userid)
+          val res: String = MetadataAPIImpl.AddContainer(msgStr, "JSON", userid, tenantId, None)
           results += Tuple3(choice.toString, msgDefFile, res)
         })
       } else {

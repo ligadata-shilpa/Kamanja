@@ -1113,7 +1113,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = getMetadataAPI.AddMessage(msgDefStr, "JSON", defaultUserId, _tenantId)
+                  val retRes = getMetadataAPI.AddMessage(msgDefStr, "JSON", defaultUserId, _tenantId, None)
                   logger.info("AddMessage: Response => " + retRes)
                   failed = isFailedStatus(retRes)
                 } catch {
@@ -1144,7 +1144,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                 var failed = false
 
                 try {
-                  val retRes = getMetadataAPI.AddContainer(contDefStr, "JSON", defaultUserId, _tenantId)
+                  val retRes = getMetadataAPI.AddContainer(contDefStr, "JSON", defaultUserId, _tenantId, None)
                   logger.info("AddContainer: Response => " + retRes)
 
                   failed = isFailedStatus(retRes)

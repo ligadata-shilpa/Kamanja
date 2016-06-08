@@ -38,7 +38,7 @@ object ContainerService {
   // 646 - 676 Chagne ends
 
 
-  def addContainer(input: String, tid: Option[String] = None): String ={
+  def addContainer(input: String, tid: Option[String] = None, pStr : Option[String]): String ={
     var response = ""
     var containerFileDir: String = ""
 
@@ -71,7 +71,7 @@ object ContainerService {
               case option => {
                 val containerDefs = getUserInputFromMainMenu(containers)
                 for (containerDef <- containerDefs) {
-                  response += metadataAPI.AddContainer(containerDef.toString, "JSON", userid, finalTid)
+                  response += metadataAPI.AddContainer(containerDef.toString, "JSON", userid, finalTid, pStr)
                 }
               }
             }
@@ -87,7 +87,7 @@ object ContainerService {
       var container = new File(input.toString)
       if( container.exists()){
         val containerDef = Source.fromFile(container).mkString
-        response = metadataAPI.AddContainer(containerDef, "JSON", userid, finalTid)
+        response = metadataAPI.AddContainer(containerDef, "JSON", userid, finalTid, pStr)
       }else{
         response = "Input container file does not exist"
       }
@@ -96,7 +96,7 @@ object ContainerService {
     response
   }
 
-  def updateContainer(input: String, tid: Option[String] = None): String ={
+  def updateContainer(input: String, tid: Option[String] = None, pStr : Option[String]): String ={
     var response = ""
     var containerFileDir: String = ""
 
@@ -129,7 +129,7 @@ object ContainerService {
               case option => {
                 val containerDefs = getUserInputFromMainMenu(containers)
                 for (containerDef <- containerDefs) {
-                  response += metadataAPI.UpdateContainer(containerDef.toString, "JSON", userid, finalTid)
+                  response += metadataAPI.UpdateContainer(containerDef.toString, "JSON", userid, finalTid, pStr)
                 }
               }
             }
@@ -145,7 +145,7 @@ object ContainerService {
       var container = new File(input.toString)
       val containerDef = Source.fromFile(container).mkString
       // 1118 Changes begin - Changed AddContiner to Update Container to follow the path correctly
-      response = metadataAPI.UpdateContainer(containerDef, "JSON", userid,  finalTid)
+      response = metadataAPI.UpdateContainer(containerDef, "JSON", userid,  finalTid, pStr)
       // 1118 Changes end
     }
     //Got the container.

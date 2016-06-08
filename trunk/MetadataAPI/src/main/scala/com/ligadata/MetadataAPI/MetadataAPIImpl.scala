@@ -1946,8 +1946,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param recompile a
      * @return <description please>
      */
-  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
-    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid, tenantId, recompile)
+  private def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, pStr: Option[String], recompile: Boolean = false): String = {
+    MessageAndContainerUtils.AddContainerOrMessage(contOrMsgText,format,userid, tenantId, pStr, recompile)
   }
 
     /**
@@ -1969,8 +1969,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *          println("Result as Json String => \n" + result._2)
      *          }}}
      */
-  override def AddMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
-    AddContainerOrMessage(messageText, format, userid, tid)
+  override def AddMessage(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None, pStr: Option[String]): String = {
+    AddContainerOrMessage(messageText, format, userid, tid, pStr)
   }
 
     /**
@@ -1980,6 +1980,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     * @param format
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param pStr  json string that contains extra parameters to be added to BaseElem (description, comment, tag)
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
     *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
@@ -1992,8 +1993,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     *          println("Result as Json String => \n" + result._2)
     *          }}}
     */
-  override def AddContainer(containerText: String, format: String, userid: Option[String] = None, tenantId: Option[String] = None): String = {
-    AddContainerOrMessage(containerText, format, userid, tenantId)
+  override def AddContainer(containerText: String, format: String, userid: Option[String] = None, tenantId: Option[String] = None, pStr: Option[String]): String = {
+    AddContainerOrMessage(containerText, format, userid, tenantId, pStr)
   }
 
     /**
@@ -2025,13 +2026,14 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param format
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
+     * @param pStr  json string that contains extra parameters to be added to BaseElem (description, comment, tag)
      * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
   override  def UpdateMessage
-    (messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
-    MessageAndContainerUtils.UpdateMessage(messageText,format,userid, tid)
+    (messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None, pStr : Option[String]): String = {
+    MessageAndContainerUtils.UpdateMessage(messageText,format,userid, tid, pStr)
   }
 
     /**
@@ -2041,12 +2043,13 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      * @param format
      * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
      *               method. If Security and/or Audit are configured, this value must be a value other than None.
+      * @param pStr  json string that contains extra parameters to be added to BaseElem (description, comment, tag)
      * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
      *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
      *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
      */
-  override  def  UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None): String = {
-    UpdateMessage(messageText, format, userid, tid)
+  override  def  UpdateContainer(messageText: String, format: String, userid: Option[String] = None, tid: Option[String] = None, pStr : Option[String]): String = {
+    UpdateMessage(messageText, format, userid, tid, pStr)
   }
 
     /**

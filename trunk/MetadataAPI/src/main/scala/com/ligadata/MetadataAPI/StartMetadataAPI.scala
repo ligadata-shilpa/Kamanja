@@ -16,6 +16,10 @@
 
 package com.ligadata.MetadataAPI
 
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
+import scala.io.Source
 import com.ligadata.Exceptions.KamanjaException
 import org.apache.logging.log4j.{ Logger, LogManager }
 
@@ -27,6 +31,7 @@ import scala.collection.mutable
 import scala.collection.immutable
 import com.ligadata.KamanjaVersion.KamanjaVersion
 import scala.io.Source
+import java.nio.file.{ Files, FileSystems }
 
 /**
  * Created by dhaval Kolapkar on 7/24/15.
@@ -302,28 +307,28 @@ object StartMetadataAPI {
         config = defaultConfig
       }
 
-    logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file")
-    //              var paramValues : scala.collection.mutable.Map [String, Any]
-    var paramJsonStr : String = ""
-    val paramConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~")) + "/config/" + extraCmdArgs(PROPERTYFILE)
-    try {
+     // logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file")
+      //              var paramValues : scala.collection.mutable.Map [String, Any]
+      var paramJsonStr : String = ""
+      val paramConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~")) + "/config/" + (extraCmdArgs getOrElse (PROPERTYFILE, None))
 
-      paramJsonStr =  Source.fromFile(paramConfig).getLines.mkString
 
-    }
-    catch {
-      case e: Exception => {
-        paramJsonStr = ""
+      if (paramConfig != "") {
+        if (FileExists(paramConfig)) {
+          paramJsonStr =  Source.fromFile(paramConfig).getLines.mkString
+          logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file contents " + paramJsonStr)
+//          val mapOriginal  =   parse(paramJsonStr).values.asInstanceOf[scala.collection.mutable.Map[String, Any]]
+        }
       }
-    }
 
-    logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file contents " + paramJsonStr)
-      getMetadataAPI.InitMdMgrFromBootStrap(config, false)
+
+
+    getMetadataAPI.InitMdMgrFromBootStrap(config, false)
       if (action == "")
         TestMetadataAPI.StartTest
       else {
         response = route(Action.withName(action.trim),  extraCmdArgs.getOrElse(INPUTLOC,""),
-          extraCmdArgs.getOrElse(WITHDEP,""), extraCmdArgs.getOrElse(TENANTID,""), args, userId ,extraCmdArgs.toMap)
+          extraCmdArgs.getOrElse(WITHDEP,""), extraCmdArgs.getOrElse(TENANTID,""), args, userId ,extraCmdArgs.toMap, paramJsonStr)
         println("Result: " + response)
       }
     }
@@ -375,15 +380,30 @@ object StartMetadataAPI {
 
 //  }
 
+  def FileExists (filename : String) : Boolean = {
+
+    val defaultFS = FileSystems.getDefault()
+
+    val path = defaultFS.getPath(filename)
+
+    if (Files.exists(path))
+      return true
+    else
+      return false
+
+  }
+
+  // main
   def usage : Unit = {
       println(s"Usage:\n  kamanja <action> <optional input> \n e.g. kamanja add message ${'$'}HOME/msg.json" )
   }
 
-  def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String], extraCmdArgs: immutable.Map[String, String]): String = {
+  def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String], extraCmdArgs: immutable.Map[String, String], paramJsonStr : String): String = {
     var response = ""
     var fileinquesiton = input
     var optMsgProduced:Option[String] = None
     var tid = if (tenantid.size > 0) Some(tenantid) else None
+    var paramStr = if (paramJsonStr != "") Some(paramJsonStr) else None
 
     val outputMsgName = extraCmdArgs.getOrElse(OUTPUTMSG, null)
 
@@ -394,8 +414,8 @@ object StartMetadataAPI {
     try {
       action match {
         //message management
-        case Action.ADDMESSAGE => response = MessageService.addMessage(input, tid)
-        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, tid)
+        case Action.ADDMESSAGE => response = MessageService.addMessage(input, tid, paramStr)
+        case Action.UPDATEMESSAGE => response = MessageService.updateMessage(input, tid, paramStr)
         case Action.REMOVEMESSAGE => {
           val msgName : String = extraCmdArgs.getOrElse(MESSAGENAME,"")
           if (msgName.isEmpty)
@@ -506,8 +526,8 @@ object StartMetadataAPI {
 
 
         //container management
-        case Action.ADDCONTAINER => response = ContainerService.addContainer(input, tid)
-        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input, tid)
+        case Action.ADDCONTAINER => response = ContainerService.addContainer(input, tid, paramStr)
+        case Action.UPDATECONTAINER => response = ContainerService.updateContainer(input, tid, paramStr)
         case Action.GETCONTAINER => response = {
           val containerName : String = extraCmdArgs.getOrElse(CONTAINERNAME,"")
           if (containerName.isEmpty)

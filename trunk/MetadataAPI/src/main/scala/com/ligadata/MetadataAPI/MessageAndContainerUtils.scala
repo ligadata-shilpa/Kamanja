@@ -252,7 +252,7 @@ object MessageAndContainerUtils {
    * @param recompile     a
    * @return <description please>
    */
-  def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, recompile: Boolean = false): String = {
+  def AddContainerOrMessage(contOrMsgText: String, format: String, userid: Option[String], tenantId: Option[String] = None, pStr : Option[String],  recompile: Boolean = false): String = {
     var resultStr: String = ""
 
     if (tenantId == None) return (new ApiResult(ErrorCodeConstants.Failure, "AddContainer/AddMessage", null, s"Tenant ID is required to perform an ADD CONTAINER or an ADD MESSAGE operation")).toString
@@ -266,6 +266,9 @@ object MessageAndContainerUtils {
         cntOrMsgDef.tenantId = tenantId.get
       }
 
+        cntOrMsgDef.setParamValues(pStr)
+        cntOrMsgDef.setCreationTime()
+         cntOrMsgDef.setModTime()
       logger.debug("Message/Container Compiler returned an object of type " + cntOrMsgDef.getClass().getName())
       cntOrMsgDef match {
         case msg: MessageDef => {
@@ -370,7 +373,7 @@ object MessageAndContainerUtils {
   }
 
   def AddContainer(containerText: String, format: String, userid: Option[String], tenantId: Option[String] = None): String = {
-    AddContainerOrMessage(containerText, format, userid, tenantId)
+    AddContainerOrMessage(containerText, format, userid, tenantId, None)
   }
 
   /**
@@ -411,7 +414,7 @@ object MessageAndContainerUtils {
         tenantId = latestMsgDef.get.TenantId
         messageText = latestMsgDef.get.objectDefinition
       }
-      resultStr = AddContainerOrMessage(messageText, "JSON", None, Some(tenantId), true)
+      resultStr = AddContainerOrMessage(messageText, "JSON", None, Some(tenantId), None, true)
       resultStr
 
     } catch {
@@ -439,7 +442,7 @@ object MessageAndContainerUtils {
    *         indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
    *         ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
    */
-  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tenantId: Option[String]): String = {
+  def UpdateMessage(messageText: String, format: String, userid: Option[String] = None, tenantId: Option[String], pStr : Option[String]): String = {
     var resultStr: String = ""
     try {
 
@@ -453,6 +456,8 @@ object MessageAndContainerUtils {
         msgDef.tenantId = tenantId.get
       }
 
+      msgDef.setParamValues(pStr)
+      msgDef.setModTime()
       val key = msgDef.FullNameWithVer
       msgDef match {
         case msg: MessageDef => {
@@ -1506,7 +1511,7 @@ object MessageAndContainerUtils {
           ",\"Fixed\":\"false\"" +
           "}}"
         logger.info("The default output message string => " + msgJson)
-        val resultStr = AddContainerOrMessage(msgJson, "JSON", optUserId, Some(modDef.TenantId), false)
+        val resultStr = AddContainerOrMessage(msgJson, "JSON", optUserId, Some(modDef.TenantId), None, false)
         return msgFullName
       }
     } catch {

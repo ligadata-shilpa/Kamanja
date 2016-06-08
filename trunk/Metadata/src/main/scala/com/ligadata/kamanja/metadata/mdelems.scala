@@ -19,14 +19,19 @@ package com.ligadata.kamanja.metadata
 import java.io.{DataInputStream, DataOutputStream}
 import java.util._
 
-import com.ligadata.Exceptions.{KamanjaException, Json4sSerializationException}
+import com.ligadata.Exceptions.{Json4sSerializationException, KamanjaException}
 import com.ligadata.kamanja.metadata.MiningModelType.MiningModelType
 import com.ligadata.kamanja.metadata.ModelRepresentation.ModelRepresentation
+import org.joda.time.DateTime
+import org.json4s._
+import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Formats}
 
 import scala.Enumeration
 import scala.collection.mutable.{Map, Set}
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.ArrayBuffer
 
 // define some enumerations
 object ObjFormatType extends Enumeration {
@@ -265,6 +270,36 @@ class BaseElemDef extends BaseElem {
     var objectFormat: ObjFormatType.FormatType = fJSON
     var ownerId: String = _
     var tenantId: String = _
+
+    def setParamValues (paramStr : Option[String]) : Any = {
+
+      paramStr match {
+
+        case None => {
+          description = "Description is empty"
+          comment = "Comment is empty"
+          tag = "Tag is empty"
+        }
+        case pStr: Option[String] => {
+          val param = pStr getOrElse ""
+          val mapOriginal = parse(param).values.asInstanceOf[scala.collection.mutable.Map[String, String]]
+          description = (mapOriginal getOrElse("description", "Description is empty"))
+          comment = (mapOriginal getOrElse("comment", "Comment is empty"))
+          tag = (mapOriginal getOrElse("tag", "Tag is empty"))
+
+        }
+      }
+
+    }
+
+    def setCreationTime () : Any = {
+      creationTime = System.currentTimeMillis()
+
+    }
+
+  def setModTime () : Any = {
+    modTime = System.currentTimeMillis()
+  }
 }
 
 // All these metadata elements should have specialized serialization and deserialization

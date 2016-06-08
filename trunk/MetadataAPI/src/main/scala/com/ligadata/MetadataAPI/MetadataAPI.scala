@@ -407,7 +407,7 @@ trait MetadataAPI {
     * println("Result as Json String => \n" + result._2)
     * }}}
     */
-  def AddMessage(messageText:String, formatType:String, userid: Option[String] = None, tid: Option[String] = None): String
+  def AddMessage(messageText:String, formatType:String, userid: Option[String] = None, tid: Option[String] = None, pStr: Option[String]): String
 
   /** Update message given messageText
     *
@@ -415,11 +415,12 @@ trait MetadataAPI {
     * @param formatType format of messageText (as JSON/XML string)
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param pStr  json string that contains extra parameters to be added to BaseElem (description, comment, tag)
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
     * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
     */
-  def UpdateMessage(messageText:String, formatType:String, userid: Option[String] = None, tid: Option[String] = None): String
+  def UpdateMessage(messageText:String, formatType:String, userid: Option[String] = None, tid: Option[String] = None, pStr : Option[String]): String
 
   /** Remove message with MessageName and Vesion Number
     *
@@ -455,6 +456,7 @@ trait MetadataAPI {
     * @param formatType format of containerText ( JSON or XML)
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param pStr  json string that contains extra parameters to be added to BaseElem (description, comment, tag)
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
     * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
@@ -467,7 +469,7 @@ trait MetadataAPI {
     * println("Result as Json String => \n" + result._2)
     * }}}
     */
-  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantId: Option[String] = None): String
+  def AddContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantId: Option[String] = None, pStr: Option[String]): String
 
   /** Update container given containerText
     *
@@ -475,11 +477,12 @@ trait MetadataAPI {
     * @param formatType format of containerText (as JSON/XML string)
     * @param userid the identity to be used by the security adapter to ascertain if this user has access permissions for this
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
+    * @param pStr  json string that contains extra parameters to be added to BaseElem (description, comment, tag)
     * @return the result as a JSON String of object ApiResult where ApiResult.statusCode
     * indicates success or failure of operation: 0 for success, Non-zero for failure. The Value of
     * ApiResult.statusDescription and ApiResult.resultData indicate the nature of the error in case of failure
     */
-  def UpdateContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantid: Option[String] = None): String
+  def UpdateContainer(containerText:String, formatType:String, userid: Option[String] = None, tenantid: Option[String] = None, pStr : Option[String]): String
 
   /** Remove container with ContainerName and Vesion Number
     *

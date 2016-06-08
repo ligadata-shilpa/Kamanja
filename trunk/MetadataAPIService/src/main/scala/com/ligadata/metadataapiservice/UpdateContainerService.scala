@@ -60,7 +60,7 @@ class UpdateContainerService(requestContext: RequestContext, userid:Option[Strin
        getMetadataAPI.logAuditRec(userid,Some(AuditConstants.WRITE),AuditConstants.UPDATEOBJECT,containerJson,AuditConstants.FAIL,"",nameVal)
        requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error:UPDATE not allowed for this user").toString )
     } else {
-      val apiResult = getMetadataAPI.UpdateContainer(containerJson, "JSON", userid, tenantId)
+      val apiResult = getMetadataAPI.UpdateContainer(containerJson, "JSON", userid, tenantId, None)
       requestContext.complete(apiResult)
     }
   }

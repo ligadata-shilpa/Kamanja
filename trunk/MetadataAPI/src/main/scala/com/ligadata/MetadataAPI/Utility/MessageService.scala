@@ -37,7 +37,7 @@ object MessageService {
   val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
   // 646 - 676 Chagne ends
 
-  def addMessage(input: String, tid: Option[String]): String = {
+  def addMessage(input: String, tid: Option[String], paramStr : Option[String]): String = {
     var response = ""
     var msgFileDir: String = ""
 
@@ -71,7 +71,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += getMetadataAPI.AddMessage(messageDef.toString, "JSON", userid, finalTid)
+                  response += getMetadataAPI.AddMessage(messageDef.toString, "JSON", userid, finalTid, paramStr)
                 }
               }
             }
@@ -87,7 +87,7 @@ object MessageService {
       var message = new File(input.toString)
       if(message.exists()){
         val messageDef = Source.fromFile(message).mkString
-        response = getMetadataAPI.AddMessage(messageDef, "JSON", userid, finalTid)
+        response = getMetadataAPI.AddMessage(messageDef, "JSON", userid, finalTid, paramStr)
       }else{
         response="Message defintion file does not exist"
       }
@@ -118,7 +118,7 @@ object MessageService {
     response
   }
 
-  def updateMessage(input: String, tid: Option[String]): String = {
+  def updateMessage(input: String, tid: Option[String], pStr : Option[String]): String = {
     var response = ""
     //val gitMsgFile = "https://raw.githubusercontent.com/ligadata-dhaval/Kamanja/master/HelloWorld_Msg_Def.json"
 
@@ -151,7 +151,7 @@ object MessageService {
               case option => {
                 val messageDefs = getUserInputFromMainMenu(messages)
                 for (messageDef <- messageDefs) {
-                  response += getMetadataAPI.UpdateMessage(messageDef.toString, "JSON", userid, finalTid)
+                  response += getMetadataAPI.UpdateMessage(messageDef.toString, "JSON", userid, finalTid, pStr)
                 }
               }
             }
@@ -166,7 +166,7 @@ object MessageService {
       //input provided
       var message = new File(input.toString)
       val messageDef = Source.fromFile(message).mkString
-      response = getMetadataAPI.UpdateMessage(messageDef, "JSON", userid, finalTid)
+      response = getMetadataAPI.UpdateMessage(messageDef, "JSON", userid, finalTid, pStr)
     }
     //Got the message. Now add them
     response
