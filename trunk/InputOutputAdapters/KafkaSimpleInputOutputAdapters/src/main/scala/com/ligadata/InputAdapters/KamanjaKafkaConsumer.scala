@@ -88,9 +88,16 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
 
   // Verify the Secuirty Paramters...
   if (qc.security_protocol != null && (qc.security_protocol.trim.equalsIgnoreCase("sasl") || qc.security_protocol.trim.equalsIgnoreCase("ssl"))) {
-    if (qc.security_protocol.trim.equalsIgnoreCase("sasl")) {
+    if (qc.security_protocol.trim.equalsIgnoreCase("sasl_plaintext")) {
       // Add all the required SASL parameters.
+      props.put("security.protocol", qc.security_protocol.trim)
       if (qc.sasl_mechanism != null) props.put("sasl.mechanism", qc.sasl_mechanism)
+
+      // THROW A WARNING, if PLAIN is chosen with unencrypted communication.
+      if (qc.sasl_mechanism.equalsIgnoreCase("plain")) {
+        LOG.warn("\n\nKamanjaKafkaConsumer is instantiated with security protocol of SASL_PLAIN and security mechanism of PLAIN. This Will result in unecrypted passwords to be sent across the wire\n")
+      }
+
       if (qc.sasl_kerberos_service_name != null)
         props.put("sasl.kerberos.service.name", qc.sasl_kerberos_service_name)
       else
@@ -101,8 +108,39 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
       if (qc.sasl_kerberos_ticket_renew_window_factor != null) props.put("sasl.kerberos.ticket.renew.window.factor", qc.sasl_kerberos_ticket_renew_window_factor)
     }
 
+    if (qc.security_protocol.trim.equalsIgnoreCase("sasl_sll")) {
+      // Add all the required SASL parameters.
+      props.put("security.protocol", qc.security_protocol.trim)
+      if (qc.sasl_mechanism != null) props.put("sasl.mechanism", qc.sasl_mechanism)
+      if (qc.sasl_kerberos_service_name != null)
+        props.put("sasl.kerberos.service.name", qc.sasl_kerberos_service_name)
+      else
+        throw new KamanjaException("KamanjaKafkaCosnumer properties must specify SASL.KERBEROS.SERVICE.NAME if SASL is specified as Security Protocol", null)
+      if (qc.sasl_kerberos_kinit_cmd != null) props.put("sasl.kerberos.kinit.cmd", qc.sasl_kerberos_kinit_cmd)
+      if (qc.sasl_kerberos_min_time_before_relogic != null) props.put("sasl.kerberos.min.time.before.relogin", qc.sasl_kerberos_min_time_before_relogic)
+      if (qc.sasl_kerberos_ticket_renew_jiter != null) props.put("sasl.kerberos.ticket.renew.jitter", qc.sasl_kerberos_ticket_renew_jiter)
+      if (qc.sasl_kerberos_ticket_renew_window_factor != null) props.put("sasl.kerberos.ticket.renew.window.factor", qc.sasl_kerberos_ticket_renew_window_factor)
+
+      // Add all the SSL stuff now
+      if (qc.ssl_key_password != null) props.put("ssl.key.password", qc.ssl_key_password)
+      if (qc.ssl_keystore_location != null) props.put("ssl.keystore.location", qc.ssl_keystore_location)
+      if (qc.ssl_keystore_password != null) props.put("ssl.keystore.password", qc.ssl_keystore_password)
+      if (qc.ssl_truststore_location != null) props.put("ssl.truststore.location",qc.ssl_truststore_location)
+      if (qc.ssl_truststore_password != null) props.put("ssl.truststore.password", qc.ssl_truststore_password)
+      if (qc.ssl_enabled_protocols != null) props.put("ssl.enabled.protocols", qc.ssl_enabled_protocols)
+      if (qc.ssl_keystore_type != null) props.put("ssl.keystore.type", qc.ssl_keystore_type)
+      if (qc.ssl_protocol != null) props.put("ssl.protocol", qc.ssl_protocol)
+      if (qc.ssl_provider != null) props.put("ssl.provider", qc.ssl_provider)
+      if (qc.ssl_truststore_type != null) props.put("ssl.truststore.type", qc.ssl_truststore_type)
+      if (qc.ssl_cipher_suites != null) props.put("ssl.cipher.suites", qc.ssl_cipher_suites)
+      if (qc.ssl_endpoint_identification_algorithm != null) props.put("ssl.endpoint.identification.algorithm", qc.ssl_endpoint_identification_algorithm)
+      if (qc.ssl_keymanager_algorithm != null) props.put("ssl.keymanager.algorithm", qc.ssl_keymanager_algorithm)
+      if (qc.ssl_trust_manager_algorithm != null) props.put("ssl.trustmanager.algorithm", qc.ssl_trust_manager_algorithm)
+    }
+
     if (qc.security_protocol.trim.equalsIgnoreCase("ssl")) {
       //All SSL parameters
+      props.put("security.protocol", qc.security_protocol.trim)
       if (qc.ssl_key_password != null) props.put("ssl.key.password", qc.ssl_key_password)
       if (qc.ssl_keystore_location != null) props.put("ssl.keystore.location", qc.ssl_keystore_location)
       if (qc.ssl_keystore_password != null) props.put("ssl.keystore.password", qc.ssl_keystore_password)
@@ -119,6 +157,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
       if (qc.ssl_trust_manager_algorithm != null) props.put("ssl.trustmanager.algorithm", qc.ssl_trust_manager_algorithm)
     }
   }
+
 
   var isConsumerInitialized: Boolean = false
 
@@ -269,6 +308,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
             resetSleepTimer
           } catch {
             case e: Throwable => {
+              //externalizeExceptionEvent(e)
               LOG.warn("KamanjaKafkaConsumer Exception initializing consumer",e)
               if (kafkaConsumer != null) kafkaConsumer.close
               kafkaConsumer = null
@@ -276,11 +316,13 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
                 Thread.sleep(internalGetSleep)
               } catch {
                 case ie: InterruptedException => {
+                  //externalizeExceptionEvent(ie)
                   Shutdown()
                   LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting down ")
                   throw ie
                 }
                 case t: Throwable => {
+                  // externalizeExceptionEvent(t)
                   LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
                   Shutdown()
                   throw t
@@ -309,6 +351,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
                   uniqueVal.Offset = record.offset
 
                   LOG.debug("MESSAGE-> at @partition " + record.partition+ " @offset "+record.offset +" " +new String(message))
+                  println(LOG.debug("MESSAGE-> at @partition " + record.partition+ " @offset "+record.offset +" " +new String(message)))
                   msgCount += 1
                   incrementCountForPartition(record.partition)
                   execContexts(record.partition).execute(message,  uniqueVals(record.partition), uniqueVal, readTmMs)
@@ -318,6 +361,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
               }
             } catch {
               case e: Throwable => {
+                // externalizeExceptionEvent(e)
                 LOG.warn("KamanjaKafkaConsumer Exception during Kafka Queue processing " + qc.topic + ", cause: ",e)
                 var pGroup_value = "Partitions-"+group._2.map(p => {p._1.asInstanceOf[KafkaPartitionUniqueRecordKey].PartitionId.toString}).toArray[String].mkString(",")
                 partitionExceptions(pGroup_value) = new ExceptionInfo(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)),"n/a")
@@ -325,11 +369,13 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
                   Thread.sleep(internalGetSleep)
                 } catch {
                   case ie: InterruptedException => {
+                    // externalizeExceptionEvent(ie)
                     LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
                     Shutdown()
                     throw ie
                   }
                   case t: Throwable => {
+                    //externalizeExceptionEvent(e)
                     LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
                     Shutdown()
                     throw t
@@ -345,6 +391,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
             kafkaConsumer = null
           } catch {
             case e: Throwable => {
+              //externalizeExceptionEvent(e)
               LOG.warn("KamanjaKafkaConsumer Exception trying to close kafka connections ", e)
             }
           }
@@ -376,16 +423,19 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
         kafkaConsumer.close()
       } catch {
         case e: Throwable => {
+          //externalizeExceptionEvent(e)
           LOG.error ("Exception processing PARTITIONSFOR request..  Retrying ",e)
           try {
             Thread.sleep(getSleepTimer)
           } catch {
             case ie: InterruptedException => {
+              //externalizeExceptionEvent(ie)
               LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
               Shutdown()
               throw ie
             }
             case t: Throwable => {
+              //externalizeExceptionEvent(t)
               LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
               Shutdown()
               throw t
@@ -483,6 +533,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
 
     } catch {
       case t: Throwable => {
+        //externalizeExceptionEvent(t)
         LOG.warn("KamanjaKafkaConsumer error encountered during HealthCheck-getDepths call", t)
         return List[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]().toArray
       }
@@ -571,9 +622,11 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
       depths = getAllPartitionEndValues
     } catch {
       case e: KamanjaException => {
+        // externalizeExceptionEvent(e)
         return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, KamanjaKafkaConsumer.ADAPTER_DESCRIPTION, "0", "0", Serialization.write(metrics).toString)
       }
       case e: Throwable => {
+        //externalizeExceptionEvent(e)
         LOG.error ("KAFKA-ADAPTER: Unexpected exception determining kafka queue depths for " + qc.topic, e)
         return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, KamanjaKafkaConsumer.ADAPTER_DESCRIPTION, "0",  "0", Serialization.write(metrics).toString)
       }
@@ -595,6 +648,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
         }
 
       } catch {
+        //externalizeExceptionEvent(e)
         case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker:  error trying to determine kafka queue depths for "+qc.topic,e)
       }
     })
