@@ -72,7 +72,7 @@ class AddModelService(requestContext: RequestContext, userid:Option[String], pas
       // we need to know ModelName, Version, and associated Message.  modelCompileInfo will be set if this is PMML, and not set if KPMML
       if (modelCompileInfo == None) {
         logger.info ("No configuration information provided, assuming Kamanja PMML implementation.")
-        val apiResult = getMetadataAPI.AddModel(ModelType.KPMML, pmmlStr, userid, tenantId)
+        val apiResult = getMetadataAPI.AddModel(ModelType.KPMML, pmmlStr, userid, tenantId, None, None, None, None, None, None)
         requestContext.complete(apiResult)
       } else {
         val cInfo = modelCompileInfo.getOrElse("")
@@ -87,10 +87,10 @@ class AddModelService(requestContext: RequestContext, userid:Option[String], pas
           requestContext.complete(new ApiResult(ErrorCodeConstants.Failure, APIName, null, "Error: Invalid compile config paramters specified for PMML, Needs at least ModelName, ModelVersion, MessageConsumed.").toString)
 
         if (compileConfigTokens.size == 3) {
-          val apiResult = getMetadataAPI.AddModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)))
+          val apiResult = getMetadataAPI.AddModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)), None, None, None)
           requestContext.complete(apiResult)
         } else {
-          val apiResult = getMetadataAPI.AddModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)), Some(compileConfigTokens(3)))
+          val apiResult = getMetadataAPI.AddModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)), Some(compileConfigTokens(3)), None, None)
           requestContext.complete(apiResult)
         }
 

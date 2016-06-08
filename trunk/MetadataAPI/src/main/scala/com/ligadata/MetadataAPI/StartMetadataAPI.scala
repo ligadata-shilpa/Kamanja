@@ -436,8 +436,8 @@ object StartMetadataAPI {
           // 672 Change ends
 
         //model management
-        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid)
-        case Action.ADDMODELJTM   => response = ModelService.addModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
+        case Action.ADDMODELKPMML => response = ModelService.addModelKPmml(input, userId, optMsgProduced, tid, paramStr)
+        case Action.ADDMODELJTM   => response = ModelService.addModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim), paramStr)
         case Action.ADDMODELPMML => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
@@ -452,21 +452,22 @@ object StartMetadataAPI {
                                             , optModelVer
                                             , msgName
                                             , optMsgVer
-                                            , tid)
+                                            , tid,
+              paramStr)
         }
 
         case Action.ADDMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.addModelScala(input, "", userId,optMsgProduced, tid)
+            response = ModelService.addModelScala(input, "", userId,optMsgProduced, tid, paramStr)
           else
-            response = ModelService.addModelScala(input, param, userId,optMsgProduced, tid)
+            response = ModelService.addModelScala(input, param, userId,optMsgProduced, tid, paramStr)
         }
 
         case Action.ADDMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.addModelJava(input, "", userId,optMsgProduced, tid)
+            response = ModelService.addModelJava(input, "", userId,optMsgProduced, tid, paramStr)
           else
-            response = ModelService.addModelJava(input, param, userId,optMsgProduced, tid)
+            response = ModelService.addModelJava(input, param, userId,optMsgProduced, tid, paramStr)
         }
 
         case Action.REMOVEMODEL => {
@@ -491,28 +492,28 @@ object StartMetadataAPI {
           else
             ModelService.deactivateModel(param, userId)
         }
-        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, tid)
-        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim))
+        case Action.UPDATEMODELKPMML => response = ModelService.updateModelKPmml(input, userId, tid, paramStr)
+        case Action.UPDATEMODELJTM => response = ModelService.updateModelJTM(input, userId, tid, if (param == null || param.trim.size == 0) None else Some(param.trim), paramStr)
 
         case Action.UPDATEMODELPMML => {
           val modelName = extraCmdArgs.getOrElse(MODELNAME, "")
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
           var validatedNewVersion: String = if (modelVer != null) MdMgr.FormatVersion(modelVer) else null
-          response = ModelService.updateModelPmml(input, userId, modelName, validatedNewVersion,tid)
+          response = ModelService.updateModelPmml(input, userId, modelName, validatedNewVersion,tid, paramStr)
         }
 
         case Action.UPDATEMODELSCALA => {
           if (param.length == 0)
-            response = ModelService.updateModelscala(input, "", userId, tid)
+            response = ModelService.updateModelscala(input, "", userId, tid, paramStr)
           else
-            response = ModelService.updateModelscala(input, param, userId, tid)
+            response = ModelService.updateModelscala(input, param, userId, tid, paramStr)
         }
 
         case Action.UPDATEMODELJAVA => {
           if (param.length == 0)
-            response = ModelService.updateModeljava(input, "", userId, tid)
+            response = ModelService.updateModeljava(input, "", userId, tid, paramStr)
           else
-            response = ModelService.updateModeljava(input, param, userId,tid)
+            response = ModelService.updateModeljava(input, param, userId,tid, paramStr)
         }
 
         case Action.GETALLMODELS => response = ModelService.getAllModels(userId, tid)

@@ -1302,7 +1302,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
       println(pmmlStr)
       // Save the model
       //    MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid")))
+      println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid"), None, None, None, None, None))
     } catch {
       case e: Exception => {
 
@@ -1422,9 +1422,9 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
       println("CHOSE " + (choice2 - 1) + "  " + modelConfigName)
 
       if (op.equalsIgnoreCase("add")) {
-        println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
+        println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName), None, None, None, None, None))
       } else {
-        println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
+        println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.JAVA, sourceStr, userid, Some("tenantid"), Some(modelConfigName), None, None, None, None))
       }
     } catch {
       case e: AlreadyExistsException => {
@@ -1509,9 +1509,9 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
 
       if (op.equalsIgnoreCase("add")) {
         println("Results as json string => \n" +
-          MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
+          MetadataAPIImpl.AddModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName), None, None, None, None, None))
       } else {
-        println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName)))
+        println("Results as json string => \n" + MetadataAPIImpl.UpdateModel(ModelType.SCALA, sourceStr, userid, Some("tenantid"), Some(modelConfigName), None, None, None, None))
       }
 
     } catch {
@@ -1608,7 +1608,7 @@ val apiResult = MetadataAPIImpl.GetMessageDefFromCache(msgNameSpace, msgName, "J
       val pmmlStr = Source.fromFile(pmmlFilePath).mkString
       // Save the model
       // MetadataAPIImpl.SetLoggerLevel(Level.TRACE)
-      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid")))
+      println("Results as json string => \n" + MetadataAPIImpl.AddModel(ModelType.KPMML, pmmlStr, userid, Some("tenantid"), None, None, None, None, None, None))
     } catch {
       case e: AlreadyExistsException => {
         logger.error("Model Already in the metadata....", e)

@@ -375,7 +375,7 @@ object ModelUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return
     */
-  private def AddModelFromSource(sourceCode: String, sourceLang: String, modelName: String, userid: Option[String], tenantId: String, optMsgProduced: Option[String]): String = {
+  private def AddModelFromSource(sourceCode: String, sourceLang: String, modelName: String, userid: Option[String], tenantId: String, optMsgProduced: Option[String], pStr: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       compProxy.setSessionUserId(userid)
@@ -461,6 +461,7 @@ object ModelUtils {
                , optMsgConsumed: Option[String] = None
                , optMsgVersion: Option[String] = Some("-1")
                , optMsgProduced: Option[String] = None
+              , pStr : Option[String]
               ): String = {
 
     // No Add Model is allowed without Tenant Id
@@ -492,15 +493,15 @@ object ModelUtils {
 
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
-        AddKPMMLModel(input, optUserid, tenantId.get, optMsgProduced)
+        AddKPMMLModel(input, optUserid, tenantId.get, optMsgProduced, pStr)
       }
       case ModelType.JTM => {
-        AddJTMModel(input, optUserid, tenantId.get, optModelName)
+        AddJTMModel(input, optUserid, tenantId.get, optModelName, pStr)
       }
       case ModelType.JAVA | ModelType.SCALA => {
         //ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
         val result: String = optModelName.fold(throw new RuntimeException("Model name should be provided for Java/Scala models"))(name => {
-          AddModelFromSource(input, modelType.toString, name, optUserid, tenantId.get, optMsgProduced)
+          AddModelFromSource(input, modelType.toString, name, optUserid, tenantId.get, optMsgProduced, pStr)
         })
         result
       }
@@ -517,7 +518,8 @@ object ModelUtils {
             , input
             , optUserid
             , tenantId.get
-            , optMsgProduced)
+            , optMsgProduced,
+          pStr)
           res
         } else {
           val inputRep: String = if (input != null && input.size > 200) input.substring(0, 199)
@@ -570,7 +572,8 @@ object ModelUtils {
                            , pmmlText: String
                            , userid: Option[String]
                            , tenantId: String
-                           , optMsgProduced: Option[String]
+    , optMsgProduced: Option[String]
+    , pStr : Option[String]
                           ): String = {
     try {
       val buffer: StringBuilder = new StringBuilder
@@ -603,6 +606,9 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
+          modDef.setParamValues(pStr)
+        modDef.setCreationTime()
+        modDef.setModTime()
         modDef.uniqueId = getMetadataAPI.GetUniqueId
         modDef.mdElementId = if (existingModel == None) getMetadataAPI.GetMdElementId else existingModel.get.MdElementId
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
@@ -672,7 +678,8 @@ object ModelUtils {
     */
   private def AddKPMMLModel(pmmlText: String,
                             userid: Option[String], tenantId: String,
-                            optMsgProduced: Option[String]): String = {
+    optMsgProduced: Option[String],
+  pStr : Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -693,7 +700,9 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
-
+        modDef.setParamValues(pStr)
+        modDef.setCreationTime()
+        modDef.setModTime()
         // save the outMessage
         AddOutMsgToModelDef(modDef, ModelType.KPMML, optMsgProduced, userid)
 
@@ -779,7 +788,7 @@ object ModelUtils {
     *               method. If Security and/or Audit are configured, this value must be a value other than None.
     * @return json string result
     */
-  private def AddJTMModel(jsonText: String, userid: Option[String], tenantId: String, optModelName: Option[String]): String = {
+  private def AddJTMModel(jsonText: String, userid: Option[String], tenantId: String, optModelName: Option[String], pStr: Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
 
@@ -799,7 +808,6 @@ object ModelUtils {
         } else {
           List[String]()
         }
-
       //compProxy.setLoggerLevel(Level.TRACE)
       var (classStr, modDef) = compProxy.compileJTM(jsonText, tenantId, extDepJars, usr, compileConfig)
 
@@ -817,6 +825,9 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        modDef.setParamValues(pStr)
+        modDef.setCreationTime()
+        modDef.setModTime()
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)

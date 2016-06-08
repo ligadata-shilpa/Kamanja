@@ -70,7 +70,7 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
       // we need to know ModelName, Version, and associated Message.  modelCompileInfo will be set if this is PMML, and not set if KPMML
       if (modelCompileInfo == None) {
         log.info ("No configuration information provided, assuming Kamanja PMML implementation.")
-        val apiResult = getMetadataAPI.UpdateModel(ModelType.KPMML, pmmlStr, userid)
+        val apiResult = getMetadataAPI.UpdateModel(ModelType.KPMML, pmmlStr, userid, tenantId, None, None, None, None, None)
         requestContext.complete(apiResult)
       } else {
         val cInfo = modelCompileInfo.getOrElse("")
@@ -86,10 +86,10 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
 
         // if an optional parm is passed, pass it, else only pass in 2 parms
         if (compileConfigTokens.size == 2) {
-          val apiResult = getMetadataAPI.UpdateModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)))
+          val apiResult = getMetadataAPI.UpdateModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), None, None, None)
           requestContext.complete(apiResult)
         } else {
-          val apiResult = getMetadataAPI.UpdateModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)) )
+          val apiResult = getMetadataAPI.UpdateModel(ModelType.PMML, pmmlStr, userid, tenantId, Some(compileConfigTokens(0)), Some(compileConfigTokens(1)), Some(compileConfigTokens(2)) , None, None)
           requestContext.complete(apiResult)
         }
       }

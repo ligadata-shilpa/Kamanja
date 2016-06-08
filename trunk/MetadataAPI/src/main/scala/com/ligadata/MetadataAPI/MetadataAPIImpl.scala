@@ -2239,7 +2239,7 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
      *               method. If Security and/or Audit are configured,supply something other than None
      * @return
      */
-  def AddModel(model: ModelDef, userid : Option[String]): String = {
+  def AddModel(model: ModelDef, userid : Option[String], pStr : Option[String]): String = {
     ModelUtils.AddModel(model,userid)
   }
 
@@ -2280,9 +2280,10 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                            , optVersion: Option[String] = None
                            , optMsgConsumed: Option[String] = None
                            , optMsgVersion: Option[String] = Some("-1")
-			                     , optMsgProduced: Option[String] = None
+    , optMsgProduced: Option[String] = None,
+    pStr : Option[String]
 		       ): String  = {
-    ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced)
+    ModelUtils.AddModel(modelType, input, optUserid, optTenantid, optModelName, optVersion, optMsgConsumed, optMsgVersion, optMsgProduced, pStr)
   }
 
   /**
@@ -2335,7 +2336,8 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
                             , optModelName: Option[String] = None
                             , optVersion: Option[String] = None
                             , optVersionBeingUpdated : Option[String] = None
-			                      , optMsgProduced: Option[String] = None): String = {
+      , optMsgProduced: Option[String] = None,
+      pStr: Option[String]): String = {
       ModelUtils.UpdateModel(modelType, input, optUserid, tenantid, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
     }
 

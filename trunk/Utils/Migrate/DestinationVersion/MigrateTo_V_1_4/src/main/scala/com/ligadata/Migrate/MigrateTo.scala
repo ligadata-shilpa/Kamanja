@@ -1045,7 +1045,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                     failed = isFailedStatus(retRes)
 
                     if (failed == false) {
-                      val retRes1 = getMetadataAPI.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, _tenantId, Some((defaultUserId.get + "." + cfgnm).toLowerCase), Some(ver))
+                      val retRes1 = getMetadataAPI.AddModel(MetadataAPI.ModelType.fromString(objFormat), defStr, defaultUserId, _tenantId, Some((defaultUserId.get + "." + cfgnm).toLowerCase), Some(ver), None, None, None, None)
                       failed = isFailedStatus(retRes1)
                     }
                   } catch {
@@ -1083,7 +1083,7 @@ class MigrateTo_V_1_4 extends MigratableTo {
                   var failed = false
 
                   try {
-                    val retRes = getMetadataAPI.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, _tenantId, Some(dispkey), Some(ver))
+                    val retRes = getMetadataAPI.AddModel(MetadataAPI.ModelType.fromString("kpmml"), mdlDefStr, defaultUserId, _tenantId, Some(dispkey), Some(ver), None, None, None, None)
                     logger.info("AddModel: Response => " + retRes)
                     failed = isFailedStatus(retRes)
                   } catch {
