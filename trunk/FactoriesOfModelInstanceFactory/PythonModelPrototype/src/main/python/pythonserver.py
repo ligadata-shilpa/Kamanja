@@ -113,7 +113,7 @@ def unPack(rawmsg):
 		startHash = rawmsg[0:lenMd5Digest]
 		del rawmsg[0:lenMd5Digest]
 		payloadLenBytes = rawmsg[0:lenInt]
-		(payloadLen,) = unPack('>I', bytearray(payloadLenBytes)) #big endian
+		(payloadLen,) = unpack('>I', bytearray(payloadLenBytes)) #big endian
 		del rawmsg[0:lenInt]
 		payloadBytes = rawmsg[0:payloadLen]
 		del rawmsg[0:payloadLen]
