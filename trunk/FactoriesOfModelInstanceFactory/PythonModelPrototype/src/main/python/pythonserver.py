@@ -85,7 +85,7 @@ for extname in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopS
 	cmdDict[extname] = handler
 
 
-def unpack(rawmsg):
+def unPack(rawmsg):
 	"""
 	This method a) verifies the message ingtegrity by examining
 	the md5 markers and computing the md5 digest on the enclosed
@@ -113,7 +113,7 @@ def unpack(rawmsg):
 		startHash = rawmsg[0:lenMd5Digest]
 		del rawmsg[0:lenMd5Digest]
 		payloadLenBytes = rawmsg[0:lenInt]
-		(payloadLen,) = unpack('>I', bytearray(payloadLenBytes)) #big endian
+		(payloadLen,) = unPack('>I', bytearray(payloadLenBytes)) #big endian
 		del rawmsg[0:lenInt]
 		payloadBytes = rawmsg[0:payloadLen]
 		del rawmsg[0:payloadLen]
@@ -194,7 +194,7 @@ def dispatcher(rawmsg):
 	legitimate command,  error is logged and returned.
 	""" 
 	results = ""
-	(cmdKey, cmdParameters, errMsg) = unpack(rawmsg)
+	(cmdKey, cmdParameters, errMsg) = unPack(rawmsg)
 	if len(cmdKey) > 0:
 		print "processing cmd = " + cmdKey + "...argument dict = " + str(cmdParameters)
 		cmd = cmdDict[cmdKey]
@@ -219,16 +219,16 @@ while True:
 	    remaining = 1024
 	    while remaining > 0:
 	        data = s.recv(remaining)     # Get available data
-	        msgparts.append(data)        # Add it to list of chunks
+	        msgparts.append(data)        # Add it to list of msg parts
 	        if not data: remaining = 0   # no more data...  
 	    rawmsg = b"".join(msgparts)      # Stitch together the complete message
 
 	    result = dispatcher(rawmsg) # string answer ...
 	    if result != 'kill-9': # stop command will return 'kill-9' as value
 	    	wireMsg = formatWireMsg(result)
-	    	conn.sendall(result) 
+	    	conn.sendall(wireMsg) 
 	    else: 
-	    	wireMsg =  goingDownMsg
+	    	wireMsg =  goingDownMsg()
 	    	conn.sendall(wireMsg)
 	    conn.close()
     	break
