@@ -1163,7 +1163,7 @@ object ModelUtils {
                   , optModelName: Option[String] = None
                   , optVersion: Option[String] = None
                   , optVersionBeingUpdated: Option[String] = None
-                  , optMsgProduced: Option[String] = None): String = {
+    , optMsgProduced: Option[String] = None, pStr : Option[String]): String = {
     /**
       * FIXME: The current strategy is that only the most recent version can be updated.
       * FIXME: This is not a satisfactory condition. It may be desirable to have 10 models all with
@@ -1180,20 +1180,20 @@ object ModelUtils {
 
     val modelResult: String = modelType match {
       case ModelType.KPMML => {
-        val result: String = UpdateKPMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optMsgProduced)
+        val result: String = UpdateKPMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optMsgProduced, pStr)
         result
       }
       case ModelType.JTM => {
-        val result: String = UpdateJTMModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion)
+        val result: String = UpdateJTMModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, pStr)
         result
       }
       case ModelType.JAVA | ModelType.SCALA => {
-        val result: String = UpdateCustomModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion)
+        val result: String = UpdateCustomModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, pStr)
         result
       }
       case ModelType.PMML => {
         //1.1.3
-        val result: String = UpdatePMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced)
+        val result: String = UpdatePMMLModel(modelType, input, optUserid, tenantId.get, optModelName, optVersion, optVersionBeingUpdated, optMsgProduced, pStr)
         result
       }
       case ModelType.BINARY =>
@@ -1228,7 +1228,7 @@ object ModelUtils {
                               , optModelName: Option[String] = None
                               , optModelVersion: Option[String] = None
                               , optVersionBeingUpdated: Option[String]
-                              , optMsgProduced: Option[String]): String = {
+                              , optMsgProduced: Option[String], pStr : Option[String]): String = {
 
     val modelName: String = optModelName.orNull
     val version: String = optModelVersion.getOrElse("-1")
@@ -1320,7 +1320,11 @@ object ModelUtils {
 
         if (isValid && modDef != null) {
           // save the outMessage
+          modDef.setParamValues(pStr)
+          modDef.setModTime()
           AddOutMsgToModelDef(modDef, ModelType.PMML, optMsgProduced, optUserid)
+          modDef.setParamValues(pStr)
+          modDef.setModTime()
 
           val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
           modDef.uniqueId = getMetadataAPI.GetUniqueId
@@ -1437,7 +1441,7 @@ object ModelUtils {
                                 , userid: Option[String] = None
                                 , tenantId: String = ""
                                 , modelName: Option[String] = None
-                                , version: Option[String] = None): String = {
+                                , version: Option[String] = None, pStr : Option[String]): String = {
     val sourceLang: String = modelType.toString
 
     /** to get here it is either 'java' or 'scala' */
@@ -1468,6 +1472,8 @@ object ModelUtils {
       //if (latestVersion )
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        modDef.setParamValues(pStr)
+        modDef.setModTime()
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
         if (latestVersion != None) {
           if (!tenantId.equalsIgnoreCase(latestVersion.get.tenantId)) {
@@ -1539,7 +1545,7 @@ object ModelUtils {
                                , tenantId: String = ""
                                , optModelName: Option[String] = None
                                , optVersion: Option[String] = None
-                               , optMsgProduced: Option[String]): String = {
+                               , optMsgProduced: Option[String], pStr : Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       //compProxy.setLoggerLevel(Level.TRACE)
@@ -1568,6 +1574,8 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        modDef.setParamValues(pStr)
+        modDef.setModTime()
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 
         // when a version number changes, latestVersion  has different namespace making it unique
@@ -1635,7 +1643,7 @@ object ModelUtils {
                              , optUserid: Option[String] = None
                              , tenantId: String = ""
                              , optModelName: Option[String] = None
-                             , optVersion: Option[String] = None): String = {
+                             , optVersion: Option[String] = None, pStr : Option[String]): String = {
     try {
       var compProxy = new CompilerProxy
       var compileConfig = ""
@@ -1681,6 +1689,8 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        modDef.setParamValues(pStr)
+        modDef.setModTime()
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 
         // when a version number changes, latestVersion  has different namespace making it unique
