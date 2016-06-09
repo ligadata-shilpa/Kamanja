@@ -32,7 +32,7 @@ class DataTypeUtility extends LogTrait{ // This class created to check the value
   }
 
   def isBoolean(field: String): Boolean={ //This method used to check if the value is boolean or not (return true if boolean and false otherwise)
-    if(field.equalsIgnoreCase("true")|| field.equalsIgnoreCase("false"))
+    if(field.trim.equalsIgnoreCase("true")|| field.trim.equalsIgnoreCase("false"))
       return true
     else
       return false
@@ -129,14 +129,19 @@ class DataTypeUtility extends LogTrait{ // This class created to check the value
   }
 
   def FindPMMLFieldType(field: String): String ={
-    if (field.equalsIgnoreCase("integer"))
+    if (field.trim.equalsIgnoreCase("integer") || field.trim.equalsIgnoreCase("int-number") || field.trim.equalsIgnoreCase("byte") || field.trim.equalsIgnoreCase("int")
+      || field.trim.equalsIgnoreCase("negativeinteger") || field.trim.equalsIgnoreCase("nonnegativeinteger") || field.trim.equalsIgnoreCase("nonpositiveinteger")
+      || field.trim.equalsIgnoreCase("positiveinteger") || field.trim.equalsIgnoreCase("short") || field.trim.equalsIgnoreCase("unsignedshort")
+      || field.trim.equalsIgnoreCase("unsignedinteger") || field.trim.equalsIgnoreCase("unsignedbyte"))
       return "Int"
-    else if (field.equalsIgnoreCase("float"))
+    else if (field.trim.equalsIgnoreCase("float") || field.trim.equalsIgnoreCase("prob-number") || field.trim.equalsIgnoreCase("percentage-number"))
       return "Float"
-    else if (field.equalsIgnoreCase("double"))
+    else if (field.trim.equalsIgnoreCase("double") || field.trim.equalsIgnoreCase("number") || field.trim.equalsIgnoreCase("real-number") || field.trim.equalsIgnoreCase("decimal"))
       return "Double"
-    else if(field.equalsIgnoreCase("boolean"))
+    else if(field.trim.equalsIgnoreCase("boolean"))
       return "Boolean"
+    else if(field.trim.equalsIgnoreCase("long") || field.trim.equalsIgnoreCase("unsignedlong"))
+      return "Long"
     else return "String"
   }
 }
