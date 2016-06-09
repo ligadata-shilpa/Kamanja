@@ -108,8 +108,10 @@ object StartMetadataAPI {
 
   // 646 - 675, 676 Change begins - replace MetadataAPIImpl, addition of new meta data
   val getMetadataAPI = MetadataAPIImpl.getMetadataAPI
-  val PROPERTYFILE="pfile"
+  val PROPERTYFILE="PropertiesFile"
+  val PROPERTY="Properties"
   var expectPropFile = false
+  var expectPropStr = false
   // 646 - 675,676 Change ends
 
   val extraCmdArgs = mutable.Map[String, String]()
@@ -125,15 +127,18 @@ object StartMetadataAPI {
     try {
       val jsonBuffer: StringBuilder = new StringBuilder
 
+      extraCmdArgs(PROPERTYFILE) = ""
+      extraCmdArgs(PROPERTY) = ""
+
       args.foreach(arg => {
 
-        if (arg.endsWith(".json")
+        if ((arg.endsWith(".json")
           || arg.endsWith(".jtm")
           || arg.endsWith(".xml")
           || arg.endsWith(".pmml")
           || arg.endsWith(".scala")
           || arg.endsWith(".java")
-          || arg.endsWith(".jar")) {
+          || arg.endsWith(".jar")) && (expectPropFile == false)) {
          extraCmdArgs(INPUTLOC) = arg
           if (expectBindingFromFile) {
             /** the json test above can prevent the ordinary catch of the name below */
@@ -181,7 +186,10 @@ object StartMetadataAPI {
             } else if (arg.equalsIgnoreCase(PROPERTYFILE)) {
               logger.warn ("getting pfile " + arg)
               expectPropFile = true
-              extraCmdArgs(PROPERTYFILE) = ""
+            }
+            else if (arg.equalsIgnoreCase(PROPERTY)) {
+              logger.warn ("getting property " + arg)
+              expectPropStr = true
             }else {
               var argVar = arg
               if (expectTid) {
@@ -256,9 +264,13 @@ object StartMetadataAPI {
 
               }
               if (expectPropFile) {
-                logger.warn ("Expecting prop file name is " + arg)
                 extraCmdArgs(PROPERTYFILE) = arg
                 expectPropFile = false
+                argVar = ""
+              }
+              if (expectPropStr) {
+                extraCmdArgs(PROPERTY) = arg
+                expectPropStr = false
                 argVar = ""
               }
 
@@ -309,13 +321,13 @@ object StartMetadataAPI {
 
      // logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file")
       //              var paramValues : scala.collection.mutable.Map [String, Any]
-      var paramJsonStr : String = ""
+      var paramJsonStr : String =  extraCmdArgs(PROPERTY)
       val paramConfig = scala.util.Properties.envOrElse("KAMANJA_HOME", scala.util.Properties.envOrElse("HOME", "~")) + "/config/" + (extraCmdArgs getOrElse (PROPERTYFILE, None))
 
 
-      if (paramConfig != "") {
-        if (FileExists(paramConfig)) {
-          paramJsonStr =  Source.fromFile(paramConfig).getLines.mkString
+      if (extraCmdArgs(PROPERTYFILE) != "") {
+        if (FileExists(extraCmdArgs(PROPERTYFILE))) {
+          paramJsonStr =  Source.fromFile(extraCmdArgs(PROPERTYFILE)).getLines.mkString
           logger.warn(extraCmdArgs(PROPERTYFILE)  + " name of propertty file contents " + paramJsonStr)
 //          val mapOriginal  =   parse(paramJsonStr).values.asInstanceOf[scala.collection.mutable.Map[String, Any]]
         }
