@@ -144,6 +144,14 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
        val modelEvaluator = pmmlObj.XMLReader(inputFileContent)
        if(configBeanObj.messageType.equalsIgnoreCase("input")){
          val activeFields = pmmlObj.ActiveFields(modelEvaluator)
+         for(item <- activeFields){
+           feildsString += (item._1 -> item._2)
+         }
+         if(feildsString.size == 0){
+           logger.info("no input message produced from file")
+           println("[RESULT] - no input message produced from file")
+           sys.exit(1)
+         }
        } else if(configBeanObj.messageType.equalsIgnoreCase("output")){
          val outputFields = pmmlObj.OutputFields(modelEvaluator)
          val targetFields = pmmlObj.TargetFields(modelEvaluator)
