@@ -94,27 +94,32 @@ trait HttpEndpointService extends HttpService {
       val result = processor.process(format, message)
       m.acceptedRequests.incrementAndGet()
       m.acceptedMessages.addAndGet(result)
-      ctx.complete("{ \"count\": " + result + "}")
+      //ctx.complete("{ \"count\": " + result + "}")
+      ctx.complete(write(Map("count" -> result)))
     } catch {
       case e: FormatException => {
         m.errorRequests.incrementAndGet()
         log.error("Error processing request: ", e)
-        ctx.complete(400, "{\"code\": " + (1000+e.code) + ", \"error\": \"" + e.getMessage + "\"}")
+        //ctx.complete(400, "{\"code\": " + (1000+e.code) + ", \"error\": \"" + e.getMessage + "\"}")
+        ctx.complete(400, write(Map("code" -> (1000+e.code), "error" -> JString(e.getMessage))))
       }
       case e: DataException => {
         m.errorRequests.incrementAndGet()
         log.error("Error processing request: ", e)
-        ctx.complete(400, "{\"code\": " + (2000+e.code) + ", \"error\": \"" + e.getMessage + "\"}")
+        //ctx.complete(400, "{\"code\": " + (2000+e.code) + ", \"error\": \"" + e.getMessage + "\"}")
+        ctx.complete(400, write(Map("code" -> (2000+e.code), "error" -> JString(e.getMessage))))
       }
       case e: ServerException => {
         m.errorRequests.incrementAndGet()
         log.error("Error processing request: ", e)
-        ctx.complete(400, "{\"code\": " + (3000+e.code) + ", \"error\": \"" + e.getMessage + "\"}")
+        //ctx.complete(400, "{\"code\": " + (3000+e.code) + ", \"error\": \"" + e.getMessage + "\"}")
+        ctx.complete(400, write(Map("code" -> (3000+e.code), "error" -> JString(e.getMessage))))
       }
       case e: Exception => {
         m.errorRequests.incrementAndGet()
         log.error("Error processing request: ", e)
-        ctx.complete(400, "{\"code\": 3999, \"error\": \"" + e.getMessage + "\"}")
+        //ctx.complete(400, "{\"code\": 3999, \"error\": \"" + e.getMessage + "\"}")
+        ctx.complete(400, write(Map("code" -> 3999, "error" -> JString(e.getMessage))))
       }
     }
   }

@@ -1,11 +1,11 @@
 package com.ligadata.tools.HttpEndpoint
 
-import java.text.SimpleDateFormat
 import java.io.ByteArrayOutputStream
 import org.apache.logging.log4j.{ Logger, LogManager }
 import org.apache.avro.{ Schema }
 import org.apache.avro.io.{ Encoder, EncoderFactory}
 import org.apache.avro.generic.{ GenericData, GenericDatumWriter, GenericRecord }
+import org.joda.time.format.DateTimeFormatter
 
 case class FormatException(code: Int, msg: String, cause: Throwable = null) extends Exception("Format error: " + msg, cause)
 case class DataException(code: Int, msg: String, cause: Throwable = null) extends Exception("Data error: " + msg, cause)
@@ -140,13 +140,11 @@ class MessageProcessor(service: Service) {
       } else {
         field.typeId match {
           case 1 => try { value.toDouble }
-            catch { case e: Exception => throw new DataException(2, field.name + " should be a number.") }
-          case 3 => try { 
-              val df = new SimpleDateFormat(field.format)
-              df.setLenient(false)
-              df.parse(value) 
+            catch { case e: Exception => throw new DataException(2, field.name + " should be a number." + ". " + e.getMessage) }
+          case 3 => try {
+              org.joda.time.format.DateTimeFormat.forPattern(field.format).parseDateTime(value) 
             }
-            catch { case e: Exception => throw new DataException(3, field.name + " should be a " + field.datatype + " with format " + field.format) }
+            catch { case e: Exception => throw new DataException(3, field.name + " should be a " + field.datatype + " with format " + field.format + ". " + e.getMessage) }
           case _ =>
         }
       }
