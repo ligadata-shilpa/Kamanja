@@ -1085,20 +1085,26 @@ object StartMetadataAPI {
 
     def run() {
       val vt = 0
+      var keepProcessing = true
+
       try {
         breakable {
-          while (!StartMetadataAPI.isShutdown) {
+          while (!StartMetadataAPI.isShutdown && keepProcessing) {
 
             //if (strLine == null)  break//TODO : find a way to stop when client is shut
 
-            val cmdJson = SocketCommunicationHelper.readMsg(in)
-            val cmdParts = SocketCommunicationHelper.getCommandParts(cmdJson)
-            LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(cmdParts.mkString(" "), socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
-            val result = StartMetadataAPI.execCmd(cmdParts)
+            val (cmdJson, isSteamClosed) = SocketCommunicationHelper.readMsg(in)
+            if(isSteamClosed){
+              keepProcessing = false
+            }
+            else {
+              val cmdParts = SocketCommunicationHelper.getCommandParts(cmdJson)
+              LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(cmdParts.mkString(" "), socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
+              val result = StartMetadataAPI.execCmd(cmdParts)
 
-            //LOG.warn("Result to be sent to client: "+result)
-            SocketCommunicationHelper.writeMsg(result, out)
-
+              //LOG.warn("Result to be sent to client: "+result)
+              SocketCommunicationHelper.writeMsg(result, out)
+            }
           }
         }
       } catch {

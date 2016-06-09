@@ -34,14 +34,26 @@ object SocketCommunicationHelper{
     }
 
     println("getCommandParts - cmd parts: " + cmdValues.get("cmd").get)
-    val partsJson = cmdValues.get("cmd").get.asInstanceOf[Array[String]]
-    partsJson
+    val partsJson = cmdValues.get("cmd").get.asInstanceOf[List[String]]
+    partsJson.toArray
   }
 
-  def readMsg(in : InputStream) : String = {
+  /**
+    *
+    * @param in input stream
+    * @return (msg, flag=true when stream is closed
+    */
+  def readMsg(in : InputStream) : (String, Boolean) = {
+    var isClosed = false
+
     var msg = ""
     var buffer = new Array[Byte](START_MARKER.length)
     var readLen : Int = in.read(buffer, 0, START_MARKER.length)
+
+    if(readLen < 0){
+      isClosed = true
+      return (null, isClosed)
+    }
 
     if(readLen < START_MARKER.length){
       throw new Exception("Corrupt message: start marker not found")
@@ -77,7 +89,7 @@ object SocketCommunicationHelper{
       throw new Exception("Corrupt message: end marker not found")
     }
 
-    msg
+    (msg, isClosed)
   }
 
   def writeMsg(msg : String, out : OutputStream): Unit ={

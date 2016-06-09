@@ -73,9 +73,12 @@ object MetadataAPIClient {
           SocketCommunicationHelper.writeMsg(cmdJson, out)
 
           //get the result and print it
-          val resultJson =  SocketCommunicationHelper.readMsg(in)
-          System.out.println(resultJson)
-
+          val (resultJson, isStreamClosed) =  SocketCommunicationHelper.readMsg(in)
+          if(!isStreamClosed)
+            System.out.println(resultJson)
+          else{
+            //exit???
+          }
         }
 
         print("kamanja>")
