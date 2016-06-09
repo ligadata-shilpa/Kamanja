@@ -2,7 +2,7 @@ package com.ligadata
 
 import java.io.{IOException, InputStreamReader, PrintWriter, BufferedReader}
 import java.net.{UnknownHostException, Socket}
-
+import com.ligadata.MetadataAPI.Utility.SocketCommunicationHelper
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -11,6 +11,12 @@ import org.apache.logging.log4j.LogManager
 object MetadataAPIClient {
 
   private val logger = LogManager.getLogger(getClass)
+
+  //split on the comma only if that comma has zero, or an even number of quotes ahead of it.
+  def split(str : String, separator : String) : Array[String] = {
+    val tokens = str.split(separator + "(?=([^\"]*\"[^\"]*\")*[^\"]*$)", -1)
+    tokens.filter(token => token.length > 0).toList.toArray
+  }
 
   def main(args : Array[String]): Unit ={
 
@@ -47,13 +53,12 @@ object MetadataAPIClient {
     * @param portNumber
     */
   def connectToLocal(hostName : String, portNumber : Int): Unit ={
-    val endOfResultMark = "<<<end>>>"
 
     var socket : Socket = null
     try {
       socket = new Socket(hostName, portNumber)
-      val out : PrintWriter = new PrintWriter(socket.getOutputStream, true)
-      val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
+      val out = socket.getOutputStream
+      val in = socket.getInputStream
       val stdIn = new BufferedReader(new InputStreamReader(System.in))
 
       var userInput = ""
@@ -62,15 +67,14 @@ object MetadataAPIClient {
       while ( userInput != null) {
         if(userInput.trim.length > 0) {
           logger.info("MetadataAPIClient - got command {}", userInput)
-          out.println(userInput)
 
-          //print the result
-          System.out.println("Result: ")
-          var resultLine = in.readLine()
-          while (resultLine != null && !resultLine.equals(endOfResultMark)) {
-            System.out.println(resultLine)
-            resultLine = in.readLine()
-          }
+          val userInputTokens = split(userInput, " ")
+          val cmdJson = SocketCommunicationHelper.wrapCommandInJson(userInputTokens)
+          SocketCommunicationHelper.writeMsg(cmdJson, out)
+
+          //get the result and print it
+          val resultJson =  SocketCommunicationHelper.readMsg(in)
+          System.out.println(resultJson)
 
         }
 

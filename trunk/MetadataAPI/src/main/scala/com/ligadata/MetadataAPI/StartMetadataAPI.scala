@@ -107,14 +107,6 @@ object StartMetadataAPI {
 
   var isShutdown = false
 
-
-  //split on the comma only if that comma has zero, or an even number of quotes ahead of it.
-  def split(str : String, separator : String) : Array[String] = {
-    val tokens = str.split(separator + "(?=([^\"]*\"[^\"]*\")*[^\"]*$)", -1)
-    tokens.filter(token => token.length > 0).toList.toArray
-  }
-
-
   def clearVariables(): Unit ={
     extraCmdArgs.clear()
     action = ""
@@ -1084,8 +1076,8 @@ object StartMetadataAPI {
 
   class MetadataAPIConnHandler(var socket: Socket) extends Runnable {
     private val LOG = LogManager.getLogger(getClass)
-    private val out = new PrintStream(socket.getOutputStream)
-    private val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
+    private val out = socket.getOutputStream
+    private val in = socket.getInputStream
 
     socket.setKeepAlive(true)
 
@@ -1096,16 +1088,17 @@ object StartMetadataAPI {
       try {
         breakable {
           while (!StartMetadataAPI.isShutdown) {
-            val strLine = in.readLine()
-            if (strLine == null)
-              break
-            LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(strLine, socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
-            val result = StartMetadataAPI.execCmd(StartMetadataAPI.split(strLine, " "))
+
+            //if (strLine == null)  break//TODO : find a way to stop when client is shut
+
+            val cmdJson = SocketCommunicationHelper.readMsg(in)
+            val cmdParts = SocketCommunicationHelper.getCommandParts(cmdJson)
+            LOG.warn("Current Command:%s. HostAddress:%s, Port:%d, LocalPort:%d".format(cmdParts.mkString(" "), socket.getLocalAddress.getHostAddress, socket.getPort, socket.getLocalPort))
+            val result = StartMetadataAPI.execCmd(cmdParts)
 
             //LOG.warn("Result to be sent to client: "+result)
-            out.println(result)
-            val endOfResultMark = "<<<end>>>" //TODO: BUG - find a better way
-            out.println(endOfResultMark)
+            SocketCommunicationHelper.writeMsg(result, out)
+
           }
         }
       } catch {
