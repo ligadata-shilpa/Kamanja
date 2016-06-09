@@ -17,11 +17,11 @@ class JsonUtility  extends LogTrait {
       ("Message" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
-          ("Verion" -> "00.01.00") ~
+          ("Version" -> "00.01.00") ~
           ("Description" -> "") ~
           ("Fixed" -> configObj.messageStructure.toString) ~
           ("Persist" -> configObj.saveMessage.toString) ~
-          ("Feilds" ->
+          ("Fields" ->
             data.map {
               key =>
                 (
@@ -41,7 +41,7 @@ class JsonUtility  extends LogTrait {
       json = ("Message" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
-          ("Verion" -> "00.01.00") ~
+          ("Version" -> "00.01.00") ~
           ("Description" -> "") ~
           ("Fixed" -> configObj.messageStructure.toString) ~
           ("Persist" -> configObj.saveMessage.toString) ~
@@ -51,7 +51,7 @@ class JsonUtility  extends LogTrait {
       json = ("Message" ->
         ("NameSpace" -> configObj.nameSpace) ~
           ("Name" -> configObj.messageName) ~
-          ("Verion" -> "00.01.00") ~
+          ("Version" -> "00.01.00") ~
           ("Description" -> "") ~
           ("Fixed" -> configObj.messageStructure.toString) ~
           ("Persist" -> configObj.saveMessage.toString) ~
