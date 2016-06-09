@@ -12,7 +12,10 @@ $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add 
 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties upload compile config $KAMANJA_HOME/config/Model_Config_HelloWorld.json
 
-$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model java $KAMANJA_HOME/input/SampleApplications/metadata/model/HelloWorld.java DEPENDSON helloworldmodel TENANTID tenant1 
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model scala $KAMANJA_HOME/input/SampleApplications/metadata/model/HelloWorldJython.scala DEPENDSON helloworldjythonmodel TENANTID tenant1
+
+
+$KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add model java $KAMANJA_HOME/input/SampleApplications/metadata/model/HelloWorld.java DEPENDSON helloworldmodel TENANTID tenant1
 
 $KAMANJA_HOME/bin/kamanja $KAMANJA_HOME/config/MetadataAPIConfig.properties add adaptermessagebinding FROMFILE $KAMANJA_HOME/config/HelloWorld_Adapter_Binding.json
 

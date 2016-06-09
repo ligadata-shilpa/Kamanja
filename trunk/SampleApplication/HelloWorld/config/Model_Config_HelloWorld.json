@@ -1,5 +1,5 @@
 {
-  "HelloWorldModel": {
+  "HelloWorldJythonModel": {
     "Dependencies": [],
     "MessageAndContainers": [
       "com.ligadata.kamanja.samples.messages.msg1",

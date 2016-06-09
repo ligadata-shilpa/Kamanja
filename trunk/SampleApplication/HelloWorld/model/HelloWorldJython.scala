@@ -21,6 +21,8 @@ import org.python.core.PyString
 import org.python.util.PythonInterpreter
 import com.ligadata.kamanja.metadata.ModelDef
 import com.ligadata.KamanjaBase._
+import com.ligadata.kamanja.samples.messages._
+import java.util.Properties
 
 class HelloWorldJythonFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
 
@@ -29,7 +31,7 @@ class HelloWorldJythonFactory(modelDef: ModelDef, nodeContext: NodeContext) exte
   }
 
   override def getVersion(): String = {
-    "0.0.1" // ToDo: get from metadata
+    "0.0.6" // ToDo: get from metadata
   }
 
   override def isValidMessage(msg: MessageContainerBase): Boolean = {
@@ -43,44 +45,65 @@ class HelloWorldJythonFactory(modelDef: ModelDef, nodeContext: NodeContext) exte
 class HelloWorldJythonModel(factory: ModelInstanceFactory) extends ModelInstance(factory) {
 
   val code =
-  """
-    |#
-    |# Copyright 2016 ligaDATA
-    |#
-    |# Licensed under the Apache License, Version 2.0 (the "License");
-    |# you may not use this file except in compliance with the License.
-    |# You may obtain a copy of the License at
-    |#
-    |#     http://www.apache.org/licenses/LICENSE-2.0
-    |#
-    |# Unless required by applicable law or agreed to in writing, software
-    |# distributed under the License is distributed on an "AS IS" BASIS,
-    |# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    |# See the License for the specific language governing permissions and
-    |# limitations under the License.
-    |#
-    |from com.ligadata.KamanjaBase import ContainerOrConcept
-    |from com.ligadata.kamanja.samples.messages import msg1
-    |from com.ligadata.kamanja.samples.messages import outmsg1
-    |
-    |class Model():
-    |   def __init__(self):
-    |
-    |   def execute(self, txnCtxt, execMsgsSet, matchedInputSetIndex, outputDefault):
-    |       inMsg = execMsgsSet[0]
-    |       if inMsg.in1()!=111:
-    |           v = inMsg.in1()
-    |           print "Early exit %d" % (v)
-    |           return None
-    |
-    |       output = outmsg1.createInstance();
-    |       output.set(0, inMsg.id())
-    |       output.set(1, inMsg.name())
-    |
-    |       returnArr = [output];
-    |       return returnArr;
-    |
-  """.stripMargin
+    """
+      |#
+      |# Copyright 2016 ligaDATA
+      |#
+      |# Licensed under the Apache License, Version 2.0 (the "License");
+      |# you may not use this file except in compliance with the License.
+      |# You may obtain a copy of the License at
+      |#
+      |#     http://www.apache.org/licenses/LICENSE-2.0
+      |#
+      |# Unless required by applicable law or agreed to in writing, software
+      |# distributed under the License is distributed on an "AS IS" BASIS,
+      |# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      |# See the License for the specific language governing permissions and
+      |# limitations under the License.
+      |#
+      |print 'jython>>> 2'
+      |from com.ligadata.KamanjaBase import ContainerOrConcept
+      |print 'jython>>> 3'
+      |from com.ligadata.kamanja.samples.messages import msg1
+      |print 'jython>>> 4'
+      |from com.ligadata.kamanja.samples.messages import outmsg1
+      |print 'jython>>> 5'
+      |
+      |class Model():
+      |   def __init__(self):
+      |       print 'jython>>> 10'
+      |
+      |   def execute(self, txnCtxt, execMsgsSet, matchedInputSetIndex, outputDefault):
+      |       print 'jython>>> 20'
+      |       inMsg = execMsgsSet[0]
+      |       print 'jython>>> 21'
+      |       if inMsg.id()!=111:
+      |           print 'jython>>> 22'
+      |           v = inMsg.in1()
+      |           print "Early exit %d" % (v)
+      |           return None
+      |
+      |       print 'jython>>> 23'
+      |       output = outmsg1.createInstance();
+      |       print 'jython>>> 24'
+      |       output.set(0, inMsg.id())
+      |       print 'jython>>> 25'
+      |       output.set(1, inMsg.name())
+      |       print 'jython>>> 26'
+      |
+      |       return output
+      |
+    """.stripMargin
+
+  var props: Properties = new Properties()
+  props.put("python.home", "/home/joerg/app2/Kamanja-1.4.1_2.10/lib/system")
+  props.put("python.console.encoding", "UTF-8")
+  props.put("python.security.respectJavaAccessibility", "false")
+  props.put("python.import.site", "false")
+
+  var preprops: Properties = System.getProperties()
+
+  PythonInterpreter.initialize(preprops, props, Array.empty[String]);
 
   // Create the jython object
   val interpreter = new PythonInterpreter()
@@ -89,8 +112,8 @@ class HelloWorldJythonModel(factory: ModelInstanceFactory) extends ModelInstance
   val modelObject: PyObject = modelgClass.__call__()
 
   override def execute(txnCtxt: TransactionContext, execMsgsSet: Array[ContainerOrConcept], triggerdSetIndex: Int, outputDefault: Boolean): Array[ContainerOrConcept] = {
-    val r: PyObject = modelObject.invoke("Execute", Py.java2py(txnCtxt), Py.java2py(execMsgsSet), 0, false)
-    val r1: ContainerOrConcept  = r.asInstanceOf[Array[ContainerOrConcept]]
-    r1
+    val r: PyObject = modelObject.invoke("Execute", Array(Py.java2py(txnCtxt), Py.java2py(execMsgsSet), Py.java2py(0), Py.java2py(false)))
+    val r1: ContainerOrConcept  = r.asInstanceOf[ContainerOrConcept]
+    Array(r1)
   }
 }
