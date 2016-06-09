@@ -811,16 +811,16 @@ object MetadataAPIImpl extends MetadataAPI with LogTrait {
     PersistenceUtils.SaveObjectList(objList, "outputmsgs")
   }
 
-    /**
-     * UpdateObject
-      *
-      * @param key
-     * @param value
-     * @param typeName
-     * @param serializerTyp
-     */
+  /**
+    * UpdateObject
+    *
+    * @param key
+    * @param value
+    * @param typeName
+    * @param serializerTyp
+    */
   def UpdateObject(key: String, value: Array[Byte], typeName: String, serializerTyp: String) {
-     PersistenceUtils.SaveObject(key, value, typeName, serializerTyp)
+    PersistenceUtils.SaveObject(key, value, typeName, serializerTyp)
   }
 
     /**

@@ -1626,4 +1626,14 @@ trait MetadataAPI {
     */
   def OpenDbStore(jarPaths: collection.immutable.Set[String], dataStoreInfo: String)
 
+  /**
+    * UpdateObject
+    *
+    * @param key
+    * @param value
+    * @param typeName
+    * @param serializerTyp
+    */
+  def UpdateObject(key: String, value: Array[Byte], typeName: String, serializerTyp: String)
+
 }
