@@ -178,9 +178,19 @@ public class SqlServerBulkInsertSink extends AbstractJDBCSink {
 		} finally {
 			try {
 				connection.commit();
+			} catch (Exception e) {
+				logger.error("Exception committing messages : "+ e.getMessage(), e);
+			}
+			try {
 				statement.close();
+			}catch (Exception e){
+				logger.error("Exception closing statement : "+e.getMessage(), e);
+			}
+			try {
 				connection.close();
-			} catch (SQLException e) {
+			}
+			catch (Exception e){
+				logger.error("Exception closing connection : "+ e.getMessage(),e);
 			}
 		}
 		

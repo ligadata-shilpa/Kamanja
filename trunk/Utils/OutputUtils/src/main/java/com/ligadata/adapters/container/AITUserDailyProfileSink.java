@@ -149,8 +149,8 @@ public class AITUserDailyProfileSink implements BufferedMessageProcessor {
 				MessageContainerBase container = writer.GetMessageContainerBase(containerName);
 						
 				JsonData jd = new JsonData("");
-		       	jd.root_json_$eq(Option.apply((new scala.collection.immutable.HashMap<String, Object>()).$plus$plus(json)));
-		       	jd.cur_json_$eq(Option.apply((new scala.collection.immutable.HashMap<String, Object>()).$plus$plus(json)));
+		        jd.root_json_$eq(Option.apply((Object)(new scala.collection.immutable.HashMap<String, Object>()).$plus$plus(json)));
+		       	jd.cur_json_$eq(Option.apply((Object)( new scala.collection.immutable.HashMap<String, Object>()).$plus$plus(json)));
 				container.populate(jd);
 				data.add(container);
 			}

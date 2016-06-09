@@ -103,10 +103,27 @@ public class UpsertJDBCSink extends AbstractJDBCSink {
 		} finally {
 			try {
 				connection.commit();
+			} catch (Exception e) {
+				logger.error("Error committing messages : " + e.getMessage(),e );
+			}
+			try{
 				updateStatement.close();
+			}
+			catch (Exception e){
+				logger.error("Error updating messages : " + e.getMessage(),e );
+			}
+			try{
 				insertStatement.close();
+			}
+			catch (Exception e){
+				logger.error("Error inserting messages : " + e.getMessage(),e );
+			}
+			try{
 				connection.close();
-			} catch (SQLException e) {
+			}
+			catch (Exception e){
+				logger.error("Error closing connection : " + e.getMessage(),e );
+
 			}
 		}
 

@@ -82,9 +82,19 @@ public class BufferedJDBCSink extends AbstractJDBCSink {
 		} finally {
 			try {
 				connection.commit();
+			} catch (Exception e) {
+				logger.error("Error committing messages : " + e.getMessage(),e );
+			}
+			try{
 				statement.close();
+			}catch (Exception e){
+				logger.error("Error closing  Statement  : " + e.getMessage(),e);
+
+			}
+			try {
 				connection.close();
-			} catch (SQLException e) {
+			}catch (Exception e){
+				logger.error("Error closing  Connection  : " + e.getMessage(),e);
 			}
 		}
 	}
