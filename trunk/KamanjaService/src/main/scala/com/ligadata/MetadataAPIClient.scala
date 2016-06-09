@@ -20,13 +20,23 @@ object MetadataAPIClient {
 
   def main(args : Array[String]): Unit ={
 
-    //TODO : pas params as arguments for now, better use a cofnig file
-    val hostName = args(0)
-    val portNumber = args(1).toInt
+    var hostName = ""
+    var portNumber = -1
+
+    var cmdArgs = Array[String]()
+
+    //TODO : pas params as arguments for now, better use a config file
+    if(args.length >= 2) {
+      hostName = args(0)
+      portNumber = args(1).toInt
+    }
+    if(args.length > 2){
+      cmdArgs = args.slice(2, args.length)//take rest of params
+    }
 
     if(isKamanjaLocal){
       logger.info("Running Metadata API Client on local machine")
-      connectToLocal(hostName, portNumber)
+      connectToLocal(hostName, portNumber, cmdArgs)
     }
     else{
       logger.info("Running Metadata API Client remotely")
@@ -52,7 +62,7 @@ object MetadataAPIClient {
     * @param hostName
     * @param portNumber
     */
-  def connectToLocal(hostName : String, portNumber : Int): Unit ={
+  def connectToLocal(hostName : String, portNumber : Int, cmdArgs : Array[String]): Unit ={
 
     var socket : Socket = null
     try {
@@ -61,29 +71,43 @@ object MetadataAPIClient {
       val in = socket.getInputStream
       val stdIn = new BufferedReader(new InputStreamReader(System.in))
 
-      var userInput = ""
-      print("kamanja>")
-      userInput = stdIn.readLine
-      while ( userInput != null) {
-        if(userInput.trim.length > 0) {
-          logger.info("MetadataAPIClient - got command {}", userInput)
+      if(cmdArgs.length > 0){//one command mode
+        val cmdJson = SocketCommunicationHelper.wrapCommandInJson(cmdArgs)
+        SocketCommunicationHelper.writeMsg(cmdJson, out)
 
-          val userInputTokens = split(userInput, " ")
-          val cmdJson = SocketCommunicationHelper.wrapCommandInJson(userInputTokens)
-          SocketCommunicationHelper.writeMsg(cmdJson, out)
-
-          //get the result and print it
-          val (resultJson, isStreamClosed) =  SocketCommunicationHelper.readMsg(in)
-          if(!isStreamClosed)
-            System.out.println(resultJson)
-          else{
-            //exit???
-          }
+        //get the result and print it
+        val (resultJson, isStreamClosed) =  SocketCommunicationHelper.readMsg(in)
+        if(!isStreamClosed)
+          System.out.println(resultJson)
+        else{
+          System.out.println("No response from server")
         }
-
-        print("kamanja>")
-        userInput = stdIn.readLine
       }
+      else{//shell mode
+        print("kamanja>")
+        var userInput = stdIn.readLine
+        while ( userInput != null) {
+          if(userInput.trim.length > 0) {
+            logger.info("MetadataAPIClient - got command {}", userInput)
+
+            val userInputTokens = split(userInput, " ")
+            val cmdJson = SocketCommunicationHelper.wrapCommandInJson(userInputTokens)
+            SocketCommunicationHelper.writeMsg(cmdJson, out)
+
+            //get the result and print it
+            val (resultJson, isStreamClosed) =  SocketCommunicationHelper.readMsg(in)
+            if(!isStreamClosed)
+              System.out.println(resultJson)
+            else{
+              //exit???
+            }
+          }
+
+          print("kamanja>")
+          userInput = stdIn.readLine
+        }
+      }
+
     } catch {
       case e : UnknownHostException =>
         logger.error("Don't know about host " + hostName, e)
