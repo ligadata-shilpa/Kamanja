@@ -91,6 +91,15 @@ trait InputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   def getAllPartitionBeginValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
 
   def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]
+
+  def externalizeExceptionEvent (cause: Throwable): Unit = {
+    val exceptionEvent = nodeContext.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaExceptionEvent").asInstanceOf[com.ligadata.KamanjaBase.KamanjaExceptionEvent]
+    exceptionEvent.timeoferrorepochms = System.currentTimeMillis()
+    exceptionEvent.componentname = inputConfig.Name
+    exceptionEvent.errortype = "exception"
+    exceptionEvent.errorstring = StackTrace.ThrowableTraceString(cause)
+    nodeContext.getEnvCtxt.postMessages(Array[ContainerInterface](exceptionEvent))
+  }
 }
 
 // Output Adapter Object to create Adapter
@@ -112,6 +121,15 @@ trait OutputAdapter extends AdaptersSerializeDeserializers with Monitorable {
   def Shutdown: Unit
 
   def Category = "Output"
+
+  def externalizeExceptionEvent (cause: Throwable): Unit = {
+    val exceptionEvent = nodeContext.getEnvCtxt.getContainerInstance("com.ligadata.KamanjaBase.KamanjaExceptionEvent").asInstanceOf[com.ligadata.KamanjaBase.KamanjaExceptionEvent]
+    exceptionEvent.timeoferrorepochms = System.currentTimeMillis()
+    exceptionEvent.componentname = inputConfig.Name
+    exceptionEvent.errortype = "exception"
+    exceptionEvent.errorstring = StackTrace.ThrowableTraceString(cause)
+    nodeContext.getEnvCtxt.postMessages(Array[ContainerInterface](exceptionEvent))
+  }
 }
 
 trait ExecContext {

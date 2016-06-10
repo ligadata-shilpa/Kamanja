@@ -220,6 +220,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
     // in the bucket, then starting to POLL.
     partitionGroups.foreach(group => {
 
+      var partitionListDisplay = group._2.map(x => {x._1.asInstanceOf[KafkaPartitionUniqueRecordKey].PartitionId}).mkString(",")
       readExecutor.execute(new Runnable() {
         var intSleepTimer = KamanjaKafkaConsumer.INITIAL_SLEEP
 
@@ -308,7 +309,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
             resetSleepTimer
           } catch {
             case e: Throwable => {
-              //externalizeExceptionEvent(e)
+              externalizeExceptionEvent(e)
               LOG.warn("KamanjaKafkaConsumer Exception initializing consumer",e)
               if (kafkaConsumer != null) kafkaConsumer.close
               kafkaConsumer = null
@@ -316,13 +317,13 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
                 Thread.sleep(internalGetSleep)
               } catch {
                 case ie: InterruptedException => {
-                  //externalizeExceptionEvent(ie)
+                  externalizeExceptionEvent(ie)
                   Shutdown()
                   LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting down ")
                   throw ie
                 }
                 case t: Throwable => {
-                  // externalizeExceptionEvent(t)
+                  externalizeExceptionEvent(t)
                   LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
                   Shutdown()
                   throw t
@@ -339,29 +340,70 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
           while (!isQuiese) {
             try {
               var records = (kafkaConsumer.poll(KamanjaKafkaConsumer.POLLING_INTERVAL)).iterator
-              while (records.hasNext) {
+              while (records.hasNext && !isQuiese) {
                 val readTmMs = System.currentTimeMillis
 
+                // Process this record.
                 var record: ConsumerRecord[String, String] = records.next
-                val message: Array[Byte] = record.value.getBytes()
+                var isRecordSentToKamanja = false
 
-                // The Engine could have told us to ignore the first offsets that we received.
-                if (record.offset() > ignoreUntilOffsets(record.partition())) {
-                  val uniqueVal = new KafkaPartitionUniqueRecordValue
-                  uniqueVal.Offset = record.offset
+                // Process this record (keep doing it until success
+                while (!isRecordSentToKamanja && !isQuiese) {
+                  try {
+                    val message: Array[Byte] = record.value.getBytes()
 
-                  LOG.debug("MESSAGE-> at @partition " + record.partition+ " @offset "+record.offset +" " +new String(message))
-                  println(LOG.debug("MESSAGE-> at @partition " + record.partition+ " @offset "+record.offset +" " +new String(message)))
-                  msgCount += 1
-                  incrementCountForPartition(record.partition)
-                  execContexts(record.partition).execute(message,  uniqueVals(record.partition), uniqueVal, readTmMs)
-                  localReadOffsets(record.partition) = (record.offset)
-                  resetSleepTimer
-                }
-              }
+                    // The Engine could have told us to ignore the first offsets that we received.
+                    if (record.offset() > ignoreUntilOffsets(record.partition())) {
+                      val uniqueVal = new KafkaPartitionUniqueRecordValue
+                      uniqueVal.Offset = record.offset
+                      LOG.debug("MESSAGE-> at @partition " + record.partition + " @offset " + record.offset + " " + new String(message))
+
+                      msgCount += 1
+                      incrementCountForPartition(record.partition)
+                      execContexts(record.partition).execute(message, uniqueVals(record.partition), uniqueVal, readTmMs)
+                      localReadOffsets(record.partition) = (record.offset)
+                      resetSleepTimer
+                    }
+
+                    isRecordSentToKamanja = true
+                  } catch {
+                    // This covers errors for each record... it must succeed!
+                    case e: Throwable => {
+                      externalizeExceptionEvent(e)
+                      LOG.warn("KamanjaKafkaConsumer Exception during Kafka Queue processing " + qc.topic + ", record " + record.offset + " from partition " + record.partition + " cause: ", e)
+                      var pGroup_value = "Partitions-" + group._2.map(p => {p._1.asInstanceOf[KafkaPartitionUniqueRecordKey].PartitionId.toString}).toArray[String].mkString(",")
+                      partitionExceptions(pGroup_value) = new ExceptionInfo(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)), "n/a")
+                      try {
+                        Thread.sleep(internalGetSleep)
+                      } catch {
+                        case ie: InterruptedException => {
+                          externalizeExceptionEvent(ie)
+                          LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
+                          if (kafkaConsumer != null) kafkaConsumer.close
+                          kafkaConsumer = null
+                          throw ie
+                        }
+                        case t: Throwable => {
+                          externalizeExceptionEvent(e)
+                          LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ", t)
+                          if (kafkaConsumer != null) kafkaConsumer.close
+                          kafkaConsumer = null
+                          throw new InterruptedException("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ")
+                        }
+                      }
+                    }
+                  }
+                } // While still sending a record to Kamanja
+              } // While there are still records in the iterator
             } catch {
+              // This will cover the case when we get an exception from the POLL call.... just turn around and do another POLL.
+              case ie: InterruptedException => {
+                // We are catching a cotrolC or similar interrup exception from the inner try-catch... we dont want to retry that!
+                LOG.warn("KamanjaKafkaConsumer - terminating reading for " + qc.topic + " partition list ["+ partitionListDisplay+"]")
+                throw ie
+              }
               case e: Throwable => {
-                // externalizeExceptionEvent(e)
+                externalizeExceptionEvent(e)
                 LOG.warn("KamanjaKafkaConsumer Exception during Kafka Queue processing " + qc.topic + ", cause: ",e)
                 var pGroup_value = "Partitions-"+group._2.map(p => {p._1.asInstanceOf[KafkaPartitionUniqueRecordKey].PartitionId.toString}).toArray[String].mkString(",")
                 partitionExceptions(pGroup_value) = new ExceptionInfo(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(System.currentTimeMillis)),"n/a")
@@ -369,21 +411,25 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
                   Thread.sleep(internalGetSleep)
                 } catch {
                   case ie: InterruptedException => {
-                    // externalizeExceptionEvent(ie)
-                    LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
-                    Shutdown()
+                    externalizeExceptionEvent(ie)
+                    LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting down ", e)
+                    if (kafkaConsumer != null) kafkaConsumer.close
+                    kafkaConsumer = null
+                    StopProcessing
                     throw ie
                   }
                   case t: Throwable => {
-                    //externalizeExceptionEvent(e)
+                    externalizeExceptionEvent(e)
                     LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
-                    Shutdown()
+                    if (kafkaConsumer != null) kafkaConsumer.close
+                    kafkaConsumer = null
+                    StopProcessing
                     throw t
                   }
                 }
               }
             }
-          }
+          }  // While the consumption is going on for this topic/partition(s)
 
           // Clean up all the existing connections
           try {
@@ -391,7 +437,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
             kafkaConsumer = null
           } catch {
             case e: Throwable => {
-              //externalizeExceptionEvent(e)
+              externalizeExceptionEvent(e)
               LOG.warn("KamanjaKafkaConsumer Exception trying to close kafka connections ", e)
             }
           }
@@ -423,21 +469,25 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
         kafkaConsumer.close()
       } catch {
         case e: Throwable => {
-          //externalizeExceptionEvent(e)
+          externalizeExceptionEvent(e)
           LOG.error ("Exception processing PARTITIONSFOR request..  Retrying ",e)
           try {
             Thread.sleep(getSleepTimer)
           } catch {
             case ie: InterruptedException => {
-              //externalizeExceptionEvent(ie)
+              externalizeExceptionEvent(ie)
               LOG.warn("KamanjaKafkaConsumer - sleep interrupted, shutting donw ")
               Shutdown()
+              kafkaConsumer.close()
+              kafkaConsumer = null
               throw ie
             }
             case t: Throwable => {
-              //externalizeExceptionEvent(t)
+              externalizeExceptionEvent(t)
               LOG.warn("KamanjaKafkaConsumer - sleep interrupted (UNKNOWN CAUSE), shutting down ",t)
               Shutdown()
+              kafkaConsumer.close()
+              kafkaConsumer = null
               throw t
             }
           }
@@ -460,7 +510,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
 
     // Successful fetch of metadata.. return the values to the engine.
     var iter = results.iterator
-    while(iter.hasNext) {
+    while(iter.hasNext && !isQuiese) {
       var thisRes = iter.next()
       var newVal = new KafkaPartitionUniqueRecordKey
       newVal.TopicName = thisRes.topic
@@ -490,7 +540,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
     */
   override def getAllPartitionEndValues: Array[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)] = lock.synchronized {
 
-    var kafkaConnection: KafkaConsumer[String,String] = null
+    var kafkaConsumer: KafkaConsumer[String,String] = null
     var partitionsToMonitor: java.util.List[TopicPartition] = new util.ArrayList[TopicPartition]()
     var infoList = List[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]()
 
@@ -499,11 +549,11 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
     //   2. Seek to the End of each of these partitions
     //   3. call 'position' method to determine where the end is.
     try {
-      kafkaConnection = createConsumerWithInputProperties()
-      var results = kafkaConnection.partitionsFor(qc.topic)
+      kafkaConsumer = createConsumerWithInputProperties()
+      var results = kafkaConsumer.partitionsFor(qc.topic)
       var iter = results.iterator
       var partitionNames: scala.collection.mutable.ListBuffer[Int] = scala.collection.mutable.ListBuffer()
-      while(iter.hasNext) {
+      while(iter.hasNext && !isQuiese) {
         var thisRes = iter.next()
        // var newVal = new KafkaPartitionUniqueRecordKey
        // newVal.TopicName = thisRes.topic
@@ -515,13 +565,13 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
       }
 
       // Assign the partitions to monitor
-      kafkaConnection.assign(partitionsToMonitor)
+      kafkaConsumer.assign(partitionsToMonitor)
 
       // Figure out what the end values are
       partitionNames.foreach(part => {
         val tp = new TopicPartition(qc.topic, part)
-        kafkaConnection.seekToEnd(tp)
-        var end = kafkaConnection.position(tp)
+        kafkaConsumer.seekToEnd(tp)
+        var end = kafkaConsumer.position(tp)
         val rKey = new KafkaPartitionUniqueRecordKey
         val rValue = new KafkaPartitionUniqueRecordValue
         rKey.PartitionId = part
@@ -533,12 +583,12 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
 
     } catch {
       case t: Throwable => {
-        //externalizeExceptionEvent(t)
+        externalizeExceptionEvent(t)
         LOG.warn("KamanjaKafkaConsumer error encountered during HealthCheck-getDepths call", t)
         return List[(PartitionUniqueRecordKey, PartitionUniqueRecordValue)]().toArray
       }
     } finally {
-      kafkaConnection.close()
+      kafkaConsumer.close()
     }
 
     return infoList.toArray
@@ -622,11 +672,11 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
       depths = getAllPartitionEndValues
     } catch {
       case e: KamanjaException => {
-        // externalizeExceptionEvent(e)
+         externalizeExceptionEvent(e)
         return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, KamanjaKafkaConsumer.ADAPTER_DESCRIPTION, "0", "0", Serialization.write(metrics).toString)
       }
       case e: Throwable => {
-        //externalizeExceptionEvent(e)
+        externalizeExceptionEvent(e)
         LOG.error ("KAFKA-ADAPTER: Unexpected exception determining kafka queue depths for " + qc.topic, e)
         return new MonitorComponentInfo(AdapterConfiguration.TYPE_INPUT, qc.Name, KamanjaKafkaConsumer.ADAPTER_DESCRIPTION, "0",  "0", Serialization.write(metrics).toString)
       }
@@ -648,8 +698,10 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
         }
 
       } catch {
-        //externalizeExceptionEvent(e)
-        case e: Exception => LOG.warn("KAFKA-ADAPTER: Broker:  error trying to determine kafka queue depths for "+qc.topic,e)
+        case e: Exception => {
+          externalizeExceptionEvent(e)
+          LOG.warn("KAFKA-ADAPTER: Broker:  error trying to determine kafka queue depths for "+qc.topic,e)
+        }
       }
     })
 
