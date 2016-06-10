@@ -101,6 +101,7 @@ class ApiResultComplex (var statusCode:Int, var functionName: String, var result
 }
 
 
+// 646 - 674 Change begins
 
 trait MetadataAPI {
   import ModelType._
@@ -1637,3 +1638,4 @@ trait MetadataAPI {
   def UpdateObject(key: String, value: Array[Byte], typeName: String, serializerTyp: String)
 
 }
+// 646 - 674 Change ends
