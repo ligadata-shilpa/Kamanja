@@ -687,7 +687,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
   }
 
 
-  private def getRowSize(r: Result) : Int = {
+  private def getRowSize1(r: Result) : Int = {
     var keySize     = r.getRow().length
     var valSize     = 0
     if( r.containsNonEmptyColumn(stStrBytes, baseStrBytes) ){
@@ -702,36 +702,73 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
     keySize + valSize
   }
 
+  private def getRowSize(r: Result) : Int = {
+    var keySize     = r.getRow().length
+    var valSize     = 0
+    if( r.containsNonEmptyColumn(siStrBytes, baseStrBytes) ){
+      valSize = r.getValue(siStrBytes, baseStrBytes).length
+    }
+    keySize + valSize
+  }
+
   private def getKeySize(k: Key): Int = {
     var bucketKeySize = 0
     k.bucketKey.foreach(bk => { bucketKeySize = bucketKeySize + bk.length })
     8 + bucketKeySize + 8 + 4
   }
 
-  private def getValueSize(v: Value): Int = {
+  private def getValueSize1(v: Value): Int = {
     v.serializerType.length + v.serializedInfo.length + 4 + columnFamilyNamesLen
+  }
+
+  private def getValueSize(v: Value): Int = {
+    v.serializedInfo.length
   }
 
   private def updateOpStats(operation: String, tableName: String, opCount: Int) : Unit = lock.synchronized{
     operation match {
       case "get" => {
-	if( _gets.get(tableName) != None ){
-	  _gets(tableName) = _gets(tableName) + opCount
+	if( _getOps.get(tableName) != None ){
+	  _getOps(tableName) = _getOps(tableName) + opCount
 	}
 	else{
-	  _gets(tableName) = + opCount
+	  _getOps(tableName) = + opCount
 	}
       }
       case "put" => {
-	if( _puts.get(tableName) != None ){
-	  _puts(tableName) = _puts(tableName) + opCount
+	if( _putOps.get(tableName) != None ){
+	  _putOps(tableName) = _putOps(tableName) + opCount
 	}
 	else{
-	  _puts(tableName) = opCount
+	  _putOps(tableName) = opCount
 	}	  
       }
       case _ => {
         throw CreateDMLException("Internal Error: Failed to Update Op-stats for " + tableName, new Exception("Invalid operation " + operation))
+      }
+    }
+  }
+
+  private def updateObjStats(operation: String, tableName: String, objCount: Int) : Unit = lock.synchronized{
+    operation match {
+      case "get" => {
+	if( _getObjs.get(tableName) != None ){
+	  _getObjs(tableName) = _getObjs(tableName) + objCount
+	}
+	else{
+	  _getObjs(tableName) = + objCount
+	}
+      }
+      case "put" => {
+	if( _putObjs.get(tableName) != None ){
+	  _putObjs(tableName) = _putObjs(tableName) + objCount
+	}
+	else{
+	  _putObjs(tableName) = objCount
+	}	  
+      }
+      case _ => {
+        throw CreateDMLException("Internal Error: Failed to Update Obj-stats for " + tableName, new Exception("Invalid operation " + operation))
       }
     }
   }
@@ -774,6 +811,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       p.addColumn(schemaIdStrBytes, baseStrBytes,Bytes.toBytes(value.schemaId))
       tableHBase.put(p)
       updateOpStats("put",tableName,1)
+      updateObjStats("put",tableName,1)
       updateByteStats("put",tableName,getKeySize(key)+getValueSize(value))
     } catch {
       case e: Exception => {
@@ -797,6 +835,7 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         tableHBase = getTableFromConnection(tableName);
         var keyValuePairs = li._2
         var puts = new Array[Put](0)
+	var byteCount = 0
         keyValuePairs.foreach(keyValuePair => {
           var key = keyValuePair._1
           var value = keyValuePair._2
@@ -806,12 +845,14 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           p.addColumn(siStrBytes, baseStrBytes, value.serializedInfo)
 	  p.addColumn(schemaIdStrBytes, baseStrBytes, Bytes.toBytes(value.schemaId))
           puts = puts :+ p
-	  updateByteStats("put",tableName,getKeySize(key)+getValueSize(value))
+	  byteCount = byteCount + getKeySize(key)+getValueSize(value)
         })
         try {
           if (puts.length > 0) {
             tableHBase.put(puts.toList)
 	    updateOpStats("put",tableName,1)
+	    updateObjStats("put",tableName,puts.length)
+	    updateByteStats("put",tableName,byteCount)
           }
         } catch {
           case e: Exception => {
@@ -938,6 +979,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var dels = new ArrayBuffer[Delete]()
 
       val tmRanges = getUnsignedTimeRanges(Array(time))
+      var byteCount = 0
+      var recCount = 0
       tmRanges.foreach(tr => {
         bucketKeys.foreach(bucketKey => {
           var scan = new Scan()
@@ -948,7 +991,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
-	    updateByteStats("get",tableName,getRowSize(r))
+	    byteCount = byteCount + getRowSize(r)
+	    recCount = recCount + 1
             var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
             logger.info("searching for " + key.bucketKey.mkString(","))
             if (bucketKeySet.contains(key.bucketKey)) {
@@ -957,6 +1001,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           }
         })
       })
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
       if (dels.length > 0) {
         tableHBase.delete(new java.util.ArrayList(dels.toList)) // callling tableHBase.delete(dels.toList) results java.lang.UnsupportedOperationException
       } else {
@@ -990,19 +1036,25 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var dels = new ArrayBuffer[Delete]()
 
       val tmRanges = getUnsignedTimeRanges(Array(time))
+      var byteCount = 0
+      var recCount = 0
+
       tmRanges.foreach(tr => {
-          var scan = new Scan()
+        var scan = new Scan()
         scan.setTimeRange(tr.beginTime,tr.endTime)
-          val rs = tableHBase.getScanner(scan);
-	  updateOpStats("get",tableName,1)
-          val it = rs.iterator()
-          while (it.hasNext()) {
-            val r = it.next()
-	    updateByteStats("get",tableName,getRowSize(r))
-            logger.info("searching for data in timerange: " + tr.beginTime +"-"+ tr.endTime)
-              dels += new Delete(r.getRow())
-            }
-          })
+        val rs = tableHBase.getScanner(scan);
+	updateOpStats("get",tableName,1)
+        val it = rs.iterator()
+        while (it.hasNext()) {
+          val r = it.next()
+	  byteCount = byteCount + getRowSize(r)
+	  recCount = recCount + 1
+          logger.info("searching for data in timerange: " + tr.beginTime +"-"+ tr.endTime)
+          dels += new Delete(r.getRow())
+        }
+      })
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
       if (dels.length > 0) {
         tableHBase.delete(new java.util.ArrayList(dels.toList)) // callling tableHBase.delete(dels.toList) results java.lang.UnsupportedOperationException
       } else {
@@ -1033,13 +1085,18 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       scan.setFilter(new FirstKeyOnlyFilter());
       var rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
+      var byteCount = 0
+      var recCount = 0
       val it = rs.iterator()
       var cnt = 0
       while (it.hasNext()) {
         var r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         cnt = cnt + 1
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
       return cnt
     } catch {
       case e: Exception => {
@@ -1112,14 +1169,19 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
       val it = rs.iterator()
+      var byteCount = 0
+      var recCount = 0
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
         val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
         processRow(r.getRow(), isMetadata, schemaId, st, si, callbackFunction)
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1143,11 +1205,16 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
       val it = rs.iterator()
+      var byteCount = 0
+      var recCount = 0
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         processKey(r.getRow(), isMetadata, callbackFunction)
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1180,11 +1247,16 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
       val it = rs.iterator()
+      var byteCount = 0
+      var recCount = 0
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         processKey(r.getRow(),isMetadata, callbackFunction)
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1217,14 +1289,19 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
       val it = rs.iterator()
+      var byteCount = 0
+      var recCount = 0
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
         val si = r.getValue(siStrBytes, baseStrBytes)
         val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
         processRow(r.getRow(),isMetadata, schemaId, st, si, callbackFunction)
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1245,23 +1322,30 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       tableHBase = getTableFromConnection(tableName);
 
       val tmRanges = getUnsignedTimeRanges(time_ranges)
+      var byteCount = 0
+      var recCount = 0
+      var opCount = 0
       tmRanges.foreach(time_range => {
         // try scan with beginRow and endRow
         var scan = new Scan()
         scan.setStartRow(MakeLongSerializedVal(time_range.beginTime))
         scan.setStopRow(MakeLongSerializedVal(time_range.endTime + 1))
         val rs = tableHBase.getScanner(scan);
-	updateOpStats("get",tableName,1)
+	opCount = opCount + 1
         val it = rs.iterator()
         while (it.hasNext()) {
           val r = it.next()
-	  updateByteStats("get",tableName,getRowSize(r))
+	  byteCount = byteCount + getRowSize(r)
+	  recCount = recCount + 1
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
           val si = r.getValue(siStrBytes, baseStrBytes)
           val schemaId = Bytes.toInt(r.getValue(schemaIdStrBytes, baseStrBytes))
           processRow(r.getRow(), isMetadata, schemaId, st, si, callbackFunction)
         }
       })
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
+      updateOpStats("get",tableName,opCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1282,20 +1366,27 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       tableHBase = getTableFromConnection(tableName);
 
       val tmRanges = getUnsignedTimeRanges(time_ranges)
+      var byteCount = 0
+      var recCount = 0
+      var opCount = 0
       tmRanges.foreach(time_range => {
         // try scan with beginRow and endRow
         var scan = new Scan()
         scan.setStartRow(MakeLongSerializedVal(time_range.beginTime))
         scan.setStopRow(MakeLongSerializedVal(time_range.endTime + 1))
         val rs = tableHBase.getScanner(scan);
-	updateOpStats("get",tableName,1)
+	opCount = opCount + 1
         val it = rs.iterator()
         while (it.hasNext()) {
           val r = it.next()
-	  updateByteStats("get",tableName,getRowSize(r))
+	  byteCount = byteCount + getRowSize(r)
+	  recCount = recCount + 1
           processKey(r.getRow(),isMetadata, callbackFunction)
         }
       })
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
+      updateOpStats("get",tableName,opCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1319,6 +1410,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       bucketKeys.foreach(bucketKey => {
         bucketKeySet.add(bucketKey)
       })
+      var byteCount = 0
+      var recCount = 0
+      var opCount = 0
       val tmRanges = getUnsignedTimeRanges(time_ranges)
       tmRanges.foreach(time_range => {
         // try scan with beginRow and endRow
@@ -1327,11 +1421,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0),isMetadata))
           scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
           val rs = tableHBase.getScanner(scan);
-	  updateOpStats("get",tableName,1)
+	  opCount = opCount + 1
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
-	    updateByteStats("get",tableName,getRowSize(r))
+	    byteCount = byteCount + getRowSize(r)
+	    recCount = recCount + 1
             var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
             if (bucketKeySet.contains(key.bucketKey)) {
               val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
@@ -1342,6 +1437,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           }
         })
       })
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
+      updateOpStats("get",tableName,opCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1368,6 +1466,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       })
 
       val tmRanges = getUnsignedTimeRanges(time_ranges)
+      var byteCount = 0
+      var recCount = 0
+      var opCount = 0
       tmRanges.foreach(time_range => {
         // try scan with beginRow and endRow
         bucketKeys.foreach(bucketKey => {
@@ -1375,11 +1476,12 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           scan.setStartRow(MakeCompositeKey(new Key(time_range.beginTime, bucketKey, 0, 0),isMetadata))
           scan.setStopRow(MakeCompositeKey(new Key(time_range.endTime, bucketKey, Long.MaxValue, Int.MaxValue),isMetadata))
           val rs = tableHBase.getScanner(scan);
-	  updateOpStats("get",tableName,1)
+	  opCount = opCount + 1
           val it = rs.iterator()
           while (it.hasNext()) {
             val r = it.next()
-	    updateByteStats("get",tableName,getRowSize(r))
+	    byteCount = byteCount + getRowSize(r)
+	    recCount = recCount + 1
             var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
             if (bucketKeySet.contains(key.bucketKey)) {
               processKey(key, callbackFunction)
@@ -1387,6 +1489,9 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           }
         })
       })
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
+      updateOpStats("get",tableName,opCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1414,11 +1519,14 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var scan = new Scan()
       val rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
+      var byteCount = 0
+      var recCount = 0
       val it = rs.iterator()
       var dels = new Array[Delete](0)
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
         if (bucketKeySet.contains(key.bucketKey)) {
           val st = Bytes.toString(r.getValue(stStrBytes, baseStrBytes))
@@ -1427,6 +1535,8 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
           processRow(key, schemaId, st, si, callbackFunction)
         }
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1453,15 +1563,20 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       var scan = new Scan()
       val rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
+      var byteCount = 0
+      var recCount = 0
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         var key = GetKeyFromCompositeKey(r.getRow(),isMetadata)
         if (bucketKeySet.contains(key.bucketKey)) {
           processKey(key, callbackFunction)
         }
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
     } catch {
       case e: Exception => {
         throw CreateDMLException("Failed to fetch data from the table " + tableName, e)
@@ -1503,11 +1618,16 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       val rs = tableHBase.getScanner(scan);
       updateOpStats("get",tableName,1)
       val it = rs.iterator()
+      var byteCount = 0
+      var recCount = 0
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",tableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         dels += new Delete(r.getRow())
       }
+      updateByteStats("get",tableName,byteCount)
+      updateObjStats("get",tableName,recCount)
       if (dels.size > 0)
         tableHBase.delete(new java.util.ArrayList(dels.toList)) // callling tableHBase.delete(dels.toList) results java.lang.UnsupportedOperationException
     } catch {
@@ -1604,12 +1724,14 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
       updateOpStats("get",srcTableName,1)
 
       // Loop through each row and write it into destination table mutator
+      var byteCount = 0
+      var recCount = 0
       val it = rs.iterator()
       while (it.hasNext()) {
         val r = it.next()
-	updateByteStats("get",srcTableName,getRowSize(r))
+	byteCount = byteCount + getRowSize(r)
+	recCount = recCount + 1
         var p = new Put(r.getRow)
-	updateByteStats("put",destTableName,getRowSize(r))
         val rc = r.rawCells()
         if (rc != null) {
           for (kv <- rc) {
@@ -1622,7 +1744,10 @@ class HBaseAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: 
         }
         mutator.mutate(p)
       }
-
+      updateByteStats("get",srcTableName,byteCount)
+      updateByteStats("put",destTableName,byteCount)
+      updateObjStats("get",srcTableName,recCount)
+      updateObjStats("put",destTableName,recCount)
     } catch {
       case e: Exception => {
         throw CreateDDLException("Failed to rename the table " + srcTableName, e)
