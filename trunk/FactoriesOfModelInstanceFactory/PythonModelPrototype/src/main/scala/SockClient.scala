@@ -16,8 +16,23 @@ import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
 import scala.sys.process._
 
+object CmdConstants {
+    /** start and end message demarcation (marker) values as strings and arrays */
+    val startMarkerValue : String = "_S_T_A_R_T_"
+    val endMarkerValue : String = "_F_I_N_I_"
+    val startMarkerArray : Array[Byte] = Array[Byte]('_','S','_','T','_','A','_','R','_','T','_')
+    val endMarkerArray : Array[Byte] = Array[Byte]('_','F','_','I','_','N','_','I','_')
+    /** at some point a crc or digest will be calculated on the cmd message (when
+		the python server is perhaps not located on the local machine) */
+    val crcDefaultValue : Long = 0L
+
+    /** lengths of the two fixed fields (scalars) that follow the startMarkerValue */
+    val lenOfCheckSum : Int = 8
+    val lenOfInt : Int = 4
+}
 
 object SockClient {
+
 
     /** cmdMap contains command preparation objects for each command type */
     val cmdMap : Map[String, PyCmd] =
@@ -40,15 +55,21 @@ object SockClient {
 
     --cmd startServer [--host <hostname or ip> ... default = localhost]
                       [--port <user port no.> ... default=9999]
+                      [--user <userId.> ... default="kamanja"]
     --cmd stopServer  [--host <hostname or ip> ... default = localhost]
                       [--port <user port no.> ... default=9999]
+                      [--user <userId.> ... default="kamanja"]
     --cmd addModel     --filePath <filePath>
+                      [--user <userId.> ... default="kamanja"]
     --cmd removeModel  --modelName '<modelName>'
-    --cmd serverStatus
+                      [--user <userId.> ... default="kamanja"]
+    --cmd serverStatus [--user <userId.> ... default="kamanja"]
     --cmd executeModel --modelName '<modelName>'
                        --msg '<msg data>'
+                      [--user <userId.> ... default="kamanja"]
     --cmd executeModel --modelName '<modelName>'
                        --filePath '<msg file path>'
+                      [--user <userId.> ... default="kamanja"]
 
 
   It is possible to run multiple servers on same host simply by varying 
@@ -131,7 +152,7 @@ object SockClient {
             println(s"Server started? $result")
         } else {
 	        /** Prepare the command message for transport (except for the case of the
-	          StartServerCmd instance... */
+	          StartServerCmd instance... NOTE: multiple cmds may be prepared */
 	        val cmdMsg : Array[Byte] = cmdObj.prepareCmdMsg(filePath
 	            , modelName
 	            , msg
@@ -152,16 +173,42 @@ object SockClient {
             out.write(cmdMsg, 0, cmdLen)
             out.flush()
             
-            //val resp : String = in.next
+            /** Contend with multiple messages results returned */
             val buffer : Array[Byte] = new Array[Byte](2^16) // 64k
             val answeredBytes : ArrayBuffer[Byte] = ArrayBuffer[Byte]()
             var bytesReceived = in.read(buffer)
             while (bytesReceived > 0) {
-        		answeredBytes ++= buffer
+        		answeredBytes ++= buffer.slice(0,bytesReceived)
+            	bytesReceived = in.read(buffer)
+
+                /** print one result each loop... and then the remaining (if any) after bytesReceived == 0) */
+            	val endMarkerIdx : Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
+                if (endMarkerIdx >= 0) {
+                    val endMarkerIncludedIdx : Int = endMarkerIdx + CmdConstants.endMarkerArray.length
+                    val responseBytes : Array[Byte] = answeredBytes.slice(0,endMarkerIncludedIdx).toArray
+                    val response : String = unpack(responseBytes)
+                    println(response)
+                    answeredBytes.remove(0, endMarkerIncludedIdx)
+                }
             }
-            
-            val response : String = unpack(answeredBytes)
-            println(response)
+
+            val lenOfRemainingAnsweredBytes : Int = answeredBytes.length
+            while (lenOfRemainingAnsweredBytes > 0) {
+                val endMarkerIdx : Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
+                if (endMarkerIdx >= 0) {
+                    val endMarkerIncludedIdx : Int = endMarkerIdx + CmdConstants.endMarkerArray.length
+                    val responseBytes : Array[Byte] = answeredBytes.slice(0,endMarkerIncludedIdx).toArray
+                    val response : String = unpack(responseBytes)
+                    println(response)
+                    answeredBytes.remove(0, endMarkerIncludedIdx)
+                } else {
+                    if (answeredBytes.nonEmpty) {
+                        println("There were residual bytes remaining in the answer buffer suggesting that the connection went down")
+                        println(s"Bytes were '${answeredBytes.toString}'")
+                    }
+                }
+
+            }
 
             s.close()
         }
@@ -169,52 +216,42 @@ object SockClient {
     }
 
     /** 
-    Peel off the md5 hash from front and back of the answered bytes, verifying
-    they are a) the same value and b) reflect the md5 hash of the payload string.
-    If satisfactory, reconstitute the json string value from the payload portion.
+    Unpack the returned message:
+		startMarkerValue ("_S_T_A_R_T_")
+		checksum (value is 0L ...  unused/unchecked)
+        result length (an int)
+        cmd result (some json string)
+		endMarkerValue ("_F_I_N_I_")
+
+    If all is well, reconstitute the json string value from the payload portion.
 
 	@param answeredBytes an ArrayBuffer containing the reply from the py server
 	@return the string result if successfully transmitted.  When result integrity
 		an issue, issue error message as the result revealing the finding.
 
     */
-    def unpack(answeredBytes : ArrayBuffer[Byte]) : String = {
-    	val lenOfMd5Digest : Int = 16
-    	val lenOfSha256Digest : Int = 32
-    	val lenOfDigest : Int = lenOfMd5Digest
-    	val lenOfInt : Int = 4
+    def unpack(answeredBytes : Array[Byte]) : String = {
+    	val lenOfCheckSum : Int = CmdConstants.lenOfCheckSum
+    	val lenOfInt : Int = CmdConstants.lenOfInt
+        val startMarkerValueLen : Int = CmdConstants.startMarkerValue.length
+        val endMarkerValueLen : Int = CmdConstants.endMarkerValue.length
 
-    	val reasonable : Boolean = answeredBytes != null && answeredBytes.length > 2 * lenOfDigest + lenOfInt
+    	val reasonable : Boolean = answeredBytes != null && answeredBytes.length > (startMarkerValueLen + lenOfCheckSum + lenOfInt + endMarkerValueLen)
     	val answer : String = if (reasonable) {
-    		val byteBuffer :  ByteBuffer = ByteBuffer.wrap(answeredBytes.toArray)
-    		val startDigest : scala.Array[Byte] = new scala.Array[Byte](lenOfMd5Digest)
-    		val endDigest : scala.Array[Byte] = new scala.Array[Byte](lenOfMd5Digest)
+    		val byteBuffer :  ByteBuffer = ByteBuffer.wrap(answeredBytes)
+    		val startMark : scala.Array[Byte] = new scala.Array[Byte](startMarkerValueLen)
+    		val endMark : scala.Array[Byte] = new scala.Array[Byte](endMarkerValueLen)
     		/** unpack the byte array into md5 digest, payload len, payload, md5 digest */
-			byteBuffer.get(startDigest,byteBuffer.arrayOffset(),lenOfMd5Digest)
-    		val payloadLen : Int = byteBuffer.getInt()
+			byteBuffer.get(startMark,0,startMarkerValueLen)
+            val crcBytes : Long = byteBuffer.getLong()
+            val payloadLen : Int = byteBuffer.getInt()
     		var payloadArray : scala.Array[Byte] = new scala.Array[Byte](payloadLen)
-			byteBuffer.get(payloadArray,byteBuffer.arrayOffset(),payloadLen)
-			byteBuffer.get(endDigest,byteBuffer.arrayOffset(),lenOfMd5Digest)
+			byteBuffer.get(payloadArray,startMarkerValueLen + lenOfCheckSum + lenOfInt,payloadLen)
+			byteBuffer.get(endMark,startMarkerValueLen + lenOfCheckSum + lenOfInt + payloadLen,endMarkerValueLen)
 
-			val digestsMatch : Boolean = startDigest.sameElements(endDigest)
-			val digestedMsg : String = if (digestsMatch) {
-				/** test the payload to see if the same digest can be obtained from it */
-				val md : MessageDigest = MessageDigest.getInstance("MD5");
-				md.update(payloadArray)
-				val mddigest : Array[Byte] = md.digest()
-				val integrityVerified : Boolean = mddigest.sameElements(endDigest)
-				val verifiedMsg : String = if (integrityVerified) {
-					payloadArray.toString
-				} else {
-					"while begin and end digests match, they don't reflect md5 digest of the bytes answered."
-				} 
-				verifiedMsg
-			} else {
-				"the beginning and ending digests do not match... results are bogus"
-			}
-			digestedMsg
+			payloadArray.toString
     	} else {
-    		"unreasonable bytes returned... either null or 0 bytes"
+    		"unreasonable bytes returned... either null or insufficient bytes in the supplied result"
     	}
  		answer
     }
@@ -293,6 +330,95 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
       * @param host
       * @param portNo
       * @return
+      *
+      *
+      *
+      *
+      *
+      *   Fixme:
+      *
+      *   call python directly, not the server script
+      *   supply the pythonpath as a positional parameter
+      *   change all commands to json strings:
+      *
+      *
+        {
+          "Cmd": "addModel",
+          "CmdOptions": {
+            "ModelFile": "a.py"
+            "ModelName": "a"
+          },
+          "ModelOptions": {
+            "InputMsgs: [
+                "org.kamanja.arithmetic.arithmeticMsg": {
+                    "a" : "Int",
+                    "b" : "Int"
+                }
+            ],
+            "OutputMsgs: [
+                "org.kamanja.arithmetic.arithmeticOutMsg": {
+                    "a" : "Int",
+                    "b" : "Int",
+                    "result" : "Int"
+                }
+            ]
+          }
+        }
+        {
+          "Cmd": "removeModel",
+          "CmdOptions": {
+            "ModelName": "a"
+          },
+          "ModelOptions": {}
+        }
+        {
+          "Cmd": "serverStatus",
+          "CmdOptions": {},
+          "ModelOptions": {}
+        }
+        {
+          "Cmd": "executeModel",
+          "CmdOptions": {
+            "InputMsgs: [
+                "org.kamanja.arithmetic.arithmeticMsg": {
+                    "a" : 1,
+                    "b" : 2
+                }
+            ]
+          },
+          "ModelOptions": {}
+        }
+        {
+          "Cmd": "stopServer",
+          "CmdOptions": {},
+          "ModelOptions": {}
+        }
+
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
       */
     def startServer(filePath : String, user : String, host : String, portNo : Int) : String = {
 
@@ -390,19 +516,18 @@ class StopServerCmd(cmd : String) extends PyCmd(cmd) {
                                , portNo : Int) : scala.Array[Byte] = {
 
 
-		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
-		val md : MessageDigest = MessageDigest.getInstance("MD5");
-		md.update(cmd.getBytes)
-		val mddigest : scala.Array[Byte] = md.digest()
 		val payload : scala.Array[Byte] = cmd.getBytes
-		val sizeOfInt : Int = 4
-		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
-		lenBytes.putInt(payload.length)
+        var checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
+        checksumBytes.putLong(0L)
+        val chkBytesArray : scala.Array[Byte] = checksumBytes.array()
+        val lenBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfInt)
+        lenBytes.putInt(payload.length)
 		val payloadLenAsBytes : scala.Array[Byte] = lenBytes.array()
-		val cmdBytes : scala.Array[Byte] = mddigest ++
-									payloadLenAsBytes ++
+		val cmdBytes : scala.Array[Byte] = CmdConstants.startMarkerArray ++
+                                    chkBytesArray ++
+                                    payloadLenAsBytes ++
 									payload ++
-                                    mddigest
+                                    CmdConstants.endMarkerArray
 		cmdBytes
         
     }
@@ -459,19 +584,18 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
 
         val modelSrcPath : String = Source.fromFile(filePath).mkString
         val payloadStr : String = s"$cmd\n$modelName$modelSrcPath"
-		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
-		val md : MessageDigest = MessageDigest.getInstance("MD5");
-		md.update(payloadStr.getBytes)
-		val mddigest : Array[Byte] = md.digest()
-		val payload : Array[Byte] = payloadStr.getBytes
-		val sizeOfInt : Int = 4
-		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
+        val payload : Array[Byte] = payloadStr.getBytes
+        val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
+        checksumBytes.putLong(0L)
+        val chkBytesArray : scala.Array[Byte] = checksumBytes.array()
+		val lenBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfInt)
 		lenBytes.putInt(payload.length)
 		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
-		val cmdBytes : Array[Byte] = mddigest ++
-									 payloadLenAsBytes ++ 
-									 payload ++ 
-									 mddigest
+		val cmdBytes : Array[Byte] = CmdConstants.startMarkerArray ++
+                                    chkBytesArray ++
+                                    payloadLenAsBytes ++
+                                    payload ++
+                                    CmdConstants.endMarkerArray
 		cmdBytes
     }
 }
@@ -497,19 +621,20 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
                                , portNo: Int): Array[Byte] = {
 
         val payloadStr : String = s"$cmd\n$modelName"
-		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
-		val md : MessageDigest = MessageDigest.getInstance("MD5");
-		md.update(payloadStr.getBytes)
-		val mddigest : Array[Byte] = md.digest()
-		val payload : Array[Byte] = payloadStr.getBytes
-		val sizeOfInt : Int = 4
-		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
-		lenBytes.putInt(payload.length)
-		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
-		val cmdBytes : Array[Byte] = mddigest ++
-									 payloadLenAsBytes ++ 
-									 payload ++ 
-									 mddigest
+        val payload : Array[Byte] = payloadStr.getBytes
+        val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
+        checksumBytes.putLong(0L)
+        val chkBytesArray : scala.Array[Byte] = checksumBytes.array()
+        val lenBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfInt)
+        lenBytes.putInt(payload.length)
+        val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+        val cmdBytes : Array[Byte] = CmdConstants.startMarkerArray ++
+            chkBytesArray ++
+            payloadLenAsBytes ++
+            payload ++
+            CmdConstants.endMarkerArray
+
+
 		cmdBytes
     }
 }
@@ -534,19 +659,19 @@ class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
                                , host: String
                                , portNo: Int) : Array[Byte] = {
         val payloadStr : String = cmd
-		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
-		val md : MessageDigest = MessageDigest.getInstance("MD5");
-		md.update(payloadStr.getBytes)
-		val mddigest : Array[Byte] = md.digest()
-		val payload : Array[Byte] = payloadStr.getBytes
-		val sizeOfInt : Int = 4
-		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
-		lenBytes.putInt(payload.length)
-		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
-		val cmdBytes : Array[Byte] = mddigest ++
-									 payloadLenAsBytes ++ 
-									 payload ++ 
-									 mddigest
+        val payload : Array[Byte] = payloadStr.getBytes
+        val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
+        checksumBytes.putLong(0L)
+        val chkBytesArray : scala.Array[Byte] = checksumBytes.array()
+        val lenBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfInt)
+        lenBytes.putInt(payload.length)
+        val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+        val cmdBytes : Array[Byte] = CmdConstants.startMarkerArray ++
+            chkBytesArray ++
+            payloadLenAsBytes ++
+            payload ++
+            CmdConstants.endMarkerArray
+
 		cmdBytes
     }
 }
@@ -578,20 +703,21 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
 		} else {
         	s"$cmd\n$modelName\n$msg"			
 		}
+
         val payloadStr : String = cmdStr
-		//val md : MessageDigest = MessageDigest.getInstance("SHA1");
-		val md : MessageDigest = MessageDigest.getInstance("MD5");
-		md.update(payloadStr.getBytes)
-		val mddigest : Array[Byte] = md.digest()
-		val payload : Array[Byte] = payloadStr.getBytes
-		val sizeOfInt : Int = 4
-		var lenBytes : ByteBuffer = ByteBuffer.allocate(sizeOfInt)
-		lenBytes.putInt(payload.length)
-		val payloadLenAsBytes : Array[Byte] = lenBytes.array()
-		val cmdBytes : Array[Byte] = mddigest ++
-									 payloadLenAsBytes ++ 
-									 payload ++ 
-									 mddigest
+        val payload : Array[Byte] = payloadStr.getBytes
+        val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
+        checksumBytes.putLong(0L)
+        val chkBytesArray : scala.Array[Byte] = checksumBytes.array()
+        val lenBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfInt)
+        lenBytes.putInt(payload.length)
+        val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+        val cmdBytes : Array[Byte] = CmdConstants.startMarkerArray ++
+            chkBytesArray ++
+            payloadLenAsBytes ++
+            payload ++
+            CmdConstants.endMarkerArray
+
 		cmdBytes
     }
 

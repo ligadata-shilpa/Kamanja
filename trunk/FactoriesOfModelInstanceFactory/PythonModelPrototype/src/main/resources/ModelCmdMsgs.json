@@ -1,0 +1,61 @@
+[
+  {
+    "Cmd": "addModel",
+    "CmdOptions": {
+      "ModelFile": "a.py",
+      "ModelName": "a"
+    },
+    "ModelOptions": {
+      "InputMsgs": [
+        {
+          "name": "org.kamanja.arithmetic.arithmeticMsg",
+          "Fields": {
+            "a": "Int",
+            "b": "Int"
+          }
+        }
+      ],
+      "OutputMsgs": [
+        {
+          "name": "org.kamanja.arithmetic.arithmeticOutMsg",
+          "Fields": {
+            "a": "Int",
+            "b": "Int",
+            "result": "Int"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "Cmd": "removeModel",
+    "CmdOptions": {
+      "ModelName": "a"
+    },
+    "ModelOptions": {}
+  },
+  {
+    "Cmd": "serverStatus",
+    "CmdOptions": {},
+    "ModelOptions": {}
+  },
+  {
+    "Cmd": "executeModel",
+    "CmdOptions": {
+      "ModelName": "a",
+      "InputMsgs": [
+        {
+          "name": "org.kamanja.arithmetic.arithmeticMsg",
+          "a": 1,
+          "b": 2
+        }
+      ]
+    },
+    "ModelOptions": {}
+  },
+  {
+    "Cmd": "stopServer",
+    "CmdOptions": {},
+    "ModelOptions": {}
+  }
+]

@@ -1,6 +1,6 @@
 
 # ExecuteModelCmd looks formatted like this Scala string : s"$cmd\n$modelName\n$msg"
-class Handler(object): 
+class executeModel(object): 
 	def handler(self, modelDict, host, port, cmdList):
 		modelName = cmdList.pop(0).strip()
 		# what is left after popping the model name are messages to process... 1 or more

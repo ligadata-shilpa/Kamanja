@@ -47,7 +47,6 @@ II. Protocol
 
         ii. From Py to Scala => Serialize Map into Json and deseirialize it into Msg from JSON in scala.
 
-    4. Model are Stateless. For now we are handling all Py models are stateless. We can not maintain the state if the Py server goes down for now.
 
 III. Metadata Commands
 
@@ -77,5 +76,19 @@ III. Metadata Commands
         b. Implement shared cache between Py & Kamanja.
 
  
-
+{
+  "Cmd": "Add Model",
+  "CmdOptions": {
+    "ModelFile": "a.py"
+  },
+  "ModelOptions": {}
+}
  
+
+ 1) annotate tasks/ break apart into finer portions if possible, 
+ 2) fix loop on server, 
+ 3) add exception handling to server, 
+ 4) fix message sent ... begin marker, protocol version, checksum, cmd payload length, cmd payload, end marker, 
+ 5) fix sample models to consume dictionary values passed at model instantiation, 
+ 6) fix msg at execute to be dictionary as well (this will be created or extracted from scala msg instance on the proxy side and made into json dict for now)
+[

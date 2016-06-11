@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+#
 # server.py 
 import socket                                         
 import time
@@ -9,62 +9,57 @@ import sys
 #import imp
 import hashlib
 import struct
-
-#sys.path.insert(0, "/home/rich/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstanceFactory/PythonModelPrototype/src/main/python") 
-#print "sys.modules = " + str(sys.modules)
-
+#
+#
 parser = argparse.ArgumentParser(description='Kamanja PyServer')
 parser.add_argument('--host', help='host name (default=localhost) ', default="localhost", type=str)
 parser.add_argument('--port', help='port binding (default=9999)', default="9999",type=int)
 parser.add_argument('--pythonpath', required=True, type=str)
 args = vars(parser.parse_args())
-
+#
 print 'starting pythonserver ...\nhost = ' + args['host'] + '\nport = ' + str(args['port']) + '\npythonpath = ' + args['pythonpath']
-
+#
 # set the sys.path s.t. the first path searched is our path 
 sys.path.insert(0, args['pythonpath']) 
-
+#
 # create a socket object
 serversocket = socket.socket(
 	        socket.AF_INET, socket.SOCK_STREAM) 
-
+#
 # get local machine name
 host = socket.gethostname()     
 port = int(args['port'])
-
+#
 # bind to the port
 print('Connection parms: ' + host + ", " + str(args['port']))
 serversocket.bind((host, port))    
-
+#
 def importPackageByName(moduleName, name):
-	"""
+	'''
 	Import the class 'name' found in package 'moduleName'.  The moduleName
 	may be a sub-package (e.g., the module is found in the 'commands' 
 	sub-package in the use below).
-	"""
+	'''
 	try:
 		print "load moduleName = " + moduleName 
 		module = __import__(moduleName, globals(), locals(), [name])
 	except ImportError:
 		return None
 	return getattr(module, name)
-
-
+#
 # command dictionary used to manage server loaded below
 cmdDict = {
-    #"addModel": addModel,  .
-    #"stopModel": stopModel,
     }
-
+#
 # model instance dictionary.
 modelDict = {
     }
-
-# Modify command dict with the python server commands supporte.
+#
+# Modify command dict with the python server commands supported.
 # These are loaded on the server from the 'commands' sub directory specified 
 # of a directory on the PYTHONPATH...e.g.,
 #
-#	export PYTHONPATH=$HOME/python/pyserver
+#	export PYTHONPATH=$KAMANJA_HOME/python/
 #
 # Using the PYTHONPATH makes sense at least for testing.  It might be fruitful
 # for production as well... 
@@ -80,71 +75,167 @@ importPackageByName("common.ModelBase", "ModelBase")
 importPackageByName("common.ModelInstance", "ModelInstance")
 # Add the system level command to the dispatcher dict
 for extname in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer':
-	HandlerClass = importPackageByName("commands." + extname, "Handler")
+	HandlerClass = importPackageByName("commands." + extname, extname)
 	handler = HandlerClass()
 	cmdDict[extname] = handler
 
+startMarkerValue = "_S_T_A_R_T_"	
+endMarkerValue = "_F_I_N_I_"	
+crcValueLen = 8
+#
+def nextMsg(conn):
+    '''
+    Assumption: more than one message can be received before a reply is made.
+	Description: Find the component parts for the next message (startMark, 
+	checksum, cmdMsgLen, cmdMsg, endMark) and preserve any residual bytes for 
+	consideration for the next message.
+    '''
+    (startMsgMark, checksum, cmdLen, followingBytes) = startMsg(conn, startMarkerValue, msgBytes)
+    (cmdMsg, endMsgMark, nextMsgBytes) = completeMsg(conn, endMarkerValue, cmdLen, followingBytes)
 
-def unPack(rawmsg):
-	"""
-	This method a) verifies the message ingtegrity by examining
-	the md5 markers and computing the md5 digest on the enclosed
-	json data enclosed in the raw message to certify the message
-	is legit. 
-	From the valid json data, a dictionary is resurrected and the
-	value of key "cmd" is found.  This value in turn is used to 
-	locate the appropriate command handler for processing.
-	If there is no "cmd" value or the md5 checks fail, an error 
-	message is logged and returned.
-	A tuple is returned containing the command key, the reconstituted
-	dictionary resurrected from the json string and an error message field
-	that will be empty ("") if all is well else the error description.	
-	WARNING: supplied message is modified.
-	"""
-	lenMd5Digest = 16
-	lenInt = 4
-	rmsgLen = len(rawmsg)
-	reasonable = rmsgLen > lenMd5Digest * 2 + lenInt
-
-	cmd = ""
-	cmdmap = []
-	errmsg = ""
-	if reasonable == True:
-		startHash = rawmsg[0:lenMd5Digest]
-		del rawmsg[0:lenMd5Digest]
-		payloadLenBytes = rawmsg[0:lenInt]
-		(payloadLen,) = unpack('>I', bytearray(payloadLenBytes)) #big endian
-		del rawmsg[0:lenInt]
-		payloadBytes = rawmsg[0:payloadLen]
-		del rawmsg[0:payloadLen]
-		endHash = rawmsg[0:lenMd5Digest]
-		del rawmsg[0:lenMd5Digest]
-
-		hashesMatch = startHash == endHash
-		if hashesMatch == True:
-			# calculate the md5 for ourselves and compare 
-			h = hashlib.new('md5') # md5 digest used for marker based on msg
-			h.update(payloadBytes)
-			md5hash = h.digest()	
-			validPayload = md5hash == endHash
-			if validPayload == True:
-		 		payload = str(payloadBytes)
-		 		cmdmap = json.loads(payload)
-		 		if "cmd" in cmdParameters and cmdParameters["cmd"] in cmdDict:
-		 			cmd = cmdmap["cmd"]
-		 		else:
-		 			cmdStr = "none supplied"
-		 			if "cmd" in cmdParameters:
-		 				cmdStr = cmdParameters["cmd"]
-		 			errmsg = "There is no command parameter or the command supplied is one that is not known... cmd = {}...legitimate server commands must be one of the following: {}".format(cmdStr, str(cmdDict.keys()))
-			else:
-				errmsg = "while the begin and end digests match, they do not reflect the md5 digest of the supplied message."
-		else:
-			errmsg = "the beginning and ending digests do not match... the input msg is bogus"
-	else:
-		errmsg = "Insufficient bytes supplied to be a reasonable message"
-	return (cmd, cmdmap, errmsg)
-
+    print "nextMsg : startMsgMark = {}, checksum = {}, cmdMsgLen = {}".format(startMsgMark, checksum, cmdLen)
+    cmdMsgDict = json.loads(cmdMsg)
+    prettycmd = json.dumps(cmdMsgDict, sort_keys=True, indent=4, separators=(',', ': '))
+    print "cmd = \n{}".format(prettycmd)
+    #
+    return cmdMsgDict
+#
+def startMsg(conn, startMarker, msgBytes):
+	'''
+	Obtain the starting FIXED portion of the current msg in the recv.
+	Receive bytes until a complete fixed portion may be considered.
+	Parameters are the connection, the startMarker value sought and any
+	msgBytes that may be left from a prior receive. 
+	Answer from receive buffer the fixed part of the message... namely 
+	the (startMark, checksum, cmdMsgLen).
+	Note: the assumption is that more than one message can be sent before 
+	a message is processed.
+	'''
+	#
+	# return values
+	#
+	startMarkerValue = ""
+	crc = 0L
+	payloadLen = 0
+	followingBytes = b""
+	#
+	# working variables
+	#
+	fixedMsgPortion = "" #fragment of cmd msg collected here and values extracted from it
+	chunks = [] #received chunks from conn collected here and joined
+	chunks.append(msgBytes) #received unprocessed bytes from previous recv are first
+	bytes_recd = len(msgBytes) #acknowledge that prior bytes are already available
+	# constant values that describe the lengths of the three pieces of info sought
+	lenStartMarker = len(startMarker)
+	lenOfWireInt = 4 # cmdSize is 4 byte int 
+	lenOfCheckSum = 8 # checksum into a 8 byte int
+	# calculate the number of bytes needed before evaluate and extract
+	bytesNeeded = len(startMarker) + lenOfCheckSum + lenOfCmdSize - len(msgBytes)
+	#
+	#
+	if bytesNeeded > 0:
+		# get the additional bytes needed to satisfy the beg mark, crc, and len requisition
+		while bytes_recd < bytesNeeded:
+			chunk = conn.recv(min(bytesNeeded - bytes_recd, 8192))
+			if chunk == '':
+				raise RuntimeError("socket connection broken")
+			chunks.append(chunk)
+			bytes_recd = bytes_recd + len(chunk)
+	#
+	rawmsg =  b"".join(chunks)
+	startMarkerBase = 0
+	try:
+		startMarkerBase = msg.index(startMarker)
+	except ValueError:
+		print 'from connection bytes "{}", start marker "{}" was not found'.format(rawmsg, startMarker)
+		print 'giving up... something is fouled'
+		raise
+	if startMarkerBase != 0: #this is not good... there should be no 
+		# slack bytes between cmdMsgs in received bytes.
+		print 'there is junk residual found before the start marker... value of junk = "{}"'.format(msg[0:startMarkerBase])		
+		raise BufferError('there is junk residual found before the start marker... value of junk = "{}"'.format(msg[0:startMarkerBase]))
+	#
+	fixedMsgPortion = rawmsg[startMarkerBase:]
+	# slice up the raw msg; treat scalars appropriately and then collect the return 
+	# values ... the start marker. the crc value and the cmdSize. The rest is returned
+	# as followingBytes... part of a following message... it is preserved by the caller
+	# and presented when the next message is considered.
+	begMark = 0
+	endMark = lenStartMarker
+	startMarkerValue = fixedMsgPortion[begMark:endMark]
+	begMark = endMark
+	endMark += lenOfCheckSum
+	crcBytes = fixedMsgPortion[begMark:endMark]
+	# big endian unsigned long long (8 bytes)
+	(crc,) = struct.unpack('>Q', bytearray(crcBytes))
+	#
+	begMark = endMark
+	endMark = endMark + lenOfWireInt
+	payloadLenBytes = fixedMsgPortion[begMark1:endMark]
+	(payloadLen,) = unpack('>I', bytearray(payloadLenBytes)) #big endian unsigned int (4 bytes)
+	#
+	begMark = endMark
+	followingBytes=fixedMsgPortion[begMark:]
+	#
+	return (startMarkerValue, crc, payloadLen, followingBytes)
+#
+def completeMsg(conn, endMarkerValue, cmdLen, followingBytes):
+	'''
+	Called after startMsg, the bytesReceived by the startMsg are searched first 
+	for the endMarker.  If not found, additional bytes are retrieved from the 
+	connection until it is found.  Any residual bytes found after the end marker
+	are considered part of the next command message.
+	This function will obtain the command message bytes, the end tag, and any
+	residual bytes that may be part of a subsequent command.
+	Answer the tuple, (cmd msg, end tag, the next message bytes buffer)
+	'''
+	#
+	# return values
+	#
+	cmdMsg = b""
+	endMsgMark = ""
+	followingBytes = ""
+	#
+	# working variables
+	#
+	chunks = []
+	chunks.append(followingBytes) #received unprocessed bytes from prior recv are first
+	markerFound = True #optimism
+	endMarkerBase = 0
+	lenEndMarker = len(endMarkerValue)
+	bytes_recd = len(followingBytes)
+	# calculate the number of bytes needed before evaluate and extract
+	bytesNeeded = len(lenEndMarker) + cmdLen - len(followingBytes)
+	#
+	if bytesNeeded > 0:
+		# get the additional bytes (if needed) to satisfy the 
+		# beg mark, crc, and len requisition
+		while bytes_recd < bytesNeeded:
+			chunk = conn.recv(min(bytesNeeded - bytes_recd, 8192))
+			if chunk == '':
+				raise RuntimeError("socket connection broken")
+			chunks.append(chunk)
+			bytes_recd = bytes_recd + len(chunk)
+	#
+	rawmsg =  b"".join(chunks)
+	endMarkerBase = 0
+	try:
+		endMarkerBase = msg.index(endMarkerValue)
+	except ValueError:
+		print 'from connection bytes ({}) received that are of sufficient size to contain the cmdMsg and end marker, end marker "{}" was not found'.format(rawmsg, endMarkerValue)
+		print 'giving up... something is fouled'
+		raise
+	#
+	# get the cmdMsg bytes and end marker value from the enclosed bytes, leaving residual
+	# in the followingBytes which purportedly are part of a subsequent message in the
+	# input.
+	cmdMsg = rawmsg[0:endMarkerBase]
+	mark = endMarkerBase + lenEndMarker
+	endMsgMark = rawmsg[mark:lenEndMarker]
+	followingBytes=rawmsg[mark:]
+	#
+	return (cmdMsg, endMsgMark, followingBytes)
+#
 def formatWireMsg(msg):
 	"""
 	Format the supplied message for transmission to client.  Format is
@@ -152,18 +243,17 @@ def formatWireMsg(msg):
 	"""
 	msgBytes = bytearray(msg)
 	msgBytesLen = len(msgBytes)
+	crcArray = struct.pack('>Q', 0) # big endian
 	msgBytesLenArray = struct.pack('>I', msgBytesLen) # big endian
-	h = hashlib.new('md5') # md5 digest used for marker based on msgBytes
-	h.update(msgBytes)
- 	md5hash = h.digest()	
  	msgparts = []
- 	msgparts.append(md5hash)
+ 	msgparts.append(startMarkerValue)
+ 	msgparts.append(crcArray)
  	msgparts.append(msgBytesLenArray)
  	msgparts.append(msgBytes)
- 	msgparts.append(md5hash)
+ 	msgparts.append(endMarkerValue)
  	rawmsg = b"".join(msgparts)
 	return rawmsg
-
+#
 def goingDownMsg():
 	"""
 	A stop server command has been received.  Format a standard message and
@@ -172,41 +262,43 @@ def goingDownMsg():
 	svrdownMsg = json.dumps({'Server' : host, 'Port' : str(port), 'Message' : "python server stopped by user command"})	
  	rawmsg = formatWireMsg(svrdownMsg)
 	return rawmsg
-
-def bogusResultsMsg(errmsg):
+#
+def exceptionMsg(infoTag):
 	"""
-	Some junk was sent by client to us.  Issue formatted message with the supplied text
+	print failure locally
+	format the failure as json dict
+	build a wire message for transmission to client
+	answer formatted message
+	Note: it is also possible to get traceback info but it is quite involved... perhaps
+	another time.
 	"""
-	bogusMsg = json.dumps({'Server' : host, 'Port' : str(port), 'Message' : errmsg})	
- 	rawmsg = formatWireMsg(bogusMsg)
+	prettycmd = json.dumps({'Server' : host, 'Port' : str(port), 'Message' : infoTag, 'Exception' : sys.exc_info()[0], 'FailedClass' : sys.exc_info()[1]}, sort_keys=True, indent=4, separators=(',', ': '))
+	print(prettycmd)
+	xeptMsg = json.dumps({'Server' : host, 'Port' : str(port), 'Message' : infoTag, 'Exception' : sys.exc_info()[0], 'FailedClass' : sys.exc_info()[1]})
+ 	rawmsg = formatWireMsg(xeptMsg)
 	return rawmsg
-
-def dispatcher(rawmsg):
+#
+def dispatcher(cmdMsgDict):
 	"""
 	a. The message byte array passed to and fro has these segments: 
-	<StartMarker>, <DataLen>, <JsonData>, <EndMarker>
-	b.  The markers are currently md5 hashes based upon the <JsonData> string (i.e., sans <DataLen>).
-	c.  The <DataLen> is a 4 byte representation of the length of the
+	<StartMarker>, <crc>, <DataLen>, <JsonData>, <EndMarker>
+	b.  The <DataLen> is a 4 byte representation of the length of the
 	<JsonData> string.
+	c.  The crc is currently unused but will hold some modest hash on msg content
+	in future release
 	d.  The <StartMarker> and <EndMarker> should have the same value.  The
 	python server will compute its own md5 hash and compare with the markers.  If they do not match an error message is both logged and returned as the result.
 	e.  The <JsonData> itself is a map.  In addition to the message integrity checks, to be successfully processed, a key must be found in the map == 'cmd' whose value is the command that will interpret the remaining key/value pairs in the dictionary.  Should the 'cmd' key value not refer to a
 	legitimate command,  error is logged and returned.
 	""" 
-	results = ""
-	(cmdKey, cmdParameters, errMsg) = unPack(rawmsg)
-	if len(cmdKey) > 0:
-		print "processing cmd = " + cmdKey + "...argument dict = " + str(cmdParameters)
-		cmd = cmdDict[cmdKey]
-		results = cmd.handler(modelDict, host, port, cmdParameters)
-	else:
-		results = bogusResultsMsg(errMsg)
+	results = cmd.handler(modelDict, host, port, cmdMsgDict)
 	return results
-
+#
 # queue up to 5 requests... could be another value... as written 
 # the conn are serialized... we mitigate by having a pythonserver for each
 # partition the engine chooses to distribute the input with.
-preserveNewLines=True
+#
+#
 serversocket.listen(5)
 result = ''
 while True:                                         
@@ -214,26 +306,38 @@ while True:
 	conn, addr = serversocket.accept()
 	print('Connected by', addr)
 	while True:
-		# get a complete msg 1k at a time... we may want to adjust it up?
-	    msgparts = []
-	    remaining = 1024
-	    while remaining > 0:
-	        data = s.recv(remaining)     # Get available data
-	        msgparts.append(data)        # Add it to list of msg parts
-	        if not data: remaining = 0   # no more data...  
-	    rawmsg = b"".join(msgparts)      # Stitch together the complete message
-
-	    result = dispatcher(rawmsg) # string answer ...
-	    if result != 'kill-9': # stop command will return 'kill-9' as value
-	    	wireMsg = formatWireMsg(result)
-	    	conn.sendall(wireMsg) 
-	    else: 
-	    	wireMsg =  goingDownMsg()
-	    	conn.sendall(wireMsg)
-	    conn.close()
-    	break
+		exceptionOccurred = False
+		try:
+			cmdMsgDict = nextMsg(conn)
+		except:
+			exceptionType = sys.exc_info()[0]
+			classFailed = sys.exc_info()[1]
+			callback = sys.exc_info()[2]
+			emsg = "nextMsg exception...\ntype = {},\nclass = {},\nstack = {}".format(exceptionType,classFailed,callback)
+			print(emsg)
+			wireMsg = formatWireMsg(result)
+			conn.sendall(wireMsg)
+			sys.exc_clear()
+			exceptionOccurred = True
+		#	
+		if exceptionOccurred == False:
+			try:
+				result = dispatcher(cmdMsgDict) # json string answers except stopServer
+			except:
+				wiremsg = exceptionMsg("dispatched cmd exception...")
+				conn.sendall(wireMsg)
+				sys.exc_clear()
+				exceptionOccurred = True
+			if exceptionOccurred == False:
+				# result
+			    if result != 'kill-9': # stop command will return 'kill-9' as value
+					wireMsg = formatWireMsg(result)
+					conn.sendall(wireMsg) 
+			    else: 
+					wireMsg =  goingDownMsg()
+					conn.sendall(wireMsg)
 	
-	if result == 'kill-9': # stop command stops listener tears down server ...
-		break
-
+		if result == 'kill-9': # stop command stops listener tears down server ...
+			break
+#
 print 'server stopped by admin command'
