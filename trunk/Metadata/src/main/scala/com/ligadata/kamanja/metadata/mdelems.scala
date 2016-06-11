@@ -288,7 +288,7 @@ class BaseElemDef extends BaseElem {
           val param = pStr getOrElse ""
           if (param != "") {
             params = scala.collection.mutable.Map() ++ parse(param.toLowerCase).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
-            if (params contains "descritpion") {
+            if (params contains "description") {
               description = params.get("description").get.asInstanceOf[String]
               params = params - "description"
             }
