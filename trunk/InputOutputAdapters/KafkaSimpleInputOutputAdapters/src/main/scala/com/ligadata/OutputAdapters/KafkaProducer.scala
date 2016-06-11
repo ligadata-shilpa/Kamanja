@@ -106,9 +106,13 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
   props.put("max.buffer.full.block.ms", qc.otherconfigs.getOrElse("max.buffer.full.block.ms", default_max_buffer_full_block_ms).toString.trim())
   props.put("network.request.timeout.ms", qc.otherconfigs.getOrElse("network.request.timeout.ms", default_network_request_timeout_ms).toString.trim())
 
+  println("===> KafkaProducer starting  with sec of " + qc.security_protocol + "...")
   // Verify the Secuirty Paramters...
-  if (qc.security_protocol != null && (qc.security_protocol.trim.equalsIgnoreCase("sasl") || qc.security_protocol.trim.equalsIgnoreCase("ssl"))) {
+  if (qc.security_protocol != null && (qc.security_protocol.trim.equalsIgnoreCase("sasl_plaintext") || qc.security_protocol.trim.equalsIgnoreCase("sasl_ssl") || qc.security_protocol.trim.equalsIgnoreCase("ssl"))) {
     if (qc.security_protocol.trim.equalsIgnoreCase("sasl_plaintext")) {
+
+      println("===> with " +  qc.security_protocol)
+
       // Add all the required SASL parameters.
       props.put("security.protocol", qc.security_protocol)
       if (qc.sasl_mechanism != null) props.put("sasl.mechanism", qc.sasl_mechanism)
@@ -128,9 +132,10 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
       if (qc.sasl_kerberos_ticket_renew_window_factor != null) props.put("sasl.kerberos.ticket.renew.window.factor", qc.sasl_kerberos_ticket_renew_window_factor)
     }
 
-    if (qc.security_protocol.trim.equalsIgnoreCase("sasl_sll")) {
+    if (qc.security_protocol.trim.equalsIgnoreCase("sasl_ssl")) {
       // Add all the required SASL parameters.
       props.put("security.protocol", qc.security_protocol)
+      println("===> with " +  qc.security_protocol)
       if (qc.sasl_mechanism != null) props.put("sasl.mechanism", qc.sasl_mechanism)
       if (qc.sasl_kerberos_service_name != null)
         props.put("sasl.kerberos.service.name", qc.sasl_kerberos_service_name)
@@ -160,6 +165,7 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
 
     if (qc.security_protocol.trim.equalsIgnoreCase("ssl")) {
       //All SSL parameters
+      println("===> with " +  qc.security_protocol)
       props.put("security.protocol", qc.security_protocol)
       if (qc.ssl_key_password != null) props.put("ssl.key.password", qc.ssl_key_password)
       if (qc.ssl_keystore_location != null) props.put("ssl.keystore.location", qc.ssl_keystore_location)
@@ -189,9 +195,15 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
   var reqCntr: Int = 0
   var msgInOrder = new AtomicLong
 
+  println("===> Creating new producer for " + qc.topic)
+
   val producer = new org.apache.kafka.clients.producer.KafkaProducer[Array[Byte], Array[Byte]](props)
 
+  println("===> Created new producer for " + qc.topic)
+
   var topicPartitionsCount = producer.partitionsFor(qc.topic).size()
+
+  println("===> Gettng partition s for producer of " + qc.topic)
   var partitionsGetTm = System.currentTimeMillis
   val refreshPartitionTime = 60 * 1000 // 60 secs
 
@@ -426,6 +438,8 @@ class KafkaProducer(val inputConfig: AdapterConfiguration, val nodeContext: Node
    * @param outputContainers
    */
   override def send(tnxCtxt: TransactionContext, outputContainers: Array[ContainerInterface]): Unit = {
+    println("===> producer send is called")
+
     if (outputContainers.size == 0) return
 
     // Sanity checks

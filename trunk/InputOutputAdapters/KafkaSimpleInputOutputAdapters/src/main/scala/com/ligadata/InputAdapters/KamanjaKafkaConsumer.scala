@@ -49,7 +49,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
   val input = this
   private val qc = KafkaQueueAdapterConfiguration.GetAdapterConfig(inputConfig)
   private val LOG = LogManager.getLogger(getClass)
-
+  println("===> KafkaConsumer starting ")
   LOG.debug("Creating a Kafka Adapter (client v0.9+) for topic:  " + qc.Name)
   private var isShutdown = false
   private val lock = new Object()
@@ -87,7 +87,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
   props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
 
   // Verify the Secuirty Paramters...
-  if (qc.security_protocol != null && (qc.security_protocol.trim.equalsIgnoreCase("sasl") || qc.security_protocol.trim.equalsIgnoreCase("ssl"))) {
+  if (qc.security_protocol != null && (qc.security_protocol.trim.equalsIgnoreCase("sasl_plaintext") || qc.security_protocol.trim.equalsIgnoreCase("sasl_ssl") || qc.security_protocol.trim.equalsIgnoreCase("ssl"))) {
     if (qc.security_protocol.trim.equalsIgnoreCase("sasl_plaintext")) {
       // Add all the required SASL parameters.
       props.put("security.protocol", qc.security_protocol.trim)
@@ -108,7 +108,7 @@ class KamanjaKafkaConsumer(val inputConfig: AdapterConfiguration, val execCtxtOb
       if (qc.sasl_kerberos_ticket_renew_window_factor != null) props.put("sasl.kerberos.ticket.renew.window.factor", qc.sasl_kerberos_ticket_renew_window_factor)
     }
 
-    if (qc.security_protocol.trim.equalsIgnoreCase("sasl_sll")) {
+    if (qc.security_protocol.trim.equalsIgnoreCase("sasl_ssl")) {
       // Add all the required SASL parameters.
       props.put("security.protocol", qc.security_protocol.trim)
       if (qc.sasl_mechanism != null) props.put("sasl.mechanism", qc.sasl_mechanism)
