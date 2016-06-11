@@ -171,7 +171,7 @@ trait BaseElem {
   // 646 - 675 Change begins - Metadata element addition/changes
   def Comment: String
   def Tag : String
-  def Params : Map[String, String]
+  def Params : Map[String, Any]
   // 646 - 675 Change ends
     def Author: String
     def NameSpace: String
@@ -210,7 +210,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675 Changes begin - Metadata additional element support
   override def Comment : String = comment
   override def Tag : String = tag
-  override def Params : Map[String, String] = params
+  override def Params : Map[String, Any] = params
   // 646 - 675 Changes end
     override def Author: String = author
     override def NameSpace: String = nameSpace // Part of Logical Name
@@ -256,7 +256,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675 Changes begin - Metadata additional element support
   var comment : String = _
   var tag: String = _
-  var params = scala.collection.mutable.Map.empty[String, String]
+  var params = scala.collection.mutable.Map.empty[String, Any]
   // 646 - 675 Changes end
     var author: String = _
     var nameSpace: String = _ //
@@ -287,21 +287,18 @@ class BaseElemDef extends BaseElem {
         case pStr: Option[String] => {
           val param = pStr getOrElse ""
           if (param != "") {
-            var mapOriginal = parse(param.toLowerCase).values.asInstanceOf[scala.collection.mutable.Map[String, String]]
-            if (mapOriginal contains "descritpion") {
-              description = mapOriginal("description")
-              mapOriginal = mapOriginal - "description"
+            params = scala.collection.mutable.Map() ++ parse(param.toLowerCase).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+            if (params contains "descritpion") {
+              description = params.get("description").get.asInstanceOf[String]
+              params = params - "description"
             }
-            if (mapOriginal contains "comment") {
-              comment = mapOriginal("comment")
-              mapOriginal = mapOriginal - "comment"
+            if (params contains "comment") {
+              comment = params.get("comment").get.asInstanceOf[String]
+              params = params - "comment"
             }
-            if (mapOriginal contains "tag") {
-              tag = mapOriginal("tag")
-              mapOriginal = mapOriginal - "tag"
-            }
-            if (mapOriginal.size > 0 ){
-              params = mapOriginal
+            if (params contains "tag") {
+              tag =  params.get("tag").get.asInstanceOf[String]
+              params = params - "tag"
             }
           }
         }
