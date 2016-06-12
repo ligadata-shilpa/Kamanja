@@ -29,15 +29,15 @@ class CacheCustomConfig(val jsonconfig: Config, var cacheManager: DefaultCacheMa
       .transport()
       .addProperty("configurationFile", values.getOrElse(CacheCustomConfig.PEERCONFIG, "jgroups_udp.xml"))
       .build(),
-      new ConfigurationBuilder().build())
+      null)
 
     cacheManager.defineConfiguration(cacheName,
       new ConfigurationBuilder().expiration
-        .lifespan(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS, "10000").toLong)
-        .maxIdle(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS, "10000").toLong)
+        .lifespan(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS, "10000000").toLong)
+        .maxIdle(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS, "10000000").toLong)
         .clustering
         .cacheMode(CacheMode.DIST_SYNC)
-        .hash.numOwners(values.getOrElse(CacheCustomConfig.NUMBEROFKETOWNERS, "1").toInt)
+        .hash.numOwners(values.getOrElse(CacheCustomConfig.NUMBEROFKETOWNERS, "2").toInt)
         .build);
 
     cacheManager
