@@ -37,7 +37,7 @@ class CacheCustomConfig(val jsonconfig: Config, var cacheManager: DefaultCacheMa
         .maxIdle(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS, "10000000").toLong)
         .clustering
         .cacheMode(CacheMode.DIST_SYNC)
-        .hash.numOwners(values.getOrElse(CacheCustomConfig.NUMBEROFKETOWNERS, "2").toInt)
+        .hash.numOwners(jsonconfig.getvalue(Config.NUMBEROFKETOWNERS).getOrElse("1").toInt)
         .build);
 
     cacheManager

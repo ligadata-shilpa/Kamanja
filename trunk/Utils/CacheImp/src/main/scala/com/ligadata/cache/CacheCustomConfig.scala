@@ -29,7 +29,6 @@ object CacheCustomConfig{
   val BOOTSTRAPASYNCHRONOUSLY:String="bootstrapAsynchronously"
   val PREFERIPV4STACK:String="java.net.preferIPv4Stack"
   val SKIPUPDATECHECK:String="net.sf.ehcache.skipUpdateCheck"
-  val NUMBEROFKETOWNERS: String = "numOfKeyOwners"
 }
 
 class CacheCustomConfig(val jsonconfig:Config, val listenCallback: CacheCallback) extends CacheConfiguration{
