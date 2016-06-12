@@ -174,6 +174,7 @@ libraryDependencies += "org.anarres.lzo" % "lzo-core" % "1.0.0"
 libraryDependencies += "com.jcraft" % "jsch" % "0.1.53"
 
 //////////////////////  Cache & CacheImp
+libraryDependencies += "org.infinispan" % "infinispan-core" % "8.2.2.Final"
 libraryDependencies += "net.sf.ehcache" % "ehcache-core" % "2.6.5"
 libraryDependencies += "net.sf.ehcache" % "ehcache-jgroupsreplication" % "1.7"
 libraryDependencies += "org.jgroups" % "jgroups" % "3.6.7.Final"
