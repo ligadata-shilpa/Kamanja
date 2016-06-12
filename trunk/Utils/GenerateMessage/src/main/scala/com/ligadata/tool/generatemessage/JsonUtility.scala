@@ -13,24 +13,38 @@ import scala.collection.mutable
 
 class JsonUtility  extends LogTrait {
   def CreateMainJsonString(data: mutable.LinkedHashMap[String, String], configObj: ConfigBean): JsonAST.JValue = {
-    val json =
-      ("Message" ->
-        ("NameSpace" -> configObj.nameSpace) ~
-          ("Name" -> configObj.messageName) ~
-          ("Version" -> "00.01.00") ~
-          ("Description" -> "") ~
-          ("Fixed" -> configObj.messageStructure.toString) ~
-          ("Persist" -> configObj.saveMessage.toString) ~
-          ("Fields" ->
-            data.map {
-              key =>
-                (
-                  ("Name" -> key._1) ~
-                    ("Type" -> "System.".concat(key._2)))
-            }
-            )
-        )
-
+    var json: JsonAST.JValue = null
+    if(data.size != 0) {
+      json =
+        ("Message" ->
+          ("NameSpace" -> configObj.nameSpace) ~
+            ("Name" -> configObj.messageName) ~
+            ("Version" -> "00.01.00") ~
+            ("Description" -> "") ~
+            ("Fixed" -> configObj.messageStructure.toString) ~
+            ("Persist" -> configObj.saveMessage.toString) ~
+            ("Fields" ->
+              data.map {
+                key =>
+                  (
+                    ("Name" -> key._1) ~
+                      ("Type" -> "System.".concat(key._2)))
+              }
+              )
+          )
+    } else {
+      json =
+        ("Message" ->
+          ("NameSpace" -> configObj.nameSpace) ~
+            ("Name" -> configObj.messageName) ~
+            ("Version" -> "00.01.00") ~
+            ("Description" -> "") ~
+            ("Fixed" -> configObj.messageStructure.toString) ~
+            ("Persist" -> configObj.saveMessage.toString) ~
+            ("Fields" -> List.empty[JInt]
+              )
+          )
+    }
 
     return json
   }

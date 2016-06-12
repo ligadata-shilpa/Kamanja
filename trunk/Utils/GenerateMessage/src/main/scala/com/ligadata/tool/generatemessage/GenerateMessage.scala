@@ -171,6 +171,25 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      }
      val jsonBean: JsonUtility = new JsonUtility()
      val fileName = fileBean.CreateFileName(configBeanObj.outputPath) // create name for output file
+     var mappedMessage: Boolean = false
+     var ignoredFields: List[String]=null
+     for(key <- feildsString.keySet){
+      if(!dataTypeObj.validateVariableName(key)){
+        feildsString.remove(key)
+        ignoredFields = ignoredFields ++ Array(key)
+        mappedMessage = true
+      }
+     }
+     if (mappedMessage == true){
+       var ignoredString = "("
+       configBeanObj.messageStructure_=(true) //true means mapped and false means fixed
+       for(item <- ignoredFields){
+         ignoredString += item + ","
+       }
+       ignoredString = ignoredString.substring(0,ignoredString.length-1) + ")"
+       logger.info("The message changed to mapped because there are some ignored fields %s".format(ignoredString))
+       println("[RESULT] - The message changed to mapped because there are some ignored feilds %s".format(ignoredString))
+     }
      val json = jsonBean.FinalJsonString(feildsString,configBeanObj) // create json string
      fileBean.writeToFile(json,fileName) // write json string to output file
      logger.info("message created successfully")

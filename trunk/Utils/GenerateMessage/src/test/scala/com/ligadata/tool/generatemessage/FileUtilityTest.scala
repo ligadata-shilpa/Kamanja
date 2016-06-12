@@ -95,6 +95,9 @@ class FileUtilityTest extends FeatureSpec with GivenWhenThen {
       Then("The delimiter variable should be set")
       configObj.delimiter should be(",")
 
+      if("yousef".matches("^[a-zA-Z][a-zA-Z0-9]*?$"))
+        println("valid")
+      else println("invalid")
 //      Given("Test CreateFileName function")
 //      val filename = fileBean.CreateFileName(configObj.outputPath)
 //      When("The file includes data")
