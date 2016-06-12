@@ -277,6 +277,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675,673 Changes begin - support for MetadataAPI changes
     def setParamValues (paramStr : Option[String]) : Any = {
 
+      var newParams = scala.collection.mutable.Map.empty[String, Any]
       paramStr match {
 
         case None => {
@@ -287,23 +288,35 @@ class BaseElemDef extends BaseElem {
         case pStr: Option[String] => {
           val param = pStr getOrElse ""
           if (param != "") {
-            params = scala.collection.mutable.Map() ++ parse(param.toLowerCase).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
-            if (params contains "description") {
-              description = params.get("description").get.asInstanceOf[String]
-              params = params - "description"
+            newParams = scala.collection.mutable.Map() ++ parse(param.toLowerCase).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+            if (newParams contains "description") {
+              description = newParams.get("description").get.asInstanceOf[String]
+              newParams = newParams - "description"
             }
-            if (params contains "comment") {
-              comment = params.get("comment").get.asInstanceOf[String]
-              params = params - "comment"
+            if (newParams contains "comment") {
+              comment = newParams.get("comment").get.asInstanceOf[String]
+              newParams = newParams - "comment"
             }
-            if (params contains "tag") {
-              tag =  params.get("tag").get.asInstanceOf[String]
-              params = params - "tag"
+            if (newParams contains "tag") {
+              tag =  newParams.get("tag").get.asInstanceOf[String]
+              newParams = newParams - "tag"
             }
           }
         }
       }
 
+      if (params.size > 0) {
+        for ((k, v) <- newParams) {
+          if (params contains k)  {
+            params(k) = v
+            newParams = newParams - k
+          }
+        }
+        if (newParams.size > 0) params = params ++ newParams
+      }
+      else {
+        params = newParams
+      }
     }
 
     def setCreationTime () : Any = {
