@@ -1545,10 +1545,8 @@ object ModelUtils {
         */
 
       val isValid: Boolean = (modDef != null && latestVersion != null && latestVersion.Version < modDef.Version)
-
-      
       // 1118 Changes begin - checks model existence before update
-      if (modDef == null /*|| DoesModelAlreadyExist(modDef) == false*/) {
+      if (modDef == null || DoesModelAlreadyExist(modDef) == false) {
         return (new ApiResult(ErrorCodeConstants.Failure, "UpdateKPMMLModel", null, s"KPMML model must exist to perform update")).toString
 
       }
