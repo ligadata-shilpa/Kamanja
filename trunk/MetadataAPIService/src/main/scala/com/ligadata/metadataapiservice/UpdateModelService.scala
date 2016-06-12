@@ -66,8 +66,8 @@ class UpdateModelService(requestContext: RequestContext, userid:Option[String], 
       // Ok, if this is a KPMML model, we dont need any additional info for compilation, its all enclosed in the model.  for normal PMML,
       // we need to know ModelName, Version, and associated Message.  modelCompileInfo will be set if this is PMML, and not set if KPMML
       if (modelCompileInfo == None) {
-        log.info ("No configuration information provided, assuming Kamanja PMML implementation.")
-        val apiResult = MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid)
+        log.info ("No configuration information provided, assuming Kamanja KPMML implementation.")
+        val apiResult = MetadataAPIImpl.UpdateModel(ModelType.KPMML, pmmlStr, userid,tenantId)
         requestContext.complete(apiResult)
       } else {
         val cInfo = modelCompileInfo.getOrElse("")
