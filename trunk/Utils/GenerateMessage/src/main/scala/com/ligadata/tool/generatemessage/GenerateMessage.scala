@@ -172,7 +172,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      val jsonBean: JsonUtility = new JsonUtility()
      val fileName = fileBean.CreateFileName(configBeanObj.outputPath) // create name for output file
      var mappedMessage: Boolean = false
-     var ignoredFields: List[String]=null
+     var ignoredFields: List[String]=Nil
      for(key <- feildsString.keySet){
       if(!dataTypeObj.validateVariableName(key)){
         feildsString.remove(key)
