@@ -16,5 +16,15 @@ object InfiniNode2 {
 
     val test = node.get("1").asInstanceOf[Array[Byte]]
     test.foreach(k=>System.out.println(k.toChar))
+
+    node.getKeys.foreach(k=>println( node.get(k).toString))
+
+    println(node.getAll.entrySet().size())
+
+
+    var a: Array[String] = new Array[String](1)
+    a(0) = "1"
+    a.foreach(k=>println(k))
+    println(node.get(a).get("1").asInstanceOf[Array[Byte]])
   }
 }

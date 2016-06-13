@@ -24,7 +24,7 @@ class MemoryDataCacheImp extends DataCache {
 
   override def start(): Unit = {
     cache = cacheManager.getCache(config.getcacheName());
-//    cache.addListener(null)
+//    cache.addListener(CacheCallback)
   }
 
   override def shutdown(): Unit = {
@@ -74,7 +74,11 @@ class MemoryDataCacheImp extends DataCache {
   }
 
   override def getKeys(): Array[String] = {
-    cache.keySet().toArray.asInstanceOf
+    val size:Int =  cache.keySet().size()
+    val array = new Array[String](size)
+    cache.keySet().toArray[String](array)
+
+    array
   }
 }
 
