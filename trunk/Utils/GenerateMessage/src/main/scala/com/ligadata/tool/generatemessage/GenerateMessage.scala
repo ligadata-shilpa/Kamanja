@@ -188,7 +188,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
        }
        ignoredString = ignoredString.substring(0,ignoredString.length-1) + ")"
        logger.info("The message changed to mapped because there are some ignored fields %s".format(ignoredString))
-       println("[RESULT] - The message changed to mapped because there are some ignored feilds %s".format(ignoredString))
+       println("[RESULT] - The message changed to mapped because there are some ignored fields %s".format(ignoredString))
      }
      val json = jsonBean.FinalJsonString(feildsString,configBeanObj) // create json string
      fileBean.writeToFile(json,fileName) // write json string to output file

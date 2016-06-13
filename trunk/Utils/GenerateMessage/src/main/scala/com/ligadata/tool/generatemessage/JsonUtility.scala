@@ -79,7 +79,7 @@ class JsonUtility  extends LogTrait {
 
   def FinalJsonString(data: mutable.LinkedHashMap[String, String], configObj: ConfigBean): JsonAST.JValue = {
     var json: JsonAST.JValue = ""
-    if (!data.isEmpty) {
+    //if (!data.isEmpty) {
       json = CreateMainJsonString(data, configObj)
       if (configObj.hasPartitionKey == true) {
         val jsonPatitionKey = CreateJsonString("PartitionKey", configObj, configObj.partitionKeyArray)
@@ -95,7 +95,7 @@ class JsonUtility  extends LogTrait {
         val jsonTimePatition = CreateJsonString("TimePartitionInfo", configObj, Array(configObj.timePartition))
         json = json merge jsonTimePatition
       }
-    }
+    //}
     return json
   }
 }
