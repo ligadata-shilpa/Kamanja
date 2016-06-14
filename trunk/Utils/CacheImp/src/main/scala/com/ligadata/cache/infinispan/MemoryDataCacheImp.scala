@@ -16,15 +16,17 @@ class MemoryDataCacheImp extends DataCache {
   var cacheManager: DefaultCacheManager = null
   var config: CacheCustomConfig = null
   var cache: Cache[String, Any] = null
+  var listenCallback: CacheCallback = null
 
   override def init(jsonString: String, listenCallback: CacheCallback): Unit = {
     config = new CacheCustomConfig(new Config(jsonString),cacheManager)
     cacheManager = config.getDefaultCacheManager()
+    this.listenCallback = listenCallback
   }
 
   override def start(): Unit = {
     cache = cacheManager.getCache(config.getcacheName());
-//    cache.addListener(CacheCallback)
+    cache.addListener(listenCallback)
   }
 
   override def shutdown(): Unit = {
