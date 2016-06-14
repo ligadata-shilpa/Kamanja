@@ -120,6 +120,7 @@ object StartMetadataAPI {
           || arg.endsWith(".pmml")
           || arg.endsWith(".scala")
           || arg.endsWith(".java")
+          || arg.endsWith(".py")
           || arg.endsWith(".jar")) {
           extraCmdArgs(INPUTLOC) = arg
           if (expectBindingFromFile) {
@@ -283,10 +284,12 @@ object StartMetadataAPI {
         config = defaultConfig
       }
 
+      println("Action Value 1" + action.toString());
       MetadataAPIImpl.InitMdMgrFromBootStrap(config, false)
       if (action == "")
         TestMetadataAPI.StartTest
       else {
+        println("Action Value 2" + action.toString());
         response = route(Action.withName(action.trim), extraCmdArgs.getOrElse(INPUTLOC, ""),
           extraCmdArgs.getOrElse(WITHDEP, ""), extraCmdArgs.getOrElse(TENANTID, ""), args, userId, extraCmdArgs.toMap)
         println("Result: " + response)
@@ -340,6 +343,7 @@ object StartMetadataAPI {
   }
 
   def route(action: Action.Value, input: String, param: String = "", tenantid: String, originalArgs: Array[String], userId: Option[String], extraCmdArgs: immutable.Map[String, String]): String = {
+    println("Action Value 3" + action.toString());
     var response = ""
     var fileinquesiton = input
     var optMsgProduced: Option[String] = None
@@ -395,8 +399,8 @@ object StartMetadataAPI {
           val optMsgVer = Option(null)
           response = ModelService.addModelPython(ModelType.PYTHON, input, userId, modelName, optModelVer, msgName, optMsgVer, tid)
         }
-        
-         case Action.ADDMODELJYTHON => {
+
+        case Action.ADDMODELJYTHON => {
           val modelName: Option[String] = extraCmdArgs.get(MODELNAME)
           val modelVer = extraCmdArgs.getOrElse(MODELVERSION, null)
           val msgName: Option[String] = extraCmdArgs.get(MESSAGENAME)
