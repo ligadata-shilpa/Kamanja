@@ -23,7 +23,7 @@ class ConfigBean {
   private var _partitionKeyArray: Array[String] = Array.empty
   private var _primaryKeyArray: Array[String] = Array.empty
   private var _createMessageFrom = ""
-  private var _messageStructure = false  // false -> fixed, true -> mapped
+  private var _messageStructure = false  // true -> fixed, false -> mapped
   private var _detectDatatypeFrom = 4
   // Getter
   def delimiter = _delimiter

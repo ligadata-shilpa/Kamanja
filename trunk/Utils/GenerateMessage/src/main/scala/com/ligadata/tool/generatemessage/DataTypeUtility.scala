@@ -144,4 +144,11 @@ class DataTypeUtility extends LogTrait{ // This class created to check the value
       return "Long"
     else return "String"
   }
+
+  def validateVariableName(variableName: String): Boolean={
+    //if(variableName.matches("^[a-zA-Z][a-zA-Z0-9]*?$"))
+    if(variableName.matches("^[a-zA-Z_$][a-zA-Z_$0-9]*$"))
+      return true
+    else return false
+  }
 }
