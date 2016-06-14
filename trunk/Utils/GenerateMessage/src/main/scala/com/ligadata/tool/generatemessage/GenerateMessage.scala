@@ -182,7 +182,7 @@ Usage:  bash $KAMANJA_HOME/bin/GenerateMessage.sh --inputfile $KAMANJA_HOME/inpu
      }
      if (mappedMessage == true){
        var ignoredString = "("
-       configBeanObj.messageStructure_=(true) //true means mapped and false means fixed
+       configBeanObj.messageStructure_=(false) //false means mapped and true means fixed
        for(item <- ignoredFields){
          ignoredString += item + ","
        }
