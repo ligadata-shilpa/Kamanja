@@ -171,7 +171,7 @@ def startMsg(conn, startMarker, msgBytes):
 	#
 	begMark = endMark
 	endMark = endMark + lenOfWireInt
-	payloadLenBytes = fixedMsgPortion[begMark1:endMark]
+	payloadLenBytes = fixedMsgPortion[begMark:endMark]
 	(payloadLen,) = unpack('>I', bytearray(payloadLenBytes)) #big endian unsigned int (4 bytes)
 	#
 	begMark = endMark
@@ -294,10 +294,12 @@ def dispatcher(cmdMsgDict):
 	results = cmd.handler(modelDict, host, port, cmdMsgDict)
 	return results
 #
+################################################################################
+# socket connection loop...
+#
 # queue up to 5 requests... could be another value... as written 
 # the conn are serialized... we mitigate by having a pythonserver for each
 # partition the engine chooses to distribute the input with.
-#
 #
 serversocket.listen(5)
 result = ''

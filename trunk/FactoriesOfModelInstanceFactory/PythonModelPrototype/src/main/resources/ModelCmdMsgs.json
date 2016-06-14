@@ -46,8 +46,10 @@
       "InputMsgs": [
         {
           "name": "org.kamanja.arithmetic.arithmeticMsg",
-          "a": 1,
-          "b": 2
+          "Fields": {
+            "a": 1,
+            "b": 2
+          }
         }
       ]
     },
