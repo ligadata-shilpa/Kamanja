@@ -1414,15 +1414,28 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
         stmt.executeUpdate(query);
         stmt.close
         var index_name = "ix_" + tableName
+        var query1= ""
+        var query2= ""
+        var query3= ""
+        var query4= ""
         if (clusteredIndex.equalsIgnoreCase("YES")) {
           logger.info("Creating clustered index...")
-          query = "create clustered index " + index_name + " on " + fullTableName + "(timePartition,bucketKey,transactionId,rowId)"
+          query1 = "create clustered index " + index_name + " on " + fullTableName + "(timePartition,bucketKey,transactionId,rowId)"
+          query2 = "create clustered index " + index_name + "2 on " + fullTableName + "(timePartition,bucketKey)"
+          query3 = "create clustered index " + index_name + "3 on " + fullTableName + "(timePartition)"
+          query4 = "create clustered index " + index_name + "4 on " + fullTableName + "(bucketKey)"
         } else {
           logger.info("Creating non-clustered index...")
-          query = "create index " + index_name + " on " + fullTableName + "(timePartition,bucketKey,transactionId,rowId)"
+          query1 = "create index " + index_name + " on " + fullTableName + "(timePartition,bucketKey,transactionId,rowId)"
+          query2 = "create index " + index_name + "2 on " + fullTableName + "(timePartition,bucketKey)"
+          query3 = "create index " + index_name + "3 on " + fullTableName + "(timePartition)"
+          query4 = "create index " + index_name + "4 on " + fullTableName + "(bucketKey)"
         }
         stmt = con.createStatement()
-        stmt.executeUpdate(query);
+        stmt.executeUpdate(query1);
+        stmt.executeUpdate(query2);
+        stmt.executeUpdate(query3);
+        stmt.executeUpdate(query4);
         stmt.close
         //index_name = "ix1_" + tableName
         //query = "create index " + index_name + " on " + fullTableName + "(bucketKey,transactionId,rowId)"
