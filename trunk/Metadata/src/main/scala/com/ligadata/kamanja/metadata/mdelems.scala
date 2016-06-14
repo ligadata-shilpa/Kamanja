@@ -293,13 +293,24 @@ class BaseElemDef extends BaseElem {
               description = newParams.get("description").get.asInstanceOf[String]
               newParams = newParams - "description"
             }
+            else {
+              if (description == null) description = ""
+            }
             if (newParams contains "comment") {
               comment = newParams.get("comment").get.asInstanceOf[String]
               newParams = newParams - "comment"
             }
+            else {
+              if (comment == null) comment = ""
+
+            }
             if (newParams contains "tag") {
               tag =  newParams.get("tag").get.asInstanceOf[String]
               newParams = newParams - "tag"
+            }
+            else {
+              if (tag == null) tag = ""
+
             }
           }
         }

@@ -1173,7 +1173,7 @@ object MessageAndContainerUtils {
           val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetMessageDefFromCache", null, ErrorCodeConstants.Get_Message_From_Cache_Failed + ":" + dispkey)
           apiResult.toString()
         case Some(m) =>
-          if (tid.get == m.tenantId || tid == None) {
+          if (tid == None || tid.get == m.tenantId) {
             logger.debug("message found => " + m.asInstanceOf[MessageDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[MessageDef].Version))
             val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetMessageDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Message_From_Cache_Successful)
             apiResult.toString()
@@ -1218,7 +1218,7 @@ object MessageAndContainerUtils {
           val apiResult = new ApiResult(ErrorCodeConstants.Failure, "GetContainerDefFromCache", null, ErrorCodeConstants.Get_Container_From_Cache_Failed + ":" + dispkey)
           apiResult.toString()
         case Some(m) =>
-          if (tid.get == m.tenantId || tid == None) {
+          if (tid == None || tid.get == m.tenantId) {
           logger.debug("container found => " + m.asInstanceOf[ContainerDef].FullName + "." + MdMgr.Pad0s2Version(m.asInstanceOf[ContainerDef].Version))
             val apiResult = new ApiResult(ErrorCodeConstants.Success, "GetContainerDefFromCache", JsonSerializer.SerializeObjectToJson(m), ErrorCodeConstants.Get_Container_From_Cache_Successful)
             apiResult.toString()
