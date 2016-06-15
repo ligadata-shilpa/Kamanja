@@ -248,10 +248,11 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   //  val driverType = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
   var connectionMode = "something"
+  var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
   connectionMode match {
-    case "embedded" => var jdbcUrl = "jdbc:h2:./storage/" + database + ";user=" + user + ";password=" + password
-    case "serverssl" => var jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
-    case "servertcp" => var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+    case "embedded" => jdbcUrl = "jdbc:h2:./storage/" + database + ";user=" + user + ";password=" + password
+    case "serverssl" => jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+    case "servertcp" => jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
   }
 
   var jars = new Array[String](0)
