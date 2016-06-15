@@ -218,7 +218,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   }
 
   // some misc optional parameters
-  var clusteredIndex = "YES"
+  var clusteredIndex = "NO"
   if (parsed_json.contains("clusteredIndex")) {
     clusteredIndex = parsed_json.get("clusteredIndex").get.toString.trim
   }
@@ -243,18 +243,23 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     H2dbInstance = H2dbInstance + ":" + portNumber
   }
 
-//  var jdbcUrl = "jdbc:sqlserver://" + sqlServerInstance + ";databaseName=" + database + ";user=" + user + ";password=" + password
-  var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/~/kamanjaStorage/" + database + ";user=" + user + ";password=" + password
 
-//  jdbc:h2:tcp://localhost/./data/H2
-//  jdbc:h2:tcp://localhost/~/test
+  //  var jdbcUrl = "jdbc:sqlserver://" + sqlServerInstance + ";databaseName=" + database + ";user=" + user + ";password=" + password
+  //  val driverType = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+
+  var connectionMode = "something"
+  connectionMode match {
+    case "embedded" => var jdbcUrl = "jdbc:h2:./storage/" + database + ";user=" + user + ";password=" + password
+    case "serverssl" => var jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+    case "servertcp" => var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+  }
 
   var jars = new Array[String](0)
   var jar = jarpaths + "/" + jdbcJar
   jars = jars :+ jar
 
-//  val driverType = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
   val driverType = "org.h2.Driver"
+
   try {
     logger.info("Loading the Driver..")
     LoadJars(jars)
