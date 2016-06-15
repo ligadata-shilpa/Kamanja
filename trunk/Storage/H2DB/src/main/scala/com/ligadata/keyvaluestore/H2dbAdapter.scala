@@ -476,36 +476,46 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
       con = getConnection
       // put is sematically an upsert. An upsert is being implemented using a transact-sql update
       // statement in H2db
-      sql = "if ( not exists(select 1 from " + tableName +
-        " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
-        " begin " +
-        " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
-        " values(?,?,?,?,?,?,?)" +
-        " end " +
-        " else " +
-        " begin " +
-        " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
-        " end ";
-      logger.debug("sql => " + sql)
-      pstmt = con.prepareStatement(sql)
+
+      sql = "merge into" + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo) key(timePartition, bucketKey, transactionId, rowId) values (?,?,?,?,?,?,?)"
       pstmt.setLong(1, key.timePartition)
       pstmt.setString(2, key.bucketKey.mkString(","))
       pstmt.setLong(3, key.transactionId)
       pstmt.setInt(4, key.rowId)
-      pstmt.setLong(5, key.timePartition)
-      pstmt.setString(6, key.bucketKey.mkString(","))
-      pstmt.setLong(7, key.transactionId)
-      pstmt.setInt(8, key.rowId)
-      pstmt.setInt(9, value.schemaId)
-      pstmt.setString(10, value.serializerType)
-      pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-      pstmt.setInt(12, value.schemaId)
-      pstmt.setString(13, value.serializerType)
-      pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-      pstmt.setLong(15, key.timePartition)
-      pstmt.setString(16, key.bucketKey.mkString(","))
-      pstmt.setLong(17, key.transactionId)
-      pstmt.setInt(18, key.rowId)
+      pstmt.setInt(5, value.schemaId)
+      pstmt.setString(6, value.serializerType)
+      pstmt.setBinaryStream(7, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+
+//      sql = "if ( not exists(select 1 from " + tableName +
+//        " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
+//        " begin " +
+//        " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
+//        " values(?,?,?,?,?,?,?)" +
+//        " end " +
+//        " else " +
+//        " begin " +
+//        " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
+//        " end ";
+//      logger.debug("sql => " + sql)
+//      pstmt = con.prepareStatement(sql)
+//      pstmt.setLong(1, key.timePartition)
+//      pstmt.setString(2, key.bucketKey.mkString(","))
+//      pstmt.setLong(3, key.transactionId)
+//      pstmt.setInt(4, key.rowId)
+//      pstmt.setLong(5, key.timePartition)
+//      pstmt.setString(6, key.bucketKey.mkString(","))
+//      pstmt.setLong(7, key.transactionId)
+//      pstmt.setInt(8, key.rowId)
+//      pstmt.setInt(9, value.schemaId)
+//      pstmt.setString(10, value.serializerType)
+//      pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+//      pstmt.setInt(12, value.schemaId)
+//      pstmt.setString(13, value.serializerType)
+//      pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+//      pstmt.setLong(15, key.timePartition)
+//      pstmt.setString(16, key.bucketKey.mkString(","))
+//      pstmt.setLong(17, key.transactionId)
+//      pstmt.setInt(18, key.rowId)
       pstmt.executeUpdate();
 
       //      var stmnt2 = ""
@@ -598,16 +608,17 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
           var tableName = toFullTableName(containerName)
           var keyValuePairs = li._2
           logger.info("Input row count for the table " + tableName + " => " + keyValuePairs.length)
-          sql = "if ( not exists(select 1 from " + tableName +
-            " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
-            " begin " +
-            " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
-            " values(?,?,?,?,?,?,?)" +
-            " end " +
-            " else " +
-            " begin " +
-            " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
-            " end ";
+          sql = "merge into" + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo) key (timePartition, and bucketKey, transactionId, rowId) values(?,?,?,?,?,?,?)"
+//          sql = "if ( not exists(select 1 from " + tableName +
+//            " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
+//            " begin " +
+//            " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
+//            " values(?,?,?,?,?,?,?)" +
+//            " end " +
+//            " else " +
+//            " begin " +
+//            " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
+//            " end ";
           logger.debug("sql => " + sql)
           pstmt = con.prepareStatement(sql)
           keyValuePairs.foreach(keyValuePair => {
@@ -617,20 +628,27 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
             pstmt.setString(2, key.bucketKey.mkString(","))
             pstmt.setLong(3, key.transactionId)
             pstmt.setInt(4, key.rowId)
-            pstmt.setLong(5, key.timePartition)
-            pstmt.setString(6, key.bucketKey.mkString(","))
-            pstmt.setLong(7, key.transactionId)
-            pstmt.setInt(8, key.rowId)
-            pstmt.setInt(9, value.schemaId)
-            pstmt.setString(10, value.serializerType)
-            pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-            pstmt.setInt(12, value.schemaId)
-            pstmt.setString(13, value.serializerType)
-            pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-            pstmt.setLong(15, key.timePartition)
-            pstmt.setString(16, key.bucketKey.mkString(","))
-            pstmt.setLong(17, key.transactionId)
-            pstmt.setInt(18, key.rowId)
+            pstmt.setInt(5, value.schemaId)
+            pstmt.setString(6, value.serializerType)
+            pstmt.setBinaryStream(7, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+//            pstmt.setLong(1, key.timePartition)
+//            pstmt.setString(2, key.bucketKey.mkString(","))
+//            pstmt.setLong(3, key.transactionId)
+//            pstmt.setInt(4, key.rowId)
+//            pstmt.setLong(5, key.timePartition)
+//            pstmt.setString(6, key.bucketKey.mkString(","))
+//            pstmt.setLong(7, key.transactionId)
+//            pstmt.setInt(8, key.rowId)
+//            pstmt.setInt(9, value.schemaId)
+//            pstmt.setString(10, value.serializerType)
+//            pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+//            pstmt.setInt(12, value.schemaId)
+//            pstmt.setString(13, value.serializerType)
+//            pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+//            pstmt.setLong(15, key.timePartition)
+//            pstmt.setString(16, key.bucketKey.mkString(","))
+//            pstmt.setLong(17, key.transactionId)
+//            pstmt.setInt(18, key.rowId)
             pstmt.addBatch()
 
             //              var stmnt2 = ""
