@@ -17,6 +17,7 @@
 
 package com.ligadata.tools
 
+import org.apache.kafka.clients.producer.{ProducerRecord, KafkaProducer}
 import org.json4s.jackson.JsonMethods._
 
 import scala.actors.threadpool.{ Executors, TimeUnit }
@@ -72,7 +73,8 @@ class  ExtractKey {
   }
 }
 
-class CustPartitioner(props: VerifiableProperties) extends Partitioner {
+//class CustPartitioner(props: VerifiableProperties) extends Partitioner {
+class CustPartitioner extends Partitioner {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
   def partition(key: Any, a_numPartitions: Int): Int = {
@@ -128,11 +130,13 @@ object SimpleKafkaProducer {
   val loggerName = this.getClass.getName
   val logger = LogManager.getLogger(loggerName)
 
-  def send(producer: Producer[AnyRef, AnyRef], topic: String, message: String, partIdx: String): Unit = send(producer, topic, message.getBytes("UTF8"), partIdx.getBytes("UTF8"))
-
-  def send(producer: Producer[AnyRef, AnyRef], topic: String, message: Array[Byte], partIdx: Array[Byte]): Unit = {
+ // def send(producer: Producer[AnyRef, AnyRef], topic: String, message: String, partIdx: String): Unit = send(producer, topic, message.getBytes("UTF8"), partIdx.getBytes("UTF8"))
+   def send(producer: KafkaProducer[Array[Byte],Array[Byte]], topic: String, message: String, partIdx: String): Unit = send(producer, topic, message.getBytes("UTF8"), partIdx.getBytes("UTF8"))
+ // def send(producer: Producer[AnyRef, AnyRef], topic: String, message: Array[Byte], partIdx: Array[Byte]): Unit = {
+ def send(producer:  KafkaProducer[Array[Byte],Array[Byte]], topic: String, message: Array[Byte], partIdx: Array[Byte]): Unit = {
     try {
-      producer.send(new KeyedMessage(topic, partIdx, message))
+      //producer.send(new KeyedMessage(topic, partIdx, message))
+      producer.send(new ProducerRecord[Array[Byte],Array[Byte]](topic, partIdx , message))
       //producer.send(new KeyedMessage(topic, message))
     } catch {
       case e: Exception =>
@@ -159,8 +163,8 @@ object SimpleKafkaProducer {
     * @param topicpartitions Int
     * @param isVerbose Boolean
     */
-  def ProcessFile(producer: Producer[AnyRef, AnyRef], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs: Any, st: Stats, ignorelines: Int, format: String, isGzip: Boolean, topicpartitions: Int, isVerbose: Boolean): Unit = {
-
+  def ProcessFile(producer:  KafkaProducer[Array[Byte],Array[Byte]], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs: Any, st: Stats, ignorelines: Int, format: String, isGzip: Boolean, topicpartitions: Int, isVerbose: Boolean): Unit = {
+ // def ProcessFile(producer: Producer[AnyRef, AnyRef], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs: Any, st: Stats, ignorelines: Int, format: String, isGzip: Boolean, topicpartitions: Int, isVerbose: Boolean): Unit = {    KafkaProducer[String, String]
     var bis: InputStream = null
 
     // If from the Gzip, wrap around a GZIPInput Stream, else... use the ByteArrayInputStream
@@ -188,10 +192,13 @@ object SimpleKafkaProducer {
 
 
   /*
-* processCSVFile - dealing with CSV File
+* processCSVFile - dealing with CSV File   KafkaProducer[String, String]
  */
-  private def processCSVFile(producer: Producer[AnyRef, AnyRef], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs: Array[Int], st: Stats, ignorelines: Int, topicpartitions: Int, bis: InputStream, isVerbose: Boolean): Unit = {
-    var len = 0
+//  private def processCSVFile(producer: Producer[AnyRef, AnyRef], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs: Array[Int], st: Stats, ignorelines: Int, topicpartitions: Int, bis: InputStream, isVerbose: Boolean): Unit = {
+
+  private def processCSVFile(producer: KafkaProducer[Array[Byte],Array[Byte]], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs: Array[Int], st: Stats, ignorelines: Int, topicpartitions: Int, bis: InputStream, isVerbose: Boolean): Unit = {
+
+      var len = 0
     var readlen = 0
     var totalLen: Int = 0
     var locallinecntr: Int = 0
@@ -281,9 +288,11 @@ object SimpleKafkaProducer {
   /**
     * processJsonFile - dealing with Json File full of individual json documents... parse individual Json documents from it and insert them individually
     *                   the JSON format will be enforced by the json parser. The outer most curly parents are used to determine where the document
-    *                   begin and end.
+    *                   begin and end.  KafkaProducer[String, String]
     */
-  private def processJsonFile(producer: Producer[AnyRef, AnyRef], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs:scala.collection.mutable.Map[String,List[String]], st: Stats, topicpartitions: Int, bis: InputStream, isVerbose: Boolean): Unit ={
+  //private def processJsonFile(producer: Producer[AnyRef, AnyRef], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs:scala.collection.mutable.Map[String,List[String]], st: Stats, topicpartitions: Int, bis: InputStream, isVerbose: Boolean): Unit =
+  private def processJsonFile(producer: KafkaProducer[Array[Byte],Array[Byte]], topics: Array[String], threadId: Int, sFileName: String, msg: String, sleeptm: Int, partitionkeyidxs:scala.collection.mutable.Map[String,List[String]], st: Stats, topicpartitions: Int, bis: InputStream, isVerbose: Boolean): Unit ={
+
     var readlen = 0
     val len = 0
     val maxlen = 1024 * 1024
@@ -316,7 +325,7 @@ object SimpleKafkaProducer {
             cp = curr
 
             val jsonDoc = buffer.slice(op,cp+1).map(byte => byte.toChar).mkString
-            processJsonDoc(jsonDoc, producer: Producer[AnyRef, AnyRef], topics, threadId, msg, sleeptm, partitionkeyidxs, st, topicpartitions,isVerbose)
+            processJsonDoc(jsonDoc, producer, topics, threadId, msg, sleeptm, partitionkeyidxs, st, topicpartitions,isVerbose)
           }
         }
         curr = curr + 1
@@ -341,7 +350,7 @@ object SimpleKafkaProducer {
   /*
   * processJsonDoc - add an individual json doc to whatever queue is specified here.
   */
-  private def processJsonDoc(doc: String, producer: Producer[AnyRef, AnyRef],
+  private def processJsonDoc(doc: String, producer: KafkaProducer[Array[Byte], Array[Byte]],
                              topics: Array[String], threadId: Int, msg: String, sleeptm: Int,
                              partitionkeyidxs: scala.collection.mutable.Map[String,List[String]], st: Stats, topicpartitions: Int,
                              isVerbose:Boolean): Unit = {
@@ -442,6 +451,52 @@ object SimpleKafkaProducer {
         nextOption(map ++ Map('verbose -> value), tail)
       case "--version" :: tail =>
         nextOption(map ++ Map('version -> "true"), tail)
+
+      case "--secprops" :: value :: tail =>
+        nextOption(map ++ Map('secprops -> value), tail)
+
+      case "--security_protocol" :: value :: tail =>
+        nextOption(map ++ Map('security_protocol -> value), tail)
+      case "--ssl_key_password" :: value :: tail =>
+        nextOption(map ++ Map('ssl_key_password -> value), tail)
+      case "--ssl_keystore_location" :: value :: tail =>
+        nextOption(map ++ Map('ssl_keystore_location -> value), tail)
+      case "--ssl_keystore_password" :: value :: tail =>
+        nextOption(map ++ Map('ssl_keystore_password -> value), tail)
+      case "--ssl_truststore_location" :: value :: tail =>
+        nextOption(map ++ Map('ssl_truststore_location -> value), tail)
+      case "--ssl_truststore_password" :: value :: tail =>
+        nextOption(map ++ Map('ssl_truststore_password -> value), tail)
+      case "--ssl_enabled_protocols" :: value :: tail =>
+        nextOption(map ++ Map('ssl_enabled_protocols -> value), tail)
+      case "--ssl_keystore_type" :: value :: tail =>
+        nextOption(map ++ Map('ssl_keystore_type -> value), tail)
+      case "--ssl_protocol" :: value :: tail =>
+        nextOption(map ++ Map('ssl_protocol -> value), tail)
+      case "--ssl_provider" :: value :: tail =>
+        nextOption(map ++ Map('ssl_provider -> value), tail)
+      case "--ssl_truststore_type" :: value :: tail =>
+        nextOption(map ++ Map('ssl_truststore_type -> value), tail)
+      case "--ssl_cipher_suites" :: value :: tail =>
+        nextOption(map ++ Map('ssl_cipher_suites -> value), tail)
+      case "--ssl_endpoint_identification_algorithm" :: value :: tail =>
+        nextOption(map ++ Map('ssl_protocol -> value), tail)
+      case "--ssl_keymanager_algorithm" :: value :: tail =>
+        nextOption(map ++ Map('ssl_keymanager_algorithm -> value), tail)
+      case "--ssl_trustmanager_algorithm" :: value :: tail =>
+        nextOption(map ++ Map('ssl_trustmanager_algorithm -> value), tail)
+
+      case "--sasl_mechanism" :: value :: tail =>
+        nextOption(map ++ Map('sasl_mechanism -> value), tail)
+      case "--sasl_kerberos_min_time_before_relogin" :: value :: tail =>
+        nextOption(map ++ Map('sasl_kerberos_min_time_before_relogin -> value), tail)
+      case "--sasl_kerberos_ticket_renew_jitter" :: value :: tail =>
+        nextOption(map ++ Map('sasl_kerberos_ticket_renew_jitter -> value), tail)
+      case "--sasl_kerberos_ticket_renew_window_factor" :: value :: tail =>
+        nextOption(map ++ Map('sasl_kerberos_ticket_renew_window_factor -> value), tail)
+      case "--sasl_kerberos_service_name" :: value :: tail =>
+        nextOption(map ++ Map('sasl_kerberos_service_name -> value), tail)
+
       case option :: tail => {
         println("Unknown option " + option)
         sys.exit(1)
@@ -528,6 +583,71 @@ object SimpleKafkaProducer {
     }
 
     val format = options.getOrElse('format,"").toString
+    val props = new Properties()
+
+    var secPropFile = options.getOrElse('secprops,"").toString
+    var propLines = scala.io.Source.fromFile(secPropFile).getLines().foreach(line => {
+      var kv = line.split("=")
+      props.put(kv(0), kv(1))
+    })
+
+
+    // Process Security paramters.
+    val reqSecProtocol = options.getOrElse('security_protocol,"").toString
+    if (reqSecProtocol.length > 0) {
+      if (reqSecProtocol.equalsIgnoreCase("SSL")) {
+        props.put("security.protocol", reqSecProtocol)
+        if (options.getOrElse('ssl_key_password, "").toString.length > 0) props.put("ssl.key.password", options.getOrElse('ssl_key_password, "").toString)
+        if (options.getOrElse('ssl_keystore_location, "").toString.length > 0) props.put("ssl.keystore.location", options.getOrElse('ssl_keystore_location, "").toString)
+        if (options.getOrElse('ssl_keystore_password, "").toString.length > 0) props.put("ssl.keystore.password", options.getOrElse('ssl_keystore_password, "").toString)
+        if (options.getOrElse('ssl_truststore_location, "").toString.length > 0) props.put("ssl.truststore.location", options.getOrElse('ssl_truststore_location, "").toString)
+        if (options.getOrElse('ssl_truststore_password, "").toString.length > 0) props.put("ssl.truststore.password", options.getOrElse('ssl_truststore_password, "").toString)
+        if (options.getOrElse('ssl_enabled_protocols, "").toString.length > 0) props.put("ssl.enabled.protocols", options.getOrElse('ssl_enabled_protocols, "").toString)
+        if (options.getOrElse('ssl_keystore_type, "").toString.length > 0) props.put("ssl.keystore.type", options.getOrElse('ssl_keystore_type, "").toString)
+        if (options.getOrElse('ssl_protocol, "").toString.length > 0) props.put("ssl.protocol", options.getOrElse('ssl_protocol, "").toString)
+        if (options.getOrElse('ssl_provider, "").toString.length > 0) props.put("ssl.provider", options.getOrElse('ssl_provider, "").toString)
+        if (options.getOrElse('ssl_truststore_type, "").toString.length > 0) props.put("ssl.truststore.type", options.getOrElse('ssl_truststore_type, "").toString)
+        if (options.getOrElse('ssl_cipher_suites, "").toString.length > 0) props.put("ssl.cipher.suites", options.getOrElse('ssl_cipher_suites, "").toString)
+        if (options.getOrElse('ssl_endpoint_identification_algorithm, "").toString.length > 0) props.put("ssl.endpoint.identification.algorithm", options.getOrElse('ssl_endpoint_identification_algorithm, "").toString)
+        if (options.getOrElse('ssl_keymanager_algorithm, "").toString.length > 0) props.put("ssl.keymanager.algorithm", options.getOrElse('ssl_keymanager_algorithm, "").toString)
+        if (options.getOrElse('ssl_trustmanager_algorithm, "").toString.length > 0) props.put("ssl.trustmanager.algorithm", options.getOrElse('ssl_trustmanager_algorithm, "").toString)
+      }
+      if (reqSecProtocol.equalsIgnoreCase("SASL_PLAINTEXT")) {
+        props.put("security.protocol", reqSecProtocol)
+        if (options.getOrElse('sasl_mechanism, "").toString.length > 0) props.put("sasl.kerberos.kinit.cmd", options.getOrElse('sasl_mechanism, "").toString)
+        if (options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString.length > 0) props.put("sasl.kerberos.min.time.before.relogin", options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString)
+        if (options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.jitter",options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString)
+        if (options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.window.factor", options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString)
+        if (options.getOrElse('sasl_kerberos_service_name, "").toString.length > 0) props.put("sasl.kerberos.service.name", options.getOrElse('sasl_kerberos_service_name, "").toString)
+
+      }
+      if (reqSecProtocol.equalsIgnoreCase("SASL_SSL")) {
+        props.put("security.protocol", reqSecProtocol)
+        // Sasl Parms
+        if (options.getOrElse('sasl_mechanism, "").toString.length > 0) props.put("sasl.kerberos.kinit.cmd", options.getOrElse('sasl_mechanism, "").toString)
+        if (options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString.length > 0) props.put("sasl.kerberos.min.time.before.relogin", options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString)
+        if (options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.jitter",options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString)
+        if (options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.window.factor", options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString)
+        if (options.getOrElse('sasl_kerberos_service_name, "").toString.length > 0) props.put("sasl.kerberos.service.name", options.getOrElse('sasl_kerberos_service_name, "").toString)
+
+        // ssl parms
+        if (options.getOrElse('ssl_key_password, "").toString.length > 0) props.put("ssl.key.password", options.getOrElse('ssl_key_password, "").toString)
+        if (options.getOrElse('ssl_keystore_location, "").toString.length > 0) props.put("ssl.keystore.location", options.getOrElse('ssl_keystore_location, "").toString)
+        if (options.getOrElse('ssl_keystore_password, "").toString.length > 0) props.put("ssl.keystore.password", options.getOrElse('ssl_keystore_password, "").toString)
+        if (options.getOrElse('ssl_truststore_location, "").toString.length > 0) props.put("ssl.truststore.location", options.getOrElse('ssl_truststore_location, "").toString)
+        if (options.getOrElse('ssl_truststore_password, "").toString.length > 0) props.put("ssl.truststore.password", options.getOrElse('ssl_truststore_password, "").toString)
+        if (options.getOrElse('ssl_enabled_protocols, "").toString.length > 0) props.put("ssl.enabled.protocols", options.getOrElse('ssl_enabled_protocols, "").toString)
+        if (options.getOrElse('ssl_keystore_type, "").toString.length > 0) props.put("ssl.keystore.type", options.getOrElse('ssl_keystore_type, "").toString)
+        if (options.getOrElse('ssl_protocol, "").toString.length > 0) props.put("ssl.protocol", options.getOrElse('ssl_protocol, "").toString)
+        if (options.getOrElse('ssl_provider, "").toString.length > 0) props.put("ssl.provider", options.getOrElse('ssl_provider, "").toString)
+        if (options.getOrElse('ssl_truststore_type, "").toString.length > 0) props.put("ssl.truststore.type", options.getOrElse('ssl_truststore_type, "").toString)
+        if (options.getOrElse('ssl_cipher_suites, "").toString.length > 0) props.put("ssl.cipher.suites", options.getOrElse('ssl_cipher_suites, "").toString)
+        if (options.getOrElse('ssl_endpoint_identification_algorithm, "").toString.length > 0) props.put("ssl.endpoint.identification.algorithm", options.getOrElse('ssl_endpoint_identification_algorithm, "").toString)
+        if (options.getOrElse('ssl_keymanager_algorithm, "").toString.length > 0) props.put("ssl.keymanager.algorithm", options.getOrElse('ssl_keymanager_algorithm, "").toString)
+        if (options.getOrElse('ssl_trustmanager_algorithm, "").toString.length > 0) props.put("ssl.trustmanager.algorithm", options.getOrElse('ssl_trustmanager_algorithm, "").toString)
+      }
+    }
+
 
     val validJsonMap = scala.collection.mutable.Map[String,List[String]]()
     // var partitionkeyidxsTemp: Array[Int] = null
@@ -554,10 +674,10 @@ object SimpleKafkaProducer {
 
     val isVerbose = options.getOrElse('verbose, "false").toString
 
-    val props = new Properties()
     props.put("compression.codec", codec.toString)
     props.put("producer.type", if (synchronously) "sync" else "async")
-    props.put("metadata.broker.list", brokerlist)
+    //props.put("metadata.broker.list", brokerlist)
+    props.put("bootstrap.servers", brokerlist)
     props.put("batch.num.messages", batchSize.toString)
     props.put("batch.size", batchSize.toString)
     props.put("queue.time", queueTime.toString)
@@ -569,7 +689,9 @@ object SimpleKafkaProducer {
     props.put("socket.send.buffer", bufferMemory.toString)
     props.put("socket.receive.buffer", bufferMemory.toString)
     props.put("client.id", clientId)
-    props.put("partitioner.class", "com.ligadata.tools.CustPartitioner");
+    //props.put("partitioner.class", "com.ligadata.tools.CustPartitioner");
+    props.put("key.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
+    props.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
 
     val s = System.nanoTime
 
@@ -601,17 +723,19 @@ object SimpleKafkaProducer {
             val flNames = fls.toArray
             var isGzip: Boolean = false
             override def run() {
-              val producer = new Producer[AnyRef, AnyRef](new ProducerConfig(props))
+              //val producer = new Producer[AnyRef, AnyRef](new ProducerConfig(props))
+              var producer2: KafkaProducer[Array[Byte],Array[Byte]] = new KafkaProducer[Array[Byte],Array[Byte]](props);
               var tm: Long = 0
               val st: Stats = new Stats
               flNames.foreach(fl => {
                 if (gz.trim.compareToIgnoreCase("true") == 0) {
                   isGzip = true
                 }
-                tm = tm + elapsed(ProcessFile(producer, topics, threadNo, fl, msg, sleeptm, partitionkeyidxs, st, ignorelines, format, isGzip, topicpartitions, isVerbose.equalsIgnoreCase("true")))
+                //tm = tm + elapsed(ProcessFile(producer, topics, threadNo, fl, msg, sleeptm, partitionkeyidxs, st, ignorelines, format, isGzip, topicpartitions, isVerbose.equalsIgnoreCase("true")))
+                tm = tm + elapsed(ProcessFile(producer2, topics, threadNo, fl, msg, sleeptm, partitionkeyidxs, st, ignorelines, format, isGzip, topicpartitions, isVerbose.equalsIgnoreCase("true")))
                 println("%02d. File:%s ElapsedTime:%.02fms".format(threadNo, fl, tm / 1000000.0))
               })
-              producer.close
+              producer2.close
             }
           })
         }
