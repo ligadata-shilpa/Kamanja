@@ -136,6 +136,13 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   }
 
   // Read all H2db parameters
+  var connectionMode: String = null;
+  if (parsed_json.contains("connectionMode")) {
+    connectionMode = parsed_json.get("connectionMode").get.toString.trim
+  } else {
+    throw CreateConnectionException("Unable to find connectionMode in adapterConfig ", new Exception("Invalid adapterConfig"))
+  }
+
   var hostname: String = null;
   if (parsed_json.contains("hostname")) {
     hostname = parsed_json.get("hostname").get.toString.trim
@@ -247,12 +254,11 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   //  var jdbcUrl = "jdbc:sqlserver://" + sqlServerInstance + ";databaseName=" + database + ";user=" + user + ";password=" + password
   //  val driverType = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
-  var connectionMode = "something"
   var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
   connectionMode match {
     case "embedded" => jdbcUrl = "jdbc:h2:./storage/" + database + ";user=" + user + ";password=" + password
-    case "serverssl" => jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
-    case "servertcp" => jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+    case "ssl" => jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+    case "tcp" => jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
   }
 
   var jars = new Array[String](0)
