@@ -973,12 +973,22 @@ object MessageAndContainerUtils {
               */
               mod.inputMsgSets.foreach(set => {
                 set.foreach(msgInfo => {
-                  if (msgInfo != null && msgInfo.message != null && msgInfo.message.trim.nonEmpty) {
-                    logger.debug("The model " + mod.FullName + "." + MdMgr.Pad0s2Version(mod.Version) + " is  dependent on the message " + msgInfo.message)
+                  if (msgInfo != null && msgInfo.message != null && msgInfo.message.trim.nonEmpty &&
+                    msgInfo.message.toLowerCase == msgObjName) {
+                    logger.warn("The model " + mod.FullName + "." + MdMgr.Pad0s2Version(mod.Version) + " is  dependent on the message " + msgInfo.message)
                     depModels = depModels :+ mod
                   }
                 })
               })
+
+             mod.outputMsgs.foreach( message => {
+               if (message != null && message.toLowerCase() == msgObjName) {
+                 logger.warn("The model " + mod.FullName + "." + MdMgr.Pad0s2Version(mod.Version) + " is  dependent on the message " + message)
+                 depModels = depModels :+ mod
+
+               }
+              })
+
             }
           })
       }
