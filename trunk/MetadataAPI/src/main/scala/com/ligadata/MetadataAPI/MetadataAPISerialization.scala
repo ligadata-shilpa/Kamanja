@@ -10,6 +10,7 @@ import com.ligadata.kamanja.metadataload.MetadataLoad
 import org.apache.logging.log4j.LogManager
 import org.json4s._
 import org.json4s.JsonDSL._
+import org.json4s.jackson.Json
 import org.json4s.jackson.JsonMethods._
 
 
@@ -44,6 +45,13 @@ object MetadataAPISerialization {
               ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("Description" -> o.Description) ~
+          // 646 - 673 Meta data api changes included - Changes begin
+          ("Comment" -> o.Comment) ~
+          ("Tag" -> o.Tag) ~
+          ("Params" -> Json(DefaultFormats).write(o.Params)) ~
+          ("CreatedTime" -> o.CreationTime) ~
+          ("UpdatedTime" -> o.ModTime) ~
+          // 646 - 673 Changes end
               ("ModelConfig" -> o.modelConfig) ~
               ("Author" -> o.Author) ~
               ("inputMsgSets" -> o.inputMsgSets.toList.map(m => m.toList.map(f => ("Origin" -> f.origin) ~ ("Message" -> f.message) ~ ("Attributes" -> f.attributes.toList)))) ~
@@ -77,6 +85,17 @@ object MetadataAPISerialization {
               containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
             }
 
+          // 646 - 673 Changes begin - MetadataAPI Changes
+          // The following MAP is created to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
+          // them as one json str, 22 parameter limitation is overcome
+          val DCTMap = ("Description" -> o.Description) ~
+          ("Comment" -> o.Comment) ~
+          ("Tag"  -> o.Tag) ~
+          ("Params" -> Json(DefaultFormats).write(o.Params))
+
+          val jsonDCTStr = Json(DefaultFormats).write(DCTMap)
+
+          // 646 - 673 Changes end
           val json = "Message" ->
             ("Name" -> o.Name) ~
               ("PhysicalName" -> o.PhysicalName) ~
@@ -97,7 +116,10 @@ object MetadataAPISerialization {
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
               ("Persist" -> o.cType.Persist) ~
-              ("Description" -> getEmptyIfNull(o.Description)) ~
+          // 646 - 673 Meta data api changes included - Changes begin
+          ("Description" -> jsonDCTStr)  ~
+          ("UpdatedTime" -> o.ModTime) ~
+          // 646 - 673 Changes end
               ("MsgAttributes" -> attribs.map(a =>
                 ("NameSpace" -> a.NameSpace) ~
                   ("Name" -> a.Name) ~
@@ -133,6 +155,20 @@ object MetadataAPISerialization {
             } else {
               containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
             }
+          // 646 - 673 Changes begin - MetadataAPI Changes
+          // The following MAP is created to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
+          // them as one json str, 22 parameter limitation is overcome
+
+          val DCTMap = ("Description" -> o.Description) ~
+          ("Comment" -> o.Comment) ~
+          ("Tag"  -> o.Tag) ~
+          ("Params" -> Json(DefaultFormats).write(o.Params))
+
+          // 646 - 673 Changes end
+          val jsonDCTStr = Json(DefaultFormats).write(DCTMap)
+
+//          val jsonDCTStr = "{" + "\"Description\" : " + "\"" + o.Description +
+          //",\"Comment\" : \" " + o.Comment + "\", \"Tag\" : \"" + o.Tag +  "\"}"
 
           val json = "Container" ->
             ("Name" -> o.name) ~
@@ -154,7 +190,12 @@ object MetadataAPISerialization {
               ("PartitionKey" -> getEmptyArrayIfNull(o.cType.PartitionKey).toList) ~
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
-              ("Description" -> o.Description) ~
+          // 646 - 673 Changes begin - MetadataAPI Changes
+          // The following MAP Json Str to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
+          // them as one json str, 22 parameter limitation is overcome
+          ("Description" -> jsonDCTStr) ~
+          ("UpdatedTime" -> o.ModTime) ~
+          // 646 - 673 Changes end
               ("MsgAttributes" -> attribs.map(a =>
                 ("NameSpace" -> a.NameSpace) ~
                   ("Name" -> a.Name) ~
@@ -735,7 +776,13 @@ object MetadataAPISerialization {
       modDef.origDef = ModDefInst.Model.OrigDef
       modDef.creationTime = ModDefInst.Model.NumericTypes.CreationTime
       modDef.modTime = ModDefInst.Model.NumericTypes.ModTime
+
+      // 646 - 673 Changes begin - MetadataAPI Changes
       modDef.description = ModDefInst.Model.Description
+      modDef.comment =  ModDefInst.Model.Comment
+      modDef.tag = ModDefInst.Model.Tag
+      modDef.params = scala.collection.mutable.Map() ++ parse(ModDefInst.Model.Params).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      // 646 - 673 Changes end
       modDef.author = ModDefInst.Model.Author
       modDef.mdElemStructVer = ModDefInst.Model.NumericTypes.MdElemStructVer
       modDef.active = ModDefInst.Model.BooleanTypes.IsActive
@@ -828,7 +875,15 @@ object MetadataAPISerialization {
       msgDef.ObjectFormat(objFmt)
       msgDef.creationTime = MsgDefInst.Message.NumericTypes.CreationTime
       msgDef.modTime = MsgDefInst.Message.NumericTypes.ModTime
-      msgDef.description = MsgDefInst.Message.Description
+      // 646 - 673 Changes begin - MetadataAPI Changes
+      // The following MAP is used to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
+      // them as one json str, 22 parameter limitation is overcome
+      val DCTMap = parse(MsgDefInst.Message.Description).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      msgDef.description = DCTMap.get("Description").get.asInstanceOf[String]
+      msgDef.comment = DCTMap.get("Comment").get.asInstanceOf[String]
+      msgDef.tag = DCTMap.get("Tag").get.asInstanceOf[String]
+      msgDef.params = scala.collection.mutable.Map() ++ parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      // 646 - 673 Changes end
       msgDef.author = "" // MsgDefInst.Message.Author
       msgDef.mdElemStructVer = MsgDefInst.Message.NumericTypes.MdElemStructVer
       msgDef.cType.persist = MsgDefInst.Message.Persist
@@ -923,7 +978,17 @@ object MetadataAPISerialization {
       contDef.ObjectFormat(objFmt)
       contDef.creationTime = ContDefInst.Container.NumericTypes.CreationTime
       contDef.modTime = ContDefInst.Container.NumericTypes.ModTime
-      contDef.description = ContDefInst.Container.Description
+
+      // 646 - 673 Changes begin - MetadataAPI Changes
+      // The following MAP is used to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
+      // them as one json str, 22 parameter limitation is overcome
+      val DCTMap = parse(ContDefInst.Container.Description).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      contDef.description = DCTMap.get("Description").get.asInstanceOf[String]
+      contDef.comment = DCTMap.get("Comment").get.asInstanceOf[String]
+      contDef.tag = DCTMap.get("Tag").get.asInstanceOf[String]
+      contDef.params = scala.collection.mutable.Map() ++ parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      // 646 - 673 Changes end
+
       contDef.author = "" // ContDefInst.Container.Author
       contDef.mdElemStructVer = ContDefInst.Container.NumericTypes.MdElemStructVer
       contDef.cType.persist = ContDefInst.Container.Persist
@@ -2012,7 +2077,30 @@ case class Attr(NameSpace: String, Name: String, Version: Long, CollectionType: 
 
 case class MsgAttr(NameSpace: String, Name: String, TypNameSpace: String, TypName: String, Version: Long, CollectionType: String)
 
-case class MessageInfo(NameSpace: String, Name: String, JarName: String, PhysicalName: String, DependencyJars: List[String], MsgAttributes: List[MsgAttr], OrigDef: String, ObjectDefinition: String, ObjectFormat: String, Description: String, OwnerId: String, PartitionKey: List[String], Persist: Boolean, IsActive: Boolean, IsDeleted: Boolean, SchemaId: Int, AvroSchema: String, PrimaryKeys: List[PrimaryKeys], ForeignKeys: List[ForeignKeys], NumericTypes: NumericTypes, TenantId: String, IsFixed: Boolean)
+case class MessageInfo(NameSpace: String,
+  Name: String,
+  JarName: String,
+  PhysicalName: String,
+  DependencyJars: List[String],
+  MsgAttributes: List[MsgAttr],
+  OrigDef: String,
+  ObjectDefinition: String,
+  ObjectFormat: String,
+  Description: String,
+//  Comment: String,
+//  Tag: String,
+  OwnerId: String,
+  PartitionKey: List[String],
+  Persist: Boolean,
+  IsActive: Boolean,
+  IsDeleted: Boolean,
+  SchemaId: Int,
+  AvroSchema: String,
+  PrimaryKeys: List[PrimaryKeys],
+  ForeignKeys: List[ForeignKeys],
+  NumericTypes: NumericTypes,
+  TenantId: String,
+  IsFixed: Boolean)
 
 case class PrimaryKeys(constraintName: String, key: List[String])
 
@@ -2026,7 +2114,28 @@ case class ModelDefinition(Model: ModelInfo)
 
 case class MsgAndAttrib(Origin: String, Message: String, Attributes: List[String])
 
-case class ModelInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectFormat: String, BooleanTypes: BooleanTypes, OwnerId: String, OutputMsgs: List[String], ModelType: String, DependencyJars: List[String], ModelRep: String, OrigDef: String, ObjectDefinition: String, NumericTypes: NumericTypes, Description: String, Author: String, ModelConfig: String, inputMsgSets: List[List[MsgAndAttrib]], TenantId: String)
+case class ModelInfo(Name: String,
+  PhysicalName: String,
+  JarName: String,
+  NameSpace: String,
+  ObjectFormat: String,
+  BooleanTypes: BooleanTypes,
+  OwnerId: String,
+  OutputMsgs: List[String],
+  ModelType: String,
+  DependencyJars: List[String],
+  ModelRep: String,
+  OrigDef: String,
+  ObjectDefinition: String,
+  NumericTypes: NumericTypes,
+  Description: String,
+  Comment: String,
+  Tag: String,
+  Params: String,
+  Author: String,
+  ModelConfig: String,
+  inputMsgSets: List[List[MsgAndAttrib]],
+  TenantId: String)
 
 case class NumericTypes(Version: Long, TransId: Long, UniqId: Long, CreationTime: Long, ModTime: Long, MdElemStructVer: Int, MdElementId: Long)
 

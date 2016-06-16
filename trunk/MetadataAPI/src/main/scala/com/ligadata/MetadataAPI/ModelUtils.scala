@@ -384,6 +384,11 @@ object ModelUtils {
       // save the outMessage
       AddOutMsgToModelDef(modDef, ModelType.fromString(sourceLang), optMsgProduced, userid)
 
+      // 646 - 673 Changes begin - MetadataAPI Changes
+      modDef.setParamValues(pStr)
+      modDef.setCreationTime()
+      modDef.setModTime()
+      // 646 - 673 Changes end
       // 1119 Changes begin - checks model existence before add to prevent
       if (DoesAnyModelExist(modDef) == true) {
         return (new ApiResult(ErrorCodeConstants.Failure, "AddModelFromSource", null, s"Java/Scala model exists, perform update on model")).toString
@@ -606,9 +611,11 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
+// 646 - 673 Changes begin - MetadataAPI Changes
           modDef.setParamValues(pStr)
         modDef.setCreationTime()
         modDef.setModTime()
+        // 646 - 673 Changes end
         modDef.uniqueId = getMetadataAPI.GetUniqueId
         modDef.mdElementId = if (existingModel == None) getMetadataAPI.GetMdElementId else existingModel.get.MdElementId
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
@@ -700,9 +707,11 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        // 646 - 673 Changes begin - MetadataAPI Changes
         modDef.setParamValues(pStr)
         modDef.setCreationTime()
         modDef.setModTime()
+        // 646 - 673 Changes end
         // save the outMessage
         AddOutMsgToModelDef(modDef, ModelType.KPMML, optMsgProduced, userid)
 
@@ -825,9 +834,11 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.INSERTOBJECT, jsonText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        // 646 - 673 Changes begin - MetadataAPI Changes
         modDef.setParamValues(pStr)
         modDef.setCreationTime()
         modDef.setModTime()
+        // 646 - 673 Changes end
         // save the jar file first
         PersistenceUtils.UploadJarsToDB(modDef)
         val apiResult = AddModel(modDef, userid)
@@ -1320,11 +1331,11 @@ object ModelUtils {
 
         if (isValid && modDef != null) {
           // save the outMessage
+          // 646 - 673 Changes begin - MetadataAPI Changes
           modDef.setParamValues(pStr)
           modDef.setModTime()
+          // 646 - 673 Changes end
           AddOutMsgToModelDef(modDef, ModelType.PMML, optMsgProduced, optUserid)
-          modDef.setParamValues(pStr)
-          modDef.setModTime()
 
           val existingModel = MdMgr.GetMdMgr.Model(modDef.NameSpace, modDef.Name, -1, false) // Any version is fine. No need of active
           modDef.uniqueId = getMetadataAPI.GetUniqueId
@@ -1472,8 +1483,11 @@ object ModelUtils {
       //if (latestVersion )
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(userid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, input, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        // 646 - 673 Changes begin - MetadataAPI Changes
         modDef.setParamValues(pStr)
         modDef.setModTime()
+        // 646 - 673 Changes end
+
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
         if (latestVersion != None) {
           if (!tenantId.equalsIgnoreCase(latestVersion.get.tenantId)) {
@@ -1574,8 +1588,10 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, pmmlText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        // 646 - 673 Changes begin - MetadataAPI Changes
         modDef.setParamValues(pStr)
         modDef.setModTime()
+        // 646 - 673 Changes end
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 
         // when a version number changes, latestVersion  has different namespace making it unique
@@ -1689,8 +1705,10 @@ object ModelUtils {
 
       if (isValid && modDef != null) {
         getMetadataAPI.logAuditRec(optUserid, Some(AuditConstants.WRITE), AuditConstants.UPDATEOBJECT, jtmText, AuditConstants.SUCCESS, "", modDef.FullNameWithVer)
+        // 646 - 673 Changes begin - MetadataAPI Changes
         modDef.setParamValues(pStr)
         modDef.setModTime()
+        // 646 - 673 Changes end
         val key = MdMgr.MkFullNameWithVersion(modDef.nameSpace, modDef.name, modDef.ver)
 
         // when a version number changes, latestVersion  has different namespace making it unique
