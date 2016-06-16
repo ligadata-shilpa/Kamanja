@@ -955,14 +955,14 @@ object JsonSerializer {
             ("FullName" -> o.FullName) ~
             ("Version" -> MdMgr.Pad0s2Version(o.ver)) ~
             ("TenantId" -> o.tenantId) ~
-            // 646 - 673 Meta data api changes included - Changes begin
-            ("description" -> o.description) ~
-            ("comment" -> o.comment) ~
-            ("tag" -> o.tag) ~
-            ("OtherParams" -> Json(DefaultFormats).write(o.params)) ~
-            ("CreatedTime" -> o.creationTime) ~
-            ("UpdatedTime" -> o.modTime) ~
-            // 646 - 673 Changes end
+          // 646 - 673 Meta data api changes included - Changes begin
+          ("Description" -> o.description) ~
+          ("Comment" -> o.comment) ~
+          ("Tag" -> o.tag) ~
+          ("OtherParams" -> Json(DefaultFormats).write(o.params)) ~
+          ("CreatedTime" -> o.creationTime) ~
+          ("UpdatedTime" -> o.modTime) ~
+          // 646 - 673 Changes end
             ("ElementId" -> o.mdElementId) ~
             ("ReportingId"-> o.uniqueId) ~
             ("SchemaId" -> o.containerType.schemaId) ~
@@ -1017,9 +1017,9 @@ object JsonSerializer {
             ("TenantId" -> o.tenantId) ~
             ("ElementId" -> o.mdElementId) ~
             // 646 - 673 Meta data api changes included - Changes begin
-            ("description" -> o.description) ~
-            ("comment" -> o.comment) ~
-            ("tag" -> o.tag) ~
+            ("Description" -> o.description) ~
+            ("Comment" -> o.comment) ~
+            ("Tag" -> o.tag) ~
             ("OtherParams" -> Json(DefaultFormats).write(o.params)) ~
             ("CreatedTime" -> o.creationTime) ~
             ("UpdatedTime" -> o.modTime) ~
@@ -1059,9 +1059,9 @@ object JsonSerializer {
             ("TenantId" -> o.tenantId) ~
             ("ElementId" -> o.mdElementId) ~
             // 646 - 673 Meta data api changes included - Changes begin
-            ("description" -> o.description) ~
-            ("comment" -> o.comment) ~
-            ("tag" -> o.tag) ~
+            ("Description" -> o.description) ~
+            ("Comment" -> o.comment) ~
+            ("Tag" -> o.tag) ~
             ("OtherParams" -> Json(DefaultFormats).write(o.params)) ~
             ("CreatedTime" -> o.creationTime) ~
             ("UpdatedTime" -> o.modTime) ~

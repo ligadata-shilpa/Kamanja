@@ -252,6 +252,7 @@ class BaseElemDef extends BaseElem {
     var modTime: Long = _ // Time in milliseconds from 1970-01-01T00:00:00 (Mostly it is Local time. May be we need to get GMT)
 
     var origDef: String = _ // string associated with this definition
+
   var description: String = _
   // 646 - 675 Changes begin - Metadata additional element support
   var comment : String = _
@@ -293,40 +294,33 @@ class BaseElemDef extends BaseElem {
               description = newParams.get("description").get.asInstanceOf[String]
               newParams = newParams - "description"
             }
-            else {
-              if (description == null) description = ""
-            }
             if (newParams contains "comment") {
               comment = newParams.get("comment").get.asInstanceOf[String]
               newParams = newParams - "comment"
             }
-            else {
-              if (comment == null) comment = ""
-
-            }
             if (newParams contains "tag") {
               tag =  newParams.get("tag").get.asInstanceOf[String]
               newParams = newParams - "tag"
-            }
-            else {
-              if (tag == null) tag = ""
-
             }
           }
         }
       }
 
       if (params.size > 0) {
-        for ((k, v) <- newParams) {
-          if (params contains k)  {
-            params(k) = v
-            newParams = newParams - k
+        if (newParams.size > 0) {
+          for ((k, v) <- newParams) {
+            if (params contains k) {
+              params(k) = v
+              newParams = newParams - k
+            }
           }
+          if (newParams.size > 0) params = params ++ newParams
         }
-        if (newParams.size > 0) params = params ++ newParams
       }
       else {
-        params = newParams
+        if (newParams.size > 0) {
+          params = params ++ newParams
+        }
       }
     }
 
