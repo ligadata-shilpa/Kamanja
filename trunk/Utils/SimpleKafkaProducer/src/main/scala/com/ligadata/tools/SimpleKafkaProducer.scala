@@ -451,52 +451,8 @@ object SimpleKafkaProducer {
         nextOption(map ++ Map('verbose -> value), tail)
       case "--version" :: tail =>
         nextOption(map ++ Map('version -> "true"), tail)
-
       case "--secprops" :: value :: tail =>
         nextOption(map ++ Map('secprops -> value), tail)
-
-      case "--security_protocol" :: value :: tail =>
-        nextOption(map ++ Map('security_protocol -> value), tail)
-      case "--ssl_key_password" :: value :: tail =>
-        nextOption(map ++ Map('ssl_key_password -> value), tail)
-      case "--ssl_keystore_location" :: value :: tail =>
-        nextOption(map ++ Map('ssl_keystore_location -> value), tail)
-      case "--ssl_keystore_password" :: value :: tail =>
-        nextOption(map ++ Map('ssl_keystore_password -> value), tail)
-      case "--ssl_truststore_location" :: value :: tail =>
-        nextOption(map ++ Map('ssl_truststore_location -> value), tail)
-      case "--ssl_truststore_password" :: value :: tail =>
-        nextOption(map ++ Map('ssl_truststore_password -> value), tail)
-      case "--ssl_enabled_protocols" :: value :: tail =>
-        nextOption(map ++ Map('ssl_enabled_protocols -> value), tail)
-      case "--ssl_keystore_type" :: value :: tail =>
-        nextOption(map ++ Map('ssl_keystore_type -> value), tail)
-      case "--ssl_protocol" :: value :: tail =>
-        nextOption(map ++ Map('ssl_protocol -> value), tail)
-      case "--ssl_provider" :: value :: tail =>
-        nextOption(map ++ Map('ssl_provider -> value), tail)
-      case "--ssl_truststore_type" :: value :: tail =>
-        nextOption(map ++ Map('ssl_truststore_type -> value), tail)
-      case "--ssl_cipher_suites" :: value :: tail =>
-        nextOption(map ++ Map('ssl_cipher_suites -> value), tail)
-      case "--ssl_endpoint_identification_algorithm" :: value :: tail =>
-        nextOption(map ++ Map('ssl_protocol -> value), tail)
-      case "--ssl_keymanager_algorithm" :: value :: tail =>
-        nextOption(map ++ Map('ssl_keymanager_algorithm -> value), tail)
-      case "--ssl_trustmanager_algorithm" :: value :: tail =>
-        nextOption(map ++ Map('ssl_trustmanager_algorithm -> value), tail)
-
-      case "--sasl_mechanism" :: value :: tail =>
-        nextOption(map ++ Map('sasl_mechanism -> value), tail)
-      case "--sasl_kerberos_min_time_before_relogin" :: value :: tail =>
-        nextOption(map ++ Map('sasl_kerberos_min_time_before_relogin -> value), tail)
-      case "--sasl_kerberos_ticket_renew_jitter" :: value :: tail =>
-        nextOption(map ++ Map('sasl_kerberos_ticket_renew_jitter -> value), tail)
-      case "--sasl_kerberos_ticket_renew_window_factor" :: value :: tail =>
-        nextOption(map ++ Map('sasl_kerberos_ticket_renew_window_factor -> value), tail)
-      case "--sasl_kerberos_service_name" :: value :: tail =>
-        nextOption(map ++ Map('sasl_kerberos_service_name -> value), tail)
-
       case option :: tail => {
         println("Unknown option " + option)
         sys.exit(1)
@@ -590,64 +546,6 @@ object SimpleKafkaProducer {
       var kv = line.split("=")
       props.put(kv(0), kv(1))
     })
-
-
-    // Process Security paramters.
-    val reqSecProtocol = options.getOrElse('security_protocol,"").toString
-    if (reqSecProtocol.length > 0) {
-      if (reqSecProtocol.equalsIgnoreCase("SSL")) {
-        props.put("security.protocol", reqSecProtocol)
-        if (options.getOrElse('ssl_key_password, "").toString.length > 0) props.put("ssl.key.password", options.getOrElse('ssl_key_password, "").toString)
-        if (options.getOrElse('ssl_keystore_location, "").toString.length > 0) props.put("ssl.keystore.location", options.getOrElse('ssl_keystore_location, "").toString)
-        if (options.getOrElse('ssl_keystore_password, "").toString.length > 0) props.put("ssl.keystore.password", options.getOrElse('ssl_keystore_password, "").toString)
-        if (options.getOrElse('ssl_truststore_location, "").toString.length > 0) props.put("ssl.truststore.location", options.getOrElse('ssl_truststore_location, "").toString)
-        if (options.getOrElse('ssl_truststore_password, "").toString.length > 0) props.put("ssl.truststore.password", options.getOrElse('ssl_truststore_password, "").toString)
-        if (options.getOrElse('ssl_enabled_protocols, "").toString.length > 0) props.put("ssl.enabled.protocols", options.getOrElse('ssl_enabled_protocols, "").toString)
-        if (options.getOrElse('ssl_keystore_type, "").toString.length > 0) props.put("ssl.keystore.type", options.getOrElse('ssl_keystore_type, "").toString)
-        if (options.getOrElse('ssl_protocol, "").toString.length > 0) props.put("ssl.protocol", options.getOrElse('ssl_protocol, "").toString)
-        if (options.getOrElse('ssl_provider, "").toString.length > 0) props.put("ssl.provider", options.getOrElse('ssl_provider, "").toString)
-        if (options.getOrElse('ssl_truststore_type, "").toString.length > 0) props.put("ssl.truststore.type", options.getOrElse('ssl_truststore_type, "").toString)
-        if (options.getOrElse('ssl_cipher_suites, "").toString.length > 0) props.put("ssl.cipher.suites", options.getOrElse('ssl_cipher_suites, "").toString)
-        if (options.getOrElse('ssl_endpoint_identification_algorithm, "").toString.length > 0) props.put("ssl.endpoint.identification.algorithm", options.getOrElse('ssl_endpoint_identification_algorithm, "").toString)
-        if (options.getOrElse('ssl_keymanager_algorithm, "").toString.length > 0) props.put("ssl.keymanager.algorithm", options.getOrElse('ssl_keymanager_algorithm, "").toString)
-        if (options.getOrElse('ssl_trustmanager_algorithm, "").toString.length > 0) props.put("ssl.trustmanager.algorithm", options.getOrElse('ssl_trustmanager_algorithm, "").toString)
-      }
-      if (reqSecProtocol.equalsIgnoreCase("SASL_PLAINTEXT")) {
-        props.put("security.protocol", reqSecProtocol)
-        if (options.getOrElse('sasl_mechanism, "").toString.length > 0) props.put("sasl.kerberos.kinit.cmd", options.getOrElse('sasl_mechanism, "").toString)
-        if (options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString.length > 0) props.put("sasl.kerberos.min.time.before.relogin", options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString)
-        if (options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.jitter",options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString)
-        if (options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.window.factor", options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString)
-        if (options.getOrElse('sasl_kerberos_service_name, "").toString.length > 0) props.put("sasl.kerberos.service.name", options.getOrElse('sasl_kerberos_service_name, "").toString)
-
-      }
-      if (reqSecProtocol.equalsIgnoreCase("SASL_SSL")) {
-        props.put("security.protocol", reqSecProtocol)
-        // Sasl Parms
-        if (options.getOrElse('sasl_mechanism, "").toString.length > 0) props.put("sasl.kerberos.kinit.cmd", options.getOrElse('sasl_mechanism, "").toString)
-        if (options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString.length > 0) props.put("sasl.kerberos.min.time.before.relogin", options.getOrElse('sasl_kerberos_min_time_before_relogin, "").toString)
-        if (options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.jitter",options.getOrElse('sasl_kerberos_ticket_renew_jitter, "").toString)
-        if (options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString.length > 0) props.put("sasl.kerberos.ticket.renew.window.factor", options.getOrElse('sasl_kerberos_ticket_renew_window_factor, "").toString)
-        if (options.getOrElse('sasl_kerberos_service_name, "").toString.length > 0) props.put("sasl.kerberos.service.name", options.getOrElse('sasl_kerberos_service_name, "").toString)
-
-        // ssl parms
-        if (options.getOrElse('ssl_key_password, "").toString.length > 0) props.put("ssl.key.password", options.getOrElse('ssl_key_password, "").toString)
-        if (options.getOrElse('ssl_keystore_location, "").toString.length > 0) props.put("ssl.keystore.location", options.getOrElse('ssl_keystore_location, "").toString)
-        if (options.getOrElse('ssl_keystore_password, "").toString.length > 0) props.put("ssl.keystore.password", options.getOrElse('ssl_keystore_password, "").toString)
-        if (options.getOrElse('ssl_truststore_location, "").toString.length > 0) props.put("ssl.truststore.location", options.getOrElse('ssl_truststore_location, "").toString)
-        if (options.getOrElse('ssl_truststore_password, "").toString.length > 0) props.put("ssl.truststore.password", options.getOrElse('ssl_truststore_password, "").toString)
-        if (options.getOrElse('ssl_enabled_protocols, "").toString.length > 0) props.put("ssl.enabled.protocols", options.getOrElse('ssl_enabled_protocols, "").toString)
-        if (options.getOrElse('ssl_keystore_type, "").toString.length > 0) props.put("ssl.keystore.type", options.getOrElse('ssl_keystore_type, "").toString)
-        if (options.getOrElse('ssl_protocol, "").toString.length > 0) props.put("ssl.protocol", options.getOrElse('ssl_protocol, "").toString)
-        if (options.getOrElse('ssl_provider, "").toString.length > 0) props.put("ssl.provider", options.getOrElse('ssl_provider, "").toString)
-        if (options.getOrElse('ssl_truststore_type, "").toString.length > 0) props.put("ssl.truststore.type", options.getOrElse('ssl_truststore_type, "").toString)
-        if (options.getOrElse('ssl_cipher_suites, "").toString.length > 0) props.put("ssl.cipher.suites", options.getOrElse('ssl_cipher_suites, "").toString)
-        if (options.getOrElse('ssl_endpoint_identification_algorithm, "").toString.length > 0) props.put("ssl.endpoint.identification.algorithm", options.getOrElse('ssl_endpoint_identification_algorithm, "").toString)
-        if (options.getOrElse('ssl_keymanager_algorithm, "").toString.length > 0) props.put("ssl.keymanager.algorithm", options.getOrElse('ssl_keymanager_algorithm, "").toString)
-        if (options.getOrElse('ssl_trustmanager_algorithm, "").toString.length > 0) props.put("ssl.trustmanager.algorithm", options.getOrElse('ssl_trustmanager_algorithm, "").toString)
-      }
-    }
-
 
     val validJsonMap = scala.collection.mutable.Map[String,List[String]]()
     // var partitionkeyidxsTemp: Array[Int] = null
