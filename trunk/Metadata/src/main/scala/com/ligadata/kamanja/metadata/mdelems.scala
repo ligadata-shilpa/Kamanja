@@ -171,7 +171,7 @@ trait BaseElem {
   // 646 - 675 Change begins - Metadata element addition/changes
   def Comment: String
   def Tag : String
-  def Params : Map[String, String]
+  def Params : scala.collection.immutable.Map[String, String]
   // 646 - 675 Change ends
     def Author: String
     def NameSpace: String
@@ -210,7 +210,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675 Changes begin - Metadata additional element support
   override def Comment : String = comment
   override def Tag : String = tag
-  override def Params : Map[String, String] = params
+  override def Params : scala.collection.immutable.Map[String, String] = params
   // 646 - 675 Changes end
     override def Author: String = author
     override def NameSpace: String = nameSpace // Part of Logical Name
@@ -257,7 +257,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675 Changes begin - Metadata additional element support
   var comment : String = _
   var tag: String = _
-  var params = scala.collection.mutable.Map.empty[String, String]
+  var params = scala.collection.immutable.Map.empty[String, String]
   // 646 - 675 Changes end
     var author: String = _
     var nameSpace: String = _ //
@@ -306,22 +306,7 @@ class BaseElemDef extends BaseElem {
         }
       }
 
-      if (params.size > 0) {
-        if (newParams.size > 0) {
-          for ((k, v) <- newParams) {
-            if (params contains k) {
-              params(k) = v
-              newParams = newParams - k
-            }
-          }
-          if (newParams.size > 0) params = params ++ newParams
-        }
-      }
-      else {
-        if (newParams.size > 0) {
-          params = params ++ newParams
-        }
-      }
+      params = newParams.toMap
     }
 
     def setCreationTime () : Any = {
