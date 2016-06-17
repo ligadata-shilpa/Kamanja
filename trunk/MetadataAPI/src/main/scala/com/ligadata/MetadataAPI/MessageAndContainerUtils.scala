@@ -1482,6 +1482,34 @@ object MessageAndContainerUtils {
   }
 
   /**
+   * IsContainer
+   *
+   * @param contName
+   * @return
+   */
+
+  def IsContainer(contName: String): Boolean = {
+    try {
+      var(nameSpace,name) = MdMgr.SplitFullName(contName)
+      val dispkey = nameSpace + "." + name
+      val o = MdMgr.GetMdMgr.Container(nameSpace.toLowerCase,name.toLowerCase,-1,false)
+      o match {
+        case None =>
+          logger.debug("container not in the cache => " + dispkey)
+          return false;
+        case Some(m) =>
+          logger.debug("container found => " + m.asInstanceOf[ContainerDef].FullName);
+          return true
+      }
+    } catch {
+      case e: Exception => {
+        logger.debug("", e)
+        throw UnexpectedMetadataAPIException(e.getMessage(), e)
+      }
+    }
+  }
+
+  /**
    * DoesContainerAlreadyExist
    *
    * @param contDef

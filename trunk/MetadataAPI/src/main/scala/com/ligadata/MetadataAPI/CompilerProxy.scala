@@ -558,6 +558,28 @@ class CompilerProxy {
     }
   }
 
+
+  private def getContainersFromModelConfig(userid: Option[String], cfgName: String): Array[String] = {
+    var containerList = List[String]()
+    var msgsAndContainers = MetadataAPIImpl.getModelMessagesContainers(cfgName,userid)
+    if( msgsAndContainers.length > 0 ){
+      msgsAndContainers.foreach(msg => {
+	logger.debug("processing the message " + msg)
+	if( MessageAndContainerUtils.IsContainer(msg) ){
+	  logger.debug("The " + msg + " is a container")
+	  containerList = msg :: containerList
+	}
+	else{
+	  logger.debug("The " + msg + " is not a container")
+	}
+      })
+    }
+    else{
+      logger.debug("MetadataAPIImpl.getModelMessagesContainers: No types for the model config " + cfgName)
+    }
+    containerList.toArray
+  }
+
   /**
     *
     */
@@ -814,7 +836,8 @@ class CompilerProxy {
         , depJars1.toArray[String]
         , recompile
         , false
-        , modCfgJson)
+        , modCfgJson
+	, getContainersFromModelConfig(None,modelConfigName))
 
       // Need to set some values by hand here.
       modDef.jarName = jarFileName

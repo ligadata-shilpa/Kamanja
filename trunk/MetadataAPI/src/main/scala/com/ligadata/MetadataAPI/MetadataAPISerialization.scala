@@ -49,7 +49,7 @@ object MetadataAPISerialization {
               ("inputMsgSets" -> o.inputMsgSets.toList.map(m => m.toList.map(f => ("Origin" -> f.origin) ~ ("Message" -> f.message) ~ ("Attributes" -> f.attributes.toList)))) ~
               ("OutputMsgs" -> getEmptyArrayIfNull(o.outputMsgs).toList) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
-              ("BooleanTypes" -> ("IsActive" -> o.IsActive) ~ ("IsReusable" -> o.isReusable) ~ ("IsDeleted" -> o.IsDeleted) ~ ("SupportsInstanceSerialization" -> o.SupportsInstanceSerialization)
+              ("BooleanTypes" -> ("IsActive" -> o.IsActive) ~ ("IsReusable" -> o.isReusable) ~ ("IsDeleted" -> o.IsDeleted) ~ ("SupportsInstanceSerialization" -> o.SupportsInstanceSerialization) ~ ("DepContainers" -> o.depContainers.toList)
                 )
           outputJson = compact(render(json))
         }
@@ -740,6 +740,12 @@ object MetadataAPISerialization {
       modDef.mdElemStructVer = ModDefInst.Model.NumericTypes.MdElemStructVer
       modDef.active = ModDefInst.Model.BooleanTypes.IsActive
       modDef.deleted = ModDefInst.Model.BooleanTypes.IsDeleted
+
+      var depContainers = List[String]()
+      if( ModDefInst.Model.DepContainers != None ){
+	depContainers = ModDefInst.Model.DepContainers.get
+      }
+      modDef.depContainers = depContainers.toArray
 
       modDef
     } catch {
@@ -2026,7 +2032,7 @@ case class ModelDefinition(Model: ModelInfo)
 
 case class MsgAndAttrib(Origin: String, Message: String, Attributes: List[String])
 
-case class ModelInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectFormat: String, BooleanTypes: BooleanTypes, OwnerId: String, OutputMsgs: List[String], ModelType: String, DependencyJars: List[String], ModelRep: String, OrigDef: String, ObjectDefinition: String, NumericTypes: NumericTypes, Description: String, Author: String, ModelConfig: String, inputMsgSets: List[List[MsgAndAttrib]], TenantId: String)
+case class ModelInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectFormat: String, BooleanTypes: BooleanTypes, OwnerId: String, OutputMsgs: List[String], ModelType: String, DependencyJars: List[String], ModelRep: String, OrigDef: String, ObjectDefinition: String, NumericTypes: NumericTypes, Description: String, Author: String, ModelConfig: String, inputMsgSets: List[List[MsgAndAttrib]], TenantId: String,DepContainers: Option[List[String]])
 
 case class NumericTypes(Version: Long, TransId: Long, UniqId: Long, CreationTime: Long, ModTime: Long, MdElemStructVer: Int, MdElementId: Long)
 
