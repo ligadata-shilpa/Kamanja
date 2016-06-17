@@ -171,7 +171,7 @@ trait BaseElem {
   // 646 - 675 Change begins - Metadata element addition/changes
   def Comment: String
   def Tag : String
-  def Params : Map[String, Any]
+  def Params : Map[String, String]
   // 646 - 675 Change ends
     def Author: String
     def NameSpace: String
@@ -210,7 +210,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675 Changes begin - Metadata additional element support
   override def Comment : String = comment
   override def Tag : String = tag
-  override def Params : Map[String, Any] = params
+  override def Params : Map[String, String] = params
   // 646 - 675 Changes end
     override def Author: String = author
     override def NameSpace: String = nameSpace // Part of Logical Name
@@ -257,7 +257,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675 Changes begin - Metadata additional element support
   var comment : String = _
   var tag: String = _
-  var params = scala.collection.mutable.Map.empty[String, Any]
+  var params = scala.collection.mutable.Map.empty[String, String]
   // 646 - 675 Changes end
     var author: String = _
     var nameSpace: String = _ //
@@ -278,7 +278,7 @@ class BaseElemDef extends BaseElem {
   // 646 - 675,673 Changes begin - support for MetadataAPI changes
     def setParamValues (paramStr : Option[String]) : Any = {
 
-      var newParams = scala.collection.mutable.Map.empty[String, Any]
+      var newParams = scala.collection.mutable.Map.empty[String, String]
       paramStr match {
 
         case None => {
@@ -289,17 +289,17 @@ class BaseElemDef extends BaseElem {
         case pStr: Option[String] => {
           val param = pStr getOrElse ""
           if (param != "") {
-            newParams = scala.collection.mutable.Map() ++ parse(param.toLowerCase).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+            newParams = scala.collection.mutable.Map() ++ parse(param.toLowerCase).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
             if (newParams contains "description") {
-              description = newParams.get("description").get.asInstanceOf[String]
+              description = newParams.getOrElse("description", "")
               newParams = newParams - "description"
             }
             if (newParams contains "comment") {
-              comment = newParams.get("comment").get.asInstanceOf[String]
+              comment = newParams.getOrElse("comment", "")
               newParams = newParams - "comment"
             }
             if (newParams contains "tag") {
-              tag =  newParams.get("tag").get.asInstanceOf[String]
+              tag =  newParams.getOrElse("tag", "")
               newParams = newParams - "tag"
             }
           }
