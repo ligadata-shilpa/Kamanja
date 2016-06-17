@@ -781,7 +781,7 @@ object MetadataAPISerialization {
       modDef.description = ModDefInst.Model.Description
       modDef.comment =  ModDefInst.Model.Comment
       modDef.tag = ModDefInst.Model.Tag
-      modDef.params = scala.collection.mutable.Map() ++ parse(ModDefInst.Model.Params).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      modDef.params = parse(ModDefInst.Model.Params).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
       // 646 - 673 Changes end
       modDef.author = ModDefInst.Model.Author
       modDef.mdElemStructVer = ModDefInst.Model.NumericTypes.MdElemStructVer
@@ -878,11 +878,11 @@ object MetadataAPISerialization {
       // 646 - 673 Changes begin - MetadataAPI Changes
       // The following MAP is used to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
       // them as one json str, 22 parameter limitation is overcome
-      val DCTMap = parse(MsgDefInst.Message.Description).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      val DCTMap = parse(MsgDefInst.Message.Description).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
       msgDef.description = DCTMap.get("Description").get.asInstanceOf[String]
       msgDef.comment = DCTMap.get("Comment").get.asInstanceOf[String]
       msgDef.tag = DCTMap.get("Tag").get.asInstanceOf[String]
-      msgDef.params = scala.collection.mutable.Map() ++ parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      msgDef.params =  parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
       // 646 - 673 Changes end
       msgDef.author = "" // MsgDefInst.Message.Author
       msgDef.mdElemStructVer = MsgDefInst.Message.NumericTypes.MdElemStructVer
@@ -982,11 +982,11 @@ object MetadataAPISerialization {
       // 646 - 673 Changes begin - MetadataAPI Changes
       // The following MAP is used to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
       // them as one json str, 22 parameter limitation is overcome
-      val DCTMap = parse(ContDefInst.Container.Description).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      val DCTMap = parse(ContDefInst.Container.Description).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
       contDef.description = DCTMap.get("Description").get.asInstanceOf[String]
       contDef.comment = DCTMap.get("Comment").get.asInstanceOf[String]
       contDef.tag = DCTMap.get("Tag").get.asInstanceOf[String]
-      contDef.params = scala.collection.mutable.Map() ++ parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, Any]]
+      contDef.params = parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
       // 646 - 673 Changes end
 
       contDef.author = "" // ContDefInst.Container.Author
