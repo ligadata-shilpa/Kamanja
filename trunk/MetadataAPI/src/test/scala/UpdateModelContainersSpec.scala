@@ -294,8 +294,18 @@ class UpdateModelContainersSpec extends FunSpec with LocalTestFixtures with Befo
       var md = models(0)
       var cfgStr = MetadataAPISerialization.serializeObjectToJson(md)
       logger.debug("Parsing ModelConfig : " + md.modelConfig)
-      var cfgmap = parse(cfgStr).values.asInstanceOf[Map[String, Any]]
+      var cfgmap = parse(md.modelConfig).values.asInstanceOf[Map[String, Any]]
       logger.debug("Count of objects in cfgmap : " + cfgmap.keys.size)
+      var depContainers = List[String]()
+      cfgmap.keys.foreach( key => {
+	cfgName = key
+	var containers = MessageAndContainerUtils.getContainersFromModelConfig(None,cfgName)
+	logger.debug("containers => " + containers)
+	depContainers = depContainers ::: containers.toList
+      })
+      logger.debug("depContainers => " + depContainers)
+      md.depContainers = depContainers.toArray
+      MetadataAPIImpl.UpdateObjectInDB(md)      
     }
   }
 

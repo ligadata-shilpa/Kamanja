@@ -28,6 +28,7 @@ import com.ligadata.kamanja.metadata._
 import com.ligadata.kamanja.metadataload.MetadataLoad
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.MetadataAPI.MetadataAPISerialization
+import com.ligadata.MetadataAPI.MessageAndContainerUtils
 import com.ligadata.MetadataAPI.AdapterMessageBindingUtils
 import com.ligadata.MetadataAPI.MetadataAPI
 import com.ligadata.Serialize.JsonSerializer
@@ -1508,7 +1509,21 @@ class MigrateTo_V_1_5_0 extends MigratableTo {
 	  var mdStrBefore:String = mdObj._2
 	  logger.info("Model Json Before Update => " + mdStrBefore)
           val md = MetadataAPISerialization.deserializeMetadata(mdStrBefore).asInstanceOf[ModelDef]
+	  // Add depContainers to the model first
+	  logger.debug("Parsing ModelConfig : " + md.modelConfig)
+	  var cfgmap = parse(md.modelConfig).values.asInstanceOf[Map[String, Any]]
+	  logger.debug("Count of objects in cfgmap : " + cfgmap.keys.size)
+	  var depContainers = List[String]()
+	  cfgmap.keys.foreach( key => {
+	    var cfgName = key
+	    var containers = MessageAndContainerUtils.getContainersFromModelConfig(None,cfgName)
+	    logger.debug("containers => " + containers)
+	    depContainers = depContainers ::: containers.toList
+	  })
+	  logger.debug("depContainers => " + depContainers)
+	  md.depContainers = depContainers.toArray
 
+	  // Filter 1.4.0 fat jars now
 	  val depJars1 = md.DependencyJarNames
 	  val jarsToBeExcluded = List("ExtDependencyLibs_2.11-1.4.0.jar", "KamanjaInternalDeps_2.11-1.4.0.jar", "ExtDependencyLibs2_2.11-1.4.0.jar")
 	  var depJars = (depJars1 diff jarsToBeExcluded)
@@ -1523,7 +1538,7 @@ class MigrateTo_V_1_5_0 extends MigratableTo {
 	  logger.info("Model Json Afer Update => " + mdStrAfter)
 	  // save updated mdStr
           val md1 = MetadataAPISerialization.deserializeMetadata(mdStrAfter).asInstanceOf[ModelDef]
-	  MetadataAPIImpl.SaveObject(md1, MdMgr.GetMdMgr)
+	  MetadataAPIImpl.UpdateObjectInDB(md1)
         } catch {
           case e: Exception => AddMdObjToGlobalException(mObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
           case e: Throwable => AddMdObjToGlobalException(mObj, "Failed to add metadata of type " + objType, e); AddedFailedMetadataKey(objType, dispkey, ver)
