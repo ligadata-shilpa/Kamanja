@@ -86,13 +86,13 @@ class MemoryDataCacheImp extends DataCache{
 
   override def put(containerName: String, timestamp: String, key: String, value: scala.Any): Unit = {}
 
-  override def get(containerName: String, list: util.List[CacheCallbackData]): Unit = {}
+  override def get(containerName: String, map : java.util.Map[String, java.util.Map[String, AnyRef]]): Unit = {}
 
   override def get(containerName: String, timestamp: String): util.Map[String, AnyRef] = {
     null
   }
 
-  override def get(containerName: String, timestamp: String, key: String): String = {
+  override def get(containerName: String, timestamp: String, key: String): AnyRef = {
     null
   }
 

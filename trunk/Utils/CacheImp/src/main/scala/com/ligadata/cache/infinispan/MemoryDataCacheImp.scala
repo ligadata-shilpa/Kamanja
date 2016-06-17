@@ -7,7 +7,7 @@ import net.sf.ehcache.config.Configuration
 import org.infinispan.configuration.cache.{CacheMode, ConfigurationBuilder}
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.Cache
-import org.infinispan.tree.{Fqn, TreeCacheFactory, TreeCache}
+import org.infinispan.tree.{Node, Fqn, TreeCacheFactory, TreeCache}
 ;
 
 /**
@@ -20,7 +20,6 @@ class MemoryDataCacheImp extends DataCache {
   var cache: Cache[String, Any] = null
   var listenCallback: CacheCallback = null
   var treeCache: TreeCache[String, Any] = null
-  val root: String = "root"
 
   override def init(jsonString: String, listenCallback: CacheCallback): Unit = {
     config = new CacheCustomConfig(new Config(jsonString), cacheManager)
@@ -92,28 +91,80 @@ class MemoryDataCacheImp extends DataCache {
     if (!containerName.equals(null) && !"".equals(containerName)) {
       if (!timestamp.equals(null) && !"".equals(timestamp)) {
         if (!key.equals(null) && !"".equals(key)) {
-          val fqn: Fqn = Fqn.fromElements(root, containerName, timestamp);
-          treeCache.put(Fqn, key, value);
+          val fqn: Fqn = Fqn.fromElements(containerName, timestamp);
+          treeCache.put(fqn, key, value);
         }
 
       }
     }
   }
 
-  override def get(containerName: String, list: util.List[CacheCallbackData]): Unit = {}
+  override def get(containerName: String, map:java.util.Map[String, java.util.Map[String, AnyRef]]): Unit = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      val containerNameCheck: Fqn = Fqn.fromElements(containerName)
+      if (treeCache.exists(containerNameCheck)) {
+        val allTimeStamp: util.Iterator[String] = treeCache.getKeys(containerNameCheck).iterator()
+        while (allTimeStamp.hasNext) {
+          val timeStamp: String = allTimeStamp.next()
+          val timestampFqn: Fqn = Fqn.fromElements(containerName, timeStamp)
+          map.put(timeStamp, treeCache.getData(timestampFqn).asInstanceOf[java.util.Map[String, AnyRef]])
+        }
+      }
+    }
+  }
 
   override def get(containerName: String, timestamp: String): util.Map[String, AnyRef] = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      if (!timestamp.equals(null) && !"".equals(timestamp)) {
+        val timestampCheck: Fqn = Fqn.fromElements(containerName, timestamp);
+        if (treeCache.exists(timestampCheck)) {
+          return treeCache.getData(timestampCheck).asInstanceOf[util.Map[String, AnyRef]]
+        }
+      }
+    }
     null
   }
 
-  override def get(containerName: String, timestamp: String, key: String): String = {
+  override def get(containerName: String, timestamp: String, key: String): AnyRef = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      if (!timestamp.equals(null) && !"".equals(timestamp)) {
+        if (!key.equals(null) && !"".equals(key)) {
+          val keyCheck: Fqn = Fqn.fromElements(containerName, timestamp, key);
+          if (treeCache.exists(keyCheck)) {
+            return treeCache.get(keyCheck, key).asInstanceOf[AnyRef];
+          }
+        }
+      }
+    }
     null
   }
 
-  override def del(containerName: String): Unit = {}
+  override def del(containerName: String): Unit = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      val fqn: Fqn = Fqn.fromElements(containerName);
+      treeCache.removeNode(fqn)
+    }
+  }
 
-  override def del(containerName: String, timestamp: String): Unit = {}
+  override def del(containerName: String, timestamp: String): Unit = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      if (!timestamp.equals(null) && !"".equals(timestamp)) {
+        val fqn: Fqn = Fqn.fromElements(containerName, timestamp);
+        treeCache.removeNode(fqn)
+      }
+    }
+  }
 
-  override def del(containerName: String, timestamp: String, key: String): Unit = {}
+  override def del(containerName: String, timestamp: String, key: String): Unit = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      if (!timestamp.equals(null) && !"".equals(timestamp)) {
+        if (!key.equals(null) && !"".equals(key)) {
+          val fqn: Fqn = Fqn.fromElements(containerName, timestamp, key);
+          treeCache.removeNode(fqn)
+        }
+
+      }
+    }
+  }
 }
 
