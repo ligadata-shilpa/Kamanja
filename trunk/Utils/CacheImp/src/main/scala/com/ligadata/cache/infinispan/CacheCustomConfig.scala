@@ -8,6 +8,7 @@ import com.ligadata.cache.{CacheCustomConfig, Config}
 import net.sf.ehcache.config.Configuration
 import org.infinispan.configuration.cache.{CacheMode, ConfigurationBuilder}
 import org.infinispan.configuration.global.{GlobalConfiguration, GlobalConfigurationBuilder}
+import org.infinispan.eviction.EvictionStrategy
 import org.infinispan.manager.DefaultCacheManager
 
 class CacheCustomConfig(val jsonconfig: Config, var cacheManager: DefaultCacheManager) {
@@ -35,6 +36,7 @@ class CacheCustomConfig(val jsonconfig: Config, var cacheManager: DefaultCacheMa
       new ConfigurationBuilder().expiration
         .lifespan(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS, "10000000").toLong)
         .maxIdle(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS, "10000000").toLong)
+        //.eviction().strategy(EvictionStrategy.LIRS).maxEntries(-1)
         .clustering
         .cacheMode(CacheMode.DIST_SYNC)
         .hash.numOwners(jsonconfig.getvalue(Config.NUMBEROFKETOWNERS).getOrElse("1").toInt)
