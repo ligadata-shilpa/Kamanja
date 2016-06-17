@@ -21,7 +21,7 @@ import java.util.Properties
 import com.ligadata.MetadataAPI.MetadataAPIImpl
 import com.ligadata.Utils.{KamanjaLoaderInfo, Utils}
 import com.ligadata.kamanja.metadata.MdMgr._
-import com.ligadata.kamanja.metadata.{ContainerDef, MessageDef, ModelDef}
+import com.ligadata.kamanja.metadata.{AdapterInfo, ContainerDef, MessageDef, ModelDef}
 import org.apache.logging.log4j._
 import java.sql.Connection
 
@@ -106,6 +106,7 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
      val msgDefs: Option[scala.collection.immutable.Set[MessageDef]] = mdMgr.Messages(true, true)
      val containerDefs: Option[scala.collection.immutable.Set[ContainerDef]] = mdMgr.Containers(true, true)
      val ModelDefs: Option[scala.collection.immutable.Set[ModelDef]] = mdMgr.Models(true, true)
+     val adapterDefs: Map[String, AdapterInfo]= mdMgr.Adapters
 
      val fileObj: FileUtility = new FileUtility
      if(fileObj.FileExist(databaseConfig) == false){
@@ -129,6 +130,19 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
      val queryObj: QueryBuilder = new QueryBuilder
 
      val conn: Connection = queryObj.getDBConnection(configBeanObj) //this used to fet a connection for orientDB
+
+     if(adapterDefs.isEmpty){
+       logger.info("There are no adapter in metadata")
+       println("There are no adapter in metadata")
+     } else {
+       for (adapter <- adapterDefs) {
+         var adapterType: String = ""
+         val setQuery = queryObj.createSetCommand(adapter = Option(adapter._2))
+         if(adapter._2.typeString.equalsIgnoreCase("input")) adapterType = "inputs" else adapterType = "outputs"
+         val query: String = queryObj.createQuery(elementType = "vertex", className = adapterType, elementName = adapter._2.Name)
+         queryObj.executeQuery(conn, query)
+       }
+     }
 
      if(containerDefs.isEmpty){
        logger.info("There are no container in metadata")
