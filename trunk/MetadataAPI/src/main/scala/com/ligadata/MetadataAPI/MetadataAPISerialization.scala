@@ -741,11 +741,14 @@ object MetadataAPISerialization {
       modDef.active = ModDefInst.Model.BooleanTypes.IsActive
       modDef.deleted = ModDefInst.Model.BooleanTypes.IsDeleted
 
-      var depContainers = List[String]()
-      if( ModDefInst.Model.DepContainers != None ){
-	depContainers = ModDefInst.Model.DepContainers.get
+      modDef.depContainers = Array[String]()
+      if( ModDefInst.Model.DepContainers != null ){
+	logger.debug("DepContainers => " + ModDefInst.Model.DepContainers)
+	modDef.depContainers = ModDefInst.Model.DepContainers.toArray
       }
-      modDef.depContainers = depContainers.toArray
+      else{
+	logger.debug("DepContainers is => None")
+      }
 
       modDef
     } catch {
@@ -2032,7 +2035,7 @@ case class ModelDefinition(Model: ModelInfo)
 
 case class MsgAndAttrib(Origin: String, Message: String, Attributes: List[String])
 
-case class ModelInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectFormat: String, BooleanTypes: BooleanTypes, OwnerId: String, OutputMsgs: List[String], ModelType: String, DependencyJars: List[String], ModelRep: String, OrigDef: String, ObjectDefinition: String, NumericTypes: NumericTypes, Description: String, Author: String, ModelConfig: String, inputMsgSets: List[List[MsgAndAttrib]], TenantId: String,DepContainers: Option[List[String]])
+case class ModelInfo(Name: String, PhysicalName: String, JarName: String, NameSpace: String, ObjectFormat: String, BooleanTypes: BooleanTypes, OwnerId: String, OutputMsgs: List[String], ModelType: String, DependencyJars: List[String], ModelRep: String, OrigDef: String, ObjectDefinition: String, NumericTypes: NumericTypes, Description: String, Author: String, ModelConfig: String, inputMsgSets: List[List[MsgAndAttrib]], TenantId: String,DepContainers: List[String])
 
 case class NumericTypes(Version: Long, TransId: Long, UniqId: Long, CreationTime: Long, ModTime: Long, MdElemStructVer: Int, MdElementId: Long)
 

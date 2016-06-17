@@ -373,8 +373,6 @@ class TestAddModelContainersSpec extends FunSpec with LocalTestFixtures with Bef
       assert(0 != msgFiles.length)
 
       fileList = List("outpatientclaim.json","inpatientclaim.json","hl7.json","beneficiary.json")
-      //fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Output_Def.json")
-      //fileList = List("HelloWorld_Msg_Def.json","HelloWorld_Msg_Def_2.json","HelloWorld_Msg_Def_3.json","HelloWorld_Out_Msg_Def_1.json")
       fileList.foreach(f1 => {
 	And("Add the Message From " + f1)
 	And("Make Sure " + f1 + " exist")
@@ -602,6 +600,12 @@ class TestAddModelContainersSpec extends FunSpec with LocalTestFixtures with Bef
 	       message.equalsIgnoreCase("com.ligadata.kamanja.samples.containers.dyspnoeacodes") || 
 	       message.equalsIgnoreCase("com.ligadata.kamanja.samples.containers.smokecodes") )
 
+	})
+	And("Validate contents of DepContainers")
+	val deps = models(0).depContainers
+	assert(deps.length == 5)
+	deps.foreach(dep => {
+	  assert(MessageAndContainerUtils.IsContainer(dep))
 	})
       })
     }

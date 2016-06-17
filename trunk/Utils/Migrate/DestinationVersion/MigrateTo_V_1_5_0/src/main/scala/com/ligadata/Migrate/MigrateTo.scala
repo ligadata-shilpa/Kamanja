@@ -1488,7 +1488,6 @@ class MigrateTo_V_1_5_0 extends MigratableTo {
     addedMessagesContainers
   }
 
-
   private def update140ModelsInPlace(mdObjs: ArrayBuffer[(String,String,Map[String, Any])]): Unit = {
     try {
       logger.info("Models to be Updated => " + mdObjs.length)
@@ -1509,6 +1508,7 @@ class MigrateTo_V_1_5_0 extends MigratableTo {
 	  var mdStrBefore:String = mdObj._2
 	  logger.info("Model Json Before Update => " + mdStrBefore)
           val md = MetadataAPISerialization.deserializeMetadata(mdStrBefore).asInstanceOf[ModelDef]
+
 	  val depJars1 = md.DependencyJarNames
 	  val jarsToBeExcluded = List("ExtDependencyLibs_2.11-1.4.0.jar", "KamanjaInternalDeps_2.11-1.4.0.jar", "ExtDependencyLibs2_2.11-1.4.0.jar")
 	  var depJars = (depJars1 diff jarsToBeExcluded)
