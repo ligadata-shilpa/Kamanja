@@ -38,6 +38,7 @@ class CacheCustomConfig(val jsonconfig: Config, var cacheManager: DefaultCacheMa
         .clustering
         .cacheMode(CacheMode.DIST_SYNC)
         .hash.numOwners(jsonconfig.getvalue(Config.NUMBEROFKETOWNERS).getOrElse("1").toInt)
+        .invocationBatching().enable()
         .build);
 
     cacheManager

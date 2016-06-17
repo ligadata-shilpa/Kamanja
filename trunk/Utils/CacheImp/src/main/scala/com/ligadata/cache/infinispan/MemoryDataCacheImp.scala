@@ -2,11 +2,13 @@ package com.ligadata.cache.infinispan
 
 import java.util
 
-import com.ligadata.cache.{Config, CacheCustomConfig, CacheCallback, DataCache}
+import com.ligadata.cache._
 import net.sf.ehcache.config.Configuration
 import org.infinispan.configuration.cache.{CacheMode, ConfigurationBuilder}
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.Cache;
+import org.infinispan.Cache
+import org.infinispan.tree.{Fqn, TreeCacheFactory, TreeCache}
+;
 
 /**
   * Created by Saleh on 6/9/2016.
@@ -17,9 +19,11 @@ class MemoryDataCacheImp extends DataCache {
   var config: CacheCustomConfig = null
   var cache: Cache[String, Any] = null
   var listenCallback: CacheCallback = null
+  var treeCache: TreeCache[String, Any] = null
+  val root: String = "root"
 
   override def init(jsonString: String, listenCallback: CacheCallback): Unit = {
-    config = new CacheCustomConfig(new Config(jsonString),cacheManager)
+    config = new CacheCustomConfig(new Config(jsonString), cacheManager)
     cacheManager = config.getDefaultCacheManager()
     this.listenCallback = listenCallback
   }
@@ -27,6 +31,7 @@ class MemoryDataCacheImp extends DataCache {
   override def start(): Unit = {
     cache = cacheManager.getCache(config.getcacheName());
     cache.addListener(listenCallback)
+    treeCache = new TreeCacheFactory().createTreeCache(cache);
   }
 
   override def shutdown(): Unit = {
@@ -76,11 +81,39 @@ class MemoryDataCacheImp extends DataCache {
   }
 
   override def getKeys(): Array[String] = {
-    val size:Int =  cache.keySet().size()
+    val size: Int = cache.keySet().size()
     val array = new Array[String](size)
     cache.keySet().toArray[String](array)
 
     array
   }
+
+  override def put(containerName: String, timestamp: String, key: String, value: scala.Any): Unit = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      if (!timestamp.equals(null) && !"".equals(timestamp)) {
+        if (!key.equals(null) && !"".equals(key)) {
+          val fqn: Fqn = Fqn.fromElements(root, containerName, timestamp);
+          treeCache.put(Fqn, key, value);
+        }
+
+      }
+    }
+  }
+
+  override def get(containerName: String, list: util.List[CacheCallbackData]): Unit = {}
+
+  override def get(containerName: String, timestamp: String): util.Map[String, AnyRef] = {
+    null
+  }
+
+  override def get(containerName: String, timestamp: String, key: String): String = {
+    null
+  }
+
+  override def del(containerName: String): Unit = {}
+
+  override def del(containerName: String, timestamp: String): Unit = {}
+
+  override def del(containerName: String, timestamp: String, key: String): Unit = {}
 }
 

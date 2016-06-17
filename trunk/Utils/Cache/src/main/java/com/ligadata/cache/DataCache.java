@@ -17,4 +17,13 @@ public interface DataCache {
     public String[] getKeys();
     public Map<String, Object> getAll();
     public void shutdown();
+    //tree cache
+    public void put(String containerName, String timestamp, String key, Object value);
+    public void get(String containerName, List<CacheCallbackData> list);
+    public Map<String, Object> get(String containerName, String timestamp);
+    public String get(String containerName, String timestamp, String key);
+    public void del(String containerName);
+    public void del(String containerName, String timestamp);
+    public void del(String containerName, String timestamp, String key);
+
 }
