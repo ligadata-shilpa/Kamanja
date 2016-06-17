@@ -4,18 +4,23 @@ import java.util.Properties
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
-import java.sql.ResultSet;
+import java.sql.ResultSet
+
+import com.ligadata.kamanja.metadata.{ContainerDef, MessageDef, ModelDef};
 /**
   * Created by Yousef on 6/16/2016.
   */
 class QueryBuilder extends LogTrait {
 
-  def createQuery(elementName: String, elementType: String, className: String , linkFrom: Option[String] = None, linkTo: Option[String] = None): String = {
+  def createQuery(elementName: String, elementType: String, className: String , linkFrom: Option[String] = None, linkTo: Option[String] = None,
+                  extendsClass: Option[String] = None): String = {
     var query: String = ""
     if(elementType.equalsIgnoreCase("vertex")){
-      query = "create %s class %s set Name = \"%s\";".format(elementType,className,elementName)
+      query = "create vertex %s set Name = \"%s\";".format(className,elementName)
     } else if(elementName.equalsIgnoreCase("edge")){
-      query= "create %s %s from %s to %s set Name = \"%s\";".format(elementType,className,linkFrom.get,linkTo.get, elementName)
+      query= "create edge %s from %s to %s set Name = \"%s\";".format(className,linkFrom.get,linkTo.get, elementName)
+    } else if(elementType.equalsIgnoreCase("class")){
+      query = "create %class %s extends %s;".format(elementName, extendsClass)
     }
     return query
   }
@@ -38,6 +43,25 @@ class QueryBuilder extends LogTrait {
     stmt.execute(query)
     stmt.close()
     // should add try catch exception and add it to log
+  }
+
+  def createSetCommand(message: Option[MessageDef]= None, contianer: Option[ContainerDef]= None, model: Option[ModelDef]= None): String ={
+    var setQuery: String = ""
+
+    if(message != None){
+      setQuery = "set ID = %i, Name = \"%s\", Namespace = \"%s\", FullName = \"%s\", Version = \"%s\", CreatedBy = \"%s\", CreatedTime = \"%s\", LastModifiedTime = \"%s\",".format(
+        message.get.UniqId, message.get.Name, message.get.NameSpace, message.get.FullName, message.get.Version, message.get.CreationTime, "", message.get.TenantId.toString) +
+        " Tenant = %s, Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(message.get.Description, message.get.Author, message.get.Active)
+    } else if(contianer != None){
+      setQuery = "set ID = %i, Name = \"%s\", Namespace = \"%s\", FullName = \"%s\", Version = \"%s\", CreatedBy = \"%s\", CreatedTime = \"%s\", LastModifiedTime = \"%s\",".format(
+        contianer.get.UniqId, contianer.get.Name, contianer.get.NameSpace, contianer.get.FullName, contianer.get.Version, contianer.get.CreationTime, "", contianer.get.TenantId.toString) +
+        " Tenant = %s, Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(contianer.get.Description, contianer.get.Author, contianer.get.Active)
+    } else if (model != None){
+      setQuery = "set ID = %i, Name = \"%s\", Namespace = \"%s\", FullName = \"%s\", Version = \"%s\", CreatedBy = \"%s\", CreatedTime = \"%s\", LastModifiedTime = \"%s\",".format(
+        model.get.UniqId, model.get.Name, model.get.NameSpace, model.get.FullName, model.get.Version, model.get.CreationTime, "", model.get.TenantId.toString) +
+        " Tenant = %s, Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(model.get.Description, model.get.Author, model.get.Active)
+    }
+    return setQuery
   }
 
 }

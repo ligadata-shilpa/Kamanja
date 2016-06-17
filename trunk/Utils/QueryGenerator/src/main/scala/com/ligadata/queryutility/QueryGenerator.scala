@@ -25,6 +25,8 @@ import com.ligadata.kamanja.metadata.{ContainerDef, MessageDef, ModelDef}
 import org.apache.logging.log4j._
 import java.sql.Connection
 
+import shapeless.option
+
 trait LogTrait {
   val loggerName = this.getClass.getName()
   val logger = LogManager.getLogger(loggerName)
@@ -133,7 +135,8 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        println("There are no container in metadata")
      } else {
        for (container <- containerDefs.get) {
-         val query: String = queryObj.createQuery("vertex", "container", container.Name)
+         val setQuery = queryObj.createSetCommand(contianer = Option(container))
+         val query: String = queryObj.createQuery(elementType = "vertex", className = "container", elementName = container.Name)
          queryObj.executeQuery(conn, query)
        }
      }
@@ -143,7 +146,8 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        println("There are no model in metadata")
      } else {
        for (model <- ModelDefs.get) {
-         val query: String = queryObj.createQuery("vertex", "model", model.Name)
+         val setQuery = queryObj.createSetCommand(model = Option(model))
+         val query: String = queryObj.createQuery(elementType = "vertex", className = "model",elementName=  model.Name)
          queryObj.executeQuery(conn, query)
        }
      }
@@ -153,7 +157,8 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        println("There are no messages in metadata")
      } else{
        for (message <- msgDefs.get){
-         val query: String = queryObj.createQuery("vertex", "Message", message.Name)
+         val setQuery = queryObj.createSetCommand(message = Option(message))
+         val query: String = queryObj.createQuery(elementType = "vertex", className = "Message", elementName = message.Name)
          queryObj.executeQuery(conn, query)
          // create an edge
        }
