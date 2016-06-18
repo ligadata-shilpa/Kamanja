@@ -430,7 +430,8 @@ object FileProcessor {
               }
             } else {
                // File System is not accessible.. issue a warning and go on to the next file.
-              logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1)
+              logger.warn("SMART FILE CONSUMER (global): File on the buffering Q is not found " + fileTuple._1 + ", Removing from the buffering queue")
+              bufferingQ_map.remove(fileTuple._1)
             }
           } catch {
             case ioe: IOException => {
@@ -853,7 +854,7 @@ object FileProcessor {
  * Counter of buffers used by the FileProcessors... there is a limit on how much memory File Consumer can use up.
  */
 object BufferCounters {
-  val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
+  //val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
 }
 
 /**
@@ -869,6 +870,8 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   lazy val loggerName = this.getClass.getName
   lazy val logger = LogManager.getLogger(loggerName)
   var fileConsumers: ExecutorService = Executors.newFixedThreadPool(3)
+
+  val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
 
   var isConsuming = true
   var isProducing = true
@@ -900,6 +903,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   private var maxBufAllowed: Long  = 0
   private var throttleTime: Int = 0
   private var isRecoveryOps = true
+  private var bufferLimit = 1
 
   /**
    * Called by the Directory Listener to initialize
@@ -913,12 +917,13 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       NUMBER_OF_BEES = props.getOrElse(SmartFileAdapterConstants.PAR_DEGREE_OF_FILE_CONSUMER, "1").toInt
       maxlen = props.getOrElse(SmartFileAdapterConstants.WORKER_BUFFER_SIZE, "4").toInt * 1024 * 1024
       partitionSelectionNumber = props(SmartFileAdapterConstants.NUMBER_OF_FILE_CONSUMERS).toInt
+      bufferLimit = props(SmartFileAdapterConstants.THREAD_BUFFER_LIMIT).toInt
 
       //Code commented
       readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
 
       maxBufAllowed = props.getOrElse(SmartFileAdapterConstants.MAX_MEM, "512").toLong * 1024L *1024L
-      throttleTime = props.getOrElse(SmartFileAdapterConstants.THROTTLE_TIME, "250").toInt
+      throttleTime = props.getOrElse(SmartFileAdapterConstants.THROTTLE_TIME, "100").toInt
       var mdConfig = props.getOrElse(SmartFileAdapterConstants.METADATA_CONFIG_FILE,null)
       var msgName = props.getOrElse(SmartFileAdapterConstants.MESSAGE_NAME, null)
       var kafkaBroker = props.getOrElse(SmartFileAdapterConstants.KAFKA_BROKER, null)
@@ -1016,7 +1021,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       if (msgQ.isEmpty) {
         return null
       }
-      BufferCounters.inMemoryBuffersCntr.decrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
+      inMemoryBuffersCntr.decrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
       return msgQ.dequeue
     }
   }
@@ -1148,7 +1153,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
               } else {
                 var newLeftovers =  BufferLeftoversArea(beeNumber, leftOvers ++ buffer.payload, buffer.chunkNumber)
                 setLeftovers(newLeftovers, beeNumber)
-                BufferCounters.inMemoryBuffersCntr.decrementAndGet()
+                inMemoryBuffersCntr.decrementAndGet()
                 isIncompleteLefovers = true
               }
             }
@@ -1238,16 +1243,19 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
          logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file - File is missing",fio)
          FileProcessor.markFileProcessingEnd(fileName)
          FileProcessor.fileCacheRemove(fileName)
+        if (bis != null) bis.close
          return
       }
       case fio: IOException => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",fio)
         FileProcessor.setFileState(fileName,FileProcessor.MISSING)
+        if (bis != null) bis.close
         return
       }
       case e: Throwable => {
         logger.error("SMART_FILE_CONSUMER (" + partitionId + ") Exception accessing the file for processing the file ",e)
         FileProcessor.setFileState(fileName,FileProcessor.MISSING)
+        if (bis != null) bis.close
         return
       }
     }
@@ -1261,10 +1269,10 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     do {
       waitedCntr = 0
       val st = System.currentTimeMillis
-      while ((BufferCounters.inMemoryBuffersCntr.get * 2 + partitionSelectionNumber + 2) * maxlen * 2 > maxBufAllowed) { // One counter for bufferQ and one for msgQ and also taken concurrentKafkaJobsRunning and 2 extra in memory
+      //while ((BufferCounters.inMemoryBuffersCntr.get * 2 + partitionSelectionNumber + 2) * maxlen * 2 > maxBufAllowed) { // One counter for bufferQ and one for msgQ and also taken concurrentKafkaJobsRunning and 2 extra in memory
+      while (inMemoryBuffersCntr.get >= bufferLimit) {
         if (waitedCntr == 0) {
-          logger.warn("SMART FILE ADDAPTER (" + partitionId + ") : exceed the allowed memory size (%d) with %d buffers. Halting for free slot".format(maxBufAllowed,
-            BufferCounters.inMemoryBuffersCntr.get * 2))
+          logger.warn("SMART FILE ADDAPTER (" + partitionId + ") : exceed the MAX number of - %d buffers. Halting for a free slot".format(inMemoryBuffersCntr.get))
         }
         waitedCntr += 1
         Thread.sleep(throttleTime)
@@ -1272,10 +1280,10 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
       if (waitedCntr > 0) {
         val timeDiff = System.currentTimeMillis - st
-        logger.warn("%d:Got slot after waiting %dms".format(partitionId, timeDiff))
+        logger.warn("%d:Got a slot after waiting %dms".format(partitionId, timeDiff))
       }
 
-      BufferCounters.inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
+      inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
       var isLastChunk = false
       try {
         readlen = 0
@@ -1299,24 +1307,28 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           logger.error("Failed to read file, file currupted " + fileName, ze)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
+          if (bis != null) bis.close
           return
         }
         case ioe: IOException => {
           logger.error("Failed to read file " + fileName, ioe)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
+          if (bis != null) bis.close
           return
         }
         case e: Exception => {
           logger.error("Failed to read file, file corrupted " + fileName, e)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
+          if (bis != null) bis.close
           return
         }
         case e: Throwable => {
           logger.error("Failed to read file, file corrupted " + fileName, e)
           val BufferToChunk = new BufferToChunk(readlen, buffer.slice(0, readlen), chunkNumber, fileName, FileProcessor.CORRUPT_FILE, isLastChunk, partMap)
           enQBuffer(BufferToChunk)
+          if (bis != null) bis.close
           return
         }
       }
