@@ -17,6 +17,8 @@
 package com.ligadata.Controller
 
 import java.io.File
+import java.net.URLEncoder
+import java.util
 
 import com.ligadata.AdaptersConfiguration.KafkaPartitionUniqueRecordValue
 import com.ligadata.InputAdapters.KafkaSimpleConsumer
@@ -108,7 +110,8 @@ class KamanjaMonitor {
   /**
    * ActionOnActionChange - This method will get called when the /ligadata/monitor/action value in zookeeper is changed.
    *                        this method is passed as a callback into a zookeeper listener implementation.
-   * @param receivedString String
+    *
+    * @param receivedString String
    */
   private def ActionOnActionChange(receivedString: String): Unit = {
     if (receivedString.size == 1 && receivedString.toInt == 1) {
@@ -291,7 +294,8 @@ class KamanjaMonitor {
 
   /**
    * configureKafkaAdapters - set up the oAdapters and sAdapter arrays here.
-   * @param aConfigs  Map[String,List[Any]]
+    *
+    * @param aConfigs  Map[String,List[Any]]
    */
   private def configureKafkaAdapters(aConfigs: Map[String, List[Any]]): Unit = {
     val statusQs: List[Map[String, Any]] = aConfigs.getOrElse("StatusQs", null).asInstanceOf[List[Map[String, Any]]]
@@ -378,9 +382,31 @@ class KamanjaMonitor {
  */
 object Monitor {
   def main(args: Array[String]): Unit = {
+    var config = args(0)
+    var properties = scala.collection.mutable.Map[String,String]()
+    val lines = scala.io.Source.fromFile(config).getLines.toList
+    lines.foreach(line => {
+      //Handle empty lines also
+      if (!line.isEmpty() && !line.startsWith("#")) {
+        val lProp = line.split("=")
+        try {
+                   properties(lProp(0)) = lProp(1)
+        } catch {
+          case iobe: IndexOutOfBoundsException => {
+            return
+          }
+          case e: Throwable => {
+            return
+          }
+        }
+      }
+    })
 
-    val monitor: KamanjaMonitor = new KamanjaMonitor()
-    monitor.start(args)
+    val monitor: FileMonitor = new com.ligadata.Controller.FileMonitor(properties)
+    val monitorThread = new Thread(monitor)
+    monitorThread.start()
 
   }
 }
+
+
