@@ -505,12 +505,12 @@ object FileProcessor {
 
   private def isValidFile(fileName: String): Boolean = {
     //Check if the File exists
+    var contentType: String = ""
     if (Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length() > 0)) {
       //Sniff only text/plain and application/gzip for now
       var detector = new DefaultDetector()
       var tika = new Tika(detector)
       var fis = new FileInputStream(new File(fileName))
-      var contentType: String = null
 
       try {
         contentType = tika.detect(fis)
@@ -594,8 +594,10 @@ object FileProcessor {
       //File doesnot exists - it is already processed
       logger.warn("SMART FILE CONSUMER (global): File aready processed " + fileName)
     } else if (Paths.get(fileName).toFile().length() == 0) {
+      logger.warn("SMART FILE CONSUMER (global): File " + fileName + " is valid and content type is" + contentType)
       return true
     }
+    logger.warn("SMART FILE CONSUMER (global): File " + fileName + " is not valid for " +  contentType)
     return false
   }
 
@@ -937,7 +939,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       NUMBER_OF_BEES = props.getOrElse(SmartFileAdapterConstants.PAR_DEGREE_OF_FILE_CONSUMER, "1").toInt
       maxlen = props.getOrElse(SmartFileAdapterConstants.WORKER_BUFFER_SIZE, "4").toInt * 1024 * 1024
       partitionSelectionNumber = props(SmartFileAdapterConstants.NUMBER_OF_FILE_CONSUMERS).toInt
-      bufferLimit = props(SmartFileAdapterConstants.THREAD_BUFFER_LIMIT).toInt
+      bufferLimit = props.getOrElse(SmartFileAdapterConstants.THREAD_BUFFER_LIMIT,"1").toInt
 
       //Code commented
       readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
