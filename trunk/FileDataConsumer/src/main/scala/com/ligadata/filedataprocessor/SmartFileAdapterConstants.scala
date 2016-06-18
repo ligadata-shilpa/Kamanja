@@ -30,6 +30,7 @@ object SmartFileAdapterConstants {
   val THROTTLE_TIME = "throttle_ms"
   val MAX_TIME_ALLOWED_TO_BUFFER = "maxTimeFileIsAllowedToBuffer"
   val REFRESH_RATE = "refreshrate_ms"
+  val BUFFER_READING_PAR_DEGEE = "bufferReadingParDegree"
 
   val KAFKA_LOAD_STATUS = "Kafka_Load_Result,"
   val TOTAL_FILE_STATUS = "File_Total_Result,"
