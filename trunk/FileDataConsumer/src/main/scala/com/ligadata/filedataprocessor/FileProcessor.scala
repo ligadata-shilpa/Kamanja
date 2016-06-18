@@ -505,75 +505,95 @@ object FileProcessor {
 
   private def isValidFile(fileName: String): Boolean = {
     //Check if the File exists
-    if(Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length()>0)) {
+    if (Files.exists(Paths.get(fileName)) && (Paths.get(fileName).toFile().length() > 0)) {
       //Sniff only text/plain and application/gzip for now
       var detector = new DefaultDetector()
       var tika = new Tika(detector)
       var fis = new FileInputStream(new File(fileName))
-      var contentType :String = null
+      var contentType: String = null
 
-      try{
+      try {
         contentType = tika.detect(fis)
-      }catch{
-        case e:IOException =>{
-          logger.warn("SmartFileConsumer - Tika unable to read from InputStream - "+e.getMessage, e)
+      } catch {
+        case e: IOException => {
+          logger.warn("SmartFileConsumer - Tika unable to read from InputStream - " + e.getMessage, e)
           throw e
         }
-        case e:Exception =>{
-          logger.warn("SmartFileConsumer - Tika processing generic exception - "+e.getMessage, e)
+        case e: Exception => {
+          logger.warn("SmartFileConsumer - Tika processing generic exception - " + e.getMessage, e)
           throw e
         }
-        case e:Throwable =>{
-          logger.warn("SmartFileConsumer - Tika processing runtime exception - "+e.getMessage, e)
+        case e: Throwable => {
+          logger.warn("SmartFileConsumer - Tika processing runtime exception - " + e.getMessage, e)
           throw e
         }
       } finally {
         fis.close()
       }
 
-      if(contentType!= null && !contentType.isEmpty() && contentType.equalsIgnoreCase("application/octet-stream")){
-		    var magicMatcher : MagicMatch =  null;
-
-		    try{
-		      magicMatcher = Magic.getMagicMatch(new File(fileName), false)
-		      if(magicMatcher != null)
-		        contentType = magicMatcher.getMimeType
-		    }catch{
-		      case e:MagicParseException =>{
-		        logger.warn("SmartFileConsumer - MimeMagic caught a parsing exception - "+e.getMessage, e)
-            throw e
-		      }
-		      case e:MagicMatchNotFoundException =>{
-		        logger.warn("SmartFileConsumer -MimeMagic Mime Not Found -"+e.getMessage, e)
-            throw e
-		      }
-		      case e:MagicException =>{
-		        logger.warn("SmartFileConsumer - MimeMagic generic exception - "+e.getMessage, e)
-            throw e
-		      }
-		      case e:Exception =>{
-            logger.warn("SmartFileConsumer - MimeMagic processing generic exception - "+e.getMessage, e)
-            throw e
+      if (contentType != null && !contentType.isEmpty() && contentType.equalsIgnoreCase("application/octet-stream")) {
+        var magicMatcher: MagicMatch = null;
+        var is: FileInputStream = null
+        try {
+          is = new FileInputStream(fileName)
+          // BUGBUG:: Take NMB from config.
+          // Get Max N MB to detect contentType
+          val buffSzToTestContextType = 1 * 1024 * 1024;
+          val tmpbuffer = new Array[Byte](buffSzToTestContextType)
+          val readlen = is.read(tmpbuffer, 0, buffSzToTestContextType)
+          val buffer =
+            if (readlen < buffSzToTestContextType)
+              java.util.Arrays.copyOf(tmpbuffer, readlen);
+            else
+              tmpbuffer
+          try {
+            magicMatcher = Magic.getMagicMatch(buffer)
+            if (magicMatcher != null)
+              contentType = magicMatcher.getMimeType
+          } catch {
+            case e: MagicParseException => {
+              logger.warn("SmartFileConsumer - MimeMagic caught a parsing exception - " + e.getMessage, e)
+              throw e
+            }
+            case e: MagicMatchNotFoundException => {
+              logger.warn("SmartFileConsumer -MimeMagic Mime Not Found -" + e.getMessage, e)
+              throw e
+            }
+            case e: MagicException => {
+              logger.warn("SmartFileConsumer - MimeMagic generic exception - " + e.getMessage, e)
+              throw e
+            }
+            case e: Exception => {
+              logger.warn("SmartFileConsumer - MimeMagic processing generic exception - " + e.getMessage, e)
+              throw e
+            }
+            case e: Throwable => {
+              logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - " + e.getMessage, e)
+              throw e
+            }
           }
-          case e:Throwable =>{
-            logger.warn("SmartFileConsumer - MimeMagic processing runtime exception - "+e.getMessage, e)
+        } catch {
+          case e: Exception =>
+            logger.warn("SmartFileConsumer - File read exception - " + e.getMessage, e)
             throw e
-          }
-		    }
+        } finally {
+          if (is != null)
+            is.close()
+        }
       }
 
       //Currently handling only text/plain and application/gzip contents
       //Need to bubble this property out into the Constants and Configuration
-      if(contentTypes contains contentType){
-         return true
-      }else{
+      if (contentTypes contains contentType) {
+        return true
+      } else {
         //Log error for invalid content type
         logger.error("SMART FILE CONSUMER (global): Invalid content type " + contentType + " for file " + fileName)
       }
     } else if (!Files.exists(Paths.get(fileName))) {
       //File doesnot exists - it is already processed
-      logger.warn ("SMART FILE CONSUMER (global): File aready processed " + fileName)
-    } else if (Paths.get(fileName).toFile().length() == 0 ){
+      logger.warn("SMART FILE CONSUMER (global): File aready processed " + fileName)
+    } else if (Paths.get(fileName).toFile().length() == 0) {
       return true
     }
     return false
