@@ -16,6 +16,7 @@
 package com.ligadata.jython.test
 
 import java.io.File
+import java.lang.reflect.Method
 
 import com.ligadata.jython._
 import org.apache.commons.io.FileUtils
@@ -126,17 +127,26 @@ class TestJython extends FunSuite with BeforeAndAfter {
         super.addURL(url)
       }
     }
-    val cl1 = interpreter.getSystemState().getClassLoader() //.asInstanceOf[URLClassLoader1]
-    val urls1 = urlses(cl1)
-    logger.Info("CLASSPATH-JYTHON-1:=" + urls1.mkString(":"))
 
-//    cp.foreach(c => cl1.addURL(new URL("file:" + c)))
-//
-//    {
-//      val cl2 = interpreter.getSystemState().getClassLoader()
-//      val urls2 = urlses(cl2)
-//      logger.Info("CLASSPATH-JYTHON-2:=" + urls2.mkString(":"))
-//    }
+    val cl1 = interpreter.getSystemState().getClassLoader()
+//    val urls1 = urlses(cl1)
+//    logger.Info("CLASSPATH-JYTHON-1:=" + urls1.mkString(":"))
+
+    var method: Method = classOf[URLClassLoader].getDeclaredMethod("addURL", classOf[URL])
+    method.setAccessible(true)
+    cp.foreach(c =>method.invoke(cl1, new File(c).toURI().toURL))
+
+    //cp.foreach(c => cl1.addURL(new File(c).toURI().toURL))
+
+    logger.Info("<<< 11-1")
+
+    {
+      val cl2 = interpreter.getSystemState().getClassLoader()
+      val urls2 = urlses(cl2)
+      logger.Info("CLASSPATH-JYTHON-2:=" + urls2.mkString(":"))
+    }
+
+    logger.Info("<<< 11-2")
 
     try {
       val modelObject: PyObject = interpreter.eval(code)
