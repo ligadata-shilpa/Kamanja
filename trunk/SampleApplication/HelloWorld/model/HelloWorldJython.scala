@@ -24,6 +24,7 @@ import com.ligadata.KamanjaBase._
 import com.ligadata.kamanja.samples.messages._
 import java.util.Properties
 import com.ligadata.runtime.Log
+import org.python.core.PySystemState
 
 class HelloWorldJythonFactory(modelDef: ModelDef, nodeContext: NodeContext) extends ModelInstanceFactory(modelDef, nodeContext) {
 
@@ -97,7 +98,11 @@ class HelloWorldJythonModel(factory: ModelInstanceFactory) extends ModelInstance
   // Create the jython object
   val logger = new Log("com.ligadata.samples.models.HelloWorldJythonModel")
   logger.Info("<<< 10")
-  val interpreter = new PythonInterpreter()
+
+  val sysstate: PySystemState = new PySystemState()
+  sysstate.setClassLoader(java.lang.ClassLoader.getSystemClassLoader())
+
+  val interpreter = new PythonInterpreter(null, sysstate)
   logger.Info("<<< 11")
 
   def urlses(cl: ClassLoader): Array[java.net.URL] = cl match {

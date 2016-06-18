@@ -9,7 +9,7 @@
         <Logger name="com.ligadata.msgcompiler" level="OFF" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
-        <Root level="trace">
+        <Root level="INFO">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
