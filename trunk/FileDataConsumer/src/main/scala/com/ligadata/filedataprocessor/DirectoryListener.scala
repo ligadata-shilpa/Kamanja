@@ -111,11 +111,6 @@ object LocationWatcher {
             }
           }
         }
-
-       // val monitor = new com.ligadata.filedataprocessor.FileMonitor(properties)
-       // val monitorThread = new Thread(monitor)
-       // monitorThread.start()
-
       } catch {
         case e: Exception => {
           logger.error("SMART FILE CONSUMER:  ERROR in starting SMART FILE CONSUMER ", e)
