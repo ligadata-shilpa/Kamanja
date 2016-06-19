@@ -8,6 +8,7 @@ shellPrompt := { state =>  "sbt (%s)> ".format(Project.extract(state).currentPro
 assemblySettings
 
 assemblyOption in assembly ~= { _.copy(prependShellScript = Some(defaultShellScript)) }
+mainClass in assembly := Some("com.ligadata.filedataprocessor.LocationWatcher")
 
 jarName in assembly := { s"${name.value}-${version.value}" }
 
