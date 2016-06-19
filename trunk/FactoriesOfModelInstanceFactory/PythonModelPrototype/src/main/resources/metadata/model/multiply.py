@@ -2,12 +2,37 @@ import abc
 from common.ModelInstance import ModelInstance
 import json
 
-class Handler(ModelInstance): 
-	""" Model multiply multiplies one or more numbers and returns the product. """
-	""" Model informational methods are found in the ModelInstance"""
-	""" superclass. """
-	def handler(self, numbers):
-		productofTup = int(numbers.pop(0))
-		for v in numbers
-			productofTup *= int(v)
-		return str(productofTup)
+class MultiplyTuple(ModelInstance): 
+	""" Model MultiplyTuple will multiply msg["a"] and msg["b"] """
+	def execute(self, msg):
+		""" 
+		A real implementation would use the output fields to 
+		determine what should be returned. 
+		"""
+		prodofTups = int(msg["a"])
+		prodofTups *= int(msg["b"])
+		outMsg = json.dumps({'a' : msg["a"], 'b' : msg["b"], 'result' : prodofTups})
+		return outMsg
+
+	def __init__(self, host, port, modelOptions):
+		super(MultiplyTuple, self).__init__(host, port, modelOptions)
+
+	def getInputOutputFields(self):
+		"""The fields and their types are returned  """
+		"""This is looking for dict item "TypeInfo" ... really it """
+		"""should be some other key... like InputFields and OutputFields"""
+		modelOptions = super(MultiplyTuple, self).ModelOptions()
+		inputFields = dict()
+		outputFields = dict()
+		if "TypeInfo" in modelOptions:
+			inputFields.update(modelOptions["TypeInfo"])
+			outputFields.update(modelOptions["TypeInfo"])
+			outputFields["result"] = "Int"
+		else:
+			inputFields["a"] = "Int"
+			inputFields["b"] = "Int"
+			outputFields["a"] = "Int"
+			outputFields["b"] = "Int"
+			outputFields["result"] = "Int"
+
+		return (inputFields , outputFields)

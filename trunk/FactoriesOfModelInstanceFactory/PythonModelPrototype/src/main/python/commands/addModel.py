@@ -1,50 +1,64 @@
 import os
 import os.path
+import json
 class addModel(object): 
 	"""
 	AddModelCmd input is formatted like this Scala string : 
 		s"$cmd\n$modelName\n$modelInfo\n$modelSrc"
 	"""
-	def handler(self, modelDict, host, port, modelProperties):
-		if "modelName" in cmdOptions:
-			modelName = cmdOptions["modelName"]
+	def handler(self, modelDict, host, port, cmdOptions, modelInfo):
+		if "ModelName" in cmdOptions:
+			modelName = str(cmdOptions["ModelName"])
 		else:
 			modelName = ""
-		# The cmdList contains the python program... write it 
-		# to $PYTHONPATH/models.  we could write them one at a time or 
-		# do this and join the list again into one string.
-		modelSrcPath = cmdOptions["modelSrcPath"]
-		pypath = cmdOptions["PythonInstallPath"]
-		modelPath = '{}/models/{}.py'.format(pypath, modelName)
-		modelFile = open(modelPath, 'w')
-		modelFile.write(modelSrc)
-		modelFile.close()
+		#
+		if "ModelFile" in cmdOptions:
+			modelFileName = str(cmdOptions["ModelFile"])
+		else:
+			modelFileName = ""
+		#
+		print "Entered addModel... model to be added = {} ... file = {}".format(modelName,modelFileName)
+		
+		pypath = modelDict["PythonInstallPath"]
+		modelSrcPath = "{}/models/{}".format(pypath,modelFileName)
+		print "addModel.handler entered ... modelSrcPath = {}".format(modelSrcPath)
+		modelName = cmdOptions["ModelName"]
 
 		result = ""
-		reasonablePath = os.path.exists(modelSrcPath) and os.path.isfile(modelSrcPath)
+		inputfields = ""
+		outputfields = ""
+		reasonablePath = os.path.exists(modelSrcPath) and os.path.isfile(modelSrcPath) and modelName != "" and modelFileName != ""
 		if reasonablePath:
-			(parentDir, file) = os.path.split(modelSrcPath)
-			stem = str.split(file,'.')[0]  # FIXME : we could insist on .py suffix; 
-			ok = modelName == "" or stem == modelName
-			if not ok:
-				result = 'the modelName in the dictionary ({}) and the python model file stem ({}) must be equivalent... models are found by the module name stem (e.g., the "foo" part of "foo.py")'.format(modelName, stem)
-			else:
+			#(parentDir, file) = os.path.split(modelSrcPath)
+			moduleName = str.split(modelFileName,'.')[0]  
+			print "model to be added = {}.{}".format(moduleName, modelName)
+			#all models found in models subdir of the pypath
+			HandlerClass = self.importName("models." + moduleName, modelName)
+			handler = HandlerClass(str(host), str(port), cmdOptions)
+			print "handler produced"
+			modelDict[str(modelName)] = handler
+			print "model {}.{} added!".format(moduleName, modelName)
+			(inputfields, outputfields) = handler.getInputOutputFields()
+			modelAddMsg = "model {}.{} added".format(moduleName,modelName)
+			result = json.dumps({'Cmd' : 'addModel', 'Server' : host, 'Port' : str(port), 'Result' : modelAddMsg, 'InputFields' : inputfields, 'OutputFields' : outputfields })
+		else:
+			inputfields = []
+			outputfields = []
+			modelAddMsg = "ModuleName.ModelName '{}.{}' is invalid...it does not reference a valid class".format(moduleName, modelName)
+			result = json.dumps({'Cmd' : 'addModel', 'Server' : host, 'Port' : str(port), 'Result' : modelAddMsg, 'InputFields' : inputfields, 'OutputFields' : outputfields })
 
-				#load the model and add it to the dictionary keyed by its name
-				HandlerClass = importName("models." + modelName, "Handler")
-				handler = HandlerClass()
-				modelDict[modelName] = handler
-				result = "model {} added".format(modelName)
+		print("AddModel results = {}").format(result)
 
-		return "model added"
+		return result
 
-	def importName(moduleName, name):
+	def importName(self, moduleName, name):
 		"""
 		Import a named object from a module in the context of this function 
 		"""
 		try:
 			print "load model = " + moduleName 
 			module = __import__(moduleName, globals(), locals(), [name])
+			print "module obtained"
 		except ImportError:
 			return None
 		return getattr(module, name)

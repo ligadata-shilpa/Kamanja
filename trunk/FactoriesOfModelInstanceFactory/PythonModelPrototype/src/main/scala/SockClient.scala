@@ -2,23 +2,23 @@
 //exec scala "$0" "$@"
 //!#
 
-
-
 import java.net._
 import java.io._
 import java.nio.ByteBuffer
 import java.security.MessageDigest
+import java.util.regex.{Matcher, Pattern}
 
-import org.json4s._
+import org.json4s.{DefaultFormats, Formats, JsonAST, MappingException}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
-import org.json4s.jackson.Serialization
 
 import scala.collection.JavaConverters._
 import scala.io._
 import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable.List
 import scala.sys.process._
+import scala.util.control.Breaks._
 
 object CmdConstants {
     /** start and end message demarcation (marker) values as strings and arrays */
@@ -27,7 +27,7 @@ object CmdConstants {
     val startMarkerArray : Array[Byte] = Array[Byte]('_','S','_','T','_','A','_','R','_','T','_')
     val endMarkerArray : Array[Byte] = Array[Byte]('_','F','_','I','_','N','_','I','_')
     /** at some point a crc or digest will be calculated on the cmd message (when
-		the python server is perhaps not located on the local machine) */
+      * the python server is perhaps not located on the local machine) */
     val crcDefaultValue : Long = 0L
 
     /** lengths of the two fixed fields (scalars) that follow the startMarkerValue */
@@ -40,7 +40,7 @@ object SockClientTools {
       * Execute the supplied command sequence. Answer with the rc, the stdOut, and stdErr outputs from
       * the external command represented in the sequence.
       *
-      * Warning: you must wait for this process to end.  It is **_not_** to be used to launch a daemon. Use
+      * Warning: This function will wait for the process to end.  It is **_not_** to be used to launch a daemon. Use
       * cmd.run instead. If this application is itself a server, you can run it with the ProcessLogger as done
       * here ... possibly with a different kind of underlying stream that writes to a log file or in some fashion
       * consumable with the program.
@@ -59,7 +59,92 @@ object SockClientTools {
         (exitValue, stdoutStream.toString, stderrStream.toString)
     }
 
+    /**
+      * Translate the supplied JSON string.
+      *
+      * @param jsonStr ...a JSON map, a JSON list, or a JSON list of JSON maps
+      * @return Any ... the caller is expected to know how to cast this value
+      */
+
+    def jsonStringAsColl(jsonStr: String): Any = {
+        val jsonObjs : Any = try {
+            implicit val jsonFormats: Formats = DefaultFormats
+            val json = parse(jsonStr)
+            println(s"Parsed the json : \n$jsonStr")
+            json.values
+        } catch {
+            case e: MappingException => {
+                println(s"mapping exception...\n${e.toString}")
+                throw e
+            }
+            case e: Exception => {
+                println(s"exception encountered...\n${e.toString}")
+                throw e
+            }
+        }
+        jsonObjs
+    }
+
+    /** Serialize a simple name value map to a suitable json string fragment for inclusion in the
+      * server messages.
+      *
+      * @param msgMap a Map[String,Any] ... e.g., input values
+      * @return json string rep
+      */
+    def SerializeSimpleMapToJson(msgMap: Map[String, Any]): String = {
+
+        val buffer : StringBuilder = new StringBuilder
+        buffer.append("{ ")
+        msgMap.toList.foreach(m => {
+            buffer.append(s"${'"'}${m._1}${'"'} : ${m._2.toString}, ")
+        })
+
+        val jsonStr : String = buffer.toString.drop(2) // scrape off trailing comma and space
+        val enclosedJsonStr : String = s"$jsonStr }"
+        enclosedJsonStr
+    }
+
 }
+
+/**
+  * MapSubstitution used to stitch in home grown json strings possibly passed as argument to SockClient
+  * into one of the messages destined for the pythonserver.  See executeModel for example.
+  *
+  * Embedded keys look like this regexp: val patStr = """(\{[A-Za-z0-9_.-]+\})"""
+  *
+  * That is:
+  *     {This_is_.my.1.key}
+  *
+  * @param template the string to have its embedded keys substituted
+  * @param subMap a map of substutitions to make.
+  */
+class MapSubstitution(template: String, subMap: scala.collection.immutable.Map[String, String]) {
+
+    def findAndReplace(m: Matcher)(callback: String => String): String = {
+        val sb = new StringBuffer
+        while (m.find) {
+            val replStr = subMap(m.group(1))
+            m.appendReplacement(sb, callback(replStr))
+        }
+        m.appendTail(sb)
+        sb.toString
+    }
+
+    def makeSubstitutions: String = {
+        var retrStr = ""
+        try {
+            val patStr = """\"(\{[A-Za-z0-9_.-]+\})\""""
+            val m = Pattern.compile(patStr).matcher(template)
+            retrStr = findAndReplace(m) { x => x }
+        } catch {
+            case e: Exception => retrStr = ""
+            case e: Throwable => retrStr = ""
+        }
+        retrStr
+    }
+
+}
+
 
 object SockClient {
 
@@ -78,33 +163,44 @@ object SockClient {
     /** Usage message for console display */
     def usage: String = {
         """
-    One of the following must be supplied.
+  One of the following must be supplied. Currently only one command at a time is permitted.
 
   SocketClient.scala <named args...>
   where <named args> are:
 
-    --cmd startServer [--host <hostname or ip> ... default = localhost]
-                      [--port <user port no.> ... default=9999]
-                      [--user <userId.> ... default="kamanja"]
-                      --pyPath <location of Kamanja python installation>
-    --cmd stopServer  [--host <hostname or ip> ... default = localhost]
-                      [--port <user port no.> ... default=9999]
-                      [--user <userId.> ... default="kamanja"]
-    --cmd addModel    --filePath <filePath>
-                      [--user <userId.> ... default="kamanja"]
-                      --options <JSON string (map) defining with input and output messages.  Keys are InputMsgs
+    --cmd startServer   [--host <hostname or ip> ... default = localhost]
+                        [--port <user port no.> ... default=9999]
+                        [--user <userId.> ... default="kamanja"]
+                        --pyPath <location of Kamanja python installation>
+    --cmd stopServer    [--host <hostname or ip> ... default = localhost]
+                        [--port <user port no.> ... default=9999]
+                        [--user <userId.> ... default="kamanja"]
+    --cmd addModel      [--host <hostname or ip> ... default = localhost]
+                        [--port <user port no.> ... default=9999]
+                        [--user <userId.> ... default="kamanja"]
+                        --filePath <filePath>
+                        --modelOptions <JSON string (map) defining with input and output messages.  Keys are InputMsgs
                         and OutputMsgs respectively. InputMsgs and OutputMsgs values are arrays (there can be multiple
                         messages ingested by a model or produced by one).  Other values can be presented in the map
                         as necessary to be utilized by the model instance that will run on the server.
-    --cmd removeModel  --modelName '<modelName>'
-                      [--user <userId.> ... default="kamanja"]
-    --cmd serverStatus [--user <userId.> ... default="kamanja"]
-    --cmd executeModel --modelName '<modelName>'
-                       --msg '<msg data expressed as json map string>'
-                      [--user <userId.> ... default="kamanja"]
-    --cmd executeModel --modelName '<modelName>'
-                       --filePath '<msg file path>'
-                      [--user <userId.> ... default="kamanja"]
+                        --pyPath <location of Kamanja python installation>
+    --cmd removeModel   [--host <hostname or ip> ... default = localhost]
+                        [--port <user port no.> ... default=9999]
+                        [--user <userId.> ... default="kamanja"]
+                        --modelName <modelName>
+    --cmd serverStatus  [--host <hostname or ip> ... default = localhost]
+                        [--port <user port no.> ... default=9999]
+                        [--user <userId.> ... default="kamanja"]
+    --cmd executeModel  [--host <hostname or ip> ... default = localhost]
+                        [--port <user port no.> ... default=9999]
+                        [--user <userId.> ... default="kamanja"]
+                        --modelName '<modelName>'
+                        --msg '<msg data expressed as json map string>'
+    --cmd executeModel  [--host <hostname or ip> ... default = localhost]
+                        [--port <user port no.> ... default=9999]
+                        [--user <userId.> ... default="kamanja"]
+                        --modelName '<modelName>'
+                        --filePath '<msg file path>'
 
 
   It is possible to run multiple servers on same host simply by varying 
@@ -138,6 +234,8 @@ object SockClient {
                     nextOption(map ++ Map('port -> value), tail)
                 case "--user" :: value :: tail =>
                     nextOption(map ++ Map('user -> value), tail)
+                case "--modelOptions" :: value :: tail =>
+                    nextOption(map ++ Map('modelOptions -> value), tail)
                 case "--pyPath" :: value :: tail =>
                     nextOption(map ++ Map('pyPath -> value), tail)
                 case option :: tail => println("Unknown option " + option)
@@ -153,6 +251,7 @@ object SockClient {
         val host : String = if (options.contains('host)) options.apply('host) else "localhost"
         val portNo : Int = if (options.contains('port)) options.apply('port).toInt else 9999
         val pyPath : String = if (options.contains('pyPath)) options.apply('pyPath) else null
+        val modelOptions : String = if (options.contains('modelOptions)) options.apply('modelOptions) else null
 
         val ok : Boolean = cmd != null
         if (! ok) {
@@ -177,6 +276,7 @@ object SockClient {
                 , user
                 , host
                 , portNo
+                , modelOptions
                 , pyPath)
         if (! cmdOk) {
             println(s"\nCommand $cmd parameters are invalid...$errMsg\n")
@@ -191,13 +291,14 @@ object SockClient {
             println(s"Server started? $result")
         } else {
 	        /** Prepare the command message for transport (except for the case of the
-	          StartServerCmd instance... NOTE: multiple cmds may be prepared */
+              * StartServerCmd instance... NOTE: multiple cmds may be prepared */
 	        val cmdMsg : Array[Byte] = cmdObj.prepareCmdMsg(filePath
 	            , modelName
 	            , msg
 	            , user
 	            , host
 	            , portNo
+                , modelOptions
                 , pyPath)
             /** send the command to the server for execution */
             val inetbyname = InetAddress.getByName(host)
@@ -217,18 +318,20 @@ object SockClient {
             val buffer : Array[Byte] = new Array[Byte](2^16) // 64k
             val answeredBytes : ArrayBuffer[Byte] = ArrayBuffer[Byte]()
             var bytesReceived = in.read(buffer)
-            while (bytesReceived > 0) {
-        		answeredBytes ++= buffer.slice(0,bytesReceived)
-            	bytesReceived = in.read(buffer)
-
-                /** print one result each loop... and then the remaining (if any) after bytesReceived == 0) */
-            	val endMarkerIdx : Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
-                if (endMarkerIdx >= 0) {
-                    val endMarkerIncludedIdx : Int = endMarkerIdx + CmdConstants.endMarkerArray.length
-                    val responseBytes : Array[Byte] = answeredBytes.slice(0,endMarkerIncludedIdx).toArray
-                    val response : String = unpack(responseBytes)
-                    println(response)
-                    answeredBytes.remove(0, endMarkerIncludedIdx)
+            breakable {
+                while (bytesReceived > 0) {
+                    answeredBytes ++= buffer.slice(0, bytesReceived)
+                    /** print one result each loop... and then the remaining (if any) after bytesReceived == 0) */
+                    val endMarkerIdx: Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
+                    if (endMarkerIdx >= 0) {
+                        val endMarkerIncludedIdx: Int = endMarkerIdx + CmdConstants.endMarkerArray.length
+                        val responseBytes: Array[Byte] = answeredBytes.slice(0, endMarkerIncludedIdx).toArray
+                        val response: String = unpack(responseBytes)
+                        println(response)
+                        answeredBytes.remove(0, endMarkerIncludedIdx)
+                        break
+                    }
+                    bytesReceived = in.read(buffer)
                 }
             }
 
@@ -247,7 +350,6 @@ object SockClient {
                         println(s"Bytes were '${answeredBytes.toString}'")
                     }
                 }
-
             }
 
             s.close()
@@ -255,21 +357,21 @@ object SockClient {
         sys.exit(0)
     }
 
-    /** 
-    Unpack the returned message:
-		startMarkerValue ("_S_T_A_R_T_")
-		checksum (value is 0L ...  unused/unchecked)
-        result length (an int)
-        cmd result (some json string)
-		endMarkerValue ("_F_I_N_I_")
-
-    If all is well, reconstitute the json string value from the payload portion.
-
-	@param answeredBytes an ArrayBuffer containing the reply from the py server
-	@return the string result if successfully transmitted.  When result integrity
-		an issue, issue error message as the result revealing the finding.
-
-    */
+    /**
+      * Unpack the returned message:
+      * startMarkerValue ("_S_T_A_R_T_")
+      * checksum (value is 0L ...  unused/unchecked)
+      * result length (an int)
+      * cmd result (some json string)
+      * endMarkerValue ("_F_I_N_I_")
+      *
+      * If all is well, reconstitute the json string value from the payload portion.
+      *
+      * @param answeredBytes an ArrayBuffer containing the reply from the py server
+      * @return the string result if successfully transmitted.  When result integrity
+      *         an issue, issue error message as the result revealing the finding.
+      *
+ */
     def unpack(answeredBytes : Array[Byte]) : String = {
     	val lenOfCheckSum : Int = CmdConstants.lenOfCheckSum
     	val lenOfInt : Int = CmdConstants.lenOfInt
@@ -284,13 +386,18 @@ object SockClient {
     		val endMark : scala.Array[Byte] = new scala.Array[Byte](endMarkerValueLen)
     		/** unpack the byte array into md5 digest, payload len, payload, md5 digest */
 			byteBuffer.get(startMark,0,startMarkerValueLen)
-            val crcBytes : Long = byteBuffer.getLong()
+            val crc : Long = byteBuffer.getLong()
             val payloadLen : Int = byteBuffer.getInt()
-    		var payloadArray : scala.Array[Byte] = new scala.Array[Byte](payloadLen)
-			byteBuffer.get(payloadArray,startMarkerValueLen + lenOfCheckSum + lenOfInt,payloadLen)
-			byteBuffer.get(endMark,startMarkerValueLen + lenOfCheckSum + lenOfInt + payloadLen,endMarkerValueLen)
-
-			payloadArray.toString
+            val startMarkStr : String = startMark.mkString("")
+            println(s"startMark = $startMarkStr, crc = $crc, payload len = $payloadLen")
+    		val payloadArray : scala.Array[Byte] = new scala.Array[Byte](payloadLen)
+			byteBuffer.get(payloadArray,0,payloadLen)
+			byteBuffer.get(endMark,0,endMarkerValueLen)
+            val endMarkStr : String = new String(endMark.array)
+			val payloadStr : String = new String(payloadArray.array)
+            println(s"payload = $payloadStr")
+            println(s"endMark = $endMarkStr")
+            payloadStr
     	} else {
     		"unreasonable bytes returned... either null or insufficient bytes in the supplied result"
     	}
@@ -298,18 +405,14 @@ object SockClient {
     }
 }
 
-/** Abstract class for objects that handle semantic checks and command preparation for
-  * the server to execute.
+/** Abstract class for objects that handle semantic checks and server command preparation
   */
 abstract class PyCmd (val cmd : String) {
-    def semanticCheck(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int, pyPath : String) : (Boolean,String)
-    def prepareCmdMsg(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int, pyPath : String) : scala.Array[Byte]
+    def semanticCheck(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int, modelOptions : String, pyPath : String) : (Boolean,String)
+    def prepareCmdMsg(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int, modelOptions : String, pyPath : String) : scala.Array[Byte]
 }
-/** Commands:
-  * StartServerCmd, StopServerCmd, AddModelCmd, RemoveModelCmd,
-  * ServerStatusCmd, ExecuteModelCmd
-  */
 
+/** Commands: StartServerCmd, StopServerCmd, AddModelCmd, RemoveModelCmd, ServerStatusCmd, ExecuteModelCmd */
 
 /**
   * StartServerCmd
@@ -322,6 +425,7 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int
+                               , modelOptions : String
                                , pyPath : String) : (Boolean,String) = {
 
         val isLocalHost : Boolean = host == "localhost"
@@ -338,6 +442,7 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int
+                               , modelOptions : String
                                , pyPath : String) : scala.Array[Byte] = {
         new scala.Array[Byte](0)
     }
@@ -357,14 +462,14 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
 
         val useSSH : Boolean = host != "localhost"
 
-        val pythonArgsStr = s"$pyPath/pythonserver.py $host ${portNo.toString} $pyPath"
+        val pythonCmdStr = s"python $pyPath/pythonserver.py --host $host --port ${portNo.toString} --pythonpath $pyPath"
         val cmdSeq : Seq[String] = if (useSSH) {
             val userMachine : String = s"$user@$host"
-            val remoteCmd : String = s"python $pythonArgsStr"
+            val remoteCmd : String = s"python $pythonCmdStr"
             Seq[String]("ssh", userMachine, remoteCmd)
         } else {
-            println(s"Start the python server... python $pythonArgsStr")
-            Seq[String]("python", pythonArgsStr)
+            println(s"Start the python server... $pythonCmdStr")
+            Seq[String]("bash", "-c", pythonCmdStr)
         }
 
         /**
@@ -373,15 +478,30 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
           * the pythonserver via ProcessLogger (see runCmdCollectOutput for example that waits for completion with
           * the .! invocation.
           */
+
         val pySrvCmd = Process(cmdSeq)
         pySrvCmd.run
         val startResult : Int = 0  /** if there are no exceptions, it succeeds */
 
-        val resultStr : String = if (startResult == 0) "Successfully" else "Failed"
+        val processInfo = ("ps aux" #| "grep python" #| s"grep ${portNo.toString}").!!.trim
+        val re = """[A-Za-z0-9]+[\t ]+([0-9]+).*""".r
+        val allMatches = re.findAllMatchIn(processInfo)
+
+        val pids : ArrayBuffer[String] = ArrayBuffer[String]()
+        allMatches.foreach ( m =>
+            pids += m.group(1)
+        )
+
+        //println(pids.toString)
+
+        val pid : String = if (pids != null) pids.last else null
+        val result : String = if (pid != null) "Server started successfully" else "Server start failed"
+        val pidStr : String = if (pid != null) pid else s"${'"'}----${'"'}"
+
+        val resultStr : String = s"{ ${'"'}result${'"'} : ${'"'}$result${'"'},  ${'"'}pid${'"'} : $pidStr }"
+
         resultStr
     }
-
-
 }
 
 /** StopServerCmd */
@@ -394,19 +514,21 @@ class StopServerCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int
+                               , modelOptions : String
                                , pyPath : String) : (Boolean,String) = {
         (true,"")
     }
 
     /**
       * Example stopServer command:
-      *
-        {
-            "Cmd": "stopServer",
-            "CmdOptions": {},
-            "ModelOptions": {}
-        },
-
+      * '''
+      * {
+      *     "Cmd": "stopServer",
+      *     "CmdVer" : 1,
+      *     "CmdOptions": {},
+      *     "ModelOptions": {}
+      * }
+      * '''
       *
       * @param filePath (unused for serverStatus)
       * @param modelName (unused for serverStatus)
@@ -414,7 +536,8 @@ class StopServerCmd(cmd : String) extends PyCmd(cmd) {
       * @param user the user that submitted this addModel command ... the 'tenant'
       * @param host the host that has the target server
       * @param portNo the port with which the server is listening for commands
-      * @param pyPath (unused for serverStatus)
+      * @param modelOptions (unused for stopServer
+      * @param pyPath (unused for stopServer)
       * @return
       */
     override def prepareCmdMsg(filePath: String
@@ -423,9 +546,11 @@ class StopServerCmd(cmd : String) extends PyCmd(cmd) {
                                , user: String
                                , host: String
                                , portNo: Int
+                               , modelOptions : String
                                , pyPath : String) : Array[Byte] = {
         val json = (
-            ("Cmd" -> cmd) //~
+            ("Cmd" -> cmd) ~
+            ("CmdVer" -> 1) // ~
             //("CmdOptions" -> List[String]() ~
             //("ModelOptions" -> List[String]())
             )
@@ -475,6 +600,7 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int
+                               , modelOptions : String
                                , pyPath : String) : (Boolean,String) = {
         (true,"")
     }
@@ -484,80 +610,33 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
       * supplied machine followed by preparing the command message for it...
       *
       * Sample message:
-
-            "Cmd": "addModel",
-            "CmdOptions": {
-              "ModelFile": "a.py",
-              "ModelName": "a"
-            },
-            "ModelOptions": {
-              "InputMsgs": [
-                {
-                  "name": "org.kamanja.arithmetic.arithmeticMsg",
-                  "fields": {
-                    "a": "Int",
-                    "b": "Int"
-                  }
-                }
-              ],
-              "OutputMsgs": [
-                {
-                  "name": "org.kamanja.arithmetic.arithmeticOutMsg",
-                  "fields": {
-                    "a": "Int",
-                    "b": "Int",
-                    "result": "Int"
-                  }
-                }
-              ]
-            }
-          }
+      *
+      *
+      * {
+      *     "Cmd": "addModel",
+      *     "CmdVer" : 1,
+      *     "CmdOptions": {
+      *         "ModelFile": "a.py",
+      *         "ModelName": "a"
+      *     },
+      *     "ModelOptions": {}
+      * }
       *
       * Multiple input and output messages are possible, assuming the model can handle that.
       *
       * @param filePath the python model program file to copy to the pyPath
       * @param modelName the name of the model (the class name) found in that file
-      * @param msgs the flattened ModelOptions dictionary value (see note below for explanation)
+      * @param msgs (unused for addModel)
       * @param user the user that submitted this addModel command ... the 'tenant'
       * @param host the host that has the target server
       * @param portNo the port with which the server is listening for commands
+      * @param modelOptions the options for (principally) addModel that describe the messages the model will ingest/emit
       * @param pyPath Kamanja's python sys.path entrant on the server machine that was supplied to the python startServer
       *               command.  Currently models are added to the $pypath/models.  NOTE: In a future release, the
       *               modelNm parameter is a namespace.name and the nodes of the namespace provide the directory structure
       *               within the pyPath (i.e., no more models forced into the models subdirectory).
       * @return an Array[Byte] representing the addModel command
       *
-      * Note: The msgs parameter is a flattened json string consisting of the ModelOptions map.  Given the example above, the
-      * value would be this portion:
-      *
-      *
-            {
-              "InputMsgs": [
-                {
-                  "name": "org.kamanja.arithmetic.arithmeticMsg",
-                  "fields": {
-                    "a": "Int",
-                    "b": "Int"
-                  }
-                }
-              ],
-              "OutputMsgs": [
-                {
-                  "name": "org.kamanja.arithmetic.arithmeticOutMsg",
-                  "fields": {
-                    "a": "Int",
-                    "b": "Int",
-                    "result": "Int"
-                  }
-                }
-              ]
-            }
-
-
-      *
-      * flattened to a string...
-      *
-      * {"InputMsgs": [{"name": "org.kamanja.arithmetic.arithmeticMsg", "fields": {"a": "Int", "b": "Int"} } ], "OutputMsgs": [{"name": "org.kamanja.arithmetic.arithmeticOutMsg", "fields": {"a": "Int", "b": "Int", "result": "Int"} } ] }
       */
     override def prepareCmdMsg(filePath : String
                                , modelName : String
@@ -565,20 +644,21 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int
+                               , modelOptions : String
                                , pyPath : String) : Array[Byte] = {
 
 
         /** copy the python model source file to $pyPath/models */
         val useSSH : Boolean = host != "localhost"
         val slash : String = if (pyPath != null && pyPath.endsWith("/")) "" else "/"
-        val cpArgsStr = s"$filePath $pyPath${slash}models/"
+        val fromCpArgsStr : String = s"$filePath"
+        val toCpArgsStr : String = s"$pyPath${slash}models/"
         val cmdSeq : Seq[String] = if (useSSH) {
             val userMachine : String = s"$user@$host"
-            val remoteCmd : String = cpArgsStr
-            Seq[String]("scp", userMachine, remoteCmd)
+            Seq[String]("scp", userMachine, fromCpArgsStr, toCpArgsStr)
         } else {
             println(s"copy model $filePath locally to $pyPath${slash}models/")
-            Seq[String]("cp", cpArgsStr)
+            Seq[String]("cp", fromCpArgsStr, toCpArgsStr)
         }
         val (result, stdoutStr, stderrStr) : (Int, String, String) = SockClientTools.runCmdCollectOutput(cmdSeq)
         if (result != 0) {
@@ -591,15 +671,23 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
         val modelFile : String = filePath.split('/').last.trim /** just the file name */
         val json = (
             ("Cmd" -> cmd) ~
+            ("CmdVer" -> 1) ~
             ("CmdOptions" -> (
                 ("ModelFile" -> modelFile) ~
                 ("ModelName" -> modelName)
             )) ~
-            ("ModelOptions" -> msgs)
+            ("ModelOptions" -> (
+                ("TypeInfo" -> "{TYPEINFO_KEY}")
+            ))
         )
         val addMsg : String = compact(render(json))
 
-        val payloadStr : String = addMsg
+        val subMap : Map[String,String] = Map[String,String]("{TYPEINFO_KEY}" -> modelOptions)
+        val sub = new MapSubstitution(addMsg, subMap)
+        val jsonCmdMsg : String = sub.makeSubstitutions
+
+
+        val payloadStr : String = jsonCmdMsg
         val payload : Array[Byte] = payloadStr.getBytes
         val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
         checksumBytes.putLong(0L)
@@ -607,12 +695,16 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
         val lenBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfInt)
         lenBytes.putInt(payload.length)
         val payloadLenAsBytes : Array[Byte] = lenBytes.array()
+
+        println(s"addModel msg = ${CmdConstants.startMarkerValue} 0L ${payload.length} $jsonCmdMsg ${CmdConstants.endMarkerValue}")
+
         val cmdBytes : Array[Byte] = CmdConstants.startMarkerArray ++
             chkBytesArray ++
             payloadLenAsBytes ++
             payload ++
             CmdConstants.endMarkerArray
 
+        println(s"addModel msg len = ${cmdBytes.length}")
         cmdBytes
 
     }
@@ -628,6 +720,7 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
                                , user: String
                                , host: String
                                , portNo: Int
+                               , modelOptions : String
                                , pyPath : String) : (Boolean,String) = {
         (true,"")
     }
@@ -635,13 +728,16 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
     /**
       * Example removeModel command message:
       *
-        {
-            "Cmd": "removeModel",
-            "CmdOptions": {
-              "ModelName": "a"
-            },
-            "ModelOptions": {}
-        }
+      * '''
+      * {
+      *     "Cmd": "removeModel",
+      *     "CmdVer" : 1,
+      *     "CmdOptions": {
+      *         "ModelName": "a"
+      *     },
+      *     "ModelOptions": {}
+      * }
+      * '''
       *
       * @param filePath (unused for removeModel)
       * @param modelName (the name of the model to be removed from the server
@@ -649,6 +745,7 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
       * @param user the user that submitted this addModel command ... the 'tenant'
       * @param host the host that has the target server
       * @param portNo the port with which the server is listening for commands
+      * @param modelOptions (unused for removeModel)
       * @param pyPath (unused for removeModel)
       * @return
       */
@@ -658,10 +755,12 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
                                , user: String
                                , host: String
                                , portNo: Int
+                               , modelOptions : String
                                , pyPath : String): Array[Byte] = {
 
         val json = (
             ("Cmd" -> cmd) ~
+            ("CmdVer" -> 1) ~
             ("CmdOptions" -> (
                 ("ModelName" -> modelName) //~
                 //("InputMsgs" -> msg)
@@ -698,6 +797,7 @@ class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
                                , user: String
                                , host: String
                                , portNo: Int
+                               , modelOptions : String
                                , pyPath : String) : (Boolean,String) = {
         (true,"")
     }
@@ -705,19 +805,22 @@ class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
     /**
       * Example serverStatus command:
       *
-        {
-            "Cmd": "serverStatus",
-            "CmdOptions": {},
-            "ModelOptions": {}
-        },
-
-      *
+      * '''
+      * {
+      *     "Cmd": "serverStatus",
+      *     "CmdVer" : 1,
+      *     "CmdOptions": {},
+      *     "ModelOptions": {}
+      * }
+      * '''
+ *
       * @param filePath (unused for serverStatus)
       * @param modelName (unused for serverStatus)
       * @param msg (unused for serverStatus)
       * @param user the user that submitted this addModel command ... the 'tenant'
       * @param host the host that has the target server
       * @param portNo the port with which the server is listening for commands
+      * @param modelOptions (unused for serverStatus)
       * @param pyPath (unused for serverStatus)
       * @return
       */
@@ -727,9 +830,11 @@ class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
                                , user: String
                                , host: String
                                , portNo: Int
+                               , modelOptions : String
                                , pyPath : String) : Array[Byte] = {
         val json = (
-            ("Cmd" -> cmd) //~
+            ("Cmd" -> cmd) ~
+            ("CmdVer" -> 1) //~
             //("CmdOptions" -> List[String]() ~
             //("ModelOptions" -> List[String]())
             )
@@ -763,6 +868,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int
+                               , modelOptions : String
                                , pyPath : String) : (Boolean,String) = {
         (true,"")
     }
@@ -772,58 +878,36 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
       *
       * Sample executeModel command prepared:
       *
-        {
-            "Cmd": "executeModel",
-            "CmdOptions": {
-              "ModelName": "a",
-              "InputMsgs": [
-                {
-                  "name": "org.kamanja.arithmetic.arithmeticMsg",
-                  "fields": {
-                    "a": 1,
-                    "b": 2
-                  }
-                }
-              ]
-            },
-            "ModelOptions": {}
-          }
-      *
-      * Fixme: It should also be possible to supply ModelOptions on the executeModel command...
+      * '''
+      * {
+      *     "Cmd": "executeModel",
+      *     "CmdVer" : 1,
+      *     "CmdOptions": {
+      *         "ModelName": "a",
+      *         "InputDictionary": {
+      *             "a": 1,
+      *             "b": 2
+      *         }
+      *     },
+      *     "ModelOptions": {}
+      * }
+      * '''
       *
       * @param filePath if supplied, a CSV file with header line is expected. Multiple elements appear
       *                 in the InputMsgs list.  The header names had better match the _sole_ input message.
       *                 This is just a hack to test out the multiple command
       * @param modelName the name of the model
-      * @param msg a flattened version of the InputMsgs array with the field name/value pairs for each message.
+      * @param msg a flattened version of the InputDictionary dictionary with the field name/value pairs
+      *            (e.g., {"a": 1, "b": 2 } for the InputDictionary above)
       * @param user the user that submitted this addModel command ... the 'tenant'
       * @param host the host that has the target server
       * @param portNo the port with which the server is listening for commands
+      * @param modelOptions conceivably used for executeModel, but not currently
       * @param pyPath (unused by executeModel).
       * @return an Array[Byte] containing the command message ready for transmission to the server
       *
-      *
-      * NOTE: the flattened version of the message is just the value part(s) of the InputMsgs.  For example, given
-      * the example above...
-      *
-        [
-          {
-            "name": "org.kamanja.arithmetic.arithmeticMsg",
-            "fields": {
-              "a": 1,
-              "b": 2
-            }
-          }
-        ]
-      * but flattened to a string:
-      *
-      * [{"name": "org.kamanja.arithmetic.arithmeticMsg", "fields": {"a": 1, "b": 2 } } ]
-      *
       * Pre-conditions:
-      * Multiple messages of different types _only_ can be sent in the array.  That is, the name field value can only appear
-      * once in the array elements, although this is currently unchecked.  Multiple messages of the same type
-      * would be managed by an array of some container type within a message.  Serialization of array fields and maps
-      * are not supported by this test harness at the moment.
+      *    For this release, only one message can be ingested
       */
     override def prepareCmdMsg(filePath : String
                                , modelName : String
@@ -831,6 +915,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
                                , user : String
                                , host : String
                                , portNo : Int
+                               , modelOptions : String
                                , pyPath : String) : Array[Byte] = {
 
     	if (filePath != null) {
@@ -838,21 +923,30 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
             return Array[Byte]()
 		}
 
+        val msgJson : scala.collection.immutable.Map[String,Any] =
+                SockClientTools.jsonStringAsColl(msg).asInstanceOf[scala.collection.immutable.Map[String,Any]]
+        val msgFieldMap : String =  SockClientTools.SerializeSimpleMapToJson(msgJson)
+
         val json = (
             ("Cmd" -> cmd) ~
+            ("CmdVer" -> 1) ~
             ("CmdOptions" -> (
                     ("ModelName" -> modelName) ~
-                    ("InputMsgs" -> msg)
+                    ("InputDictionary" -> "{DATA.KEY}")
             )) //~
             //("ModelOptions" -> List[String]())
         )
-        val cmdMsgOptions : String = compact(render(json))
-        cmdMsgOptions
+        val jsonCmdTemplate : String = compact(render(json))
 
+        val subMap : Map[String,String] = Map[String,String]("{DATA.KEY}" -> msgFieldMap)
+        val sub = new MapSubstitution(jsonCmdTemplate, subMap)
+        val jsonCmdMsg : String = sub.makeSubstitutions
 
-        val cmdStr : String = cmd
-        val payloadStr : String = cmdStr
-        val payload : Array[Byte] = payloadStr.getBytes
+        val subMap1 : Map[String,String] = Map[String,String]("{DATA.KEY}" -> msg)
+        val sub1 = new MapSubstitution(jsonCmdTemplate, subMap1)
+        val jsonCmdMsg1 : String = sub1.makeSubstitutions
+
+        val payload : Array[Byte] = jsonCmdMsg1.getBytes
         val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
         checksumBytes.putLong(0L)
         val chkBytesArray : scala.Array[Byte] = checksumBytes.array()
@@ -880,6 +974,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
       * @param user the user that submitted this addModel command ... the 'tenant'
       * @param host the host that has the target server
       * @param portNo the port with which the server is listening for commands
+      * @param modelOptions conceivably used for executeModel, but not currently
       * @param pyPath (unused by executeModel).
       * @return an array of commands (byte arrays) prepared from the records found in the filePath
       */
@@ -889,6 +984,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
                        , user : String
                        , host : String
                        , portNo : Int
+                       , modelOptions : String
                        , pyPath : String) : Array[Array[Byte]]  = {
 
         if (filePath == null) {
@@ -912,8 +1008,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
             })
 
             val cmdsAsBytes : Array[Array[Byte]] = cmdStrings.map(jsonCmd => {
-                val payloadStr : String = cmdStr
-                val payload : Array[Byte] = payloadStr.getBytes
+                val payload : Array[Byte] = jsonCmd.getBytes
                 val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
                 checksumBytes.putLong(0L)
                 val chkBytesArray : scala.Array[Byte] = checksumBytes.array()
@@ -957,6 +1052,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
         val msgs : List[String] = List[String](msgJson)
         val json = (
             ("Cmd" -> cmd) ~
+            ("CmdVer" -> 1) ~
             ("CmdOptions" -> (
                 ("ModelName" -> modelName) ~
                 ("InputMsgs" -> msgs)

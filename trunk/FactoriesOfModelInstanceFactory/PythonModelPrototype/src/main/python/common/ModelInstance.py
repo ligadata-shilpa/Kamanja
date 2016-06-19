@@ -4,49 +4,46 @@ from common.ModelBase import ModelBase
 import json
 
 class ModelInstance(ModelBase): 
-    """ initialize the model instance (the super class for 
+    """ 
+    Initialize the model instance (the super class for 
     all the python models) with the supplied model info JSON
-    popped off the front of supplied addModel inputs """
+    popped off the front of supplied addModel inputs 
+    """
 
-    def __init__(self, modelInfo):
-        self.jsonModelInfo = modelInfo #string rep 
-        self.modelInfo = [] #json.loads(modelInfo) #json => dictionary
-        partitionHash = modelInfo["partitionHash"]
-        init(partitionHash)
-
-    #def ModelName(self):
-    def ModelName(self):
-        """Answer the model's name."""
-        nm = modelInfo["ModelName"]
-        return nm
-
-    def Version(self):
-        """Answer the model's version."""
-        ver = modelInfo["Version"]
-        return ver
-
-    def Tenant(self):
-        """Answer the model's owner."""
-        tenant = modelInfo["Tenant"]
-        return tenant
-
-    def OwnerId(self):
-        """Answer the model's owner."""
-        return Tenant()
-
-    def TransId(self):
-        """Answer the transaction id for this model instance."""
-        transId = modelInfo["TransId"]
-        return transId
-
-    def init(self, partitionHash):
-        """Instance initialization. Once per instance."""
-        self.partitionHash = partitionHash
+    def __init__(self, host, port, modelOptions):
+        self.host = host
+        self.port = port
+        #self.jsonModelInfo = modelOptions #string rep 
+        #self.modelOptions = json.loads(modelOptions) #json => dictionary
+        self.modelOptions = modelOptions
+        if "PartitionHash" in modelOptions:
+            self.partitionHash = modelOptions["partitionHash"]
+        else:
+            self.partitionHash = 0
 
     @abc.abstractmethod
     def execute(self, outputDefault):
         """if outputDefault is true we will output the default value if nothing matches, otherwise null."""
 
+    @abc.abstractmethod
+    def getInputOutputFields(self):
+        """answer two lists - one for input and output 
+            (inputList, outputList) 
+            each list consists of [(fldName, fld type, descr)]
+            this is the add model result ... from the AddModel command
+        """
+
     def isModelInstanceReusable(self):
         """Can the instance created for this model be reused on subsequent transactions?"""
         return super().isModelInstanceReusable()
+
+    def ModelOptions(self):
+        #make the options dictionary available to the concrete implementors of ModelBase
+        return self.modelOptions
+
+
+    def PartitionHash(self):
+        #Answer which hash this model is dedicated to.
+        return self.partitionHash
+
+
