@@ -139,7 +139,8 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
          var adapterType: String = ""
          val setQuery = queryObj.createSetCommand(adapter = Option(adapter._2))
          if(adapter._2.typeString.equalsIgnoreCase("input")) adapterType = "inputs" else adapterType = "outputs"
-         val query: String = queryObj.createQuery(elementType = "vertex", className = adapterType, elementName = adapter._2.Name)
+         val query: String = queryObj.createQuery(elementType = "vertex", className = adapterType, setQuery = setQuery)
+         println(query)
          queryObj.executeQuery(conn, query)
        }
      }
@@ -150,7 +151,8 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
      } else {
        for (container <- containerDefs.get) {
          val setQuery = queryObj.createSetCommand(contianer = Option(container))
-         val query: String = queryObj.createQuery(elementType = "vertex", className = "container", elementName = container.Name)
+         val query: String = queryObj.createQuery(elementType = "vertex", className = "container", setQuery = setQuery)
+         println(query)
          queryObj.executeQuery(conn, query)
        }
      }
@@ -161,7 +163,19 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
      } else {
        for (model <- ModelDefs.get) {
          val setQuery = queryObj.createSetCommand(model = Option(model))
-         val query: String = queryObj.createQuery(elementType = "vertex", className = "model",elementName=  model.Name)
+         val query: String = queryObj.createQuery(elementType = "vertex", className = "model",setQuery=  setQuery)
+         println(query)
+         val inputName = model.inputMsgSets
+         for(msg <- inputName)
+           for(msg1 <- msg) {
+             println("input origin : " + msg1.origin + " input message : " + msg1.message)
+             for(item <- msg1.attributes)
+               println("input attribute : " + item)
+           }
+
+         val outputName = model.outputMsgs
+         for(item <- outputName)
+           println("output message : " + item)
          queryObj.executeQuery(conn, query)
        }
      }
@@ -172,7 +186,8 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
      } else{
        for (message <- msgDefs.get){
          val setQuery = queryObj.createSetCommand(message = Option(message))
-         val query: String = queryObj.createQuery(elementType = "vertex", className = "Message", elementName = message.Name)
+         val query: String = queryObj.createQuery(elementType = "edge", className = "Message", setQuery = setQuery)
+         println(query)
          queryObj.executeQuery(conn, query)
          // create an edge
        }

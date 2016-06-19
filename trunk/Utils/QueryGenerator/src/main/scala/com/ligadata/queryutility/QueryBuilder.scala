@@ -12,15 +12,15 @@ import com.ligadata.kamanja.metadata.{AdapterInfo, ContainerDef, MessageDef, Mod
   */
 class QueryBuilder extends LogTrait {
 
-  def createQuery(elementName: String, elementType: String, className: String , linkFrom: Option[String] = None, linkTo: Option[String] = None,
+  def createQuery(setQuery: String, elementType: String, className: String , linkFrom: Option[String] = None, linkTo: Option[String] = None,
                   extendsClass: Option[String] = None): String = {
     var query: String = ""
     if(elementType.equalsIgnoreCase("vertex")){
-      query = "create vertex %s set Name = \"%s\";".format(className,elementName)
-    } else if(elementName.equalsIgnoreCase("edge")){
-      query= "create edge %s from %s to %s set Name = \"%s\";".format(className,linkFrom.get,linkTo.get, elementName)
-    } else if(elementType.equalsIgnoreCase("class")){
-      query = "create %class %s extends %s;".format(elementName, extendsClass)
+      query = "create vertex %s %s;".format(className,setQuery)
+    } else if(elementType.equalsIgnoreCase("edge")){
+      query= "create edge %s from %s to %s %s;".format(className,linkFrom.get,linkTo.get, setQuery)
+//    } else if(elementType.equalsIgnoreCase("class")){
+//      query = "create class %s extends %s;".format(setQuery, extendsClass)
     }
     return query
   }
