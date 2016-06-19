@@ -4,7 +4,7 @@ import json
 
 class DivideTuple(ModelInstance): 
 	""" Model DivideTuple will divide msg["a"] by msg["b"] """
-	def handler(self, msg):
+	def execute(self, msg):
 		""" 
 		A real implementation would use the output fields to 
 		determine what should be returned. 
