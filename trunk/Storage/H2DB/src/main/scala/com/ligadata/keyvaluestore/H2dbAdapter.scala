@@ -143,12 +143,14 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     throw CreateConnectionException("Unable to find connectionMode in adapterConfig ", new Exception("Invalid adapterConfig"))
   }
 
-  var hostname: String = null;
-  if (parsed_json.contains("hostname")) {
-    hostname = parsed_json.get("hostname").get.toString.trim
-  } else {
-    throw CreateConnectionException("Unable to find hostname in adapterConfig ", new Exception("Invalid adapterConfig"))
-  }
+  //  var hostname: String = null;
+  //  if (parsed_json.contains("hostname")) {
+  //    hostname = parsed_json.get("hostname").get.toString.trim
+  //  } else {
+  //    throw CreateConnectionException("Unable to find hostname in adapterConfig ", new Exception("Invalid adapterConfig"))
+  //  }
+
+  val hostname = if (parsed_json.contains("hostlist")) parsed_json.getOrElse("hostlist", "localhost").toString.trim else parsed_json.getOrElse("Location", "localhost").toString.trim
 
   var instanceName: String = null;
   if (parsed_json.contains("instancename")) {
@@ -164,14 +166,16 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   if (parsed_json.contains("database")) {
     database = parsed_json.get("database").get.toString.trim
   } else {
-    throw CreateConnectionException("Unable to find database in adapterConfig ", new Exception("Invalid adapterConfig"))
+    //    throw CreateConnectionException("Unable to find database in adapterConfig ", new Exception("Invalid adapterConfig"))
+    database = "database"
   }
 
   var user: String = null;
   if (parsed_json.contains("user")) {
     user = parsed_json.get("user").get.toString.trim
   } else {
-    throw CreateConnectionException("Unable to find user in adapterConfig ", new Exception("Invalid adapterConfig"))
+    //    throw CreateConnectionException("Unable to find user in adapterConfig ", new Exception("Invalid adapterConfig"))
+    user = "test"
   }
 
   var SchemaName: String = null;
@@ -186,22 +190,23 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   if (parsed_json.contains("password")) {
     password = parsed_json.get("password").get.toString.trim
   } else {
-    throw CreateConnectionException("Unable to find password in adapterConfig ", new Exception("Invalid adapterConfig"))
+    //    throw CreateConnectionException("Unable to find password in adapterConfig ", new Exception("Invalid adapterConfig"))
+    password = "test"
   }
 
-  var jarpaths: String = null;
-  if (parsed_json.contains("jarpaths")) {
-    jarpaths = parsed_json.get("jarpaths").get.toString.trim
-  } else {
-    throw CreateConnectionException("Unable to find jarpaths in adapterConfig ", new Exception("Invalid adapterConfig"))
-  }
+  //  var jarpaths: String = null;
+  //  if (parsed_json.contains("jarpaths")) {
+  //    jarpaths = parsed_json.get("jarpaths").get.toString.trim
+  //  } else {
+  //    throw CreateConnectionException("Unable to find jarpaths in adapterConfig ", new Exception("Invalid adapterConfig"))
+  //  }
 
-  var jdbcJar: String = null;
-  if (parsed_json.contains("jdbcJar")) {
-    jdbcJar = parsed_json.get("jdbcJar").get.toString.trim
-  } else {
-    throw CreateConnectionException("Unable to find jdbcJar in adapterConfig ", new Exception("Invalid adapterConfig"))
-  }
+  //  var jdbcJar: String = null;
+  //  if (parsed_json.contains("jdbcJar")) {
+  //    jdbcJar = parsed_json.get("jdbcJar").get.toString.trim
+  //  } else {
+  //    throw CreateConnectionException("Unable to find jdbcJar in adapterConfig ", new Exception("Invalid adapterConfig"))
+  //  }
 
   // The following three properties are used for connection pooling
   var maxActiveConnections = 1000
@@ -237,8 +242,8 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   logger.info("hostname => " + hostname)
   logger.info("username => " + user)
   logger.info("SchemaName => " + SchemaName)
-  logger.info("jarpaths => " + jarpaths)
-  logger.info("jdbcJar  => " + jdbcJar)
+  //  logger.info("jarpaths => " + jarpaths)
+  //  logger.info("jdbcJar  => " + jdbcJar)
   logger.info("clusterdIndex  => " + clusteredIndex)
   logger.info("autoCreateTables  => " + autoCreateTables)
 
@@ -254,22 +259,22 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   //  var jdbcUrl = "jdbc:sqlserver://" + sqlServerInstance + ";databaseName=" + database + ";user=" + user + ";password=" + password
   //  val driverType = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
-  var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+  var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + SchemaName + ";user=" + user + ";password=" + password
   connectionMode match {
-    case "embedded" => jdbcUrl = "jdbc:h2:./storage/" + database + ";user=" + user + ";password=" + password
-    case "ssl" => jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
-    case "tcp" => jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + database + ";user=" + user + ";password=" + password
+    case "embedded" => jdbcUrl = "jdbc:h2:./storage/" + SchemaName + ";user=" + user + ";password=" + password
+    case "ssl" => jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + SchemaName + ";user=" + user + ";password=" + password
+    case "tcp" => jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + SchemaName + ";user=" + user + ";password=" + password
   }
 
-  var jars = new Array[String](0)
-  var jar = jarpaths + "/" + jdbcJar
-  jars = jars :+ jar
+  //  var jars = new Array[String](0)
+  //  var jar = jarpaths + "/" + jdbcJar
+  //  jars = jars :+ jar
 
   val driverType = "org.h2.Driver"
 
   try {
     logger.info("Loading the Driver..")
-    LoadJars(jars)
+    //    LoadJars(jars)
     val d = Class.forName(driverType, true, clsLoader).newInstance.asInstanceOf[Driver]
     logger.info("Registering Driver..")
     DriverManager.registerDriver(new DriverShim(d));
@@ -286,7 +291,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   try {
     dataSource = new BasicDataSource
     dataSource.setUrl(jdbcUrl)
-    dataSource.setUsername(user)
+    //    dataSource.setUsername(user)
     dataSource.setPassword(password)
     dataSource.setMaxTotal(maxActiveConnections);
     dataSource.setMaxIdle(maxIdleConnections);
@@ -428,33 +433,33 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     * loadJar - load the specified jar into the classLoader
     */
 
-  private def LoadJars(jars: Array[String]): Unit = {
-    // Loading all jars
-    for (j <- jars) {
-      val jarNm = j.trim
-      logger.debug("%s:Processing Jar: %s".format(GetCurDtTmStr, jarNm))
-      val fl = new File(jarNm)
-      if (fl.exists) {
-        try {
-          if (loadedJars(fl.getPath())) {
-            logger.info("%s:Jar %s already loaded to class path.".format(GetCurDtTmStr, jarNm))
-          } else {
-            clsLoader.addURL(fl.toURI().toURL())
-            logger.info("%s:Jar %s added to class path.".format(GetCurDtTmStr, jarNm))
-            loadedJars += fl.getPath()
-          }
-        } catch {
-          case e: Exception => {
-            val errMsg = "Jar " + jarNm + " failed added to class path."
-            throw CreateConnectionException(errMsg, e)
-          }
-        }
-      } else {
-        val errMsg = "Jar " + jarNm + " not found"
-        throw new Exception(errMsg)
-      }
-    }
-  }
+  //  private def LoadJars(jars: Array[String]): Unit = {
+  //    // Loading all jars
+  //    for (j <- jars) {
+  //      val jarNm = j.trim
+  //      logger.debug("%s:Processing Jar: %s".format(GetCurDtTmStr, jarNm))
+  //      val fl = new File(jarNm)
+  //      if (fl.exists) {
+  //        try {
+  //          if (loadedJars(fl.getPath())) {
+  //            logger.info("%s:Jar %s already loaded to class path.".format(GetCurDtTmStr, jarNm))
+  //          } else {
+  //            clsLoader.addURL(fl.toURI().toURL())
+  //            logger.info("%s:Jar %s added to class path.".format(GetCurDtTmStr, jarNm))
+  //            loadedJars += fl.getPath()
+  //          }
+  //        } catch {
+  //          case e: Exception => {
+  //            val errMsg = "Jar " + jarNm + " failed added to class path."
+  //            throw CreateConnectionException(errMsg, e)
+  //          }
+  //        }
+  //      } else {
+  //        val errMsg = "Jar " + jarNm + " not found"
+  //        throw new Exception(errMsg)
+  //      }
+  //    }
+  //  }
 
   private def toTableName(containerName: String): String = {
     // Ideally, we need to check for all restrictions for naming a table
@@ -492,36 +497,36 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
       pstmt.setString(6, value.serializerType)
       pstmt.setBinaryStream(7, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
 
-//      sql = "if ( not exists(select 1 from " + tableName +
-//        " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
-//        " begin " +
-//        " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
-//        " values(?,?,?,?,?,?,?)" +
-//        " end " +
-//        " else " +
-//        " begin " +
-//        " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
-//        " end ";
-//      logger.debug("sql => " + sql)
-//      pstmt = con.prepareStatement(sql)
-//      pstmt.setLong(1, key.timePartition)
-//      pstmt.setString(2, key.bucketKey.mkString(","))
-//      pstmt.setLong(3, key.transactionId)
-//      pstmt.setInt(4, key.rowId)
-//      pstmt.setLong(5, key.timePartition)
-//      pstmt.setString(6, key.bucketKey.mkString(","))
-//      pstmt.setLong(7, key.transactionId)
-//      pstmt.setInt(8, key.rowId)
-//      pstmt.setInt(9, value.schemaId)
-//      pstmt.setString(10, value.serializerType)
-//      pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-//      pstmt.setInt(12, value.schemaId)
-//      pstmt.setString(13, value.serializerType)
-//      pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-//      pstmt.setLong(15, key.timePartition)
-//      pstmt.setString(16, key.bucketKey.mkString(","))
-//      pstmt.setLong(17, key.transactionId)
-//      pstmt.setInt(18, key.rowId)
+      //      sql = "if ( not exists(select 1 from " + tableName +
+      //        " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
+      //        " begin " +
+      //        " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
+      //        " values(?,?,?,?,?,?,?)" +
+      //        " end " +
+      //        " else " +
+      //        " begin " +
+      //        " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
+      //        " end ";
+      //      logger.debug("sql => " + sql)
+      //      pstmt = con.prepareStatement(sql)
+      //      pstmt.setLong(1, key.timePartition)
+      //      pstmt.setString(2, key.bucketKey.mkString(","))
+      //      pstmt.setLong(3, key.transactionId)
+      //      pstmt.setInt(4, key.rowId)
+      //      pstmt.setLong(5, key.timePartition)
+      //      pstmt.setString(6, key.bucketKey.mkString(","))
+      //      pstmt.setLong(7, key.transactionId)
+      //      pstmt.setInt(8, key.rowId)
+      //      pstmt.setInt(9, value.schemaId)
+      //      pstmt.setString(10, value.serializerType)
+      //      pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+      //      pstmt.setInt(12, value.schemaId)
+      //      pstmt.setString(13, value.serializerType)
+      //      pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+      //      pstmt.setLong(15, key.timePartition)
+      //      pstmt.setString(16, key.bucketKey.mkString(","))
+      //      pstmt.setLong(17, key.transactionId)
+      //      pstmt.setInt(18, key.rowId)
       pstmt.executeUpdate();
 
       //      var stmnt2 = ""
@@ -615,16 +620,16 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
           var keyValuePairs = li._2
           logger.info("Input row count for the table " + tableName + " => " + keyValuePairs.length)
           sql = "merge into" + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo) key (timePartition, and bucketKey, transactionId, rowId) values(?,?,?,?,?,?,?)"
-//          sql = "if ( not exists(select 1 from " + tableName +
-//            " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
-//            " begin " +
-//            " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
-//            " values(?,?,?,?,?,?,?)" +
-//            " end " +
-//            " else " +
-//            " begin " +
-//            " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
-//            " end ";
+          //          sql = "if ( not exists(select 1 from " + tableName +
+          //            " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
+          //            " begin " +
+          //            " insert into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo)" +
+          //            " values(?,?,?,?,?,?,?)" +
+          //            " end " +
+          //            " else " +
+          //            " begin " +
+          //            " update " + tableName + " set schemaId = ?,serializerType = ?, serializedInfo = ? where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ?  " +
+          //            " end ";
           logger.debug("sql => " + sql)
           pstmt = con.prepareStatement(sql)
           keyValuePairs.foreach(keyValuePair => {
@@ -637,24 +642,24 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
             pstmt.setInt(5, value.schemaId)
             pstmt.setString(6, value.serializerType)
             pstmt.setBinaryStream(7, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-//            pstmt.setLong(1, key.timePartition)
-//            pstmt.setString(2, key.bucketKey.mkString(","))
-//            pstmt.setLong(3, key.transactionId)
-//            pstmt.setInt(4, key.rowId)
-//            pstmt.setLong(5, key.timePartition)
-//            pstmt.setString(6, key.bucketKey.mkString(","))
-//            pstmt.setLong(7, key.transactionId)
-//            pstmt.setInt(8, key.rowId)
-//            pstmt.setInt(9, value.schemaId)
-//            pstmt.setString(10, value.serializerType)
-//            pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-//            pstmt.setInt(12, value.schemaId)
-//            pstmt.setString(13, value.serializerType)
-//            pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
-//            pstmt.setLong(15, key.timePartition)
-//            pstmt.setString(16, key.bucketKey.mkString(","))
-//            pstmt.setLong(17, key.transactionId)
-//            pstmt.setInt(18, key.rowId)
+            //            pstmt.setLong(1, key.timePartition)
+            //            pstmt.setString(2, key.bucketKey.mkString(","))
+            //            pstmt.setLong(3, key.transactionId)
+            //            pstmt.setInt(4, key.rowId)
+            //            pstmt.setLong(5, key.timePartition)
+            //            pstmt.setString(6, key.bucketKey.mkString(","))
+            //            pstmt.setLong(7, key.transactionId)
+            //            pstmt.setInt(8, key.rowId)
+            //            pstmt.setInt(9, value.schemaId)
+            //            pstmt.setString(10, value.serializerType)
+            //            pstmt.setBinaryStream(11, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+            //            pstmt.setInt(12, value.schemaId)
+            //            pstmt.setString(13, value.serializerType)
+            //            pstmt.setBinaryStream(14, new java.io.ByteArrayInputStream(value.serializedInfo), value.serializedInfo.length)
+            //            pstmt.setLong(15, key.timePartition)
+            //            pstmt.setString(16, key.bucketKey.mkString(","))
+            //            pstmt.setLong(17, key.transactionId)
+            //            pstmt.setInt(18, key.rowId)
             pstmt.addBatch()
 
             //              var stmnt2 = ""
