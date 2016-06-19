@@ -78,6 +78,7 @@ object FileProcessor {
   val REFRESH_RATE = 2000
   val MAX_WAIT_TIME = 60000
   var errorWaitTime = 1000
+  val MAX_ZK_RETRY_MS = 5000
 
   var reset_watcher = false
 
@@ -117,13 +118,13 @@ object FileProcessor {
   /**
    *
    */
-  def initZookeeper: CuratorFramework = {
+  def initZookeeper = {
     try {
       zkcConnectString = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZOOKEEPER_CONNECT_STRING")
       logger.info("SMART_FILE_CONSUMER (global) Using zookeeper " + zkcConnectString)
       znodePath = MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer"
-      CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath)
-      return CreateClient.createSimple(zkcConnectString)
+      createNode(zkcConnectString, znodePath) // CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath)
+      zkc = getZkc(zkcConnectString)// CreateClient.createSimple(zkcConnectString)
     } catch {
       case e: Exception => {
         logger.error("SMART FILE CONSUMER (global): unable to connect to zookeeper using " + zkcConnectString, e )
@@ -143,7 +144,7 @@ object FileProcessor {
       logger.info("SMART_FILE_CONSUMER (global): Getting zookeeper info for "+ znodePath)
 
       logger.info("SMART_FILE_CONSUMER (MI): addToZK "+ fileName)
-      CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
+      createNode(zkcConnectString, znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))//CreateClient.CreateNodeIfNotExists(zkcConnectString, znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
       zkValue = zkValue + offset.toString
 
       // Set up Partition data
@@ -160,8 +161,8 @@ object FileProcessor {
         })
         zkValue = zkValue + "]"
       }
-
-      zkc.setData().forPath(znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"), zkValue.getBytes)
+      setData(znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"), zkValue.getBytes)
+     // zkc.setData().forPath(znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"), zkValue.getBytes)
     }
   }
 
@@ -169,7 +170,8 @@ object FileProcessor {
     zkRecoveryLock.synchronized {
       try {
         logger.info("SMART_FILE_CONSUMER (global): Removing file " + fileName + " from zookeeper")
-        zkc.delete.forPath(znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
+       // zkc.delete.forPath(znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
+        deleteData(znodePath + "/" + URLEncoder.encode(fileName,"UTF-8"))
 
       } catch {
         case e: Exception => logger.warn("SmartFileConsumer - Failure", e)
@@ -178,9 +180,196 @@ object FileProcessor {
     }
   }
 
+  private def closeZKClient(): Unit = {
+    zkRecoveryLock.synchronized {
+      try {
+        if (zkc != null) zkc.close
+      } catch {
+        case e: Throwable => {
+          logger.warn("SmartFileConsumer - Failure closing ZKC.")
+        }
+      } finally {
+        zkc = null
+      }
+
+    }
+  }
+
+  private def getZkc(zkcConnectString: String): CuratorFramework = {
+    closeZKClient
+    var client: CuratorFramework = null
+    zkRecoveryLock.synchronized {
+      var isSuccess = false
+      while (!isSuccess) {
+        try {
+          client = CreateClient.createSimple(zkcConnectString)
+          isSuccess = true
+          //return client
+        } catch {
+          case e: Throwable => {
+            logger.warn("SmartFileConsumer - Failure creating a new zookeeper connection, retrying.", e)
+            try {
+              Thread.sleep(MAX_ZK_RETRY_MS)
+            } catch {
+              case e: InterruptedException => {
+                throw e
+              }
+            }
+          }
+        }
+      }
+    }
+    return client
+  }
+
+  private def deleteData(zkPath: String): Unit = {
+    var isSuccess = false
+    while (!isSuccess) {
+      try {
+        zkc.delete.forPath(zkPath)
+        isSuccess = true
+      } catch {
+        case e: Throwable => {
+          logger.warn("SmartFileConsumer - Failure deleting data from zookeeper, reinitializing connection and retrying.")
+          try {
+            Thread.sleep(MAX_ZK_RETRY_MS)
+            zkc = getZkc(zkcConnectString)
+          } catch {
+            case e: InterruptedException => {
+              throw e
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private def getData(zkPath: String): Array[Byte] = {
+    var isSuccess = false
+    var data: Array[Byte] = null
+    zkRecoveryLock.synchronized {
+      while (!isSuccess) {
+        try {
+          data = zkc.getData.forPath(zkPath)
+          isSuccess = true
+        } catch {
+          case e: Throwable => {
+            logger.warn("SmartFileConsumer - Failure adding data to zookeeper reinitializing and retrying.")
+            try {
+              Thread.sleep(MAX_ZK_RETRY_MS)
+              zkc = getZkc(zkcConnectString)
+            } catch {
+              case e: InterruptedException => {
+                throw e
+              }
+            }
+          }
+        }
+      }
+    }
+    return data
+  }
+
+  private def setData(zkPath: String, data: Array[Byte]): Unit = {
+    var isSuccess = false
+    while (!isSuccess) {
+      try {
+        zkc.setData().forPath(zkPath, data)
+        isSuccess = true
+      } catch {
+        case e: Throwable => {
+          logger.warn("SmartFileConsumer - Failure adding data to zookeeper reinitializing and retrying.")
+          try {
+            Thread.sleep(MAX_ZK_RETRY_MS)
+            zkc = getZkc(zkcConnectString)
+          } catch {
+            case e: InterruptedException => {
+              throw e
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private def getNodes(zkPath: String): java.util.List[String] = {
+    var data: java.util.List[String] = null
+    var isSuccess = false
+    zkRecoveryLock.synchronized {
+      while (!isSuccess) {
+        try {
+          data = zkc.getChildren.forPath(zkPath)
+          isSuccess = true
+        } catch {
+          case e: Throwable => {
+            logger.warn("SmartFileConsumer - Failure adding data to zookeeper reinitializing and retrying.")
+            try {
+              Thread.sleep(MAX_ZK_RETRY_MS)
+              zkc = getZkc(zkcConnectString)
+            } catch {
+              case e: InterruptedException => {
+                throw e
+              }
+            }
+          }
+        }
+      }
+    }
+    return data
+  }
+
+  private def doNodesExist(zkPath: String): Boolean = {
+    var isData: Boolean = true
+    var isSuccess = false
+    zkRecoveryLock.synchronized {
+      while (!isSuccess) {
+        try {
+          isData = true // just incae
+          var retData = zkc.checkExists().forPath(zkPath)
+          if (retData == null) isData = false
+          isSuccess = true
+        } catch {
+          case e: Throwable => {
+            logger.warn("SmartFileConsumer - Failure adding data to zookeeper reinitializing and retrying.")
+            try {
+              Thread.sleep(MAX_ZK_RETRY_MS)
+              zkc = getZkc(zkcConnectString)
+            } catch {
+              case e: InterruptedException => {
+                throw e
+              }
+            }
+          }
+        }
+      }
+    }
+    return isData
+  }
+
+  private def createNode(zkConnectString: String, zkPath: String ): Unit = {
+    var isSuccess = false
+    while(!isSuccess) {
+      try {
+        CreateClient.CreateNodeIfNotExists(zkcConnectString, zkPath)
+        isSuccess = true
+      } catch {
+        case e: Throwable => {
+          logger.warn("SmartFileConsumer - Failure creating a new node in zookeeper, retrying.")
+          try {
+            Thread.sleep(MAX_ZK_RETRY_MS)
+          } catch {
+            case e: InterruptedException => {
+              throw e
+            }
+          }
+        }
+      }
+    }
+  }
   /**
    * checkIfFileBeingProcessed - if for some reason a file name is queued twice... this will prevent it
-   * @param file
+    *
+    * @param file
    * @return
    */
   def checkIfFileBeingProcessed(file: String): Boolean = {
@@ -316,7 +505,7 @@ object FileProcessor {
     bufferTimeout = 1000 * props.getOrElse(SmartFileAdapterConstants.FILE_BUFFERING_TIMEOUT,"300").toInt
     localMetadataConfig = props(SmartFileAdapterConstants.METADATA_CONFIG_FILE)
     MetadataAPIImpl.InitMdMgrFromBootStrap(localMetadataConfig, false)
-    zkc = initZookeeper
+    initZookeeper
 
     isBufferMonitorRunning = true
     globalFileMonitorService.execute(new Runnable() {
@@ -608,8 +797,9 @@ object FileProcessor {
     try {
       // Lets see if we have failed previously on this partition Id, and need to replay some messages first.
       logger.info(" SMART FILE CONSUMER (global): Recovery operations, checking  => " + MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")
-      if (zkc.checkExists().forPath(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer") != null) {
-        var priorFailures = zkc.getChildren.forPath(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")
+      //if (zkc.checkExists().forPath(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer") != null) {
+      if (doNodesExist(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")) {
+        var priorFailures = getNodes(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer") //zkc.getChildren.forPath(MetadataAPIImpl.GetMetadataAPIConfig.getProperty("ZNODE_PATH") + "/smartFileConsumer")
         if (priorFailures != null) {
           var map = priorFailures.toArray
           //var map = parse(new String(priorFailures)).values.asInstanceOf[Map[String, Any]]
@@ -623,7 +813,7 @@ object FileProcessor {
                 //Should we be more particular and check in Processed directory ??? TODO
                 && Files.exists(Paths.get(fileToRecover))) {
 
-              val offset = zkc.getData.forPath(znodePath + "/" + fileToReprocess.asInstanceOf[String])
+              val offset = getData(znodePath + "/" + fileToReprocess.asInstanceOf[String]) // zkc.getData.forPath(znodePath + "/" + fileToReprocess.asInstanceOf[String])
 
               var recoveryInfo = new String(offset)
               logger.info("SMART FILE CONSUMER (global): " + fileToRecover + " from offset " + recoveryInfo)
@@ -893,7 +1083,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
   lazy val logger = LogManager.getLogger(loggerName)
   var fileConsumers: ExecutorService = Executors.newFixedThreadPool(3)
 
-  val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
+  //val inMemoryBuffersCntr = new java.util.concurrent.atomic.AtomicLong()
 
   var isConsuming = true
   var isProducing = true
@@ -929,7 +1119,8 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
   /**
    * Called by the Directory Listener to initialize
-   * @param props
+    *
+    * @param props
    */
   def init(props: scala.collection.mutable.Map[String, String]): Unit = {
     try {
@@ -1043,7 +1234,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       if (msgQ.isEmpty) {
         return null
       }
-      inMemoryBuffersCntr.decrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
+     // inMemoryBuffersCntr.decrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
       return msgQ.dequeue
     }
   }
@@ -1077,7 +1268,8 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
   /**
    * Each worker bee will run this code... looking for work to do.
-   * @param beeNumber
+    *
+    * @param beeNumber
    */
   private def processBuffers(beeNumber: Int) = {
 
@@ -1175,7 +1367,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
               } else {
                 var newLeftovers =  BufferLeftoversArea(beeNumber, leftOvers ++ buffer.payload, buffer.chunkNumber)
                 setLeftovers(newLeftovers, beeNumber)
-                inMemoryBuffersCntr.decrementAndGet()
+               // inMemoryBuffersCntr.decrementAndGet()
                 isIncompleteLefovers = true
               }
             }
@@ -1213,7 +1405,8 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
   /**
    * This will be run under a CONSUMER THREAD.
-   * @param file
+    *
+    * @param file
    */
   private def readBytesChunksFromFile(file: EnqueuedFile): Unit = {
 
@@ -1292,9 +1485,9 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       waitedCntr = 0
       val st = System.currentTimeMillis
       //while ((BufferCounters.inMemoryBuffersCntr.get * 2 + partitionSelectionNumber + 2) * maxlen * 2 > maxBufAllowed) { // One counter for bufferQ and one for msgQ and also taken concurrentKafkaJobsRunning and 2 extra in memory
-      while (inMemoryBuffersCntr.get >= bufferLimit) {
+      while (bufferQ.size >= bufferLimit) {
         if (waitedCntr == 0) {
-          logger.warn("SMART FILE ADDAPTER (" + partitionId + ") : exceed the MAX number of - %d buffers. Halting for a free slot".format(inMemoryBuffersCntr.get))
+          logger.warn("SMART FILE ADDAPTER (" + partitionId + ") : current size %d exceed the MAX number of %d buffers. Halting for a free slot".format(bufferQ.size, bufferLimit))
         }
         waitedCntr += 1
         Thread.sleep(throttleTime)
@@ -1305,7 +1498,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
         logger.warn("%d:Got a slot after waiting %dms".format(partitionId, timeDiff))
       }
 
-      inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
+     // inMemoryBuffersCntr.incrementAndGet() // Incrementing when we enQBuffer and Decrementing when we deQMsg
       var isLastChunk = false
       try {
         readlen = 0
