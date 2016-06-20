@@ -10,7 +10,9 @@
     "jars": [
       "{NewPackageInstallPath}/lib/system/migratebase-1.5.0.jar",
       "{NewPackageInstallPath}/lib/system/migratefrom_v_{KamanjaFromVersionWithUnderscore}_{ScalaFromVersion}-1.5.0.jar",
-      "{OldPackageInstallPath}/bin/KamanjaManager-1.0"
+      "{NewPackageInstallPath}/lib/system/KamanjaInternalDeps_{ScalaToVersion}-1.5.0.jar",
+      "{NewPackageInstallPath}/lib/system/ExtDependencyLibs_{ScalaToVersion}-1.5.0.jar",
+      "{NewPackageInstallPath}/lib/system/ExtDependencyLibs2_{ScalaToVersion}-1.5.0.jar"
     ]
   },
   "migratingTo": {
@@ -36,5 +38,6 @@
     "OutputMsgDef"
   ],
   "excludeData": false
+
 }
 
