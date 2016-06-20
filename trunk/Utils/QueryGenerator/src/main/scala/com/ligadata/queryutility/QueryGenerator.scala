@@ -140,8 +140,14 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
          val setQuery = queryObj.createSetCommand(adapter = Option(adapter._2))
          if(adapter._2.typeString.equalsIgnoreCase("input")) adapterType = "inputs" else adapterType = "outputs"
          val query: String = queryObj.createQuery(elementType = "vertex", className = adapterType, setQuery = setQuery)
-         println(query)
-         queryObj.executeQuery(conn, query)
+         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = adapter._2.Name, className = adapterType)) == false) {
+           queryObj.executeQuery(conn, query)
+           println(query)
+         }
+         else {
+           logger.info("This adapter %s exsist in database".format(adapter._2.Name))
+           println("This adapter %s exsist in database".format(adapter._2.Name))
+         }
        }
      }
 
@@ -152,8 +158,13 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        for (container <- containerDefs.get) {
          val setQuery = queryObj.createSetCommand(contianer = Option(container))
          val query: String = queryObj.createQuery(elementType = "vertex", className = "container", setQuery = setQuery)
-         println(query)
-         queryObj.executeQuery(conn, query)
+         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = container.Name, className = "container")) == false) {
+           queryObj.executeQuery(conn, query)
+           println(query)
+         } else {
+           logger.info("This container %s exsist in".format(container.Name))
+           println("This container %s exsist in database".format(container.name))
+         }
        }
      }
 
@@ -164,19 +175,24 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        for (model <- ModelDefs.get) {
          val setQuery = queryObj.createSetCommand(model = Option(model))
          val query: String = queryObj.createQuery(elementType = "vertex", className = "model",setQuery=  setQuery)
-         println(query)
+         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = model.Name, className = "model")) == false) {
+           queryObj.executeQuery(conn, query)
+           println(query)
+         } else {
+           logger.info("This model %s exsist in database".format(model.Name))
+           println("This model %s exsist in database".format(model.name))
+         }
          val inputName = model.inputMsgSets
          for(msg <- inputName)
            for(msg1 <- msg) {
-             println("input origin : " + msg1.origin + " input message : " + msg1.message)
-             for(item <- msg1.attributes)
-               println("input attribute : " + item)
+             msg1.message.substring(msg1.message.lastIndexOf('.')+1)
+             //println(" input message : " + msg1.message)
            }
 
          val outputName = model.outputMsgs
          for(item <- outputName)
-           println("output message : " + item)
-         queryObj.executeQuery(conn, query)
+           item.substring(item.lastIndexOf('.')+ 1)
+           //println("output message : " + item)
        }
      }
 
@@ -186,9 +202,14 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
      } else{
        for (message <- msgDefs.get){
          val setQuery = queryObj.createSetCommand(message = Option(message))
-         val query: String = queryObj.createQuery(elementType = "edge", className = "Message", setQuery = setQuery)
-         println(query)
-         queryObj.executeQuery(conn, query)
+         val query: String = queryObj.createQuery(elementType = "vertex", className = "Message", setQuery = setQuery)
+         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = message.Name, className = "Message")) == false) {
+           queryObj.executeQuery(conn, query)
+           println(query)
+         } else {
+           logger.info("This message %s exsist in database".format(message.Name))
+           println("This message %s exsist in database".format(message.name))
+         }
          // create an edge
        }
      }
