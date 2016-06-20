@@ -151,6 +151,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   //  }
 
   val hostname = if (parsed_json.contains("hostlist")) parsed_json.getOrElse("hostlist", "localhost").toString.trim else parsed_json.getOrElse("Location", "localhost").toString.trim
+  val namespace = if (parsed_json.contains("SchemaName")) parsed_json.getOrElse("SchemaName", "default").toString.trim else parsed_json.getOrElse("SchemaName", "default").toString.trim
 
   var instanceName: String = null;
   if (parsed_json.contains("instancename")) {
@@ -162,13 +163,6 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     portNumber = parsed_json.get("portnumber").get.toString.trim
   }
 
-  var database: String = null;
-  if (parsed_json.contains("database")) {
-    database = parsed_json.get("database").get.toString.trim
-  } else {
-    //    throw CreateConnectionException("Unable to find database in adapterConfig ", new Exception("Invalid adapterConfig"))
-    database = "database"
-  }
 
   var user: String = null;
   if (parsed_json.contains("user")) {
@@ -259,11 +253,11 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
   //  var jdbcUrl = "jdbc:sqlserver://" + sqlServerInstance + ";databaseName=" + database + ";user=" + user + ";password=" + password
   //  val driverType = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
-  var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + SchemaName + ";user=" + user + ";password=" + password
+  var jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./" + namespace + ";user=" + user + ";password=" + password
   connectionMode match {
-    case "embedded" => jdbcUrl = "jdbc:h2:./storage/" + SchemaName + ";user=" + user + ";password=" + password
-    case "ssl" => jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./storage/" + SchemaName + ";user=" + user + ";password=" + password
-    case "tcp" => jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./storage/" + SchemaName + ";user=" + user + ";password=" + password
+    case "embedded" => jdbcUrl = "jdbc:h2:./" + namespace + ";user=" + user + ";password=" + password
+    case "ssl" => jdbcUrl = "jdbc:h2:ssl://" + H2dbInstance + "/./" + namespace + ";user=" + user + ";password=" + password
+    case "tcp" => jdbcUrl = "jdbc:h2:tcp://" + H2dbInstance + "/./" + namespace + ";user=" + user + ";password=" + password
   }
 
   //  var jars = new Array[String](0)
@@ -361,7 +355,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     var query = ""
     try {
       con = getConnection
-      query = "SELECT count(*) FROM sys.schemas WHERE name = ?"
+      query = "SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE CATALOG_NAME = ?"
       pstmt = con.prepareStatement(query)
       pstmt.setString(1, schemaName)
       rs = pstmt.executeQuery();
@@ -488,7 +482,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
       // put is sematically an upsert. An upsert is being implemented using a transact-sql update
       // statement in H2db
 
-      sql = "merge into" + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo) key(timePartition, bucketKey, transactionId, rowId) values (?,?,?,?,?,?,?)"
+      sql = "merge into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo) key(timePartition, bucketKey, transactionId, rowId) values (?,?,?,?,?,?,?)"
       pstmt.setLong(1, key.timePartition)
       pstmt.setString(2, key.bucketKey.mkString(","))
       pstmt.setLong(3, key.transactionId)
@@ -619,7 +613,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
           var tableName = toFullTableName(containerName)
           var keyValuePairs = li._2
           logger.info("Input row count for the table " + tableName + " => " + keyValuePairs.length)
-          sql = "merge into" + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo) key (timePartition, and bucketKey, transactionId, rowId) values(?,?,?,?,?,?,?)"
+          sql = "merge into " + tableName + "(timePartition,bucketKey,transactionId,rowId,schemaId,serializerType,serializedInfo) key (timePartition, bucketKey, transactionId, rowId) values(?,?,?,?,?,?,?)"
           //          sql = "if ( not exists(select 1 from " + tableName +
           //            " where timePartition = ? and bucketKey = ?  and transactionId = ?  and rowId = ? ) ) " +
           //            " begin " +
@@ -1381,7 +1375,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
       con = getConnection
       // check if the container already dropped
       val dbm = con.getMetaData();
-      rs = dbm.getTables(null, SchemaName, tableName, null);
+      rs = dbm.getTables(null, SchemaName.toUpperCase, tableName.toUpperCase, null);
       if (!rs.next()) {
         logger.info("The table " + tableName + " doesn't exist in the schema " + SchemaName + "  may have beem dropped already ")
       } else {
@@ -1430,7 +1424,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
       con = getConnection
       // check if the container already exists
       val dbm = con.getMetaData();
-      rs = dbm.getTables(null, SchemaName, tableName, null);
+      rs = dbm.getTables(null, SchemaName.toUpperCase, tableName.toUpperCase, null);
       if (rs.next()) {
         logger.debug("The table " + tableName + " already exists ")
       } else {
@@ -1519,7 +1513,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     try {
       con = getConnection
       val dbm = con.getMetaData();
-      rs = dbm.getTables(null, SchemaName, tableName, null);
+      rs = dbm.getTables(null, SchemaName.toUpperCase, tableName.toUpperCase, null);
       if (rs.next()) {
         return true
       } else {
@@ -1629,7 +1623,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     try {
       con = getConnection
       val dbm = con.getMetaData();
-      rs = dbm.getTables(null, SchemaName, null, null);
+      rs = dbm.getTables(null, SchemaName.toUpperCase, null, null);
       while (rs.next()) {
         var t = rs.getString(3)
         tbls = tbls :+ t
