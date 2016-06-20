@@ -114,6 +114,7 @@ object FileProcessor {
   private val bufferingQ_map: scala.collection.mutable.Map[String, (Long, Long, Int)] = scala.collection.mutable.Map[String, (Long, Long, Int)]()
   private val bufferingQLock = new Object
   private val zkRecoveryLock = new Object
+  private var maxFormatValidationArea = 1048576
 
   /**
    *
@@ -411,6 +412,7 @@ object FileProcessor {
     readyToProcessKey = props.getOrElse(SmartFileAdapterConstants.READY_MESSAGE_MASK, ".gzip")
     maxTimeFileAllowedToLive = (1000 * props.getOrElse(SmartFileAdapterConstants.MAX_TIME_ALLOWED_TO_BUFFER, "3000").toInt)
     refreshRate = props.getOrElse(SmartFileAdapterConstants.REFRESH_RATE, "2000").toInt
+    maxFormatValidationArea = props.getOrElse(SmartFileAdapterConstants.MAX_SIZE_FOR_FILE_CONTENT_VALIDATION, "1048576").toInt
   }
 
   def markFileProcessing (fileName: String, offset: Int, createDate: Long): Unit = {
@@ -727,7 +729,7 @@ object FileProcessor {
           is = new FileInputStream(fileName)
           // BUGBUG:: Take NMB from config.
           // Get Max N MB to detect contentType
-          val buffSzToTestContextType = 1 * 1024 * 1024;
+          val buffSzToTestContextType = maxFormatValidationArea;  // Default is 1 * 1024 * 1024
           val tmpbuffer = new Array[Byte](buffSzToTestContextType)
           val readlen = is.read(tmpbuffer, 0, buffSzToTestContextType)
           val buffer =
@@ -1301,6 +1303,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
         var indx = 0
         var prevIndx = indx
+        var isContentParsable = true
 
         isEofBuffer = buffer.isEof
         if (buffer.firstValidOffset <= FileProcessor.BROKEN_FILE) {
@@ -1314,9 +1317,11 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           }
         } else {
           // Look for messages.
-          if (!buffer.isEof){
+          if (!buffer.isEof) {
+            isContentParsable = false
             buffer.payload.foreach(x => {
               if (x.asInstanceOf[Char] == message_separator) {
+                isContentParsable = true
                 var newMsg: Array[Char] = buffer.payload.slice(prevIndx, indx)
                 msgNum += 1
                 logger.debug("SMART_FILE_CONSUMER (" + partitionId + ") Message offset " + msgNum + ", and the buffer offset is " + buffer.firstValidOffset )
@@ -1328,11 +1333,16 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
                 prevIndx = indx + 1
               }
               indx = indx + 1
-
             })
           }
         }
 
+        // We are here if our sanity check notifies us that we cannot separate data into distinct lines... ERROR out as CORRUPT
+        if (!isContentParsable) {
+          logger.error("SMART FILE CONSUMER (" + partitionId + "): This maybe a corrupt file, The max length of the line must be the size of a processing buffer")
+          messages.empty
+          messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.CORRUPT_FILE))
+        }
 
         // Wait for a previous worker be to finish so that we can get the leftovers.,, If we are the first buffer, then
         // just publish
