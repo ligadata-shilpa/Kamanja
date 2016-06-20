@@ -1,12 +1,17 @@
 import os
 import os.path
 import json
-class addModel(object): 
+from common.CommandBase import CommandBase
+
+class addModel(CommandBase): 
 	"""
-	AddModelCmd input is formatted like this Scala string : 
-		s"$cmd\n$modelName\n$modelInfo\n$modelSrc"
+	The addModel command ...uh... adds models to the server.
 	"""
-	def handler(self, modelDict, host, port, cmdOptions, modelInfo):
+
+	def __init__(self, pkgCmdName, host, port):
+		super(addModel, self).__init__(pkgCmdName, host, port)
+
+	def handler(self, modelDict, host, port, cmdOptions, modelOptions):
 		if "ModelName" in cmdOptions:
 			modelName = str(cmdOptions["ModelName"])
 		else:

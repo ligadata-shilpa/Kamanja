@@ -76,11 +76,12 @@ modelDict["PythonInstallPath"] = args['pythonpath']
 importPackageByName("common.ModelBase", "ModelBase")
 importPackageByName("common.ModelInstance", "ModelInstance")
 # Add the system level command to the dispatcher dict
-for extname in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer':
-	HandlerClass = importPackageByName("commands." + extname, extname)
-	handler = HandlerClass()
-	key = extname #"{}.{}".format(extname,extname)
-	cmdDict[key] = handler
+for moduleName in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'stopServer':
+	pkgCmdName = "commands.{}".format(moduleName)
+	className = moduleName # also 
+	HandlerClass = importPackageByName(pkgCmdName, className)
+	handler = HandlerClass(pkgCmdName, hostDisplayStr, port)
+	cmdDict[moduleName] = handler
 #self, modelDict, host, port, cmdOptions, modelOptions
 startMarkerValue = "_S_T_A_R_T_"	
 endMarkerValue = "_F_I_N_I_"	

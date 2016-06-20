@@ -2,6 +2,8 @@
 import abc
 from common.ModelBase import ModelBase
 import json
+import sys
+
 
 class ModelInstance(ModelBase): 
     """ 
@@ -46,4 +48,14 @@ class ModelInstance(ModelBase):
         #Answer which hash this model is dedicated to.
         return self.partitionHash
 
+    #
+    def exceptionMsg(self, infoTag):
+        """
+        print failure locally and
+        answer the exception as json dict
+        """
+        prettycmd = json.dumps({'Server' : hostDisplayStr, 'Port' : str(port), 'Result' : infoTag, 'Exception' : str(sys.exc_info()[0]), 'FailedClass' : str(sys.exc_info()[1])}, sort_keys=True, indent=4, separators=(',', ': '))
+        print(prettycmd)
+        xeptMsg = json.dumps({'Server' : hostDisplayStr, 'Port' : str(port), 'Result' : infoTag, 'Exception' : str(sys.exc_info()[0]), 'FailedClass' : str(sys.exc_info()[1])})
+        return xeptMsg
 

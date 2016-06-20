@@ -327,7 +327,7 @@ object SockClient {
                         val endMarkerIncludedIdx: Int = endMarkerIdx + CmdConstants.endMarkerArray.length
                         val responseBytes: Array[Byte] = answeredBytes.slice(0, endMarkerIncludedIdx).toArray
                         val response: String = unpack(responseBytes)
-                        println(response)
+                        println(s"$cmd reply = \n$response")
                         answeredBytes.remove(0, endMarkerIncludedIdx)
                         break
                     }
@@ -395,8 +395,8 @@ object SockClient {
 			byteBuffer.get(endMark,0,endMarkerValueLen)
             val endMarkStr : String = new String(endMark)
 			val payloadStr : String = new String(payloadArray)
-            println(s"payload = $payloadStr")
-            println(s"endMark = $endMarkStr")
+            //println(s"payload = $payloadStr")
+            //println(s"endMark = $endMarkStr")
             payloadStr
     	} else {
     		"unreasonable bytes returned... either null or insufficient bytes in the supplied result"

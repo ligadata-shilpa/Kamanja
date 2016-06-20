@@ -1,18 +1,61 @@
+import sys
+import json
+from common.CommandBase import CommandBase
 
-# ExecuteModelCmd looks formatted like this Scala string : s"$cmd\n$modelName\n$msg"
-class executeModel(object): 
-	def handler(self, modelDict, host, cmdOptions, modelOptions):
-		modelName = cmdList.pop(0).strip()
-		# what is left after popping the model name are messages to process... 1 or more
-		# Process each message left in the list
-		cmd = modelDict[modelName]
-		results = []
-		for i, rawMsg in enumerate(cmdList):
-			msg = rawMsg.strip().split(',')
-			print "processing cmd = (" + i + ") " + cmd + " with arguments " + str(msg)
-			res = cmd.handler(msg)
-			results.append(res)		
-		resultStr = json.dumps(results)
-		return resultStr
+
+# ExecuteModelCmd is formatted like this:
+# {
+#   "Cmd": "executeModel",
+#   "CmdVer": 1,
+#   "CmdOptions": {
+#     "ModelName": "a",
+#     "InputDictionary": {
+#       "a": 1,
+#       "b": 2
+#     }
+#   },
+#   "ModelOptions": {}
+# },
+
+class executeModel(CommandBase):
+	"""
+	Execute the model mentioned in the cmdOptions feeding it the
+	message also found there (key = "InputDictionary")
+	"""
+	def __init__(self, pkgCmdName, host, port):
+		super(executeModel, self).__init__(pkgCmdName, host, port)
+
+	def handler(self, modelDict, host, port, cmdOptions, modelOptions):
+		"""
+		diagnostics: dump the model name keys and values from the modelDict
+		"""
+		modelNameView = modelDict.viewkeys()
+		modelNames = ["{}".format(v) for v in modelNameView]
+		modelValueView = modelDict.viewvalues()
+		modelInsts =  ["{}".format(str(v)) for v in modelValueView]
+		print "{} models in modelDict = {}".format(len(modelNameView),modelNames)
+		print "{} instances in cmdDict = {}".format(len(modelValueView),modelInsts)
+
+		if "ModelName" in cmdOptions:
+			modelName = str(cmdOptions["ModelName"])
+		else:
+			modelName = "no model name supplied"
+
+		results = ""
+		try:
+			msg = cmdOptions["InputDictionary"]
+		except:
+			results = exceptionMsg("No message value with key 'InputDictionary' for model {} ... it should be in the supplied cmdOptions dictionary for executeModel".format(modelName))
+		#
+		if results == "":
+			try:
+				model = cmdDict.get(modelName)
+				msg = cmdOptions["InputDictionary"]
+				print "model instance selected = {}".format(str(model))
+				results = model.execute(msg)
+			except:
+				results = exceptionMsg("The model '{}' is having a bad day...".format(modelName))
+		return results
+
 
 
