@@ -1280,6 +1280,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
     var buffer: BufferToChunk = null;
     var fileNameToProcess: String = ""
     var isEofBuffer = false
+    var isContentParsable = true
 
     // basically, keep running until shutdown.
     while (isConsuming) {
@@ -1296,115 +1297,120 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           msgNum = 0
           fileNameToProcess = buffer.relatedFileName
           isEofBuffer = false
+          isContentParsable = true
         }
 
-        // need a ordered structure to keep the messages.
-        messages = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
-
-        var indx = 0
-        var prevIndx = indx
-        var isContentParsable = true
-
-        isEofBuffer = buffer.isEof
-        if (buffer.firstValidOffset <= FileProcessor.BROKEN_FILE) {
-          // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
-          if (buffer.firstValidOffset == FileProcessor.BROKEN_FILE) {
-            logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.BROKEN_FILE))
-          } else {
-            logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
-            messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.CORRUPT_FILE))
-          }
-        } else {
-          // Look for messages.
-          if (!buffer.isEof) {
-            isContentParsable = false
-            buffer.payload.foreach(x => {
-              if (x.asInstanceOf[Char] == message_separator) {
-                isContentParsable = true
-                var newMsg: Array[Char] = buffer.payload.slice(prevIndx, indx)
-                msgNum += 1
-                logger.debug("SMART_FILE_CONSUMER (" + partitionId + ") Message offset " + msgNum + ", and the buffer offset is " + buffer.firstValidOffset )
-
-                // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
-                // appear in the leftover areas
-                messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileName,  buffer.partMap, prevIndx))
-
-                prevIndx = indx + 1
-              }
-              indx = indx + 1
-            })
-          }
-        }
-
-        // We are here if our sanity check notifies us that we cannot separate data into distinct lines... ERROR out as CORRUPT
+        // In this state, we need to ignore the rest of the incoming buffers, until a new file is encountered.
         if (!isContentParsable) {
-          logger.error("SMART FILE CONSUMER (" + partitionId + "): This maybe a corrupt file, The max length of the line must be the size of a processing buffer")
-          messages.empty
-          messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.CORRUPT_FILE))
-        }
+          logger.warn("SMART FILE CONSUMER (\" + partitionId + \"): Ignoring buffers due to earlier corruption in the file.")
+        } else {
+          // need a ordered structure to keep the messages.
+          messages = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
 
-        // Wait for a previous worker be to finish so that we can get the leftovers.,, If we are the first buffer, then
-        // just publish
-        if (buffer.chunkNumber == 0) {
-          enQMsg(messages.toArray, beeNumber)
-        }
+          var indx = 0
+          var prevIndx = indx
 
-        var foundRelatedLeftovers = false
-        var isIncompleteLefovers = false
-        while (!foundRelatedLeftovers && buffer.chunkNumber != 0) {
-          myLeftovers = getLeftovers(beeNumber)
-          if (myLeftovers.relatedChunk == (buffer.chunkNumber - 1)) {
-
-            leftOvers = myLeftovers.leftovers
-            foundRelatedLeftovers = true
-
-            // Prepend the leftovers to the first element of the array of messages
-            val msgArray = messages.toArray
-            var firstMsgWithLefovers: KafkaMessage = null
-            if (isEofBuffer) {
-              if (leftOvers.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileName, buffer.partMap, buffer.firstValidOffset )
-                messages.add(firstMsgWithLefovers)
-                enQMsg(messages.toArray, beeNumber)
-                isIncompleteLefovers = false
-              }
+          isEofBuffer = buffer.isEof
+          if (buffer.firstValidOffset <= FileProcessor.BROKEN_FILE) {
+            // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
+            if (buffer.firstValidOffset == FileProcessor.BROKEN_FILE) {
+              logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
+              messages.add(new KafkaMessage(Array[Char](), FileProcessor.BROKEN_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.BROKEN_FILE))
             } else {
-              if (messages.size > 0) {
-                firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileName, msgArray(0).partMap, msgArray(0).offsetInFile)
-                msgArray(0) = firstMsgWithLefovers
-                enQMsg(msgArray, beeNumber)
-                isIncompleteLefovers = false
-              } else {
-                var newLeftovers =  BufferLeftoversArea(beeNumber, leftOvers ++ buffer.payload, buffer.chunkNumber)
-                setLeftovers(newLeftovers, beeNumber)
-               // inMemoryBuffersCntr.decrementAndGet()
-                isIncompleteLefovers = true
-              }
+              logger.error("SMART FILE CONSUMER (" + partitionId + "): Detected a broken file")
+              messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.CORRUPT_FILE))
             }
           } else {
-            Thread.sleep(100)
+            // Look for messages.
+            if (!buffer.isEof) {
+              isContentParsable = false
+              buffer.payload.foreach(x => {
+                if (x.asInstanceOf[Char] == message_separator) {
+                  //isContentParsable = true
+                  var newMsg: Array[Char] = buffer.payload.slice(prevIndx, indx)
+                  msgNum += 1
+                  logger.debug("SMART_FILE_CONSUMER (" + partitionId + ") Message offset " + msgNum + ", and the buffer offset is " + buffer.firstValidOffset )
+
+                  // Ok, we could be in recovery, so we have to ignore some messages, but these ignoraable messages must still
+                  // appear in the leftover areas
+                  messages.add(new KafkaMessage(newMsg, buffer.firstValidOffset, false, false, buffer.relatedFileName,  buffer.partMap, prevIndx))
+
+                  prevIndx = indx + 1
+                }
+                indx = indx + 1
+              })
+            }
           }
-        }
 
-        if (!isIncompleteLefovers) {
+          // We are here if our sanity check notifies us that we cannot separate data into distinct lines... ERROR out as CORRUPT
+          if (!isContentParsable) {
+            logger.error("SMART FILE CONSUMER (" + partitionId + "): This maybe a corrupt file, The max length of the line must be the size of a processing buffer")
+            messages = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
+            messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.CORRUPT_FILE))
+          }
 
-          // whatever is left is the leftover we need to pass to another thread.
-          indx = scala.math.min(indx, buffer.len)
+          // Wait for a previous worker be to finish so that we can get the leftovers.,, If we are the first buffer, then
+          // just publish
+          if (buffer.chunkNumber == 0) {
+            enQMsg(messages.toArray, beeNumber)
+          }
 
-          if (indx != prevIndx) {
+          var foundRelatedLeftovers = false
+          var isIncompleteLefovers = false
+          while (!foundRelatedLeftovers && buffer.chunkNumber != 0) {
+            myLeftovers = getLeftovers(beeNumber)
+            if (myLeftovers.relatedChunk == (buffer.chunkNumber - 1)) {
 
-            if (!isEofBuffer) {
-              val newFileLeftOvers = BufferLeftoversArea(beeNumber, buffer.payload.slice(prevIndx, indx), buffer.chunkNumber)
-              setLeftovers(newFileLeftOvers, beeNumber)
+              leftOvers = myLeftovers.leftovers
+              foundRelatedLeftovers = true
+
+              // Prepend the leftovers to the first element of the array of messages
+              val msgArray = messages.toArray
+              var firstMsgWithLefovers: KafkaMessage = null
+              if (isEofBuffer) {
+                if (leftOvers.size > 0) {
+                  firstMsgWithLefovers = new KafkaMessage(leftOvers, buffer.firstValidOffset, false, false, buffer.relatedFileName, buffer.partMap, buffer.firstValidOffset )
+                  messages.add(firstMsgWithLefovers)
+                  enQMsg(messages.toArray, beeNumber)
+                  isIncompleteLefovers = false
+                }
+              } else {
+                if (messages.size > 0) {
+                  firstMsgWithLefovers = new KafkaMessage(leftOvers ++ msgArray(0).msg, msgArray(0).offsetInFile, false, false, buffer.relatedFileName, msgArray(0).partMap, msgArray(0).offsetInFile)
+                  msgArray(0) = firstMsgWithLefovers
+                  enQMsg(msgArray, beeNumber)
+                  isIncompleteLefovers = false
+                } else {
+                  var newLeftovers =  BufferLeftoversArea(beeNumber, leftOvers ++ buffer.payload, buffer.chunkNumber)
+                  setLeftovers(newLeftovers, beeNumber)
+                  // inMemoryBuffersCntr.decrementAndGet()
+                  isIncompleteLefovers = true
+                }
+              }
             } else {
+              Thread.sleep(100)
+            }
+          }
+
+          if (!isIncompleteLefovers) {
+
+            // whatever is left is the leftover we need to pass to another thread.
+            indx = scala.math.min(indx, buffer.len)
+
+            if (indx != prevIndx) {
+
+              if (!isEofBuffer) {
+                val newFileLeftOvers = BufferLeftoversArea(beeNumber, buffer.payload.slice(prevIndx, indx), buffer.chunkNumber)
+                setLeftovers(newFileLeftOvers, beeNumber)
+              } else {
+                val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
+                setLeftovers(newFileLeftOvers, beeNumber)
+              }
+
+            } else{
               val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
               setLeftovers(newFileLeftOvers, beeNumber)
             }
-
-          } else{
-            val newFileLeftOvers = BufferLeftoversArea(beeNumber, new Array[Char](0), buffer.chunkNumber)
-            setLeftovers(newFileLeftOvers, beeNumber)
           }
         }
       } else {
