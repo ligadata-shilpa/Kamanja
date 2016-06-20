@@ -163,6 +163,13 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     portNumber = parsed_json.get("portnumber").get.toString.trim
   }
 
+  //  var database: String = null;
+  //  if (parsed_json.contains("database")) {
+  //    database = parsed_json.get("database").get.toString.trim
+  //  } else {
+  //        throw CreateConnectionException("Unable to find database in adapterConfig ", new Exception("Invalid adapterConfig"))
+  ////    database = "database"
+  //  }
 
   var user: String = null;
   if (parsed_json.contains("user")) {
@@ -355,6 +362,7 @@ class H2dbAdapter(val kvManagerLoader: KamanjaLoaderInfo, val datastoreConfig: S
     var query = ""
     try {
       con = getConnection
+      //      query = "SELECT count(*) FROM sys.schemas WHERE name = ?"
       query = "SELECT count(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE CATALOG_NAME = ?"
       pstmt = con.prepareStatement(query)
       pstmt.setString(1, schemaName)
