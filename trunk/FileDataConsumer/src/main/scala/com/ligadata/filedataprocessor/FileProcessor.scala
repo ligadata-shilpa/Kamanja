@@ -1294,6 +1294,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       if (buffer != null) {
         // If the new file being processed,  offsets to messages in this file to 0.
         if (!fileNameToProcess.equalsIgnoreCase(buffer.relatedFileName)) {
+          logger.info("SMART FILE CONSUMER (\" + partitionId + \"): Buffering a new file " + buffer.relatedFileName)
           msgNum = 0
           fileNameToProcess = buffer.relatedFileName
           isEofBuffer = false
@@ -1309,7 +1310,8 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
 
           var indx = 0
           var prevIndx = indx
-
+          var tempMsgSize = 0
+          var isThisBufferCorrupted: Boolean = false
           isEofBuffer = buffer.isEof
           if (buffer.firstValidOffset <= FileProcessor.BROKEN_FILE) {
             // Broken File is recoverable, CORRUPTED FILE ISNT!!!!!
@@ -1323,10 +1325,11 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           } else {
             // Look for messages.
             if (!buffer.isEof) {
-              isContentParsable = false
+              tempMsgSize = buffer.payload.length
+              isThisBufferCorrupted = true
               buffer.payload.foreach(x => {
                 if (x.asInstanceOf[Char] == message_separator) {
-                  //isContentParsable = true
+                  isThisBufferCorrupted = false
                   var newMsg: Array[Char] = buffer.payload.slice(prevIndx, indx)
                   msgNum += 1
                   logger.debug("SMART_FILE_CONSUMER (" + partitionId + ") Message offset " + msgNum + ", and the buffer offset is " + buffer.firstValidOffset )
@@ -1343,7 +1346,8 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           }
 
           // We are here if our sanity check notifies us that we cannot separate data into distinct lines... ERROR out as CORRUPT
-          if (!isContentParsable) {
+          if (isThisBufferCorrupted && tempMsgSize >= maxBufAllowed ) {
+            isContentParsable = false
             logger.error("SMART FILE CONSUMER (" + partitionId + "): This maybe a corrupt file, The max length of the line must be the size of a processing buffer")
             messages = scala.collection.mutable.LinkedHashSet[KafkaMessage]()
             messages.add(new KafkaMessage(Array[Char](), FileProcessor.CORRUPT_FILE, true, true, buffer.relatedFileName, buffer.partMap, FileProcessor.CORRUPT_FILE))
