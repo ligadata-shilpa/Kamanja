@@ -1333,6 +1333,7 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
           }
         }
 
+
         // Wait for a previous worker be to finish so that we can get the leftovers.,, If we are the first buffer, then
         // just publish
         if (buffer.chunkNumber == 0) {
@@ -1485,9 +1486,9 @@ class FileProcessor(val path: ArrayBuffer[Path], val partitionId: Int) extends R
       waitedCntr = 0
       val st = System.currentTimeMillis
       //while ((BufferCounters.inMemoryBuffersCntr.get * 2 + partitionSelectionNumber + 2) * maxlen * 2 > maxBufAllowed) { // One counter for bufferQ and one for msgQ and also taken concurrentKafkaJobsRunning and 2 extra in memory
-      while (bufferQ.size >= bufferLimit) {
+      while ((bufferQ.size + msgQ.size) >= bufferLimit) {
         if (waitedCntr == 0) {
-          logger.warn("SMART FILE ADDAPTER (" + partitionId + ") : current size %d exceed the MAX number of %d buffers. Halting for a free slot".format(bufferQ.size, bufferLimit))
+          logger.warn("SMART FILE ADDAPTER (" + partitionId + ") : current size:%d (bufferQ:%d + msgQ:%d) exceed the MAX number of %d buffers. Halting for a free slot".format(bufferQ.size + msgQ.size, bufferQ.size, msgQ.size, bufferLimit))
         }
         waitedCntr += 1
         Thread.sleep(throttleTime)
