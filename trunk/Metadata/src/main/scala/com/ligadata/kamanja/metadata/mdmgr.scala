@@ -2265,6 +2265,10 @@ class MdMgr {
     mdl.tenantId = tenantId
     SetBaseElem(mdl, nameSpace, name, ver, jarNm, dJars, ownerId, tenantId, uniqueId, mdElementId)
 
+    if( mdl.depContainers == null ){
+      mdl.depContainers = Array[String]()
+    }
+
     mdl
   }
 

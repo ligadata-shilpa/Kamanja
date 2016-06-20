@@ -391,7 +391,8 @@ object StartMetadataAPI {
                                             , optModelVer
                                             , msgName
                                             , optMsgVer
-                                            , tid)
+                                            , tid
+					    , optMsgProduced)
         }
 
         case Action.ADDMODELSCALA => {
