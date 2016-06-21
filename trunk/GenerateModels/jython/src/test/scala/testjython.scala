@@ -136,7 +136,7 @@ class TestJython extends FunSuite with BeforeAndAfter {
     val interpreter = interpreter1.asInstanceOf[org.python.util.PythonInterpreter]
 
     {
-      val cl2 = interpreter.getSystemState().getClassLoader()
+      val cl2 = interpreter.getClass.getClassLoader
       val urls2 = urlses(cl2)
       logger.Info("CLASSPATH-JYTHON-2:=" + urls2.mkString(":"))
     }
