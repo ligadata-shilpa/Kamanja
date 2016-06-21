@@ -8,8 +8,8 @@ export KAMANJAPYPATH=~/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstance
 export DATA=~/github1/dev/r1.5.0/kamanja/trunk/FactoriesOfModelInstanceFactory/PythonModelPrototype/src/main/resources/data
 
 **Start Server Commands**
-SockClient.scala --cmd startServer --user kamanaja --host localhost --port 9999 --pyPath $KAMANJAPYPATH --log4jConfig $KAMANJAPYPATH/bin/pythonlog4j.cfg
-SockClient.scala --cmd startServer --user kamanaja --host localhost --port 9998 --pyPath $KAMANJAPYPATH --log4jConfig $KAMANJAPYPATH/bin/pythonlog4j.cfg
+SockClient.scala --cmd startServer --user kamanaja --host localhost --port 9999 --pyPath $KAMANJAPYPATH --log4jConfig $KAMANJAPYPATH/bin/pythonlog4j.cfg --fileLogPath $KAMANJAPYPATH/logs/pythonserver.log
+SockClient.scala --cmd startServer --user kamanaja --host localhost --port 9998 --pyPath $KAMANJAPYPATH --log4jConfig $KAMANJAPYPATH/bin/pythonlog4j.cfg --fileLogPath $KAMANJAPYPATH/logs/pythonserver.log
 
 **START SERVER DIRECTLY**
 ./pythonserver.py --host localhost --port 9999 --pythonPath $KAMANJAPYPATH --log4jConfig $KAMANJAPYPATH/bin/pythonlog4j.cfg

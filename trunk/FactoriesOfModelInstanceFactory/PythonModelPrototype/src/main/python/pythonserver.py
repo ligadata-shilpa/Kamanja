@@ -10,6 +10,7 @@ import struct
 import json
 import logging
 import logging.config
+import logging.handlers
 
 #
 #
@@ -18,17 +19,25 @@ parser.add_argument('--host', help='host name (default=localhost) ', default="lo
 parser.add_argument('--port', help='port binding (default=9999)', default="9999",type=int)
 parser.add_argument('--pythonPath', required=True, type=str)
 parser.add_argument('--log4jConfig', required=True, type=str)
+parser.add_argument('--fileLogPath', default="", type=str)
 args = vars(parser.parse_args())
 #
 #
 # set the sys.path s.t. the first path searched is our path 
+pythonPath = args['pythonPath']
 sys.path.insert(0, args['pythonPath']) 
 #
 # initialize logging
-logfile = args['log4jConfig']
-logging.config.fileConfig(logfile)
+log4jConfig = args['log4jConfig']
+logging.config.fileConfig(log4jConfig)
 # create logger
 logger = logging.getLogger('pythonserver')
+# add file logger if specified on command line 
+fileLogPath = args['fileLogPath']
+if fileLogPath != "":
+	fileHandler = logging.handlers.RotatingFileHandler(fileLogPath, mode='a', maxBytes=500000, backupCount=3)
+	logger.addHandler(fileHandler)
+
 # log basic startup info
 logger.info('starting pythonserver ...\nhost = ' + args['host'] + '\nport = ' + str(args['port']) + '\npythonPath = ' + args['pythonPath'] + '\nlog4jConfig = ' + args['log4jConfig'])
 #
