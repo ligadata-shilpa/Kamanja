@@ -172,6 +172,7 @@ object SockClient {
                         [--port <user port no.> ... default=9999]
                         [--user <userId.> ... default="kamanja"]
                         --pyPath <location of Kamanja python installation>
+                        --log4jConfig <path to the log4j configuration>
     --cmd stopServer    [--host <hostname or ip> ... default = localhost]
                         [--port <user port no.> ... default=9999]
                         [--user <userId.> ... default="kamanja"]
@@ -238,6 +239,8 @@ object SockClient {
                     nextOption(map ++ Map('modelOptions -> value), tail)
                 case "--pyPath" :: value :: tail =>
                     nextOption(map ++ Map('pyPath -> value), tail)
+                case "--log4jConfig" :: value :: tail =>
+                    nextOption(map ++ Map('log4jConfig -> value), tail)
                 case option :: tail => println("Unknown option " + option)
                     sys.exit(1)
             }
@@ -251,6 +254,7 @@ object SockClient {
         val host : String = if (options.contains('host)) options.apply('host) else "localhost"
         val portNo : Int = if (options.contains('port)) options.apply('port).toInt else 9999
         val pyPath : String = if (options.contains('pyPath)) options.apply('pyPath) else null
+        val log4jConfig : String = if (options.contains('log4jConfig)) options.apply('log4jConfig) else null
         val modelOptions : String = if (options.contains('modelOptions)) options.apply('modelOptions) else null
 
         val ok : Boolean = cmd != null
@@ -287,7 +291,7 @@ object SockClient {
 
         if (cmd == "startServer") {
             val startServerCmd : StartServerCmd = cmdObj.asInstanceOf[StartServerCmd]
-            val result : String = startServerCmd.startServer(filePath, user, host, portNo, pyPath)
+            val result : String = startServerCmd.startServer(filePath, user, host, portNo, pyPath, log4jConfig)
             println(s"Server started? $result")
         } else {
 	        /** Prepare the command message for transport (except for the case of the
@@ -474,14 +478,20 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
       * @param host the host that will be used for the pythonserver
       * @param portNo the port on which the server will listen
       * @param pyPath the kamanja python module path where the server lives and the models will be copied
+      * @param log4jConfigPath the log4j config file to be used by the python server being started
       * @return the result of the start server command
       *
       */
-    def startServer(filePath : String, user : String, host : String, portNo : Int, pyPath : String) : String = {
+    def startServer(filePath : String
+                    , user : String
+                    , host : String
+                    , portNo : Int
+                    , pyPath : String
+                    , log4jConfigPath : String) : String = {
 
         val useSSH : Boolean = host != "localhost"
 
-        val pythonCmdStr = s"python $pyPath/pythonserver.py --host $host --port ${portNo.toString} --pythonpath $pyPath"
+        val pythonCmdStr = s"python $pyPath/pythonserver.py --host $host --port ${portNo.toString} --pythonPath $pyPath --log4jConfig $log4jConfigPath"
         val cmdSeq : Seq[String] = if (useSSH) {
             val userMachine : String = s"$user@$host"
             val remoteCmd : String = s"python $pythonCmdStr"
@@ -490,6 +500,7 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
             println(s"Start the python server... $pythonCmdStr")
             Seq[String]("bash", "-c", pythonCmdStr)
         }
+
 
         /**
           * Note that if we ask for the result, the call will block.  This is not a good idea for the start server.

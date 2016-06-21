@@ -30,7 +30,7 @@ logging.config.fileConfig(logfile)
 # create logger
 logger = logging.getLogger('pythonserver')
 # log basic startup info
-logger.info('starting pythonserver ...\nhost = ' + args['host'] + '\nport = ' + str(args['port']) + '\npythonpath = ' + args['pythonPath'] + '\nlog4jConfig = ' + args['log4jConfig'])
+logger.info('starting pythonserver ...\nhost = ' + args['host'] + '\nport = ' + str(args['port']) + '\npythonPath = ' + args['pythonPath'] + '\nlog4jConfig = ' + args['log4jConfig'])
 #
 # create a socket object
 serversocket = socket.socket(
