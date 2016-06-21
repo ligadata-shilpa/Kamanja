@@ -5,8 +5,11 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.Statement
 import java.sql.ResultSet
+import scala.collection.mutable.HashMap
 
-import com.ligadata.kamanja.metadata.{AdapterInfo, ContainerDef, MessageDef, ModelDef};
+import com.ligadata.kamanja.metadata.{AdapterInfo, ContainerDef, MessageDef, ModelDef}
+
+import scala.collection.immutable.HashMap.HashMap1;
 /**
   * Created by Yousef on 6/16/2016.
   */
@@ -28,13 +31,34 @@ class QueryBuilder extends LogTrait {
   def checkQuery(elementType: String, objName: String ,className: String , linkFrom: Option[String] = None, linkTo: Option[String] = None): String ={
     var query: String = ""
     if(elementType.equalsIgnoreCase("vertex")){
-      query = "select * from %s where Name = \"%s\";".format(className,objName)
+      query = "select * from %s where Name = \"%s\";".format(className,objName)//use fullname
 //    } else if(elementType.equalsIgnoreCase("edge")){
 //      query= "select * from %s and Name = \"%s\" and in = (select @rid from V where Name = \"%s\");".format(className,objName,linkFrom.get,linkTo.get)
     } else if(elementType.equalsIgnoreCase("class")){
       query = "select distinct(@class) from V where @class = \"%s\";".format(className)
     }
     return query
+  }
+
+  def getAllProperty(className: String): List[String] ={
+    var extendClass = ""
+    if (className.equals("KamanjaEdge")) extendClass = "E" else extendClass = "V"
+    var property: List[String] = Nil
+    property = property ++ Array("Create Property %s.ID INTEGER ;".format(className))
+    property = property ++ Array("Create Property %s.Name STRING ;".format(className))
+    property = property ++ Array("Create Property %s.Namespace STRING ;".format(className))
+    property = property ++ Array("Create Property %s.FullName STRING ;".format(className))
+    property = property ++ Array("Create Property %s.Version STRING ;".format(className))
+    property = property ++ Array("Create Property %s.CreatedBy STRING ;".format(className))
+    property = property ++ Array("Create Property %s.CreatedTime STRING ;".format(className))
+    property = property ++ Array("Create Property %s.LastModifiedTime STRING ;".format(className))
+    property = property ++ Array("Create Property %s.Tenant STRING ;".format(className))
+    property = property ++ Array("Create Property %s.Description STRING ;".format(className))
+    property = property ++ Array("Create Property %s.Author STRING ;".format(className))
+    property = property ++ Array("Create Property %s.Active BOOLEAN ;".format(className))
+    property = property ++ Array("Create Property %s.Type STRING;".format(className))
+    property = property ++ Array("ALTER PROPERTY %s.Type DEFAULT \'%s\' ;".format(className, extendClass))
+    return property
   }
   def getDBConnection(configObj: ConfigBean): Connection ={
     Class.forName("com.orientechnologies.orient.jdbc.OrientJdbcDriver")
@@ -47,6 +71,50 @@ class QueryBuilder extends LogTrait {
     val conn = DriverManager.getConnection(configObj.url, info); // url==> jdbc:orient:remote:localhost/test"
 
     return conn
+  }
+
+  def getAllExsistDataQuery(elementType: String, extendClass: Option[String] = None): String ={
+    var query: String = ""
+    if(elementType.equals("vertex")){
+      query = "select @rid, FullName from V;"
+    } else if(elementType.equals("edge")){
+      query = "select @rid, FullName, in, out from E;"
+    } else if(elementType.equals("class")){
+      query = "select distinct(@class) from %s;".format(extendClass.get)
+    }
+    return query
+  }
+
+  def getAllVerteces(conn: Connection, query: String): HashMap[String, String] ={
+    val data = HashMap[String, String]()
+    val stmt: Statement = conn.createStatement()
+    val result: ResultSet = stmt.executeQuery(query)
+    while (result.next()){
+      data +=  (result.getString(1) -> result.getString(2))
+    }
+    return data
+  }
+
+  def getAllEdges(conn: Connection, query: String): HashMap[String, String] ={
+    val data = HashMap[String, String]()
+    val stmt: Statement = conn.createStatement()
+    val result: ResultSet = stmt.executeQuery(query)
+    var Key = ""
+    while (result.next()){
+      Key = result.getString(3) + "," + result.getString(4)
+      data +=  (Key -> result.getString(2))
+    }
+    return data
+  }
+
+  def getAllClasses(conn: Connection, query: String): List[String] ={
+    var data: List[String]=Nil
+    val stmt: Statement = conn.createStatement()
+    val result: ResultSet = stmt.executeQuery(query)
+    while (result.next()){
+      data =  data ++ Array(result.getString(1))
+    }
+    return data
   }
 
   def executeQuery(conn: Connection, query: String): Unit ={
@@ -95,7 +163,11 @@ class QueryBuilder extends LogTrait {
         " Tenant = %s, Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(
           tenantID, model.get.Description, model.get.Author, model.get.Active)
     } else if(adapter != None){
-      setQuery = "set Name = \"%s\", Tenant = \"%s\", Type = \'V\'".format(adapter.get.Name, adapter.get.TenantId.toString)
+      val tenantID: String =
+        if(adapter.get.TenantId.isEmpty) ""
+        else adapter.get.TenantId
+
+      setQuery = "set Name = \"%s\", FullName = \"%s\", Tenant = \"%s\", Type = \'V\'".format(adapter.get.Name, adapter.get.Name, tenantID)
     }
     return setQuery
   }

@@ -131,6 +131,68 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
 
      val conn: Connection = queryObj.getDBConnection(configBeanObj) //this used to fet a connection for orientDB
 
+     /* Step 1
+     *  1- check all existing classes in graphDB
+     *  2- add missing classes to GraphDB
+      */
+
+      var dataQuery = queryObj.getAllExsistDataQuery(elementType = "class", extendClass = option("V"))
+     var data = queryObj.getAllClasses(conn, dataQuery)
+     var classesName = Array("Model", "Input", "Output", "Storage", "Container", "Message", "Inputs", "Stores", "Outputs", "Engine", "KamanjaVertex")
+     var extendsClass = "KamanjaVertex"
+     for(className <- classesName) {
+       if (!data.contains(classesName)) {
+         if (classesName.equals("KamanjaVertex")) extendsClass = "V"
+         val createClassQuery = queryObj.createQuery(elementType = "class", className = className, setQuery = "", extendsClass = Option(extendsClass))
+         queryObj.executeQuery(conn, createClassQuery)
+         logger.info(createClassQuery)
+         println(createClassQuery)
+         if (classesName.equals("KamanjaVertex")) {
+           val propertyList = queryObj.getAllProperty("KamanjaVertex")
+           for (prop <- propertyList){
+             queryObj.executeQuery(conn, prop)
+             logger.info(prop)
+             println(prop)
+           }
+         }
+       } else {
+         logger.info("The %s class exsists".format(className))
+         println("The %s class exsists".format(className))
+       }
+     }
+
+      dataQuery = queryObj.getAllExsistDataQuery(elementType = "class", extendClass = option("E"))
+      data = queryObj.getAllClasses(conn, dataQuery)
+      classesName = Array("MessageE", "Containers", "Messages", "Produces", "ConsumedBy", "StoredBy", "Retrieves", "SentTo", "KamanjaEdge")
+      extendsClass = "KamanjaEdge"
+     for(className <- classesName) {
+       if (!data.contains(classesName)) {
+         if (classesName.equals("KamanjaEdge")) extendsClass = "E"
+         val createClassQuery = queryObj.createQuery(elementType = "class", className = className, setQuery = "", extendsClass = Option(extendsClass))
+         queryObj.executeQuery(conn, createClassQuery)
+         logger.info(createClassQuery)
+         println(createClassQuery)
+         if (classesName.equals("KamanjaEdge")) {
+           val propertyList = queryObj.getAllProperty("KamanjaEdge")
+           for (prop <- propertyList){
+             queryObj.executeQuery(conn, prop)
+             logger.info(prop)
+             println(prop)
+           }
+         }
+       } else {
+         logger.info("The %s class exsists".format(className))
+         println("The %s class exsists".format(className))
+       }
+     }
+
+     /* Step 2
+      *  1- check all existing Vertices in graphDB
+      *  2- add missing Vertices to GraphDB
+     */
+     dataQuery = queryObj.getAllExsistDataQuery(elementType = "vertex", extendClass = option("V"))
+     val verticesData = queryObj.getAllVerteces(conn, dataQuery)
+
      if(adapterDefs.isEmpty){
        logger.info("There are no adapter in metadata")
        println("There are no adapter in metadata")
@@ -140,8 +202,10 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
          val setQuery = queryObj.createSetCommand(adapter = Option(adapter._2))
          if(adapter._2.typeString.equalsIgnoreCase("input")) adapterType = "inputs" else adapterType = "outputs"
          val query: String = queryObj.createQuery(elementType = "vertex", className = adapterType, setQuery = setQuery)
-         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = adapter._2.Name, className = adapterType)) == false) {
+        // if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = adapter._2.Name, className = adapterType)) == false) {
+         if(!verticesData.exists(_._2 == adapter._2.Name)) {
            queryObj.executeQuery(conn, query)
+           logger.info(query)
            println(query)
          }
          else {
@@ -158,8 +222,10 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        for (container <- containerDefs.get) {
          val setQuery = queryObj.createSetCommand(contianer = Option(container))
          val query: String = queryObj.createQuery(elementType = "vertex", className = "container", setQuery = setQuery)
-         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = container.Name, className = "container")) == false) {
+         //if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = container.Name, className = "container")) == false) {
+         if(!verticesData.exists(_._2 == container.FullName)) {
            queryObj.executeQuery(conn, query)
+           logger.info(query)
            println(query)
          } else {
            logger.info("This container %s exsist in".format(container.Name))
@@ -175,8 +241,10 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        for (model <- ModelDefs.get) {
          val setQuery = queryObj.createSetCommand(model = Option(model))
          val query: String = queryObj.createQuery(elementType = "vertex", className = "model",setQuery=  setQuery)
-         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = model.Name, className = "model")) == false) {
+         //if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = model.Name, className = "model")) == false) {
+         if(!verticesData.exists(_._2 == model.FullName)) {
            queryObj.executeQuery(conn, query)
+           logger.info(query)
            println(query)
          } else {
            logger.info("This model %s exsist in database".format(model.Name))
@@ -203,8 +271,10 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
        for (message <- msgDefs.get){
          val setQuery = queryObj.createSetCommand(message = Option(message))
          val query: String = queryObj.createQuery(elementType = "vertex", className = "Message", setQuery = setQuery)
-         if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = message.Name, className = "Message")) == false) {
+         //if(queryObj.checkObjexsist(conn,queryObj.checkQuery(elementType = "vertex", objName = message.Name, className = "Message")) == false) {
+         if(!verticesData.exists(_._2 == message.FullName)) {
            queryObj.executeQuery(conn, query)
+           logger.info(query)
            println(query)
          } else {
            logger.info("This message %s exsist in database".format(message.Name))
