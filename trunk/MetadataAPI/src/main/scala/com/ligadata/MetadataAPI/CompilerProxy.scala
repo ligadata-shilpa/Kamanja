@@ -1472,6 +1472,7 @@ class CompilerProxy {
     // dont want to allow developers using the classpath to pass in dependencies.
     var returnList = ArrayBuffer[String]()
     var depArray: Array[String] = clsPath.trim.split(":")
+	val jarsToBeExcluded = List("ExtDependencyLibs_2.11-1.4.2.jar", "KamanjaInternalDeps_2.11-1.4.2.jar", "ExtDependencyLibs2_2.11-1.4.2.jar").toSet
     depArray.foreach(dep => {
       // Check it is the file & the file exists
       val fl = new File(dep.trim)
@@ -1480,7 +1481,7 @@ class CompilerProxy {
       } else {
         var parsedJarpath = dep.split("/")
         var tempSanity = parsedJarpath(parsedJarpath.length - 1).split('.')
-        if (tempSanity(tempSanity.length - 1).trim.equalsIgnoreCase("jar"))
+        if (tempSanity(tempSanity.length - 1).trim.equalsIgnoreCase("jar") && !jarsToBeExcluded.contains((tempSanity.mkString(".").trim)))
           returnList += (tempSanity.mkString(".").trim)
       }
     })
