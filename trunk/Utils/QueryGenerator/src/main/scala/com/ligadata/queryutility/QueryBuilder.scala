@@ -19,12 +19,12 @@ class QueryBuilder extends LogTrait {
                   extendsClass: Option[String] = None): String = {
     var query: String = ""
     if(elementType.equalsIgnoreCase("vertex")){
-      query = "create vertex %s %s;".format(className,setQuery)
+      query = "create vertex %s %s".format(className,setQuery)
     } else if(elementType.equalsIgnoreCase("edge")){
       //query= "create edge %s from (select @rid from V where FullName = %s) to (select @rid from V where FullName = %s) %s;".format(className,linkFrom.get,linkTo.get, setQuery)
-      query= "create edge %s from %s to %s %s;".format(className,linkFrom.get,linkTo.get, setQuery)
+      query= "create edge %s from %s to %s %s".format(className,linkFrom.get,linkTo.get, setQuery)
     } else if(elementType.equalsIgnoreCase("class")){
-      query = "create class %s extends %s;".format(setQuery, extendsClass)
+      query = "create class %s extends %s".format(className, extendsClass.get)
     }
     return query
   }
@@ -32,11 +32,11 @@ class QueryBuilder extends LogTrait {
   def checkQuery(elementType: String, objName: String ,className: String , linkFrom: Option[String] = None, linkTo: Option[String] = None): String ={
     var query: String = ""
     if(elementType.equalsIgnoreCase("vertex")){
-      query = "select * from %s where Name = \"%s\";".format(className,objName)//use fullname
+      query = "select * from %s where Name = \"%s\"".format(className,objName)//use fullname
 //    } else if(elementType.equalsIgnoreCase("edge")){
 //      query= "select * from %s and Name = \"%s\" and in = (select @rid from V where Name = \"%s\");".format(className,objName,linkFrom.get,linkTo.get)
     } else if(elementType.equalsIgnoreCase("class")){
-      query = "select distinct(@class) from V where @class = \"%s\";".format(className)
+      query = "select distinct(@class) from V where @class = \"%s\"".format(className)
     }
     return query
   }
@@ -45,20 +45,20 @@ class QueryBuilder extends LogTrait {
     var extendClass = ""
     if (className.equals("KamanjaEdge")) extendClass = "E" else extendClass = "V"
     var property: List[String] = Nil
-    property = property ++ Array("Create Property %s.ID INTEGER ;".format(className))
-    property = property ++ Array("Create Property %s.Name STRING ;".format(className))
-    property = property ++ Array("Create Property %s.Namespace STRING ;".format(className))
-    property = property ++ Array("Create Property %s.FullName STRING ;".format(className))
-    property = property ++ Array("Create Property %s.Version STRING ;".format(className))
-    property = property ++ Array("Create Property %s.CreatedBy STRING ;".format(className))
-    property = property ++ Array("Create Property %s.CreatedTime STRING ;".format(className))
-    property = property ++ Array("Create Property %s.LastModifiedTime STRING ;".format(className))
-    property = property ++ Array("Create Property %s.Tenant STRING ;".format(className))
-    property = property ++ Array("Create Property %s.Description STRING ;".format(className))
-    property = property ++ Array("Create Property %s.Author STRING ;".format(className))
-    property = property ++ Array("Create Property %s.Active BOOLEAN ;".format(className))
-    property = property ++ Array("Create Property %s.Type STRING;".format(className))
-    property = property ++ Array("ALTER PROPERTY %s.Type DEFAULT \'%s\' ;".format(className, extendClass))
+    property = property ++ Array("Create Property %s.ID INTEGER".format(className))
+    property = property ++ Array("Create Property %s.Name STRING".format(className))
+    property = property ++ Array("Create Property %s.Namespace STRING".format(className))
+    property = property ++ Array("Create Property %s.FullName STRING".format(className))
+    property = property ++ Array("Create Property %s.Version STRING".format(className))
+    property = property ++ Array("Create Property %s.CreatedBy STRING".format(className))
+    property = property ++ Array("Create Property %s.CreatedTime STRING".format(className))
+    property = property ++ Array("Create Property %s.LastModifiedTime STRING".format(className))
+    property = property ++ Array("Create Property %s.Tenant STRING".format(className))
+    property = property ++ Array("Create Property %s.Description STRING".format(className))
+    property = property ++ Array("Create Property %s.Author STRING".format(className))
+    property = property ++ Array("Create Property %s.Active BOOLEAN".format(className))
+    property = property ++ Array("Create Property %s.Type STRING".format(className))
+    property = property ++ Array("ALTER PROPERTY %s.Type DEFAULT \'%s\'".format(className, extendClass))
     return property
   }
   def getDBConnection(configObj: ConfigBean): Connection ={
@@ -77,11 +77,11 @@ class QueryBuilder extends LogTrait {
   def getAllExistDataQuery(elementType: String, extendClass: Option[String] = None): String ={
     var query: String = ""
     if(elementType.equals("vertex")){
-      query = "select @rid, FullName from V;"
+      query = "select @rid as id, FullName from V"
     } else if(elementType.equals("edge")){
-      query = "select @rid, FullName, in, out from E;"
+      query = "select @rid as id, FullName, in, out from E"
     } else if(elementType.equals("class")){
-      query = "select distinct(@class) from %s;".format(extendClass.get)
+      query = "select distinct(@class) from %s".format(extendClass.get)
     }
     return query
   }
@@ -91,7 +91,8 @@ class QueryBuilder extends LogTrait {
     val stmt: Statement = conn.createStatement()
     val result: ResultSet = stmt.executeQuery(query)
     while (result.next()){
-      data +=  (result.getString(1) -> result.getString(2))
+      //data +=  (result.getString(1) -> result.getString(2))
+      data +=  (result.getString("id") -> result.getString("FullName"))
     }
     return data
   }
@@ -118,6 +119,17 @@ class QueryBuilder extends LogTrait {
     return data
   }
 
+  def createclassInDB(conn: Connection, query: String): Boolean ={
+    val stmt: Statement = conn.createStatement()
+    try {
+      stmt.execute(query)
+      stmt.close()
+      return false
+    }
+    catch {
+      case e: Exception => stmt.close() return true
+    }
+  }
   def executeQuery(conn: Connection, query: String): Unit ={
     var stmt: Statement = conn.createStatement()
     stmt.execute(query)
@@ -143,7 +155,7 @@ class QueryBuilder extends LogTrait {
 
       setQuery = "set ID = " + message.get.UniqId + ", Name = \"%s\", Namespace = \"%s\", FullName = \"%s\", Version = \"%s\",  CreatedTime = \"%s\",".format(
          message.get.Name, message.get.NameSpace, message.get.FullName, message.get.Version, message.get.CreationTime) +
-        " Tenant = %s, Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(
+        " Tenant = \"%s\", Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(
           tenantID, message.get.Description, message.get.Author, message.get.Active)
     } else if(contianer != None){
         val tenantID: String =
@@ -152,7 +164,7 @@ class QueryBuilder extends LogTrait {
 
       setQuery = "set ID = "+ contianer.get.UniqId + ", Name = \"%s\", Namespace = \"%s\", FullName = \"%s\", Version = \"%s\", CreatedTime = \"%s\", ".format(
          contianer.get.Name, contianer.get.NameSpace, contianer.get.FullName, contianer.get.Version, contianer.get.CreationTime) +
-        " Tenant = %s, Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(
+        " Tenant = \"%s\", Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(
           tenantID, contianer.get.Description, contianer.get.Author, contianer.get.Active)
     } else if (model != None){
       val tenantID: String =
@@ -161,7 +173,7 @@ class QueryBuilder extends LogTrait {
 
       setQuery = "set ID = " + model.get.UniqId + ", Name = \"%s\", Namespace = \"%s\", FullName = \"%s\", Version = \"%s\", CreatedTime = \"%s\", ".format(
          model.get.Name, model.get.NameSpace, model.get.FullName, model.get.Version, model.get.CreationTime) +
-        " Tenant = %s, Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(
+        " Tenant = \"%s\", Description = \"%s\", Author = \"%s\", Active = %b, Type = \'V\'".format(
           tenantID, model.get.Description, model.get.Author, model.get.Active)
     } else if(adapter != None){
       val tenantID: String =

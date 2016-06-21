@@ -139,16 +139,17 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
 
      var dataQuery = queryObj.getAllExistDataQuery(elementType = "class", extendClass = option("V"))
      var data = queryObj.getAllClasses(conn, dataQuery)
-     var classesName = Array("Model", "Input", "Output", "Storage", "Container", "Message", "Inputs", "Stores", "Outputs", "Engine", "KamanjaVertex")
+     var classesName = Array("KamanjaVertex", "Model", "Input", "Output", "Storage", "Container", "Message", "Inputs", "Stores", "Outputs", "Engine")
      var extendsClass = "KamanjaVertex"
      for (className <- classesName) {
-       if (!data.contains(classesName)) {
-         if (classesName.equals("KamanjaVertex")) extendsClass = "V"
+      // if (!data.contains(className)) {
+         if (className.equals("KamanjaVertex")) extendsClass = "V"
          val createClassQuery = queryObj.createQuery(elementType = "class", className = className, setQuery = "", extendsClass = Option(extendsClass))
-         queryObj.executeQuery(conn, createClassQuery)
+         val existFlag = queryObj.createclassInDB(conn, createClassQuery)
+       if(existFlag == false){
          logger.info(createClassQuery)
          println(createClassQuery)
-         if (classesName.equals("KamanjaVertex")) {
+         if (className.equals("KamanjaVertex")) {
            val propertyList = queryObj.getAllProperty("KamanjaVertex")
            for (prop <- propertyList) {
              queryObj.executeQuery(conn, prop)
@@ -164,16 +165,16 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
 
      dataQuery = queryObj.getAllExistDataQuery(elementType = "class", extendClass = option("E"))
      data = queryObj.getAllClasses(conn, dataQuery)
-     classesName = Array("MessageE", "Containers", "Messages", "Produces", "ConsumedBy", "StoredBy", "Retrieves", "SentTo", "KamanjaEdge")
+     classesName = Array("KamanjaEdge", "MessageE", "Containers", "Messages", "Produces", "ConsumedBy", "StoredBy", "Retrieves", "SentTo")
      extendsClass = "KamanjaEdge"
      for (className <- classesName) {
-       if (!data.contains(classesName)) {
-         if (classesName.equals("KamanjaEdge")) extendsClass = "E"
+       if (!data.contains(className)) {
+         if (className.equals("KamanjaEdge")) extendsClass = "E"
          val createClassQuery = queryObj.createQuery(elementType = "class", className = className, setQuery = "", extendsClass = Option(extendsClass))
          queryObj.executeQuery(conn, createClassQuery)
          logger.info(createClassQuery)
          println(createClassQuery)
-         if (classesName.equals("KamanjaEdge")) {
+         if (className.equals("KamanjaEdge")) {
            val propertyList = queryObj.getAllProperty("KamanjaEdge")
            for (prop <- propertyList) {
              queryObj.executeQuery(conn, prop)
@@ -297,8 +298,6 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
      val edgeData = queryObj.getAllEdges(conn, dataQuery)
      val adapterMessageMap: Map[String, AdapterMessageBinding] = mdMgr.AllAdapterMessageBindings //this includes all adapter and message for it
      for(adapterMessage <- adapterMessageMap) {
-       adapterMessage._2.adapterName
-       adapterMessage._2.messageName
        if(!ModelDefs.isEmpty) {
          for (model <- ModelDefs.get) {
            val inputName = model.inputMsgSets
@@ -306,7 +305,7 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
              for (msg1 <- msg) {
                var adapterId = ""
                var vertexId = ""
-               if (adapterMessage._2.messageName.equals(msg1.message.substring(msg1.message.lastIndexOf('.') + 1))) {
+               if (adapterMessage._2.messageName.equals(msg1.message)) {
                  for (vertex <- verticesDataNew) {
                    if (vertex._2.equals(adapterMessage._2.adapterName)) {
                      adapterId = vertex._1
@@ -346,7 +345,7 @@ Usage:  bash $KAMANJA_HOME/bin/QueryGenerator.sh --metadataconfig $KAMANJA_HOME/
              //println("output message : " + item)
              var adapterId = ""
              var vertexId = ""
-             if (adapterMessage._2.messageName.equals(item.substring(item.lastIndexOf('.') + 1))) {
+             if (adapterMessage._2.messageName.equals(item)) {
                for (vertex <- verticesDataNew) {
                  if (vertex._2.equals(adapterMessage._2.adapterName)) {
                    adapterId = vertex._1
