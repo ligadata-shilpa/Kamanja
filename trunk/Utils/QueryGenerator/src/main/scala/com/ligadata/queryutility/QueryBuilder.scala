@@ -21,6 +21,7 @@ class QueryBuilder extends LogTrait {
     if(elementType.equalsIgnoreCase("vertex")){
       query = "create vertex %s %s;".format(className,setQuery)
     } else if(elementType.equalsIgnoreCase("edge")){
+      //query= "create edge %s from (select @rid from V where FullName = %s) to (select @rid from V where FullName = %s) %s;".format(className,linkFrom.get,linkTo.get, setQuery)
       query= "create edge %s from %s to %s %s;".format(className,linkFrom.get,linkTo.get, setQuery)
     } else if(elementType.equalsIgnoreCase("class")){
       query = "create class %s extends %s;".format(setQuery, extendsClass)
@@ -73,7 +74,7 @@ class QueryBuilder extends LogTrait {
     return conn
   }
 
-  def getAllExsistDataQuery(elementType: String, extendClass: Option[String] = None): String ={
+  def getAllExistDataQuery(elementType: String, extendClass: Option[String] = None): String ={
     var query: String = ""
     if(elementType.equals("vertex")){
       query = "select @rid, FullName from V;"
@@ -85,7 +86,7 @@ class QueryBuilder extends LogTrait {
     return query
   }
 
-  def getAllVerteces(conn: Connection, query: String): HashMap[String, String] ={
+  def getAllVertices(conn: Connection, query: String): HashMap[String, String] ={
     val data = HashMap[String, String]()
     val stmt: Statement = conn.createStatement()
     val result: ResultSet = stmt.executeQuery(query)
