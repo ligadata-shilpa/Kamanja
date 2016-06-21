@@ -85,25 +85,14 @@ object MetadataAPISerialization {
               containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
             }
 
-          // 646 - 673 Changes begin - MetadataAPI Changes
-          // The following MAP is created to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
-          // them as one json str, 22 parameter limitation is overcome
-          val DCTMap = ("Description" -> o.Description) ~
-          ("Comment" -> o.Comment) ~
-          ("Tag"  -> o.Tag) ~
-          ("Params" -> Json(DefaultFormats).write(o.Params))
-
-          val jsonDCTStr = Json(DefaultFormats).write(DCTMap)
-
-          // 646 - 673 Changes end
-          val json = "Message" ->
+         val json = "MessageNew" -> ("MessageInfo" ->
             ("Name" -> o.Name) ~
               ("PhysicalName" -> o.PhysicalName) ~
               ("JarName" -> getEmptyIfNull(o.JarName)) ~
               ("NameSpace" -> o.NameSpace) ~
               ("DependencyJars" -> o.CheckAndGetDependencyJarNames.toList) ~
               ("OrigDef" -> o.OrigDef) ~
-              ("ObjectDefinition" -> o.ObjectDefinition) ~
+           ("ObjectDefinition" -> o.ObjectDefinition) ~
               ("ObjectFormat" -> ObjFormatType.asString(o.ObjectFormat)) ~
               ("CreationTime" -> o.CreationTime) ~
               ("IsFixed" -> containerDef.IsFixed) ~
@@ -117,7 +106,7 @@ object MetadataAPISerialization {
               ("IsDeleted" -> o.IsDeleted) ~
               ("Persist" -> o.cType.Persist) ~
           // 646 - 673 Meta data api changes included - Changes begin
-          ("Description" -> jsonDCTStr)  ~
+            ("Description" -> o.Description) ~
           ("UpdatedTime" -> o.ModTime) ~
           // 646 - 673 Changes end
               ("MsgAttributes" -> attribs.map(a =>
@@ -129,8 +118,9 @@ object MetadataAPISerialization {
                   ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
-              ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))
-          outputJson = compact(render(json))
+           ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))) ~
+          ("MessageExInfo" ->  ("Author" -> o.Author) ~ ("Comment" -> o.Comment) ~ ("Tag" -> o.Tag) ~ ("Params" -> o.Params))
+          outputJson = compact(json)
         }
         case o: ContainerDef => {
           var primaryKeys = List[(String, List[String])]()
@@ -155,22 +145,8 @@ object MetadataAPISerialization {
             } else {
               containerDef.asInstanceOf[MappedMsgTypeDef].attrMap.map(kv => kv._2).toList
             }
-          // 646 - 673 Changes begin - MetadataAPI Changes
-          // The following MAP is created to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
-          // them as one json str, 22 parameter limitation is overcome
 
-          val DCTMap = ("Description" -> o.Description) ~
-          ("Comment" -> o.Comment) ~
-          ("Tag"  -> o.Tag) ~
-          ("Params" -> Json(DefaultFormats).write(o.Params))
-
-          // 646 - 673 Changes end
-          val jsonDCTStr = Json(DefaultFormats).write(DCTMap)
-
-//          val jsonDCTStr = "{" + "\"Description\" : " + "\"" + o.Description +
-          //",\"Comment\" : \" " + o.Comment + "\", \"Tag\" : \"" + o.Tag +  "\"}"
-
-          val json = "Container" ->
+          val json = "ContainerNew" -> ("ContainerInfo" ->
             ("Name" -> o.name) ~
               ("PhysicalName" -> o.physicalName) ~
               ("JarName" -> getEmptyIfNull(o.jarName)) ~
@@ -190,12 +166,8 @@ object MetadataAPISerialization {
               ("PartitionKey" -> getEmptyArrayIfNull(o.cType.PartitionKey).toList) ~
               ("IsActive" -> o.IsActive) ~
               ("IsDeleted" -> o.IsDeleted) ~
-          // 646 - 673 Changes begin - MetadataAPI Changes
-          // The following MAP Json Str to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
-          // them as one json str, 22 parameter limitation is overcome
-          ("Description" -> jsonDCTStr) ~
+          ("Description" -> o.Description) ~
           ("UpdatedTime" -> o.ModTime) ~
-          // 646 - 673 Changes end
               ("MsgAttributes" -> attribs.map(a =>
                 ("NameSpace" -> a.NameSpace) ~
                   ("Name" -> a.Name) ~
@@ -205,7 +177,8 @@ object MetadataAPISerialization {
                   ("CollectionType" -> ObjType.asString(a.CollectionType)))) ~
               ("NumericTypes" -> ("Version" -> o.Version) ~ ("TransId" -> o.TranId) ~ ("UniqId" -> o.UniqId) ~ ("CreationTime" -> o.CreationTime) ~ ("ModTime" -> o.ModTime) ~ ("MdElemStructVer" -> o.MdElemStructVer) ~ ("MdElementId" -> o.MdElementId)) ~
               ("PrimaryKeys" -> primaryKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2))) ~
-              ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))
+            ("ForeignKeys" -> foreignKeys.map(m => ("constraintName" -> m._1) ~ ("key" -> m._2) ~ ("forignContainerName" -> m._3) ~ ("forignKey" -> m._4)))) ~
+          ("ContainerExInfo" -> ("Author" -> o.Author) ~ ("Comment" -> o.Comment) ~ ("Tag" -> o.Tag) ~ ("Params" -> o.Params))
           outputJson = compact(render(json))
         }
         case o: FunctionDef => {
@@ -692,6 +665,8 @@ object MetadataAPISerialization {
 
     val json = parse(metadataJson)
 
+    logger.debug("Parsed  json  and it is : " + json)
+
     val key = json.mapField(k => {
       (k._1, JString(""))
     }).extract[(String, String)]._1
@@ -700,7 +675,9 @@ object MetadataAPISerialization {
       key match {
         case "Model" => parseModelDef(json)
         case "Message" => parseMessageDef(json)
+        case "MessageNew" => parseMessageNewDef(json)
         case "Container" => parseContainerDef(json)
+        case "ContainerNew" => parseContainerNewDef(json)
         case "Function" => parseFunctionDef(json)
         case "MapType" => parseMapTypeDef(json)
         case "ArrayType" => parseArrayTypeDef(json)
@@ -801,6 +778,8 @@ object MetadataAPISerialization {
     }
   }
 
+  // 646 - 673 The following module can be retired after moving to higher versions
+
   private def parseMessageDef(msgDefJson: JValue): MessageDef = {
     try {
       logger.debug("Parsed the json : " + msgDefJson)
@@ -875,15 +854,6 @@ object MetadataAPISerialization {
       msgDef.ObjectFormat(objFmt)
       msgDef.creationTime = MsgDefInst.Message.NumericTypes.CreationTime
       msgDef.modTime = MsgDefInst.Message.NumericTypes.ModTime
-      // 646 - 673 Changes begin - MetadataAPI Changes
-      // The following MAP is used to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
-      // them as one json str, 22 parameter limitation is overcome
-      val DCTMap = parse(MsgDefInst.Message.Description).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
-      msgDef.description = DCTMap.get("Description").get.asInstanceOf[String]
-      msgDef.comment = DCTMap.get("Comment").get.asInstanceOf[String]
-      msgDef.tag = DCTMap.get("Tag").get.asInstanceOf[String]
-      msgDef.params =  parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
-      // 646 - 673 Changes end
       msgDef.author = "" // MsgDefInst.Message.Author
       msgDef.mdElemStructVer = MsgDefInst.Message.NumericTypes.MdElemStructVer
       msgDef.cType.persist = MsgDefInst.Message.Persist
@@ -902,7 +872,211 @@ object MetadataAPISerialization {
     }
   }
 
-  private def parseContainerDef(contDefJson: JValue): ContainerDef = {
+  // 646 - 673 Changes begin
+  private def parseMessageNewDef(msgDefJson: JValue): MessageDef = {
+    try {
+      logger.debug("Parsed the json : " + msgDefJson)
+
+      val MsgDefInst = msgDefJson.extract[MessageNew]
+      val attrList = MsgDefInst.MessageNew.MessageInfo.MsgAttributes
+      var attrList1 = List[(String, String, String, String, Boolean, String)]()
+      for (attr <- attrList) {
+        attrList1 ::=(attr.NameSpace, attr.Name, attr.TypNameSpace, attr.TypName, false, attr.CollectionType)
+      }
+
+      var primaryKeys = List[(String, List[String])]()
+      val pr = MsgDefInst.MessageNew.MessageInfo.PrimaryKeys
+
+      pr.foreach(f => {
+        primaryKeys ::=(f.constraintName, f.key)
+      })
+
+      var foreignKeys = List[(String, List[String], String, List[String])]()
+      val fr = MsgDefInst.MessageNew.MessageInfo.ForeignKeys
+
+      fr.foreach(f => {
+        foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
+      })
+
+      val msgDef =
+        if (MsgDefInst.MessageNew.MessageInfo.IsFixed) {
+          MdMgr.GetMdMgr.MakeFixedMsg(
+            MsgDefInst.MessageNew.MessageInfo.NameSpace,
+            MsgDefInst.MessageNew.MessageInfo.Name,
+            MsgDefInst.MessageNew.MessageInfo.PhysicalName,
+            attrList1,
+            MsgDefInst.MessageNew.MessageInfo.OwnerId,
+            MsgDefInst.MessageNew.MessageInfo.TenantId,
+            MsgDefInst.MessageNew.MessageInfo.NumericTypes.UniqId,
+            MsgDefInst.MessageNew.MessageInfo.NumericTypes.MdElementId,
+            MsgDefInst.MessageNew.MessageInfo.SchemaId,
+            MsgDefInst.MessageNew.MessageInfo.AvroSchema,
+            MsgDefInst.MessageNew.MessageInfo.NumericTypes.Version,
+            MsgDefInst.MessageNew.MessageInfo.JarName,
+            MsgDefInst.MessageNew.MessageInfo.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            MsgDefInst.MessageNew.MessageInfo.PartitionKey.toArray,
+            false, MsgDefInst.MessageNew.MessageInfo.Persist
+          )
+        } else {
+          MdMgr.GetMdMgr.MakeMappedMsg(
+            MsgDefInst.MessageNew.MessageInfo.NameSpace,
+            MsgDefInst.MessageNew.MessageInfo.Name,
+            MsgDefInst.MessageNew.MessageInfo.PhysicalName,
+            attrList1,
+            MsgDefInst.MessageNew.MessageInfo.NumericTypes.Version,
+            MsgDefInst.MessageNew.MessageInfo.JarName,
+            MsgDefInst.MessageNew.MessageInfo.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            MsgDefInst.MessageNew.MessageInfo.PartitionKey.toArray,
+            false, MsgDefInst.MessageNew.MessageInfo.OwnerId,
+            MsgDefInst.MessageNew.MessageInfo.TenantId,
+            MsgDefInst.MessageNew.MessageInfo.NumericTypes.UniqId,
+            MsgDefInst.MessageNew.MessageInfo.NumericTypes.MdElementId,
+            MsgDefInst.MessageNew.MessageInfo.SchemaId,
+            MsgDefInst.MessageNew.MessageInfo.AvroSchema,
+            MsgDefInst.MessageNew.MessageInfo.Persist)
+        }
+
+      msgDef.tranId = MsgDefInst.MessageNew.MessageInfo.NumericTypes.TransId
+      msgDef.origDef = MsgDefInst.MessageNew.MessageInfo.OrigDef
+      msgDef.ObjectDefinition(MsgDefInst.MessageNew.MessageInfo.ObjectDefinition)
+      val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(MsgDefInst.MessageNew.MessageInfo.ObjectFormat)
+      msgDef.ObjectFormat(objFmt)
+      msgDef.creationTime = MsgDefInst.MessageNew.MessageInfo.NumericTypes.CreationTime
+      msgDef.modTime = MsgDefInst.MessageNew.MessageInfo.NumericTypes.ModTime
+      // 646 - 673 Changes begin - MetadataAPI Changes
+      msgDef.description = MsgDefInst.MessageNew.MessageInfo.Description
+      msgDef.comment = MsgDefInst.MessageNew.MessageExInfo.Comment
+      msgDef.tag = MsgDefInst.MessageNew.MessageExInfo.Tag
+      msgDef.params = MsgDefInst.MessageNew.MessageExInfo.Params
+      msgDef.author =  MsgDefInst.MessageNew.MessageExInfo.Author
+      // 646 - 673 Changes end
+      msgDef.mdElemStructVer = MsgDefInst.MessageNew.MessageInfo.NumericTypes.MdElemStructVer
+      msgDef.cType.persist = MsgDefInst.MessageNew.MessageInfo.Persist
+      msgDef.active = MsgDefInst.MessageNew.MessageInfo.IsActive
+      msgDef.deleted = MsgDefInst.MessageNew.MessageInfo.IsDeleted
+      msgDef
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.debug("", e)
+        throw MessageDefParsingException(e.getMessage(), e)
+      }
+    }
+  }
+
+private def parseContainerNewDef(contDefJson: JValue): ContainerDef = {
+    try {
+
+      logger.debug("Parsed the json : " + contDefJson)
+
+      val ContDefInst = contDefJson.extract[ContainerNew]
+      val attrList = ContDefInst.ContainerNew.ContainerInfo.MsgAttributes
+      var attrList1 = List[(String, String, String, String, Boolean, String)]()
+      for (attr <- attrList) {
+        attrList1 ::=(attr.NameSpace, attr.Name, attr.TypNameSpace, attr.TypName, false, attr.CollectionType)
+      }
+
+      var primaryKeys = List[(String, List[String])]()
+      val pr = ContDefInst.ContainerNew.ContainerInfo.PrimaryKeys
+
+      pr.foreach(m => {
+        primaryKeys ::=(m.constraintName, m.key)
+      })
+      var foreignKeys = List[(String, List[String], String, List[String])]()
+      val fr = ContDefInst.ContainerNew.ContainerInfo.ForeignKeys
+
+      fr.foreach(f => {
+        foreignKeys ::=(f.constraintName, f.key, f.forignContainerName, f.forignKey)
+      })
+
+
+      val contDef =
+        if (ContDefInst.ContainerNew.ContainerInfo.IsFixed) {
+          MdMgr.GetMdMgr.MakeFixedContainer(
+            ContDefInst.ContainerNew.ContainerInfo.NameSpace,
+            ContDefInst.ContainerNew.ContainerInfo.Name,
+            ContDefInst.ContainerNew.ContainerInfo.PhysicalName,
+            attrList1,
+            ContDefInst.ContainerNew.ContainerInfo.OwnerId,
+            ContDefInst.ContainerNew.ContainerInfo.TenantId,
+            ContDefInst.ContainerNew.ContainerInfo.NumericTypes.UniqId,
+            ContDefInst.ContainerNew.ContainerInfo.NumericTypes.MdElementId,
+            ContDefInst.ContainerNew.ContainerInfo.SchemaId,
+            ContDefInst.ContainerNew.ContainerInfo.AvroSchema,
+            ContDefInst.ContainerNew.ContainerInfo.NumericTypes.Version,
+            ContDefInst.ContainerNew.ContainerInfo.JarName,
+            ContDefInst.ContainerNew.ContainerInfo.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            ContDefInst.ContainerNew.ContainerInfo.PartitionKey.toArray,
+            false, ContDefInst.ContainerNew.ContainerInfo.Persist
+          )
+        } else {
+          MdMgr.GetMdMgr.MakeMappedContainer(
+            ContDefInst.ContainerNew.ContainerInfo.NameSpace,
+            ContDefInst.ContainerNew.ContainerInfo.Name,
+            ContDefInst.ContainerNew.ContainerInfo.PhysicalName,
+            attrList1,
+            ContDefInst.ContainerNew.ContainerInfo.NumericTypes.Version,
+            ContDefInst.ContainerNew.ContainerInfo.JarName,
+            ContDefInst.ContainerNew.ContainerInfo.DependencyJars.toArray,
+            primaryKeys,
+            foreignKeys,
+            ContDefInst.ContainerNew.ContainerInfo.PartitionKey.toArray,
+            ContDefInst.ContainerNew.ContainerInfo.OwnerId,
+            ContDefInst.ContainerNew.ContainerInfo.TenantId,
+            ContDefInst.ContainerNew.ContainerInfo.NumericTypes.UniqId,
+            ContDefInst.ContainerNew.ContainerInfo.NumericTypes.MdElementId,
+            ContDefInst.ContainerNew.ContainerInfo.SchemaId,
+            ContDefInst.ContainerNew.ContainerInfo.AvroSchema,
+            false, ContDefInst.ContainerNew.ContainerInfo.Persist
+          )
+        }
+
+      contDef.tranId = ContDefInst.ContainerNew.ContainerInfo.NumericTypes.TransId
+      contDef.origDef = ContDefInst.ContainerNew.ContainerInfo.OrigDef
+      contDef.ObjectDefinition(ContDefInst.ContainerNew.ContainerInfo.ObjectDefinition)
+      val objFmt: ObjFormatType.FormatType = ObjFormatType.fromString(ContDefInst.ContainerNew.ContainerInfo.ObjectFormat)
+      contDef.ObjectFormat(objFmt)
+      contDef.creationTime = ContDefInst.ContainerNew.ContainerInfo.NumericTypes.CreationTime
+      contDef.modTime = ContDefInst.ContainerNew.ContainerInfo.NumericTypes.ModTime
+
+      // 646 - 673 Changes begin - MetadataAPI Changes
+      contDef.description = ContDefInst.ContainerNew.ContainerInfo.Description
+      contDef.comment = ContDefInst.ContainerNew.ContainerExInfo.Comment
+      contDef.tag = ContDefInst.ContainerNew.ContainerExInfo.Tag
+      contDef.params = ContDefInst.ContainerNew.ContainerExInfo.Params
+      contDef.author = ContDefInst.ContainerNew.ContainerExInfo.Author
+      // 646 - 673 Changes end
+
+      contDef.author = "" // ContDefInst.ContainerNew.ContainerInfo.Author
+      contDef.mdElemStructVer = ContDefInst.ContainerNew.ContainerInfo.NumericTypes.MdElemStructVer
+      contDef.cType.persist = ContDefInst.ContainerNew.ContainerInfo.Persist
+      contDef.active = ContDefInst.ContainerNew.ContainerInfo.IsActive
+      contDef.deleted = ContDefInst.ContainerNew.ContainerInfo.IsDeleted
+      contDef
+    } catch {
+      case e: MappingException => {
+        logger.debug("", e)
+        throw Json4sParsingException(e.getMessage(), e)
+      }
+      case e: Exception => {
+        logger.debug("", e)
+        throw ContainerDefParsingException(e.getMessage(), e)
+      }
+    }
+  }
+  // 646 - 673 Changes end
+
+  // 646 - 673 The following module can be retired after moving to higher versions
+private def parseContainerDef(contDefJson: JValue): ContainerDef = {
     try {
 
       logger.debug("Parsed the json : " + contDefJson)
@@ -978,16 +1152,6 @@ object MetadataAPISerialization {
       contDef.ObjectFormat(objFmt)
       contDef.creationTime = ContDefInst.Container.NumericTypes.CreationTime
       contDef.modTime = ContDefInst.Container.NumericTypes.ModTime
-
-      // 646 - 673 Changes begin - MetadataAPI Changes
-      // The following MAP is used to tackle the limitation 22 parameters in case class for SCALA 2.10. By grouping
-      // them as one json str, 22 parameter limitation is overcome
-      val DCTMap = parse(ContDefInst.Container.Description).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
-      contDef.description = DCTMap.get("Description").get.asInstanceOf[String]
-      contDef.comment = DCTMap.get("Comment").get.asInstanceOf[String]
-      contDef.tag = DCTMap.get("Tag").get.asInstanceOf[String]
-      contDef.params = parse(DCTMap.get("Params").get.asInstanceOf[String]).values.asInstanceOf[scala.collection.immutable.Map[String, String]]
-      // 646 - 673 Changes end
 
       contDef.author = "" // ContDefInst.Container.Author
       contDef.mdElemStructVer = ContDefInst.Container.NumericTypes.MdElemStructVer
@@ -2087,8 +2251,6 @@ case class MessageInfo(NameSpace: String,
   ObjectDefinition: String,
   ObjectFormat: String,
   Description: String,
-//  Comment: String,
-//  Tag: String,
   OwnerId: String,
   PartitionKey: List[String],
   Persist: Boolean,
@@ -2106,9 +2268,19 @@ case class PrimaryKeys(constraintName: String, key: List[String])
 
 case class ForeignKeys(constraintName: String, key: List[String], forignContainerName: String, forignKey: List[String])
 
+case class MessageExtInfo (Author : String, Comment : String, Tag: String, Params : Map[String, String])
+
 case class MessageDefin(Message: MessageInfo)
 
+case class MessageFull(MessageInfo : MessageInfo,  MessageExInfo : MessageExtInfo)
+
+case class MessageNew (MessageNew : MessageFull)
+
 case class ContainerDefin(Container: MessageInfo)
+
+case class ContainerFull(ContainerInfo: MessageInfo, ContainerExInfo : MessageExtInfo)
+
+case class ContainerNew(ContainerNew : ContainerFull)
 
 case class ModelDefinition(Model: ModelInfo)
 

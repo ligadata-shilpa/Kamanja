@@ -958,6 +958,7 @@ object JsonSerializer {
           // 646 - 673 Meta data api changes included - Changes begin
           ("Description" -> o.description) ~
           ("Comment" -> o.comment) ~
+          ("Author" -> o.author) ~
           ("Tag" -> o.tag) ~
           ("OtherParams" -> Json(DefaultFormats).write(o.params)) ~
           ("CreatedTime" -> o.creationTime) ~
@@ -1018,7 +1019,8 @@ object JsonSerializer {
             ("ElementId" -> o.mdElementId) ~
             // 646 - 673 Meta data api changes included - Changes begin
             ("Description" -> o.description) ~
-            ("Comment" -> o.comment) ~
+          ("Comment" -> o.comment) ~
+          ("Author" -> o.author) ~
             ("Tag" -> o.tag) ~
             ("OtherParams" -> Json(DefaultFormats).write(o.params)) ~
             ("CreatedTime" -> o.creationTime) ~
@@ -1060,7 +1062,8 @@ object JsonSerializer {
             ("ElementId" -> o.mdElementId) ~
             // 646 - 673 Meta data api changes included - Changes begin
             ("Description" -> o.description) ~
-            ("Comment" -> o.comment) ~
+          ("Comment" -> o.comment) ~
+          ("Author" -> o.author) ~
             ("Tag" -> o.tag) ~
             ("OtherParams" -> Json(DefaultFormats).write(o.params)) ~
             ("CreatedTime" -> o.creationTime) ~
@@ -1089,6 +1092,7 @@ object JsonSerializer {
           ("CollectionType" -> ObjType.asString(o.collectionType)) ~
           ("TransactionId" -> o.tranId))
         var jsonStr = pretty(render(json))
+
         //jsonStr = jsonStr.replaceAll("}","").trim + ",\n  \"Type\": "
         jsonStr = replaceLast(jsonStr, "}", "").trim + ",\n  \"Type\": "
         var memberDefJson = SerializeObjectToJson(o.typeDef)
