@@ -790,6 +790,12 @@ class CompilerProxy {
 
       val modelType: String = if (sourceLang.equalsIgnoreCase("scala")) "Scala" else "Java"
       val ownerId: String = if (userid == None) "kamanja" else userid.get
+
+      // filter the 3 fat jars from dependent jars before creating ModelDef
+      val jarsToBeExcludedRegEx = "ExtDependencyLibs.*jar|KamanjaInternalDeps.*jar".r
+      var depJars1 = deps.filter(x => ! jarsToBeExcludedRegEx.pattern.matcher(x).matches)
+      logger.debug("Before deps => " + deps.toList + "\nAfter Deps" + depJars1.toList)
+
       val modDef: ModelDef = MdMgr.GetMdMgr.MakeModelDef(modelNamespace
         , modelName
         , pName
@@ -802,7 +808,7 @@ class CompilerProxy {
         , MiningModelType.modelType(modelType)
         , MdMgr.ConvertVersionToLong(MdMgr.FormatVersion(modelVersion))
         , jarFileName
-        , deps.toArray[String]
+        , depJars1.toArray[String]
         , recompile
         , false
         , modCfgJson)
@@ -1472,7 +1478,6 @@ class CompilerProxy {
     // dont want to allow developers using the classpath to pass in dependencies.
     var returnList = ArrayBuffer[String]()
     var depArray: Array[String] = clsPath.trim.split(":")
-	val jarsToBeExcluded = List("ExtDependencyLibs_2.11-1.4.2.jar", "KamanjaInternalDeps_2.11-1.4.2.jar", "ExtDependencyLibs2_2.11-1.4.2.jar").toSet
     depArray.foreach(dep => {
       // Check it is the file & the file exists
       val fl = new File(dep.trim)
@@ -1481,7 +1486,7 @@ class CompilerProxy {
       } else {
         var parsedJarpath = dep.split("/")
         var tempSanity = parsedJarpath(parsedJarpath.length - 1).split('.')
-        if (tempSanity(tempSanity.length - 1).trim.equalsIgnoreCase("jar") && !jarsToBeExcluded.contains((tempSanity.mkString(".").trim)))
+        if (tempSanity(tempSanity.length - 1).trim.equalsIgnoreCase("jar"))
           returnList += (tempSanity.mkString(".").trim)
       }
     })
