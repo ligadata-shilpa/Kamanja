@@ -13,7 +13,7 @@ object InfiniNode {
 //      """{"name":"CacheCluster","jgroups.tcpping.initial_hosts":"192.168.1.2[7800],192.168.1.2[7801],192.168.1.2[7802]","jgroups.port":"7800","numOfKeyOwners":"2","maxEntries":"300000","CacheConfig":{"timeToIdleSeconds":"300000","timeToLiveSeconds":"300000","peerconfig":"jgroups_tcp.xml"}}""", new CacheCallback {
 //        override def call(callbackData: CacheCallbackData): Unit = println(callbackData.key + ">>>" + callbackData.eventType + ">>>>>" + callbackData.value)
 //      })
-    node.init("""{"name":"CacheCluster","jgroups.tcpping.initial_hosts":"192.168.1.2[7800],192.168.1.2[7801],192.168.1.2[7802]","jgroups.port":"7800","numOfKeyOwners":"2","maxEntries":"300000","CacheConfig":{"timeToIdleSeconds":"300000","timeToLiveSeconds":"300000","peerconfig":"jgroups_tcp.xml"}}""", null)
+    node.init("""{"name":"CacheCluster","jgroups.tcpping.initial_hosts":"192.168.1.129[7800],192.168.1.129[7801],192.168.1.129[7802]","jgroups.port":"7800","numOfKeyOwners":"2","maxEntries":"300000","CacheConfig":{"timeToIdleSeconds":"300000","timeToLiveSeconds":"300000","peerconfig":"jgroups_tcp.xml"}}""", null)
     node.start()
 
     node.put("1", "HI ALL".getBytes)

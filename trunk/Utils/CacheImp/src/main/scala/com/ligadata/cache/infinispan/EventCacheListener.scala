@@ -21,18 +21,19 @@ class EventCacheListener(val listenCallback: CacheCallback) {
     if (event.isPre())
       return;
 
-    if (listenCallback != null) {
-      val key: NodeKey = event.getKey().asInstanceOf[NodeKey]
-      if (key.getContents == NodeKey.Type.DATA) {
-        val map: AtomicHashMap[String, String] = event.getValue.asInstanceOf[AtomicHashMap[String, String]]
-        val it: util.Iterator[String] = map.keySet().iterator()
-        while (it.hasNext) {
-          val k: String = it.next()
-          listenCallback.call(new CacheCallbackData("Put", k, map.get(k)));
-        }
-      }
-    }
-
+    //    if (listenCallback != null) {
+    //      val key: NodeKey = event.getKey().asInstanceOf[NodeKey]
+    //      if (key.getContents == NodeKey.Type.DATA) {
+    //        val map: AtomicHashMap[String, String] = event.getValue.asInstanceOf[AtomicHashMap[String, String]]
+    //        val it: util.Iterator[String] = map.keySet().iterator()
+    //        while (it.hasNext) {
+    //          val k: String = it.next()
+    //          listenCallback.call(new CacheCallbackData("Put", k, map.get(k)));
+    //        }
+    //      }
+    //    }
+    if (listenCallback != null)
+      listenCallback.call(new CacheCallbackData("Put", event.getKey(), event.getValue));
     //    System.out.println("Cache entry " + key.toString + map.get("1") + " added in cache " + event.getCache());
   }
 
@@ -41,17 +42,19 @@ class EventCacheListener(val listenCallback: CacheCallback) {
     if (event.isPre())
       return;
 
-    if (listenCallback != null) {
-      val key: NodeKey = event.getKey().asInstanceOf[NodeKey]
-      if (key.getContents == NodeKey.Type.DATA) {
-        val map: AtomicHashMap[String, String] = event.getValue.asInstanceOf[AtomicHashMap[String, String]]
-        val it: util.Iterator[String] = map.keySet().iterator()
-        while (it.hasNext) {
-          val k: String = it.next()
-          listenCallback.call(new CacheCallbackData("Update", k, map.get(k)));
-        }
-      }
-    }
+    //    if (listenCallback != null) {
+    //      val key: NodeKey = event.getKey().asInstanceOf[NodeKey]
+    //      if (key.getContents == NodeKey.Type.DATA) {
+    //        val map: AtomicHashMap[String, String] = event.getValue.asInstanceOf[AtomicHashMap[String, String]]
+    //        val it: util.Iterator[String] = map.keySet().iterator()
+    //        while (it.hasNext) {
+    //          val k: String = it.next()
+    //          listenCallback.call(new CacheCallbackData("Update", k, map.get(k)));
+    //        }
+    //      }
+    //    }
+    if (listenCallback != null)
+      listenCallback.call(new CacheCallbackData("Update", event.getKey(), event.getValue));
 
     //    System.out.println("Cache entry " + key.toString + map.get(key.toString) + " modified in cache " + event.getCache());
   }
@@ -61,18 +64,20 @@ class EventCacheListener(val listenCallback: CacheCallback) {
     if (event.isPre())
       return;
 
-    if (listenCallback != null) {
-      val key: NodeKey = event.getKey().asInstanceOf[NodeKey]
-      if (key.getContents == NodeKey.Type.DATA) {
-        val map: AtomicHashMap[String, String] = event.getValue.asInstanceOf[AtomicHashMap[String, String]]
-        val it: util.Iterator[String] = map.keySet().iterator()
-        while (it.hasNext) {
-          val k: String = it.next()
-          listenCallback.call(new CacheCallbackData("Remove", k, map.get(k)));
-        }
-      }
-    }
-    
+    //    if (listenCallback != null) {
+    //      val key: NodeKey = event.getKey().asInstanceOf[NodeKey]
+    //      if (key.getContents == NodeKey.Type.DATA) {
+    //        val map: AtomicHashMap[String, String] = event.getValue.asInstanceOf[AtomicHashMap[String, String]]
+    //        val it: util.Iterator[String] = map.keySet().iterator()
+    //        while (it.hasNext) {
+    //          val k: String = it.next()
+    //          listenCallback.call(new CacheCallbackData("Remove", k, map.get(k)));
+    //        }
+    //      }
+    //    }
+    if (listenCallback != null)
+      listenCallback.call(new CacheCallbackData("Remove", event.getKey(), event.getValue));
+
     //    System.out.println("Cache entry " + key.toString + map.get(key.toString) + " removed in cache " + event.getCache());
 
   }

@@ -30,9 +30,9 @@ class MemoryDataCacheImp extends DataCache {
 
   override def start(): Unit = {
     cache = cacheManager.getCache(config.getcacheName());
-//    if (listenCallback != null) {
+    if (listenCallback != null) {
       cache.addListener(new EventCacheListener(listenCallback))
-//    }
+    }
     treeCache = new TreeCacheFactory().createTreeCache(cache);
   }
 
