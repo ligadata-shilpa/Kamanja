@@ -99,7 +99,7 @@ object SockClientTools {
             buffer.append(s"${'"'}${m._1}${'"'} : ${m._2.toString}, ")
         })
 
-        val jsonStr : String = buffer.toString.drop(2) // scrape off trailing comma and space
+        val jsonStr : String = buffer.toString.dropRight(2) // scrape off trailing comma and space
         val enclosedJsonStr : String = s"$jsonStr }"
         enclosedJsonStr
     }
@@ -292,7 +292,7 @@ object SockClient {
         } else {
 	        /** Prepare the command message for transport (except for the case of the
               * StartServerCmd instance... NOTE: multiple cmds may be prepared */
-	        val cmdMsg : Array[Byte] = cmdObj.prepareCmdMsg(filePath
+	        val cmdMsgs : Array[Array[Byte]] = cmdObj.prepareCmdMsg(filePath
 	            , modelName
 	            , msg
 	            , user
@@ -303,58 +303,76 @@ object SockClient {
             /** send the command to the server for execution */
             val inetbyname = InetAddress.getByName(host)
             println("inetbyname = " + inetbyname)
-            val s : Socket = new Socket(inetbyname, portNo)
-            lazy val in = new DataInputStream(s.getInputStream)
+            val sock : Socket = new Socket(inetbyname, portNo)
+            lazy val in = new DataInputStream(sock.getInputStream)
             //lazy val in = new BufferedSource(s.getInputStream).getLines()
-            val out = new DataOutputStream(s.getOutputStream)
+            val out = new DataOutputStream(sock.getOutputStream)
             //val out = new PrintStream(s.getOutputStream)
 
-            //out.println(cmdMsg)
-            val cmdLen : Int = cmdMsg.length
-            out.write(cmdMsg, 0, cmdLen)
-            out.flush()
-            
-            /** Contend with multiple messages results returned */
-            val buffer : Array[Byte] = new Array[Byte](2^16) // 64k
-            val answeredBytes : ArrayBuffer[Byte] = ArrayBuffer[Byte]()
-            var bytesReceived = in.read(buffer)
-            breakable {
-                while (bytesReceived > 0) {
-                    answeredBytes ++= buffer.slice(0, bytesReceived)
-                    /** print one result each loop... and then the remaining (if any) after bytesReceived == 0) */
-                    val endMarkerIdx: Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
-                    if (endMarkerIdx >= 0) {
-                        val endMarkerIncludedIdx: Int = endMarkerIdx + CmdConstants.endMarkerArray.length
-                        val responseBytes: Array[Byte] = answeredBytes.slice(0, endMarkerIncludedIdx).toArray
-                        val response: String = unpack(responseBytes)
-                        println(s"$cmd reply = \n$response")
-                        answeredBytes.remove(0, endMarkerIncludedIdx)
-                        break
-                    }
-                    bytesReceived = in.read(buffer)
-                }
+            if (cmdMsgs.length == 0) {
+                println("there were no commands formed... abandoning processing")
+            } else {
+                val buffer: Array[Byte] = new Array[Byte](2 ^ 16) // 64k
+                cmdMsgs.foreach( msg => {
+                    processOneMsg(in, out, cmd, msg, buffer)
+                })
             }
-
-            val lenOfRemainingAnsweredBytes : Int = answeredBytes.length
-            while (lenOfRemainingAnsweredBytes > 0) {
-                val endMarkerIdx : Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
-                if (endMarkerIdx >= 0) {
-                    val endMarkerIncludedIdx : Int = endMarkerIdx + CmdConstants.endMarkerArray.length
-                    val responseBytes : Array[Byte] = answeredBytes.slice(0,endMarkerIncludedIdx).toArray
-                    val response : String = unpack(responseBytes)
-                    println(response)
-                    answeredBytes.remove(0, endMarkerIncludedIdx)
-                } else {
-                    if (answeredBytes.nonEmpty) {
-                        println("There were residual bytes remaining in the answer buffer suggesting that the connection went down")
-                        println(s"Bytes were '${answeredBytes.toString}'")
-                    }
-                }
-            }
-
-            s.close()
+            sock.close()
         }
         sys.exit(0)
+    }
+
+    /** Process one message, sending the cmdMsg to the DataOutputStream and collecting the answer from the DataInputStream.
+      *
+      * @param in bytes are received from server here
+      * @param out bytes are sent to the server with this
+      * @param cmd visual id as to which command is being executed
+      * @param cmdMsg the command to send
+      * @param buffer working buffer for the bytes received from the DataInputStream
+      * @return Unit
+      */
+    def processOneMsg(in : DataInputStream, out : DataOutputStream, cmd : String, cmdMsg : Array[Byte], buffer : Array[Byte]) : Unit = {
+        //out.println(cmdMsg)
+        val cmdLen: Int = cmdMsg.length
+        out.write(cmdMsg, 0, cmdLen)
+        out.flush()
+
+        /** Contend with multiple messages results returned */
+        val answeredBytes: ArrayBuffer[Byte] = ArrayBuffer[Byte]()
+        var bytesReceived = in.read(buffer)
+        breakable {
+            while (bytesReceived > 0) {
+                answeredBytes ++= buffer.slice(0, bytesReceived)
+                /** print one result each loop... and then the remaining (if any) after bytesReceived == 0) */
+                val endMarkerIdx: Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
+                if (endMarkerIdx >= 0) {
+                    val endMarkerIncludedIdx: Int = endMarkerIdx + CmdConstants.endMarkerArray.length
+                    val responseBytes: Array[Byte] = answeredBytes.slice(0, endMarkerIncludedIdx).toArray
+                    val response: String = unpack(responseBytes)
+                    println(s"$cmd reply = \n$response")
+                    answeredBytes.remove(0, endMarkerIncludedIdx)
+                    break
+                }
+                bytesReceived = in.read(buffer)
+            }
+        }
+
+        val lenOfRemainingAnsweredBytes: Int = answeredBytes.length
+        while (lenOfRemainingAnsweredBytes > 0) {
+            val endMarkerIdx: Int = answeredBytes.indexOfSlice(CmdConstants.endMarkerArray)
+            if (endMarkerIdx >= 0) {
+                val endMarkerIncludedIdx: Int = endMarkerIdx + CmdConstants.endMarkerArray.length
+                val responseBytes: Array[Byte] = answeredBytes.slice(0, endMarkerIncludedIdx).toArray
+                val response: String = unpack(responseBytes)
+                println(response)
+                answeredBytes.remove(0, endMarkerIncludedIdx)
+            } else {
+                if (answeredBytes.nonEmpty) {
+                    println("There were residual bytes remaining in the answer buffer suggesting that the connection went down")
+                    println(s"Bytes were '${answeredBytes.toString}'")
+                }
+            }
+        }
     }
 
     /**
@@ -389,7 +407,7 @@ object SockClient {
             val crc : Long = byteBuffer.getLong()
             val payloadLen : Int = byteBuffer.getInt()
             val startMarkStr : String = new String(startMark)
-            println(s"startMark = $startMarkStr, crc = $crc, payload len = $payloadLen")
+            //println(s"startMark = $startMarkStr, crc = $crc, payload len = $payloadLen")
     		val payloadArray : scala.Array[Byte] = new scala.Array[Byte](payloadLen)
 			byteBuffer.get(payloadArray,0,payloadLen)
 			byteBuffer.get(endMark,0,endMarkerValueLen)
@@ -409,7 +427,7 @@ object SockClient {
   */
 abstract class PyCmd (val cmd : String) {
     def semanticCheck(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int, modelOptions : String, pyPath : String) : (Boolean,String)
-    def prepareCmdMsg(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int, modelOptions : String, pyPath : String) : scala.Array[Byte]
+    def prepareCmdMsg(filePath : String, modelName : String, msg : String, user : String, host : String, portNo : Int, modelOptions : String, pyPath : String) : Array[Array[Byte]]
 }
 
 /** Commands: StartServerCmd, StopServerCmd, AddModelCmd, RemoveModelCmd, ServerStatusCmd, ExecuteModelCmd */
@@ -443,8 +461,9 @@ class StartServerCmd(cmd : String) extends PyCmd(cmd) {
                                , host : String
                                , portNo : Int
                                , modelOptions : String
-                               , pyPath : String) : scala.Array[Byte] = {
-        new scala.Array[Byte](0)
+                               , pyPath : String) : Array[Array[Byte]] = {
+        val fauxcmd : Array[Byte] = Array[Byte](0)
+        new Array[Array[Byte]](0) :+ fauxcmd
     }
 
     /**
@@ -547,7 +566,7 @@ class StopServerCmd(cmd : String) extends PyCmd(cmd) {
                                , host: String
                                , portNo: Int
                                , modelOptions : String
-                               , pyPath : String) : Array[Byte] = {
+                               , pyPath : String) : Array[Array[Byte]] = {
         val json = (
             ("Cmd" -> cmd) ~
             ("CmdVer" -> 1) // ~
@@ -570,25 +589,20 @@ class StopServerCmd(cmd : String) extends PyCmd(cmd) {
             payload ++
             CmdConstants.endMarkerArray
 
-        cmdBytes
+        //Array[Array[Byte]] = {
+        new Array[Array[Byte]](0) :+ cmdBytes
+
     }
 }
 
 /**
   * AddModelCmd
   *
-  *  NOTE about the model name.  For this prototype, the name of the python program to be sent to the
-  *  server *_must be_* the name of the python program file.  It is this file name that is sought by the loader
-  *  in the server to load the python program into the server (as if it were an explicit import).
+  *  Required: filePath, modelNm, host, port, user, and pyPath.
   *
-  *  For this reason, when a command is invoked that refers to the model (e.g.,
-  *     --cmd removeModel 'modelName'
-  *     --cmd executeModel --modelName '<modelName>' --msg 'msg data'
-  *  the _modelName_ value must be the name of the appropriate python program that was previously added with
-  *  the addModel command.
-  *
-  *  Failure to supply a path in the form _some/path/mymodel.py_ for your file path will likely cause a
-  *  RuntimeException and command failure.
+  *  The modelOptions can supply the input message layout as an unnamed dictionary if desired.  The result
+  *  or score field will be automatically added to these fields for the output message requirement.
+  *  This is just for testing.
   *
   */
 class AddModelCmd(cmd : String) extends PyCmd(cmd) {
@@ -645,7 +659,7 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
                                , host : String
                                , portNo : Int
                                , modelOptions : String
-                               , pyPath : String) : Array[Byte] = {
+                               , pyPath : String) : Array[Array[Byte]] = {
 
 
         /** copy the python model source file to $pyPath/models */
@@ -664,7 +678,7 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
         if (result != 0) {
             println(s"AddModel failed... unable to copy $filePath to $pyPath${slash}models/")
             println(s"copy error message(s):\n\t$stderrStr")
-            return Array[Byte]()
+            return new Array[Array[Byte]](0)
         }
 
         /** prepare the message */
@@ -682,6 +696,7 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
         )
         val addMsg : String = compact(render(json))
 
+        val modOpts : String = if (modelOptions != null && modelOptions.length > 0) modelOptions else "{}"
         val subMap : Map[String,String] = Map[String,String]("{TYPEINFO_KEY}" -> modelOptions)
         val sub = new MapSubstitution(addMsg, subMap)
         val jsonCmdMsg : String = sub.makeSubstitutions
@@ -705,8 +720,9 @@ class AddModelCmd(cmd : String) extends PyCmd(cmd) {
             CmdConstants.endMarkerArray
 
         println(s"addModel msg len = ${cmdBytes.length}")
-        cmdBytes
 
+        //Array[Array[Byte]] = {
+        new Array[Array[Byte]](0) :+ cmdBytes
     }
 }
 
@@ -756,7 +772,7 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
                                , host: String
                                , portNo: Int
                                , modelOptions : String
-                               , pyPath : String): Array[Byte] = {
+                               , pyPath : String): Array[Array[Byte]] = {
 
         val json = (
             ("Cmd" -> cmd) ~
@@ -783,7 +799,8 @@ class RemoveModelCmd(cmd : String) extends PyCmd(cmd) {
             payload ++
             CmdConstants.endMarkerArray
 
-        cmdBytes
+        //Array[Array[Byte]] = {
+        new Array[Array[Byte]](0) :+ cmdBytes
     }
 }
 
@@ -831,7 +848,7 @@ class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
                                , host: String
                                , portNo: Int
                                , modelOptions : String
-                               , pyPath : String) : Array[Byte] = {
+                               , pyPath : String) : Array[Array[Byte]] = {
         val json = (
             ("Cmd" -> cmd) ~
             ("CmdVer" -> 1) //~
@@ -854,7 +871,8 @@ class ServerStatusCmd(cmd: String) extends PyCmd(cmd) {
             payload ++
             CmdConstants.endMarkerArray
 
-        cmdBytes
+        //Array[Array[Byte]] = {
+        new Array[Array[Byte]](0) :+ cmdBytes
     }
 }
 
@@ -874,7 +892,51 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
     }
 
     /**
-      * Prepare an executeModel message for transmission to the server.
+      * Prepare an one or more executeModel commands.  When the filePath is not null, the content of the
+      * file is expected to be csv input with a header record that describes the field names.
+      *
+      * Recall that the input message field types are either apriori known by the model or have been sent
+      * to the model with the key of TypeInfo in the ModelOptions dictionary.  See AddModelCmd for more details.
+      * In any event, the data items had jolly well better match up with the expectations of the model.
+      *
+      * A single message can also be supplied with inline JSON data.
+      *
+      * @param filePath if supplied, a CSV file with header line is expected. Multiple elements appear
+      *                 in the InputMsgs list.  The header names had better match the _sole_ input message.
+      *                 This is just a hack to test out the multiple command
+      * @param modelName the name of the model
+      * @param msg one message ... a flattened version of the InputDictionary dictionary with the field name/value pairs
+      *            (e.g., {"a": 1, "b": 2 } for the InputDictionary above)
+      * @param user the user that submitted this addModel command ... the 'tenant'
+      * @param host the host that has the target server
+      * @param portNo the port with which the server is listening for commands
+      * @param modelOptions conceivably used for executeModel, but not currently
+      * @param pyPath (unused by executeModel).
+      * @return an Array[Byte] containing the command message ready for transmission to the server
+      *
+      * Pre-conditions:
+      *    For this release, only one message can be ingested
+      */
+    override def prepareCmdMsg(filePath : String
+                               , modelName : String
+                               , msg : String
+                               , user : String
+                               , host : String
+                               , portNo : Int
+                               , modelOptions : String
+                               , pyPath : String) : Array[Array[Byte]] = {
+
+        val oneOrMoreCmds : Array[Array[Byte]] =  if (filePath != null) {
+            prepareCmdMsgs(filePath, modelName, msg, user, host, portNo, modelOptions, pyPath)
+        } else {
+            prepareOneCmdMsg(filePath, modelName, msg, user, host, portNo, modelOptions, pyPath)
+        }
+
+        oneOrMoreCmds
+    }
+
+    /**
+      * Prepare one executeModel message for transmission to the server.
       *
       * Sample executeModel command prepared:
       *
@@ -909,33 +971,33 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
       * Pre-conditions:
       *    For this release, only one message can be ingested
       */
-    override def prepareCmdMsg(filePath : String
+    private def prepareOneCmdMsg(filePath : String
                                , modelName : String
                                , msg : String
                                , user : String
                                , host : String
                                , portNo : Int
                                , modelOptions : String
-                               , pyPath : String) : Array[Byte] = {
+                               , pyPath : String) : Array[Array[Byte]] = {
 
-    	if (filePath != null) {
+        if (filePath != null) {
             println("executeModel failure!  Method prepareCmdMsg does not accept file input... method prepareCmdMsgs should have been used... logic error....")
-            return Array[Byte]()
-		}
+            return new Array[Array[Byte]](0)
+        }
 
         val msgJson : scala.collection.immutable.Map[String,Any] =
-                SockClientTools.jsonStringAsColl(msg).asInstanceOf[scala.collection.immutable.Map[String,Any]]
+            SockClientTools.jsonStringAsColl(msg).asInstanceOf[scala.collection.immutable.Map[String,Any]]
         val msgFieldMap : String =  SockClientTools.SerializeSimpleMapToJson(msgJson)
 
         val json = (
             ("Cmd" -> cmd) ~
-            ("CmdVer" -> 1) ~
-            ("CmdOptions" -> (
+                ("CmdVer" -> 1) ~
+                ("CmdOptions" -> (
                     ("ModelName" -> modelName) ~
-                    ("InputDictionary" -> "{DATA.KEY}")
-            )) //~
+                        ("InputDictionary" -> "{DATA.KEY}")
+                    )) //~
             //("ModelOptions" -> List[String]())
-        )
+            )
         val jsonCmdTemplate : String = compact(render(json))
 
         val subMap : Map[String,String] = Map[String,String]("{DATA.KEY}" -> msgFieldMap)
@@ -959,7 +1021,8 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
             payload ++
             CmdConstants.endMarkerArray
 
-		cmdBytes
+        //Array[Array[Byte]] = {
+        new Array[Array[Byte]](0) :+ cmdBytes
     }
 
     /**
@@ -1003,11 +1066,26 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
             val cmdStrings : Array[String] = dataContent.map(msgValues => {
                 val values : Array[String] = msgValues.split(',').map(fieldVal => sansQuotes(fieldVal.trim))
                 val pairs : Array[(String,String)] = msgNames.zip(values)
-                val cmdMsg : String = SerializeCmdToJson(cmd, modelName, msg, pairs)
+
+                val msgFieldMap : String =  SockClientTools.SerializeSimpleMapToJson(pairs.toMap)
+                val json = (
+                    ("Cmd" -> cmd) ~
+                        ("CmdVer" -> 1) ~
+                        ("CmdOptions" -> (
+                            ("ModelName" -> modelName) ~
+                                ("InputDictionary" -> "{DATA.KEY}")
+                            )) //~
+                    //("ModelOptions" -> List[String]())
+                    )
+                val jsonCmdTemplate : String = compact(render(json))
+
+                val subMap1 : Map[String,String] = Map[String,String]("{DATA.KEY}" -> msgFieldMap)
+                val sub1 = new MapSubstitution(jsonCmdTemplate, subMap1)
+                val cmdMsg : String = sub1.makeSubstitutions
                 cmdMsg
             })
 
-            val cmdsAsBytes : Array[Array[Byte]] = cmdStrings.map(jsonCmd => {
+            val arrayOfCmds : Array[Array[Byte]] = cmdStrings.map(jsonCmd => {
                 val payload : Array[Byte] = jsonCmd.getBytes
                 val checksumBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfCheckSum)
                 checksumBytes.putLong(0L)
@@ -1015,18 +1093,18 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
                 val lenBytes : ByteBuffer = ByteBuffer.allocate(CmdConstants.lenOfInt)
                 lenBytes.putInt(payload.length)
                 val payloadLenAsBytes : Array[Byte] = lenBytes.array()
-                val cmdBytes : Array[Byte] = CmdConstants.startMarkerArray ++
+                val cmdsAsBytes : Array[Byte] = CmdConstants.startMarkerArray ++
                     chkBytesArray ++
                     payloadLenAsBytes ++
                     payload ++
                     CmdConstants.endMarkerArray
-                cmdBytes
+                cmdsAsBytes
             })
-            cmdsAsBytes
+            arrayOfCmds
 
         } else {
             println(s"executeModel failure!  \nThe message input file sent to the prepareCmdMsgs is malformed... \nIt contains only one (or no) records... \nThere must be a CSV header that gives field names (the names should match those found in the InputMsgs message supplied to the addModel command)...\n...and at least one input data record of csv values corresponding to the names in the header.")
-            Array[Array[Byte]]()
+            new Array[Array[Byte]](0)
         }
 
 
@@ -1055,7 +1133,7 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
             ("CmdVer" -> 1) ~
             ("CmdOptions" -> (
                 ("ModelName" -> modelName) ~
-                ("InputMsgs" -> msgs)
+                ("InputDictionary" -> msgs)
             )) //~
             //("ModelOptions" -> List[String]())
         )
@@ -1066,14 +1144,26 @@ class ExecuteModelCmd(cmd : String) extends PyCmd(cmd) {
     /**
       * Use org.json4s.jackson.JsonMethods to serialize an executeCommand
       *
+      *
+      *         val json = (
+            ("Cmd" -> cmd) ~
+                ("CmdVer" -> 1) ~
+                ("CmdOptions" -> (
+                    ("ModelName" -> modelName) ~
+                        ("InputDictionary" -> "{DATA.KEY}")
+                    )) //~
+            //("ModelOptions" -> List[String]())
+            )
+
+      *
+      *
       * @param inputMsgName the name of the message
       * @param msgFieldValuePairs field name/value pairs
       * @return json string for the message to be processed
       */
     private def SerializeMsgToJson(inputMsgName: String,msgFieldValuePairs : Array[(String,String)]): String = {
         val json = (
-            ("name" -> inputMsgName) ~
-            ("fields" -> msgFieldValuePairs.toList.map ( pair => {
+            ("InputDictionary" -> msgFieldValuePairs.toList.map ( pair => {
                 val name : String = pair._1
                 (s"${'"'}$name${'"'}" -> pair._2)
             }))

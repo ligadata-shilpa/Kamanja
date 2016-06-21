@@ -23,3 +23,19 @@ Pyserver.FIXME.txt
     }
   }
 }
+
+{
+  "InputFields": {
+    "a": "Int",
+    "b": "Int"
+  },
+  "Cmd": "addModel",
+  "Server": "pepper.fishpuppy.com",
+  "OutputFields": {
+    "a": "Int",
+    "b": "Int",
+    "result": "Int"
+  },
+  "Result": "model multiply.MultiplyTuple added",
+  "Port": "9999"
+}

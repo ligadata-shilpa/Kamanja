@@ -1,7 +1,10 @@
 
-{ "WireFormats" : "for sending commands to python server"}
+
 
 [
+  {
+    "WireFormats": "for sending commands to python server"
+  },
   {
     "Cmd": "addModel",
     "CmdVer": 1,

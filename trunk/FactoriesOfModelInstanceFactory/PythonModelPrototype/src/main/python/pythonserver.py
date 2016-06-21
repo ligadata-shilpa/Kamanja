@@ -80,6 +80,7 @@ for moduleName in 'addModel', 'removeModel', 'serverStatus', 'executeModel', 'st
 	pkgCmdName = "commands.{}".format(moduleName)
 	className = moduleName # also 
 	HandlerClass = importPackageByName(pkgCmdName, className)
+	print "load HandlerClass({},{},{})".format(pkgCmdName,hostDisplayStr,str(port))
 	handler = HandlerClass(pkgCmdName, hostDisplayStr, port)
 	cmdDict[moduleName] = handler
 #self, modelDict, host, port, cmdOptions, modelOptions

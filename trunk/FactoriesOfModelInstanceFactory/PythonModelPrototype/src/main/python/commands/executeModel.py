@@ -23,6 +23,7 @@ class executeModel(CommandBase):
 	message also found there (key = "InputDictionary")
 	"""
 	def __init__(self, pkgCmdName, host, port):
+		
 		super(executeModel, self).__init__(pkgCmdName, host, port)
 
 	def handler(self, modelDict, host, port, cmdOptions, modelOptions):
@@ -34,7 +35,7 @@ class executeModel(CommandBase):
 		modelValueView = modelDict.viewvalues()
 		modelInsts =  ["{}".format(str(v)) for v in modelValueView]
 		print "{} models in modelDict = {}".format(len(modelNameView),modelNames)
-		print "{} instances in cmdDict = {}".format(len(modelValueView),modelInsts)
+		print "{} instances in modelDict = {}".format(len(modelValueView),modelInsts)
 
 		if "ModelName" in cmdOptions:
 			modelName = str(cmdOptions["ModelName"])
@@ -45,16 +46,16 @@ class executeModel(CommandBase):
 		try:
 			msg = cmdOptions["InputDictionary"]
 		except:
-			results = exceptionMsg("No message value with key 'InputDictionary' for model {} ... it should be in the supplied cmdOptions dictionary for executeModel".format(modelName))
+			results = super(executeModel, self).exceptionMsg("No message value with key 'InputDictionary' for model {} ... it should be in the supplied cmdOptions dictionary for executeModel".format(modelName))
 		#
 		if results == "":
 			try:
-				model = cmdDict.get(modelName)
+				model = modelDict.get(modelName)
 				msg = cmdOptions["InputDictionary"]
 				print "model instance selected = {}".format(str(model))
 				results = model.execute(msg)
 			except:
-				results = exceptionMsg("The model '{}' is having a bad day...".format(modelName))
+				results = super(executeModel, self).exceptionMsg("The model '{}' is having a bad day...".format(modelName))
 		return results
 
 
