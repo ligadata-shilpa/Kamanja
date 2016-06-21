@@ -103,8 +103,10 @@ class QueryBuilder extends LogTrait {
     val result: ResultSet = stmt.executeQuery(query)
     var Key = ""
     while (result.next()){
-      Key = result.getString(3) + "," + result.getString(4)
-      data +=  (Key -> result.getString(2))
+      val linkFrom = result.getString("in").substring(result.getString("in").indexOf("#"),result.getString("in").indexOf("{"))
+      val linkTo = result.getString("out").substring(result.getString("out").indexOf("#"),result.getString("out").indexOf("{"))
+      Key = linkFrom + "," + linkTo
+      data +=  (Key -> result.getString("FullName"))
     }
     return data
   }
@@ -127,7 +129,7 @@ class QueryBuilder extends LogTrait {
       return false
     }
     catch {
-      case e: Exception => stmt.close() return true
+      case e: Exception => stmt.close(); return true
     }
   }
   def executeQuery(conn: Connection, query: String): Unit ={
