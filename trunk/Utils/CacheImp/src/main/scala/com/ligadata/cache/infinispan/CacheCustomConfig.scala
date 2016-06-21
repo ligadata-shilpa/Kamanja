@@ -36,7 +36,7 @@ class CacheCustomConfig(val jsonconfig: Config, var cacheManager: DefaultCacheMa
       new ConfigurationBuilder().expiration
         .lifespan(values.getOrElse(CacheCustomConfig.TIMETOLIVESECONDS, "10000000").toLong)
         .maxIdle(values.getOrElse(CacheCustomConfig.TIMETOIDLESECONDS, "10000000").toLong)
-        //.eviction().strategy(EvictionStrategy.LIRS).maxEntries(-1)
+        .eviction().strategy(EvictionStrategy.LIRS).maxEntries(jsonconfig.getvalue(CacheCustomConfig.MAXENTRIES).getOrElse("300000").toLong)
         .clustering
         .cacheMode(CacheMode.DIST_SYNC)
         .hash.numOwners(jsonconfig.getvalue(Config.NUMBEROFKETOWNERS).getOrElse("1").toInt)

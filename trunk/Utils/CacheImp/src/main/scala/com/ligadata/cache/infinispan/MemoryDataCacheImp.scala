@@ -30,7 +30,9 @@ class MemoryDataCacheImp extends DataCache {
 
   override def start(): Unit = {
     cache = cacheManager.getCache(config.getcacheName());
-    cache.addListener(listenCallback)
+//    if (listenCallback != null) {
+      cache.addListener(new EventCacheListener(listenCallback))
+//    }
     treeCache = new TreeCacheFactory().createTreeCache(cache);
   }
 
@@ -39,7 +41,9 @@ class MemoryDataCacheImp extends DataCache {
   }
 
   override def put(key: String, value: scala.Any): Unit = {
-    treeCache.put(root, key, value)
+    if (!key.equals(null) && !"".equals(key)) {
+      treeCache.put(root, key, value)
+    }
   }
 
   override def get(key: String): AnyRef = {
@@ -49,8 +53,21 @@ class MemoryDataCacheImp extends DataCache {
 
       return obj
     } else {
-      return ""
+      return null
     }
+  }
+
+  override def getFromRoot(rootNode: String, key: String): java.util.Map[String, AnyRef] = {
+    val map = new java.util.HashMap[String, AnyRef]
+    val fqn: Fqn = Fqn.fromString(rootNode)
+    val keys: util.Iterator[String] = treeCache.getKeys(fqn).iterator()
+    if (treeCache.getKeys(fqn).size() != 0) {
+      while (keys.hasNext) {
+        val key: String = keys.next()
+        map.put(key, treeCache.get(fqn, key).asInstanceOf[AnyRef])
+      }
+    }
+    return map
   }
 
   override def isKeyInCache(key: String): Boolean = (treeCache != null && treeCache.getKeys(root).contains(key))
@@ -100,15 +117,24 @@ class MemoryDataCacheImp extends DataCache {
     }
   }
 
+  override def put(containerName: String, key: String, value: scala.Any): Unit = {
+    if (!containerName.equals(null) && !"".equals(containerName)) {
+      if (!key.equals(null) && !"".equals(key)) {
+        val fqn: Fqn = Fqn.fromElements(containerName);
+        treeCache.put(fqn, key, value);
+      }
+    }
+  }
+
   override def get(containerName: String, map: java.util.Map[String, java.util.Map[String, AnyRef]]): Unit = {
     if (!containerName.equals(null) && !"".equals(containerName)) {
       val containerNameCheck: Fqn = Fqn.fromElements(containerName)
       if (treeCache.exists(containerNameCheck)) {
-        val allTimeStamp:Node[String, Any] = treeCache.getRoot().getChild(containerNameCheck);
+        val allTimeStamp: Node[String, Any] = treeCache.getRoot().getChild(containerNameCheck);
         val nodes = allTimeStamp.getChildren.iterator()
         while (nodes.hasNext) {
-          val timeStamp:Node[String, Any] = nodes.next()
-          map.put(timeStamp.getFqn.toString,timeStamp.getData().asInstanceOf[java.util.Map[String, AnyRef]])
+          val timeStamp: Node[String, Any] = nodes.next()
+          map.put(timeStamp.getFqn.toString, timeStamp.getData().asInstanceOf[java.util.Map[String, AnyRef]])
         }
       }
     }
@@ -161,7 +187,7 @@ class MemoryDataCacheImp extends DataCache {
       if (!timestamp.equals(null) && !"".equals(timestamp)) {
         if (!key.equals(null) && !"".equals(key)) {
           val fqn: Fqn = Fqn.fromElements(containerName, timestamp);
-          treeCache.remove(fqn,key)
+          treeCache.remove(fqn, key)
         }
 
       }

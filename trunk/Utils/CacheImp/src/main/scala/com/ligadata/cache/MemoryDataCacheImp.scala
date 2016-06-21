@@ -101,4 +101,10 @@ class MemoryDataCacheImp extends DataCache{
   override def del(containerName: String, timestamp: String): Unit = {}
 
   override def del(containerName: String, timestamp: String, key: String): Unit = {}
+
+  override def put(containerName: String, key: String, value: scala.Any): Unit = {}
+
+  override def getFromRoot(rootNode: String, key: String): java.util.Map[String, AnyRef] = {
+    null
+  }
 }
